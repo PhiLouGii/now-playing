@@ -58,6 +58,7 @@
 }
 
 .navbar__link {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 7px;
@@ -79,6 +80,21 @@
 .navbar__link:hover {
   color: var(--color-white);
   background: rgba(255, 255, 255, 0.05);
+}
+
+.navbar__link.active {
+  color: var(--color-white);
+}
+
+.navbar__link.active::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 4px;
+  height: 2px;
+  border-radius: var(--radius-pill);
+  background: var(--color-purple);
 }
 
 /* ========================================

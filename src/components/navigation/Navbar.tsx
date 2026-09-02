@@ -1,10 +1,20 @@
-import { Music, Trophy, Compass, User } from 'lucide-react'
+import {
+  Music,
+  Trophy,
+  Compass,
+  User,
+} from 'lucide-react'
+import { NavLink } from 'react-router-dom'
 import './Navbar.css'
 
 function Navbar() {
   return (
     <nav className="navbar">
-      <div className="navbar__brand">
+      <NavLink
+        to="/"
+        className="navbar__brand"
+        aria-label="NOW PLAYING home"
+      >
         <div className="navbar__logo">
           <Music size={20} />
         </div>
@@ -12,27 +22,39 @@ function Navbar() {
         <span className="navbar__title">
           NOW PLAYING
         </span>
-      </div>
+      </NavLink>
 
       <div className="navbar__links">
-        <a href="#" className="navbar__link">
+        <NavLink
+          to="/play"
+          className="navbar__link"
+        >
           Play
-        </a>
+        </NavLink>
 
-        <a href="#" className="navbar__link">
+        <NavLink
+          to="/explore"
+          className="navbar__link"
+        >
           <Compass size={17} />
           Explore
-        </a>
+        </NavLink>
 
-        <a href="#" className="navbar__link">
+        <NavLink
+          to="/leaderboard"
+          className="navbar__link"
+        >
           <Trophy size={17} />
           Leaderboard
-        </a>
+        </NavLink>
 
-        <a href="#" className="navbar__link">
+        <NavLink
+          to="/profile"
+          className="navbar__link"
+        >
           <User size={17} />
           Profile
-        </a>
+        </NavLink>
       </div>
     </nav>
   )
