@@ -1,0 +1,80 @@
+:root {
+  /* =========================
+     COLORS
+     ========================= */
+
+  --color-bg: #0d0d14;
+  --color-bg-secondary: #13131d;
+  --color-bg-card: #181824;
+
+  --color-white: #f5f5f7;
+  --color-muted: #8f8f9f;
+  --color-subtle: #5f5f6f;
+
+  --color-purple: #8b5cf6;
+  --color-pink: #ec4899;
+  --color-cyan: #22d3ee;
+  --color-yellow: #facc15;
+
+  /* =========================
+     GRADIENTS
+     ========================= */
+
+  --gradient-primary: linear-gradient(
+    135deg,
+    var(--color-purple),
+    var(--color-pink)
+  );
+
+  --gradient-cyan: linear-gradient(
+    135deg,
+    var(--color-cyan),
+    var(--color-purple)
+  );
+
+  /* =========================
+     BORDERS
+     ========================= */
+
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-medium: rgba(255, 255, 255, 0.14);
+
+  /* =========================
+     RADIUS
+     ========================= */
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+
+  /* =========================
+     SHADOWS / GLOWS
+     ========================= */
+
+  --shadow-card:
+    0 10px 40px rgba(0, 0, 0, 0.25);
+
+  --glow-purple:
+    0 0 30px rgba(139, 92, 246, 0.25);
+
+  --glow-pink:
+    0 0 30px rgba(236, 72, 153, 0.25);
+
+  --glow-cyan:
+    0 0 30px rgba(34, 211, 238, 0.25);
+
+  /* =========================
+     LAYOUT
+     ========================= */
+
+  --max-width: 1400px;
+  --navbar-height: 76px;
+
+  /* =========================
+     TYPOGRAPHY
+     ========================= */
+
+  --font-body: 'Inter', sans-serif;
+  --font-display: 'Space Grotesk', sans-serif;
+}
