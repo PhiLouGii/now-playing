@@ -113,3 +113,22 @@
     display: none;
   }
 }
+
+@media (max-width: 480px) {
+  .navbar {
+    padding: 0 14px;
+  }
+
+  .navbar__title {
+    font-size: 15px;
+  }
+
+  .navbar__links {
+    gap: 0;
+  }
+
+  .navbar__link {
+    padding: 7px;
+    font-size: 12px;
+  }
+}
