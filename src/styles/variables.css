@@ -1,24 +1,29 @@
 :root {
-  /* =========================
+  /* ========================================
      COLORS
-     ========================= */
+     ======================================== */
 
   --color-bg: #0d0d14;
-  --color-bg-secondary: #13131d;
-  --color-bg-card: #181824;
+  --color-bg-secondary: #11111a;
+  --color-bg-tertiary: #171720;
+
+  --color-surface: #181824;
+  --color-surface-hover: #20202d;
 
   --color-white: #f5f5f7;
-  --color-muted: #8f8f9f;
-  --color-subtle: #5f5f6f;
+  --color-muted: #9494a5;
+  --color-subtle: #626274;
 
   --color-purple: #8b5cf6;
+  --color-purple-light: #a78bfa;
+
   --color-pink: #ec4899;
   --color-cyan: #22d3ee;
   --color-yellow: #facc15;
 
-  /* =========================
+  /* ========================================
      GRADIENTS
-     ========================= */
+     ======================================== */
 
   --gradient-primary: linear-gradient(
     135deg,
@@ -26,34 +31,49 @@
     var(--color-pink)
   );
 
-  --gradient-cyan: linear-gradient(
+  --gradient-secondary: linear-gradient(
     135deg,
     var(--color-cyan),
     var(--color-purple)
   );
 
-  /* =========================
+  --gradient-warm: linear-gradient(
+    135deg,
+    var(--color-pink),
+    var(--color-yellow)
+  );
+
+  /* ========================================
      BORDERS
-     ========================= */
+     ======================================== */
 
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-medium: rgba(255, 255, 255, 0.14);
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-medium: rgba(255, 255, 255, 0.12);
+  --border-bright: rgba(255, 255, 255, 0.2);
 
-  /* =========================
+  /* ========================================
      RADIUS
-     ========================= */
+     ======================================== */
 
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 18px;
   --radius-xl: 24px;
+  --radius-pill: 999px;
 
-  /* =========================
-     SHADOWS / GLOWS
-     ========================= */
+  /* ========================================
+     SHADOWS
+     ======================================== */
 
-  --shadow-card:
-    0 10px 40px rgba(0, 0, 0, 0.25);
+  --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.2);
+
+  --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.3);
+
+  --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.4);
+
+  /* ========================================
+     GLOWS
+     ======================================== */
 
   --glow-purple:
     0 0 30px rgba(139, 92, 246, 0.25);
@@ -64,17 +84,41 @@
   --glow-cyan:
     0 0 30px rgba(34, 211, 238, 0.25);
 
-  /* =========================
+  --glow-yellow:
+    0 0 30px rgba(250, 204, 21, 0.2);
+
+  /* ========================================
      LAYOUT
-     ========================= */
+     ======================================== */
 
   --max-width: 1400px;
   --navbar-height: 76px;
 
-  /* =========================
+  /* ========================================
+     SPACING
+     ======================================== */
+
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+  --space-4xl: 96px;
+
+  /* ========================================
      TYPOGRAPHY
-     ========================= */
+     ======================================== */
 
   --font-body: 'Inter', sans-serif;
   --font-display: 'Space Grotesk', sans-serif;
+
+  /* ========================================
+     TRANSITIONS
+     ======================================== */
+
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow: 400ms ease;
 }
