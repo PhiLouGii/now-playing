@@ -43,3 +43,13 @@
     transform: scale(1);
   }
 }
+
+@keyframes waveform {
+  from {
+    height: 15%;
+  }
+
+  to {
+    height: 85%;
+  }
+}
