@@ -1,0 +1,25 @@
+.placeholder-page {
+  width: min(100% - 80px, var(--max-width));
+  min-height: calc(100vh - var(--navbar-height));
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.placeholder-page .label {
+  margin-bottom: 16px;
+  color: var(--color-pink);
+}
+
+.placeholder-page .body-lg {
+  margin-top: 20px;
+  color: var(--color-muted);
+}
+
+@media (max-width: 768px) {
+  .placeholder-page {
+    width: min(100% - 40px, var(--max-width));
+  }
+}
