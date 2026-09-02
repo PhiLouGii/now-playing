@@ -5,12 +5,14 @@ import Play from '../pages/Play/Play'
 import Explore from '../pages/Explore/Explore'
 import Leaderboard from '../pages/Leaderboard/Leaderboard'
 import Profile from '../pages/Profile/Profile'
+import Game from '../pages/Game/Game'
 
 function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/play" element={<Play />} />
+      <Route path="/game" element={<Game />} />
       <Route path="/explore" element={<Explore />} />
       <Route path="/leaderboard" element={<Leaderboard />} />
       <Route path="/profile" element={<Profile />} />
