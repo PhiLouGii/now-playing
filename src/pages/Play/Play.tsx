@@ -1,18 +1,32 @@
+import FeaturedGame from '../../components/play/FeaturedGame'
+import QuickModes from '../../components/play/QuickModes'
 import './Play.css'
 
 function Play() {
   return (
-    <section className="placeholder-page">
-      <p className="label">PLAY</p>
+    <div className="play-page">
+      <div className="play-page__container">
 
-      <h1 className="display-lg">
-        Choose your game.
-      </h1>
+        <header className="play-page__header">
+          <p className="label">
+            PLAY
+          </p>
 
-      <p className="body-lg">
-        The game modes will live here.
-      </p>
-    </section>
+          <h1 className="display-lg">
+            Choose your challenge.
+          </h1>
+
+          <p className="play-page__intro">
+            Test your music knowledge across songs,
+            artists, albums, and more.
+          </p>
+        </header>
+
+        <FeaturedGame />
+        <QuickModes />
+
+      </div>
+    </div>
   )
 }
 
