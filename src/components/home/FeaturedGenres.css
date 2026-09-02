@@ -1,0 +1,56 @@
+.genres {
+  padding: var(--space-4xl) 40px 120px;
+}
+
+.genres__container {
+  width: min(100%, var(--max-width));
+  margin: 0 auto;
+}
+
+.genres__header {
+  margin-bottom: var(--space-xl);
+}
+
+.genres__header .label {
+  display: block;
+
+  margin-bottom: 10px;
+
+  color: var(--color-pink);
+}
+
+.genres__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.genre-pill {
+  padding: 12px 18px;
+
+  color: var(--color-muted);
+
+  background: var(--color-surface);
+
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
+
+  font-size: 14px;
+  font-weight: 500;
+
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.genre-pill:hover {
+  color: var(--color-white);
+
+  background: var(--color-surface-hover);
+
+  border-color: rgba(236, 72, 153, 0.4);
+
+  transform: translateY(-2px);
+}
