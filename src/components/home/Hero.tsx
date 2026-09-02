@@ -1,3 +1,4 @@
+import { ArrowRight } from 'lucide-react'
 import Button from '../ui/Button'
 import Waveform from '../music/Waveform'
 import './Hero.css'
@@ -13,7 +14,8 @@ function Hero() {
         </p>
 
         <h1 className="hero__title">
-          NOW PLAYING
+          NOW
+          <span>PLAYING</span>
         </h1>
 
         <p className="hero__tagline">
@@ -23,11 +25,17 @@ function Hero() {
         <div className="hero__actions">
           <Button size="lg">
             PLAY NOW
+            <ArrowRight size={18} />
           </Button>
         </div>
+
+        <p className="hero__meta">
+          Songs. Artists. Albums. Years.
+        </p>
       </div>
     </section>
   )
 }
 
 export default Hero
+
