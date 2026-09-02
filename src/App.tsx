@@ -1,5 +1,6 @@
 import './App.css'
 import Navbar from './components/navigation/Navbar'
+import Waveform from './components/music/Waveform'
 
 function App() {
   return (
@@ -7,20 +8,22 @@ function App() {
       <Navbar />
 
       <section className="hero">
-        <div className="hero__content">
-          <p className="hero__eyebrow">
-            THE MUSIC GUESSING GAME
-          </p>
+  <Waveform />
 
-          <h1 className="hero__title">
-            NOW PLAYING
-          </h1>
+  <div className="hero__content">
+    <p className="hero__eyebrow">
+      THE MUSIC GUESSING GAME
+    </p>
 
-          <p className="hero__tagline">
-            You heard it. Now prove it.
-          </p>
-        </div>
-      </section>
+    <h1 className="hero__title">
+      NOW PLAYING
+    </h1>
+
+    <p className="hero__tagline">
+      You heard it. Now prove it.
+    </p>
+  </div>
+</section>
     </main>
   )
 }
