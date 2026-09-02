@@ -71,3 +71,51 @@
 
   color: var(--color-muted);
 }
+
+.app {
+  min-height: 100vh;
+
+  color: var(--color-white);
+  background: var(--color-bg);
+
+  position: relative;
+  overflow: hidden;
+}
+
+.app::before {
+  content: '';
+
+  position: fixed;
+
+  width: 700px;
+  height: 700px;
+
+  top: -350px;
+  left: 50%;
+
+  transform: translateX(-50%);
+
+  background: rgba(139, 92, 246, 0.08);
+
+  filter: blur(120px);
+
+  pointer-events: none;
+}
+
+.app::after {
+  content: '';
+
+  position: fixed;
+
+  width: 500px;
+  height: 500px;
+
+  right: -250px;
+  bottom: -250px;
+
+  background: rgba(34, 211, 238, 0.05);
+
+  filter: blur(100px);
+
+  pointer-events: none;
+}

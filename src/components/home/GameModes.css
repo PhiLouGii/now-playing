@@ -85,3 +85,23 @@
 
   color: var(--color-muted);
 }
+
+@media (max-width: 1000px) {
+  .modes__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .modes {
+    padding: var(--space-3xl) 20px;
+  }
+
+  .modes__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mode-card {
+    min-height: 180px;
+  }
+}
