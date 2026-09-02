@@ -175,3 +175,25 @@
 
   font-size: 18px;
 }
+
+@media (max-width: 768px) {
+  .hero {
+    min-height: calc(100vh - 68px);
+    padding: 0 20px;
+  }
+
+  .hero__eyebrow {
+    margin-bottom: 16px;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+  }
+
+  .hero__title {
+    font-size: clamp(52px, 17vw, 90px);
+  }
+
+  .hero__tagline {
+    margin-top: 20px;
+    font-size: 16px;
+  }
+}
