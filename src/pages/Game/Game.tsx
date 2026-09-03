@@ -74,6 +74,14 @@ function Game() {
     setTimeRemaining(10)
   }
 
+  const isCorrect =
+    selectedAnswer === question.correctAnswer
+
+  const pointsEarned =
+    isCorrect && answerTime !== null
+      ? calculatePoints(answerTime)
+      : 0
+
   return (
     <div className="game-page">
       <div className="game-page__container">
@@ -116,21 +124,41 @@ function Game() {
             onSelect={handleAnswer}
           />
 
+          {isAnswered && (
+            <div
+              className={`game-feedback ${
+                isTimeUp
+                  ? 'game-feedback--timeout'
+                  : isCorrect
+                    ? 'game-feedback--correct'
+                    : 'game-feedback--incorrect'
+              }`}
+            >
+              <div className="game-feedback__label">
+                {isTimeUp
+                  ? "TIME'S UP"
+                  : isCorrect
+                    ? 'CORRECT'
+                    : 'INCORRECT'}
+              </div>
+
+              <div className="game-feedback__answer">
+                {question.correctAnswer}
+              </div>
+
+              {!isTimeUp && isCorrect && (
+                <div className="game-feedback__points">
+                  +{pointsEarned.toLocaleString()} POINTS
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="game-status">
             <div className="game-streak">
               <span>STREAK</span>
               <strong>{streak}</strong>
             </div>
-
-            {isAnswered && (
-              <div className="game-result">
-                {isTimeUp
-                  ? "TIME'S UP"
-                  : selectedAnswer === question.correctAnswer
-                    ? `CORRECT +${calculatePoints(answerTime ?? 0)}`
-                    : 'INCORRECT'}
-              </div>
-            )}
           </div>
 
           {isAnswered && (

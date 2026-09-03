@@ -32,7 +32,7 @@
   transform: translateY(-2px);
 }
 
-.game-answer span {
+.game-answer__letter {
   width: 30px;
   height: 30px;
   flex-shrink: 0;
@@ -48,6 +48,14 @@
   font-weight: 600;
 }
 
+.game-answer__text {
+  flex: 1;
+}
+
+.game-answer__icon {
+  flex-shrink: 0;
+}
+
 .game-answer--selected {
   border-color: var(--color-purple);
   background: rgba(139, 92, 246, 0.12);
@@ -58,10 +66,14 @@
   background: rgba(34, 211, 238, 0.1);
 }
 
-.game-answer--correct span {
+.game-answer--correct .game-answer__letter {
   color: var(--color-cyan);
   background: rgba(34, 211, 238, 0.1);
   border-color: rgba(34, 211, 238, 0.2);
+}
+
+.game-answer--correct .game-answer__icon {
+  color: var(--color-cyan);
 }
 
 .game-answer--incorrect {
@@ -69,10 +81,14 @@
   background: rgba(236, 72, 153, 0.1);
 }
 
-.game-answer--incorrect span {
+.game-answer--incorrect .game-answer__letter {
   color: var(--color-pink);
   background: rgba(236, 72, 153, 0.1);
   border-color: rgba(236, 72, 153, 0.2);
+}
+
+.game-answer--incorrect .game-answer__icon {
+  color: var(--color-pink);
 }
 
 .game-answer:disabled {

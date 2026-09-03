@@ -108,6 +108,65 @@
   justify-content: space-between;
 }
 
+.game-feedback {
+  width: min(100%, 720px);
+  margin-top: 24px;
+  padding: 18px 22px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  text-align: left;
+  animation: scale-in 220ms ease-out;
+}
+
+.game-feedback--correct {
+  background: rgba(34, 211, 238, 0.06);
+  border-color: rgba(34, 211, 238, 0.25);
+}
+
+.game-feedback--incorrect {
+  background: rgba(236, 72, 153, 0.06);
+  border-color: rgba(236, 72, 153, 0.25);
+}
+
+.game-feedback--timeout {
+  background: rgba(250, 204, 21, 0.05);
+  border-color: rgba(250, 204, 21, 0.25);
+}
+
+.game-feedback__label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+.game-feedback--correct .game-feedback__label {
+  color: var(--color-cyan);
+}
+
+.game-feedback--incorrect .game-feedback__label {
+  color: var(--color-pink);
+}
+
+.game-feedback--timeout .game-feedback__label {
+  color: var(--color-yellow);
+}
+
+.game-feedback__answer {
+  margin-top: 6px;
+  color: var(--color-white);
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.game-feedback__points {
+  margin-top: 8px;
+  color: var(--color-subtle);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
 .game-streak {
   display: flex;
   align-items: center;

@@ -1,3 +1,4 @@
+import { Check, X } from 'lucide-react'
 import './AnswerGrid.css'
 
 type AnswerGridProps = {
@@ -20,12 +21,14 @@ function AnswerGrid({
       {answers.map((answer, index) => {
         const isSelected = selectedAnswer === answer
         const isCorrect = answer === correctAnswer
+        const isWrongSelection =
+          isSelected && answer !== correctAnswer
 
         let stateClass = ''
 
         if (isAnswered && isCorrect) {
           stateClass = 'game-answer--correct'
-        } else if (isAnswered && isSelected) {
+        } else if (isAnswered && isWrongSelection) {
           stateClass = 'game-answer--incorrect'
         } else if (isSelected) {
           stateClass = 'game-answer--selected'
@@ -39,11 +42,27 @@ function AnswerGrid({
             onClick={() => onSelect(answer)}
             disabled={isAnswered}
           >
-            <span>
+            <span className="game-answer__letter">
               {String.fromCharCode(65 + index)}
             </span>
 
-            {answer}
+            <span className="game-answer__text">
+              {answer}
+            </span>
+
+            {isAnswered && isCorrect && (
+              <Check
+                className="game-answer__icon"
+                size={18}
+              />
+            )}
+
+            {isAnswered && isWrongSelection && (
+              <X
+                className="game-answer__icon"
+                size={18}
+              />
+            )}
           </button>
         )
       })}
