@@ -32,8 +32,10 @@ function Game() {
   const [isGameComplete, setIsGameComplete] = useState(false)
 
   const [questions] = useState(() =>
-    generateGameQuestions(songs, 5),
-  )
+  generateGameQuestions(songs, 5, {
+    difficulty: 'medium',
+  }),
+)
 
   const question = questions[currentQuestion]
 

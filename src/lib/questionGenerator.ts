@@ -13,20 +13,93 @@ function shuffle<T>(items: T[]) {
   return [...items].sort(() => Math.random() - 0.5)
 }
 
+function getGenreSimilarity(
+  correctSong: Song,
+  candidate: Song,
+) {
+  return candidate.genres.filter((genre) =>
+    correctSong.genres.includes(genre),
+  ).length
+}
+
+function getYearDifference(
+  correctSong: Song,
+  candidate: Song,
+) {
+  return Math.abs(
+    correctSong.releaseYear - candidate.releaseYear,
+  )
+}
+
+function scoreDistractor(
+  correctSong: Song,
+  candidate: Song,
+) {
+  let score = 0
+
+  if (candidate.artist === correctSong.artist) {
+    score += 10
+  }
+
+  score += getGenreSimilarity(
+    correctSong,
+    candidate,
+  ) * 4
+
+  const yearDifference = getYearDifference(
+    correctSong,
+    candidate,
+  )
+
+  if (yearDifference <= 2) {
+    score += 5
+  } else if (yearDifference <= 5) {
+    score += 3
+  } else if (yearDifference <= 10) {
+    score += 1
+  }
+
+  return score
+}
+
 function getWrongAnswers(
   correctSong: Song,
   songs: Song[],
+  difficulty: Question['difficulty'],
   count = 3,
 ) {
   const candidates = songs.filter(
     (song) => song.id !== correctSong.id,
   )
 
-  const shuffledCandidates = shuffle(candidates)
+  const scoredCandidates = candidates.map((song) => ({
+    song,
+    score: scoreDistractor(correctSong, song),
+  }))
 
-  return shuffledCandidates
+  if (difficulty === 'easy') {
+    scoredCandidates.sort(
+      (a, b) => b.score - a.score,
+    )
+  }
+
+  if (difficulty === 'medium') {
+    scoredCandidates.sort(
+      (a, b) =>
+        b.score - a.score + (Math.random() - 0.5) * 8,
+    )
+  }
+
+  if (difficulty === 'hard') {
+    scoredCandidates.sort(
+      (a, b) =>
+        a.score - b.score + (Math.random() - 0.5) * 8,
+    )
+  }
+
+  return scoredCandidates
     .slice(0, count)
-    .map((song) => song.title)
+    .map((item) => item.song.title)
 }
 
 export function generateQuestion(
@@ -43,7 +116,11 @@ export function generateQuestion(
     )
   }
 
-  const wrongAnswers = getWrongAnswers(song, songs)
+  const wrongAnswers = getWrongAnswers(
+    song,
+    songs,
+    difficulty,
+  )
 
   const answers = shuffle([
     song.title,
