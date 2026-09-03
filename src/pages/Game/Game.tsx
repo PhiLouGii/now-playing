@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { mockQuestions } from '../../data/mockSongs'
 import GameHeader from '../../components/game/GameHeader'
 import AnswerGrid from '../../components/game/AnswerGrid'
+import AudioPlayer from '../../components/game/AudioPlayer'
 import './Game.css'
 
 function Game() {
@@ -55,16 +56,17 @@ function Game() {
           </h1>
 
           <div className="game-question">
-            <div className="game-question__art">
-              <span>
-                ?
-              </span>
-            </div>
+  <div className="game-question__art">
+    <span>
+      ?
+    </span>
+  </div>
 
-            <div className="game-question__waveform">
-              AUDIO WAVEFORM
-            </div>
-          </div>
+  <AudioPlayer
+    audioUrl={question.song.audioUrl}
+    duration={10}
+  />
+</div>
 
           <AnswerGrid
             answers={question.answers}
