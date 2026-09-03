@@ -28,3 +28,13 @@ export type Question = {
   correctAnswer: string
   difficulty: QuestionDifficulty
 }
+
+export type RoundConfig = {
+  id: string
+  name: string
+  questionCount: number
+  questionTypes: QuestionType[]
+  difficulty: QuestionDifficulty
+  genre?: string
+  decade?: number
+}

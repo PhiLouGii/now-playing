@@ -2,7 +2,13 @@ import { ArrowRight, Headphones } from 'lucide-react'
 import Button from '../ui/Button'
 import './FeaturedGame.css'
 
-function FeaturedGame() {
+type FeaturedGameProps = {
+  onSelectRound: (roundId: string) => void
+}
+
+function FeaturedGame({
+  onSelectRound,
+}: FeaturedGameProps) {
   return (
     <section className="featured-game">
       <div className="featured-game__number">
@@ -24,7 +30,7 @@ function FeaturedGame() {
         </p>
 
         <div className="featured-game__details">
-          <span>10 QUESTIONS</span>
+          <span>5 QUESTIONS</span>
           <span>MULTIPLE CHOICE</span>
           <span>TIME BONUS</span>
         </div>
@@ -32,10 +38,20 @@ function FeaturedGame() {
 
       <div className="featured-game__action">
         <div className="featured-game__icon">
-          <Headphones size={22} strokeWidth={1.8} />
+          <Headphones
+            size={22}
+            strokeWidth={1.8}
+          />
         </div>
 
-        <Button size="lg">
+        <Button
+          size="lg"
+          onClick={() =>
+            onSelectRound(
+              'name-that-song',
+            )
+          }
+        >
           PLAY
           <ArrowRight size={18} />
         </Button>

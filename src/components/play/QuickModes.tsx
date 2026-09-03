@@ -6,28 +6,46 @@ import {
 } from 'lucide-react'
 import './QuickModes.css'
 
-const quickModes = [
+type QuickMode = {
+  icon: typeof CalendarDays
+  label: string
+  title: string
+  description: string
+  roundId?: string
+}
+
+const quickModes: QuickMode[] = [
   {
     icon: CalendarDays,
     label: 'DAILY',
     title: 'Daily Challenge',
-    description: 'One challenge. Everyone plays the same game.',
+    description:
+      'One challenge. Everyone plays the same game.',
   },
   {
     icon: Zap,
     label: 'QUICK PLAY',
     title: 'Jump Right In',
-    description: 'No setup. Start a random round instantly.',
+    description:
+      'No setup. Start a random round instantly.',
+    roundId: 'mixed-challenge',
   },
   {
     icon: SlidersHorizontal,
     label: 'CUSTOM',
     title: 'Build Your Game',
-    description: 'Choose your categories and difficulty.',
+    description:
+      'Choose your categories and difficulty.',
   },
 ]
 
-function QuickModes() {
+type QuickModesProps = {
+  onSelectRound: (roundId: string) => void
+}
+
+function QuickModes({
+  onSelectRound,
+}: QuickModesProps) {
   return (
     <section className="quick-modes">
       <div className="quick-modes__header">
@@ -45,10 +63,21 @@ function QuickModes() {
               key={mode.label}
               type="button"
               className="quick-mode"
+              onClick={() => {
+                if (mode.roundId) {
+                  onSelectRound(
+                    mode.roundId,
+                  )
+                }
+              }}
+              disabled={!mode.roundId}
             >
               <div className="quick-mode__top">
                 <div className="quick-mode__icon">
-                  <Icon size={19} strokeWidth={1.8} />
+                  <Icon
+                    size={19}
+                    strokeWidth={1.8}
+                  />
                 </div>
 
                 <ArrowUpRight

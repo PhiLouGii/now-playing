@@ -1,9 +1,12 @@
 import { useCallback, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import AudioPlayer from '../../components/game/AudioPlayer'
 import AnswerGrid from '../../components/game/AnswerGrid'
 import GameHeader from '../../components/game/GameHeader'
 import GameProgress from '../../components/game/GameProgress'
 import ResultsScreen from '../../components/game/ResultsScreen'
+import type { RoundConfig } from '../../types/game'
+import { defaultRound } from '../../data/defaultRound'
 import { songs } from '../../data/songs'
 import { generateQuestion } from '../../lib/questionGenerator'
 import {
@@ -14,6 +17,12 @@ import {
 import './Game.css'
 
 function Game() {
+  const location = useLocation()
+
+  const roundConfig =
+    (location.state as { roundConfig?: RoundConfig } | null)
+      ?.roundConfig ?? defaultRound
+
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
 
@@ -32,35 +41,37 @@ function Game() {
   const [isGameComplete, setIsGameComplete] = useState(false)
 
   const [questions] = useState(() => {
-  const questionTypes = [
-    'name-the-song',
-    'name-the-artist',
-    'name-the-song',
-    'guess-the-year',
-    'name-the-album',
-  ] as const
-
-  const shuffledSongs = [...songs].sort(
-    () => Math.random() - 0.5,
-  )
-
-  return shuffledSongs
-    .slice(0, 5)
-    .map((song, index) =>
-      generateQuestion(
-        song,
-        songs,
-        {
-          type: questionTypes[index],
-          difficulty: 'medium',
-        },
-      ),
+    const shuffledSongs = [...songs].sort(
+      () => Math.random() - 0.5,
     )
-})
+
+    return shuffledSongs
+      .slice(
+        0,
+        Math.min(
+          roundConfig.questionCount,
+          songs.length,
+        ),
+      )
+      .map((song, index) =>
+        generateQuestion(
+          song,
+          songs,
+          {
+            type:
+              roundConfig.questionTypes[
+                index % roundConfig.questionTypes.length
+              ],
+            difficulty: roundConfig.difficulty,
+          },
+        ),
+      )
+  })
 
   const question = questions[currentQuestion]
 
-  const isAnswered = selectedAnswer !== null || isTimeUp
+  const isAnswered =
+    selectedAnswer !== null || isTimeUp
 
   const handleTimeUpdate = useCallback(
     (time: number) => {
@@ -90,7 +101,8 @@ function Game() {
     }
 
     const timeAtAnswer = timeRemaining
-    const isCorrect = answer === question.correctAnswer
+    const isCorrect =
+      answer === question.correctAnswer
 
     setSelectedAnswer(answer)
     setAnswerTime(timeAtAnswer)
@@ -98,27 +110,33 @@ function Game() {
     if (isCorrect) {
       const nextStreak = streak + 1
 
-      setCorrectAnswers((current) => current + 1)
-
-      setBestStreak((current) =>
-        Math.max(current, nextStreak),
+      setCorrectAnswers(
+        (current) => current + 1,
       )
 
-      const basePoints = calculatePoints(timeAtAnswer)
+      setBestStreak(
+        (current) =>
+          Math.max(current, nextStreak),
+      )
+
+      const basePoints =
+        calculatePoints(timeAtAnswer)
 
       const multiplier =
         calculateStreakMultiplier(nextStreak)
 
-      const finalPoints = calculateFinalPoints(
-        timeAtAnswer,
-        nextStreak,
-      )
+      const finalPoints =
+        calculateFinalPoints(
+          timeAtAnswer,
+          nextStreak,
+        )
 
       setPointsEarned(finalPoints)
       setMultiplierEarned(multiplier)
 
       setScore(
-        (currentScore) => currentScore + finalPoints,
+        (currentScore) =>
+          currentScore + finalPoints,
       )
 
       setStreak(nextStreak)
@@ -134,12 +152,18 @@ function Game() {
   }
 
   const handleNextQuestion = () => {
-    if (currentQuestion >= questions.length - 1) {
+    if (
+      currentQuestion >=
+      questions.length - 1
+    ) {
       setIsGameComplete(true)
       return
     }
 
-    setCurrentQuestion((current) => current + 1)
+    setCurrentQuestion(
+      (current) => current + 1,
+    )
+
     setSelectedAnswer(null)
     setIsTimeUp(false)
     setAnswerTime(null)
@@ -166,7 +190,9 @@ function Game() {
     <div className="game-page">
       <div className="game-page__container">
         <GameHeader
-          currentQuestion={currentQuestion + 1}
+          currentQuestion={
+            currentQuestion + 1
+          }
           totalQuestions={questions.length}
           score={score}
         />
@@ -178,30 +204,38 @@ function Game() {
 
         <main className="game-content">
           <p className="game-content__category">
-            {question.type === 'name-the-song' &&
+            {question.type ===
+              'name-the-song' &&
               'NAME THAT SONG'}
 
-            {question.type === 'name-the-artist' &&
+            {question.type ===
+              'name-the-artist' &&
               'NAME THAT ARTIST'}
 
-            {question.type === 'name-the-album' &&
+            {question.type ===
+              'name-the-album' &&
               'NAME THAT ALBUM'}
 
-            {question.type === 'guess-the-year' &&
+            {question.type ===
+              'guess-the-year' &&
               'GUESS THE YEAR'}
           </p>
 
           <h1>
-            {question.type === 'name-the-song' &&
+            {question.type ===
+              'name-the-song' &&
               'What song is this?'}
 
-            {question.type === 'name-the-artist' &&
+            {question.type ===
+              'name-the-artist' &&
               'Who performs this song?'}
 
-            {question.type === 'name-the-album' &&
+            {question.type ===
+              'name-the-album' &&
               'Which album is this from?'}
 
-            {question.type === 'guess-the-year' &&
+            {question.type ===
+              'guess-the-year' &&
               'When was this song released?'}
           </h1>
 
@@ -214,15 +248,21 @@ function Game() {
               key={question.id}
               audioUrl={question.song.audioUrl}
               duration={10}
-              onTimeUpdate={handleTimeUpdate}
-              onComplete={handleTimeComplete}
+              onTimeUpdate={
+                handleTimeUpdate
+              }
+              onComplete={
+                handleTimeComplete
+              }
             />
           </div>
 
           <AnswerGrid
             answers={question.answers}
             selectedAnswer={selectedAnswer}
-            correctAnswer={question.correctAnswer}
+            correctAnswer={
+              question.correctAnswer
+            }
             isAnswered={isAnswered}
             onSelect={handleAnswer}
           />
@@ -249,17 +289,24 @@ function Game() {
                 {question.correctAnswer}
               </div>
 
-              {isCorrect && !isTimeUp && (
-                <div className="game-feedback__points">
-                  +{pointsEarned.toLocaleString()} POINTS
+              {isCorrect &&
+                !isTimeUp && (
+                  <div className="game-feedback__points">
+                    +
+                    {pointsEarned.toLocaleString()}
+                    {' '}POINTS
 
-                  {multiplierEarned > 1 && (
-                    <span>
-                      {' '}×{multiplierEarned}
-                    </span>
-                  )}
-                </div>
-              )}
+                    {multiplierEarned >
+                      1 && (
+                      <span>
+                        {' '}×
+                        {
+                          multiplierEarned
+                        }
+                      </span>
+                    )}
+                  </div>
+                )}
             </div>
           )}
 
@@ -274,9 +321,12 @@ function Game() {
             <button
               type="button"
               className="game-next"
-              onClick={handleNextQuestion}
+              onClick={
+                handleNextQuestion
+              }
             >
-              {currentQuestion >= questions.length - 1
+              {currentQuestion >=
+              questions.length - 1
                 ? 'SEE RESULTS'
                 : 'NEXT QUESTION'}
             </button>
