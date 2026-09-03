@@ -10,6 +10,7 @@ export const mockQuestions: Question[] = [
       album: 'Short n’ Sweet',
       releaseYear: 2024,
       artworkUrl: '',
+      audioUrl: '/audio/demo-1.mp3',
     },
     answers: [
       'Espresso',
@@ -19,7 +20,6 @@ export const mockQuestions: Question[] = [
     ],
     correctAnswer: 'Espresso',
   },
-
   {
     id: 'q2',
     song: {
@@ -29,6 +29,7 @@ export const mockQuestions: Question[] = [
       album: 'After Hours',
       releaseYear: 2020,
       artworkUrl: '',
+      audioUrl: '/audio/demo-2.mp3',
     },
     answers: [
       'Save Your Tears',
@@ -38,16 +39,16 @@ export const mockQuestions: Question[] = [
     ],
     correctAnswer: 'Blinding Lights',
   },
-
   {
     id: 'q3',
     song: {
       id: 'song3',
-      title: 'Do I Wanna Know?',
+      title: '505',
       artist: 'Arctic Monkeys',
       album: 'AM',
       releaseYear: 2013,
       artworkUrl: '',
+      audioUrl: '/audio/demo-3.mp3',
     },
     answers: [
       'R U Mine?',
@@ -55,9 +56,8 @@ export const mockQuestions: Question[] = [
       'Do I Wanna Know?',
       'Why’d You Only Call Me When You’re High?',
     ],
-    correctAnswer: 'Do I Wanna Know?',
+    correctAnswer: '505',
   },
-
   {
     id: 'q4',
     song: {
@@ -67,6 +67,7 @@ export const mockQuestions: Question[] = [
       album: 'Tyla',
       releaseYear: 2023,
       artworkUrl: '',
+      audioUrl: '/audio/demo-1.mp3',
     },
     answers: [
       'Truth or Dare',
@@ -76,7 +77,6 @@ export const mockQuestions: Question[] = [
     ],
     correctAnswer: 'Water',
   },
-
   {
     id: 'q5',
     song: {
@@ -86,6 +86,7 @@ export const mockQuestions: Question[] = [
       album: 'Radical Optimism',
       releaseYear: 2024,
       artworkUrl: '',
+      audioUrl: '/audio/demo-2.mp3',
     },
     answers: [
       'Houdini',
