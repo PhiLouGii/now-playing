@@ -3,6 +3,8 @@ import type { Question } from '../types/game'
 export const mockQuestions: Question[] = [
   {
     id: 'q1',
+    type: 'name-the-song',
+    difficulty: 'easy',
     song: {
       id: 'song1',
       title: 'Espresso',
@@ -11,6 +13,7 @@ export const mockQuestions: Question[] = [
       releaseYear: 2024,
       artworkUrl: '',
       audioUrl: '/audio/demo-1.mp3',
+      genres: ['pop'],
     },
     answers: [
       'Espresso',
@@ -22,6 +25,8 @@ export const mockQuestions: Question[] = [
   },
   {
     id: 'q2',
+    type: 'name-the-song',
+    difficulty: 'easy',
     song: {
       id: 'song2',
       title: 'Blinding Lights',
@@ -30,6 +35,7 @@ export const mockQuestions: Question[] = [
       releaseYear: 2020,
       artworkUrl: '',
       audioUrl: '/audio/demo-2.mp3',
+      genres: ['pop', 'synth-pop'],
     },
     answers: [
       'Save Your Tears',
@@ -41,6 +47,8 @@ export const mockQuestions: Question[] = [
   },
   {
     id: 'q3',
+    type: 'name-the-song',
+    difficulty: 'medium',
     song: {
       id: 'song3',
       title: '505',
@@ -49,6 +57,7 @@ export const mockQuestions: Question[] = [
       releaseYear: 2013,
       artworkUrl: '',
       audioUrl: '/audio/demo-3.mp3',
+      genres: ['indie rock', 'alternative rock'],
     },
     answers: [
       'R U Mine?',
@@ -60,6 +69,8 @@ export const mockQuestions: Question[] = [
   },
   {
     id: 'q4',
+    type: 'name-the-song',
+    difficulty: 'medium',
     song: {
       id: 'song4',
       title: 'Water',
@@ -68,6 +79,7 @@ export const mockQuestions: Question[] = [
       releaseYear: 2023,
       artworkUrl: '',
       audioUrl: '/audio/demo-1.mp3',
+      genres: ['amapiano', 'pop', 'R&B'],
     },
     answers: [
       'Truth or Dare',
@@ -79,6 +91,8 @@ export const mockQuestions: Question[] = [
   },
   {
     id: 'q5',
+    type: 'name-the-song',
+    difficulty: 'hard',
     song: {
       id: 'song5',
       title: 'Houdini',
@@ -87,6 +101,7 @@ export const mockQuestions: Question[] = [
       releaseYear: 2024,
       artworkUrl: '',
       audioUrl: '/audio/demo-2.mp3',
+      genres: ['pop', 'dance-pop'],
     },
     answers: [
       'Houdini',
