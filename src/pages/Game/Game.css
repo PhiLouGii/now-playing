@@ -150,6 +150,33 @@
   font-weight: 600;
 }
 
+.game-next {
+  margin-top: 24px;
+  min-height: 48px;
+  padding: 0 28px;
+  color: var(--color-white);
+  background: var(--gradient-primary);
+  border: 0;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  box-shadow: var(--glow-purple);
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-normal);
+}
+
+.game-next:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 0 40px rgba(139, 92, 246, 0.4);
+}
+
+.game-next:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
 @media (max-width: 768px) {
   .game-page {
     padding: 32px 20px 60px;

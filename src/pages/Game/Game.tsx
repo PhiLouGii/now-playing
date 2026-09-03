@@ -1,34 +1,48 @@
+import { useState } from 'react'
 import { mockQuestions } from '../../data/mockSongs'
+import GameHeader from '../../components/game/GameHeader'
+import AnswerGrid from '../../components/game/AnswerGrid'
 import './Game.css'
 
 function Game() {
-  const question = mockQuestions[0]
+  const [currentQuestion, setCurrentQuestion] = useState(0)
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
+  const [score, setScore] = useState(0)
+
+  const question = mockQuestions[currentQuestion]
+
+  const isAnswered = selectedAnswer !== null
+
+  function handleAnswer(answer: string) {
+    if (isAnswered) {
+      return
+    }
+
+    setSelectedAnswer(answer)
+
+    if (answer === question.correctAnswer) {
+      setScore((currentScore) => currentScore + 100)
+    }
+  }
+
+  function handleNextQuestion() {
+    if (currentQuestion >= mockQuestions.length - 1) {
+      return
+    }
+
+    setCurrentQuestion((current) => current + 1)
+    setSelectedAnswer(null)
+  }
 
   return (
     <div className="game-page">
       <div className="game-page__container">
 
-        <header className="game-header">
-          <div>
-            <span className="game-header__label">
-              ROUND
-            </span>
-
-            <strong>
-              01 / 10
-            </strong>
-          </div>
-
-          <div>
-            <span className="game-header__label">
-              SCORE
-            </span>
-
-            <strong>
-              0
-            </strong>
-          </div>
-        </header>
+        <GameHeader
+          currentQuestion={currentQuestion + 1}
+          totalQuestions={mockQuestions.length}
+          score={score}
+        />
 
         <main className="game-content">
 
@@ -52,21 +66,26 @@ function Game() {
             </div>
           </div>
 
-          <div className="game-answers">
-            {question.answers.map((answer, index) => (
-              <button
-                key={answer}
-                type="button"
-                className="game-answer"
-              >
-                <span>
-                  {String.fromCharCode(65 + index)}
-                </span>
+          <AnswerGrid
+            answers={question.answers}
+            selectedAnswer={selectedAnswer}
+            correctAnswer={question.correctAnswer}
+            isAnswered={isAnswered}
+            onSelect={handleAnswer}
+          />
 
-                {answer}
-              </button>
-            ))}
-          </div>
+          {isAnswered && (
+            <button
+              type="button"
+              className="game-next"
+              onClick={handleNextQuestion}
+              disabled={currentQuestion >= mockQuestions.length - 1}
+            >
+              {currentQuestion >= mockQuestions.length - 1
+                ? 'GAME COMPLETE'
+                : 'NEXT QUESTION'}
+            </button>
+          )}
 
         </main>
 
