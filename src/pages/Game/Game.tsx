@@ -3,6 +3,7 @@ import AudioPlayer from '../../components/game/AudioPlayer'
 import AnswerGrid from '../../components/game/AnswerGrid'
 import GameHeader from '../../components/game/GameHeader'
 import GameProgress from '../../components/game/GameProgress'
+import ResultsScreen from '../../components/game/ResultsScreen'
 import { mockQuestions } from '../../data/mockSongs'
 import {
   calculateFinalPoints,
@@ -16,6 +17,9 @@ function Game() {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
   const [score, setScore] = useState(0)
   const [streak, setStreak] = useState(0)
+  const [bestStreak, setBestStreak] = useState(0)
+const [correctAnswers, setCorrectAnswers] = useState(0)
+const [isGameComplete, setIsGameComplete] = useState(false)
   const [timeRemaining, setTimeRemaining] = useState(10)
   const [answerTime, setAnswerTime] = useState<number | null>(null)
   const [pointsEarned, setPointsEarned] = useState(0)
@@ -61,6 +65,11 @@ function Game() {
 
     if (isCorrect) {
       const nextStreak = streak + 1
+      setCorrectAnswers((current) => current + 1)
+      setBestStreak((current) =>
+        Math.max(current, nextStreak),
+      )
+
       const basePoints = calculatePoints(timeAtAnswer)
       const multiplier = calculateStreakMultiplier(nextStreak)
       const finalPoints = calculateFinalPoints(
@@ -85,21 +94,33 @@ function Game() {
   }
 
   const handleNextQuestion = () => {
-    if (currentQuestion >= mockQuestions.length - 1) {
-      return
-    }
-
-    setCurrentQuestion((current) => current + 1)
-    setSelectedAnswer(null)
-    setIsTimeUp(false)
-    setAnswerTime(null)
-    setPointsEarned(0)
-    setMultiplierEarned(1)
-    setTimeRemaining(10)
+  if (currentQuestion >= mockQuestions.length - 1) {
+    setIsGameComplete(true)
+    return
   }
 
+  setCurrentQuestion((current) => current + 1)
+  setSelectedAnswer(null)
+  setIsTimeUp(false)
+  setAnswerTime(null)
+  setPointsEarned(0)
+  setMultiplierEarned(1)
+  setTimeRemaining(10)
+}
+
   const isCorrect =
-    selectedAnswer === question.correctAnswer
+  selectedAnswer === question.correctAnswer
+
+if (isGameComplete) {
+  return (
+    <ResultsScreen
+      score={score}
+      totalQuestions={mockQuestions.length}
+      correctAnswers={correctAnswers}
+      bestStreak={bestStreak}
+    />
+  )
+}
 
   return (
     <div className="game-page">
@@ -190,10 +211,9 @@ function Game() {
               type="button"
               className="game-next"
               onClick={handleNextQuestion}
-              disabled={currentQuestion >= mockQuestions.length - 1}
             >
               {currentQuestion >= mockQuestions.length - 1
-                ? 'GAME COMPLETE'
+                ? 'SEE RESULTS'
                 : 'NEXT QUESTION'}
             </button>
           )}
