@@ -1,114 +1,216 @@
-import { useCallback, useState } from 'react'
+import {
+  useEffect,
+  useState,
+} from 'react'
 import { useLocation } from 'react-router-dom'
+
 import AudioPlayer from '../../components/game/AudioPlayer'
 import AnswerGrid from '../../components/game/AnswerGrid'
 import GameHeader from '../../components/game/GameHeader'
 import GameProgress from '../../components/game/GameProgress'
 import ResultsScreen from '../../components/game/ResultsScreen'
-import type { RoundConfig } from '../../types/game'
+
 import { defaultRound } from '../../data/defaultRound'
-import { songs } from '../../data/songs'
-import { generateQuestion } from '../../lib/questionGenerator'
+import { generateRound } from '../../services/gameService'
+
+import type {
+  Question,
+  RoundConfig,
+} from '../../types/game'
+
 import {
   calculateFinalPoints,
   calculatePoints,
   calculateStreakMultiplier,
 } from '../../lib/gameScoring'
+
 import './Game.css'
 
 function Game() {
   const location = useLocation()
 
   const roundConfig =
-    (location.state as { roundConfig?: RoundConfig } | null)
-      ?.roundConfig ?? defaultRound
+    (
+      location.state as {
+        roundConfig?: RoundConfig
+      } | null
+    )?.roundConfig ?? defaultRound
 
-  const [currentQuestion, setCurrentQuestion] = useState(0)
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
+  const [questions, setQuestions] =
+    useState<Question[]>([])
 
-  const [score, setScore] = useState(0)
-  const [streak, setStreak] = useState(0)
-  const [bestStreak, setBestStreak] = useState(0)
-  const [correctAnswers, setCorrectAnswers] = useState(0)
+  const [isLoading, setIsLoading] =
+    useState(true)
 
-  const [timeRemaining, setTimeRemaining] = useState(10)
-  const [answerTime, setAnswerTime] = useState<number | null>(null)
+  const [currentQuestion, setCurrentQuestion] =
+    useState(0)
 
-  const [pointsEarned, setPointsEarned] = useState(0)
-  const [multiplierEarned, setMultiplierEarned] = useState(1)
+  const [selectedAnswer, setSelectedAnswer] =
+    useState<string | null>(null)
 
-  const [isTimeUp, setIsTimeUp] = useState(false)
-  const [isGameComplete, setIsGameComplete] = useState(false)
+  const [score, setScore] =
+    useState(0)
 
-  const [questions] = useState(() => {
-    const shuffledSongs = [...songs].sort(
-      () => Math.random() - 0.5,
+  const [streak, setStreak] =
+    useState(0)
+
+  const [bestStreak, setBestStreak] =
+    useState(0)
+
+  const [correctAnswers, setCorrectAnswers] =
+    useState(0)
+
+  const [timeRemaining, setTimeRemaining] =
+    useState(10)
+
+  const [pointsEarned, setPointsEarned] =
+    useState(0)
+
+  const [multiplierEarned, setMultiplierEarned] =
+    useState(1)
+
+  const [isTimeUp, setIsTimeUp] =
+    useState(false)
+
+  const [isGameComplete, setIsGameComplete] =
+    useState(false)
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadRound() {
+      setIsLoading(true)
+
+      try {
+        const generatedQuestions =
+          await generateRound(roundConfig)
+
+        if (isMounted) {
+          setQuestions(
+            generatedQuestions,
+          )
+          setIsLoading(false)
+        }
+      } catch (error) {
+        console.error(
+          'Failed to generate round:',
+          error,
+        )
+
+        if (isMounted) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    loadRound()
+
+    return () => {
+      isMounted = false
+    }
+  }, [roundConfig])
+
+  /*
+   * Loading state
+   */
+
+  if (isLoading) {
+    return (
+      <div className="game-page">
+        <div className="game-page__container">
+          <main className="game-content">
+            <p className="game-content__category">
+              {roundConfig.name.toUpperCase()}
+            </p>
+
+            <h1>
+              GETTING YOUR ROUND READY
+            </h1>
+          </main>
+        </div>
+      </div>
     )
+  }
 
-    return shuffledSongs
-      .slice(
-        0,
-        Math.min(
-          roundConfig.questionCount,
-          songs.length,
-        ),
-      )
-      .map((song, index) =>
-        generateQuestion(
-          song,
-          songs,
-          {
-            type:
-              roundConfig.questionTypes[
-                index % roundConfig.questionTypes.length
-              ],
-            difficulty: roundConfig.difficulty,
-          },
-        ),
-      )
-  })
+  /*
+   * Safety check
+   */
 
-  const question = questions[currentQuestion]
+  if (questions.length === 0) {
+    return (
+      <div className="game-page">
+        <div className="game-page__container">
+          <main className="game-content">
+            <p className="game-content__category">
+              {roundConfig.name.toUpperCase()}
+            </p>
+
+            <h1>
+              NO QUESTIONS AVAILABLE
+            </h1>
+
+            <p>
+              We couldn't generate a round
+              right now.
+            </p>
+          </main>
+        </div>
+      </div>
+    )
+  }
+
+  const question =
+    questions[currentQuestion]
 
   const isAnswered =
     selectedAnswer !== null || isTimeUp
 
-  const handleTimeUpdate = useCallback(
-    (time: number) => {
-      if (!isAnswered) {
-        setTimeRemaining(time)
-      }
-    },
-    [isAnswered],
-  )
+  /*
+   * Timer
+   */
 
-  const handleTimeComplete = useCallback(() => {
+  function handleTimeUpdate(
+    time: number,
+  ) {
+    if (!isAnswered) {
+      setTimeRemaining(time)
+    }
+  }
+
+  function handleTimeComplete() {
     if (isAnswered) {
       return
     }
 
     setTimeRemaining(0)
-    setAnswerTime(0)
     setPointsEarned(0)
     setMultiplierEarned(1)
     setIsTimeUp(true)
     setStreak(0)
-  }, [isAnswered])
+  }
 
-  const handleAnswer = (answer: string) => {
+  /*
+   * Answer selection
+   */
+
+  function handleAnswer(
+    answer: string,
+  ) {
     if (isAnswered) {
       return
     }
 
-    const timeAtAnswer = timeRemaining
+    const timeAtAnswer =
+      timeRemaining
+
     const isCorrect =
       answer === question.correctAnswer
 
     setSelectedAnswer(answer)
-    setAnswerTime(timeAtAnswer)
 
     if (isCorrect) {
-      const nextStreak = streak + 1
+      const nextStreak =
+        streak + 1
 
       setCorrectAnswers(
         (current) => current + 1,
@@ -116,14 +218,21 @@ function Game() {
 
       setBestStreak(
         (current) =>
-          Math.max(current, nextStreak),
+          Math.max(
+            current,
+            nextStreak,
+          ),
       )
 
       const basePoints =
-        calculatePoints(timeAtAnswer)
+        calculatePoints(
+          timeAtAnswer,
+        )
 
       const multiplier =
-        calculateStreakMultiplier(nextStreak)
+        calculateStreakMultiplier(
+          nextStreak,
+        )
 
       const finalPoints =
         calculateFinalPoints(
@@ -131,12 +240,18 @@ function Game() {
           nextStreak,
         )
 
-      setPointsEarned(finalPoints)
-      setMultiplierEarned(multiplier)
+      setPointsEarned(
+        finalPoints,
+      )
+
+      setMultiplierEarned(
+        multiplier,
+      )
 
       setScore(
         (currentScore) =>
-          currentScore + finalPoints,
+          currentScore +
+          finalPoints,
       )
 
       setStreak(nextStreak)
@@ -151,7 +266,11 @@ function Game() {
     }
   }
 
-  const handleNextQuestion = () => {
+  /*
+   * Next question
+   */
+
+  function handleNextQuestion() {
     if (
       currentQuestion >=
       questions.length - 1
@@ -166,25 +285,37 @@ function Game() {
 
     setSelectedAnswer(null)
     setIsTimeUp(false)
-    setAnswerTime(null)
     setPointsEarned(0)
     setMultiplierEarned(1)
     setTimeRemaining(10)
   }
 
-  const isCorrect =
-    selectedAnswer === question.correctAnswer
+  /*
+   * Results
+   */
 
   if (isGameComplete) {
     return (
       <ResultsScreen
         score={score}
-        totalQuestions={questions.length}
-        correctAnswers={correctAnswers}
+        totalQuestions={
+          questions.length
+        }
+        correctAnswers={
+          correctAnswers
+        }
         bestStreak={bestStreak}
       />
     )
   }
+
+  /*
+   * Game
+   */
+
+  const isCorrect =
+    selectedAnswer ===
+    question.correctAnswer
 
   return (
     <div className="game-page">
@@ -193,13 +324,19 @@ function Game() {
           currentQuestion={
             currentQuestion + 1
           }
-          totalQuestions={questions.length}
+          totalQuestions={
+            questions.length
+          }
           score={score}
         />
 
         <GameProgress
-          current={currentQuestion + 1}
-          total={questions.length}
+          current={
+            currentQuestion + 1
+          }
+          total={
+            questions.length
+          }
         />
 
         <main className="game-content">
@@ -246,7 +383,9 @@ function Game() {
 
             <AudioPlayer
               key={question.id}
-              audioUrl={question.song.audioUrl}
+              audioUrl={
+                question.song.audioUrl
+              }
               duration={10}
               onTimeUpdate={
                 handleTimeUpdate
@@ -258,13 +397,21 @@ function Game() {
           </div>
 
           <AnswerGrid
-            answers={question.answers}
-            selectedAnswer={selectedAnswer}
+            answers={
+              question.answers
+            }
+            selectedAnswer={
+              selectedAnswer
+            }
             correctAnswer={
               question.correctAnswer
             }
-            isAnswered={isAnswered}
-            onSelect={handleAnswer}
+            isAnswered={
+              isAnswered
+            }
+            onSelect={
+              handleAnswer
+            }
           />
 
           {isAnswered && (
@@ -286,15 +433,17 @@ function Game() {
               </div>
 
               <div className="game-feedback__answer">
-                {question.correctAnswer}
+                {
+                  question.correctAnswer
+                }
               </div>
 
               {isCorrect &&
                 !isTimeUp && (
                   <div className="game-feedback__points">
                     +
-                    {pointsEarned.toLocaleString()}
-                    {' '}POINTS
+                    {pointsEarned.toLocaleString()}{' '}
+                    POINTS
 
                     {multiplierEarned >
                       1 && (
@@ -312,8 +461,13 @@ function Game() {
 
           <div className="game-status">
             <div className="game-streak">
-              <span>STREAK</span>
-              <strong>{streak}</strong>
+              <span>
+                STREAK
+              </span>
+
+              <strong>
+                {streak}
+              </strong>
             </div>
           </div>
 
