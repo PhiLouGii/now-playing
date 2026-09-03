@@ -21,3 +21,33 @@ export function calculatePoints(timeRemaining: number) {
 
   return 0
 }
+
+export function calculateStreakMultiplier(streak: number) {
+  if (streak >= 5) {
+    return 2
+  }
+
+  if (streak === 4) {
+    return 1.5
+  }
+
+  if (streak === 3) {
+    return 1.25
+  }
+
+  if (streak === 2) {
+    return 1.1
+  }
+
+  return 1
+}
+
+export function calculateFinalPoints(
+  timeRemaining: number,
+  streak: number,
+) {
+  const basePoints = calculatePoints(timeRemaining)
+  const multiplier = calculateStreakMultiplier(streak)
+
+  return Math.round(basePoints * multiplier)
+}

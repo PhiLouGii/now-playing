@@ -4,7 +4,11 @@ import AnswerGrid from '../../components/game/AnswerGrid'
 import GameHeader from '../../components/game/GameHeader'
 import GameProgress from '../../components/game/GameProgress'
 import { mockQuestions } from '../../data/mockSongs'
-import { calculatePoints } from '../../lib/gameScoring'
+import {
+  calculateFinalPoints,
+  calculatePoints,
+  calculateStreakMultiplier,
+} from '../../lib/gameScoring'
 import './Game.css'
 
 function Game() {
@@ -14,6 +18,8 @@ function Game() {
   const [streak, setStreak] = useState(0)
   const [timeRemaining, setTimeRemaining] = useState(10)
   const [answerTime, setAnswerTime] = useState<number | null>(null)
+  const [pointsEarned, setPointsEarned] = useState(0)
+  const [multiplierEarned, setMultiplierEarned] = useState(1)
   const [isTimeUp, setIsTimeUp] = useState(false)
 
   const question = mockQuestions[currentQuestion]
@@ -36,6 +42,8 @@ function Game() {
 
     setTimeRemaining(0)
     setAnswerTime(0)
+    setPointsEarned(0)
+    setMultiplierEarned(1)
     setIsTimeUp(true)
     setStreak(0)
   }, [isAnswered])
@@ -46,18 +54,32 @@ function Game() {
     }
 
     const timeAtAnswer = timeRemaining
+    const isCorrect = answer === question.correctAnswer
 
     setSelectedAnswer(answer)
     setAnswerTime(timeAtAnswer)
 
-    const isCorrect = answer === question.correctAnswer
-
     if (isCorrect) {
-      const points = calculatePoints(timeAtAnswer)
+      const nextStreak = streak + 1
+      const basePoints = calculatePoints(timeAtAnswer)
+      const multiplier = calculateStreakMultiplier(nextStreak)
+      const finalPoints = calculateFinalPoints(
+        timeAtAnswer,
+        nextStreak,
+      )
 
-      setScore((currentScore) => currentScore + points)
-      setStreak((currentStreak) => currentStreak + 1)
+      setPointsEarned(finalPoints)
+      setMultiplierEarned(multiplier)
+
+      setScore((currentScore) => currentScore + finalPoints)
+      setStreak(nextStreak)
+
+      console.log(
+        `Base: ${basePoints} | Multiplier: x${multiplier} | Final: ${finalPoints}`,
+      )
     } else {
+      setPointsEarned(0)
+      setMultiplierEarned(1)
       setStreak(0)
     }
   }
@@ -71,16 +93,13 @@ function Game() {
     setSelectedAnswer(null)
     setIsTimeUp(false)
     setAnswerTime(null)
+    setPointsEarned(0)
+    setMultiplierEarned(1)
     setTimeRemaining(10)
   }
 
   const isCorrect =
     selectedAnswer === question.correctAnswer
-
-  const pointsEarned =
-    isCorrect && answerTime !== null
-      ? calculatePoints(answerTime)
-      : 0
 
   return (
     <div className="game-page">
@@ -146,9 +165,14 @@ function Game() {
                 {question.correctAnswer}
               </div>
 
-              {!isTimeUp && isCorrect && (
+              {isCorrect && !isTimeUp && (
                 <div className="game-feedback__points">
                   +{pointsEarned.toLocaleString()} POINTS
+                  {multiplierEarned > 1 && (
+                    <span>
+                      {' '}×{multiplierEarned}
+                    </span>
+                  )}
                 </div>
               )}
             </div>

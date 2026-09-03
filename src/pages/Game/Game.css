@@ -167,6 +167,11 @@
   letter-spacing: 0.12em;
 }
 
+.game-feedback__points span {
+  margin-left: 6px;
+  color: var(--color-yellow);
+}
+
 .game-streak {
   display: flex;
   align-items: center;
