@@ -20,52 +20,56 @@ function AudioPlayer({
   const [isPlaying, setIsPlaying] = useState(false)
   const [timeLeft, setTimeLeft] = useState(duration)
   const [progress, setProgress] = useState(0)
-  
 
   useEffect(() => {
     setTimeLeft(duration)
     setProgress(0)
     setIsPlaying(false)
+
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.currentTime = 0
+    }
   }, [duration, audioUrl])
 
-  useEffect(() => {
-    if (!isPlaying) {
+  function handleAudioTimeUpdate() {
+    const audio = audioRef.current
+
+    if (!audio) {
       return
     }
 
-    const interval = window.setInterval(() => {
-      setTimeLeft((current) => {
-        if (current <= 1) {
-          window.clearInterval(interval)
+    const elapsed = audio.currentTime
+    const remaining = Math.max(0, duration - elapsed)
+    const percentage = Math.min(100, (elapsed / duration) * 100)
 
-          setIsPlaying(false)
-          setProgress(100)
+    setTimeLeft(Math.ceil(remaining))
+    setProgress(percentage)
 
-          onTimeUpdate?.(0)
-          onComplete?.()
+    onTimeUpdate?.(Math.ceil(remaining))
 
-          return 0
-        }
-
-        const nextTime = current - 1
-
-        onTimeUpdate?.(nextTime)
-
-        return nextTime
-      })
-
-      setProgress((current) =>
-        Math.min(100, current + (100 / duration)),
-      )
-    }, 1000)
-
-    return () => {
-      window.clearInterval(interval)
+    if (remaining <= 0) {
+      audio.pause()
+      setIsPlaying(false)
+      setTimeLeft(0)
+      setProgress(100)
+      onTimeUpdate?.(0)
+      onComplete?.()
     }
-  }, [isPlaying, duration, onComplete, onTimeUpdate])
+  }
+
+  function handleAudioEnded() {
+    setIsPlaying(false)
+    setTimeLeft(0)
+    setProgress(100)
+    onTimeUpdate?.(0)
+    onComplete?.()
+  }
 
   async function handlePlayPause() {
-    if (!audioUrl) {
+    const audio = audioRef.current
+
+    if (!audio) {
       return
     }
 
@@ -73,31 +77,28 @@ function AudioPlayer({
       return
     }
 
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause()
-      } else {
-        await audioRef.current.play()
-      }
+    if (isPlaying) {
+      audio.pause()
+      setIsPlaying(false)
+      return
     }
 
-    setIsPlaying((current) => !current)
+    try {
+      await audio.play()
+      setIsPlaying(true)
+    } catch (error) {
+      console.error('Unable to play audio:', error)
+    }
   }
 
   return (
     <div className="audio-player">
-
       {audioUrl && (
         <audio
           ref={audioRef}
           src={audioUrl}
-          onEnded={() => {
-            setIsPlaying(false)
-            setTimeLeft(0)
-            setProgress(100)
-            onTimeUpdate?.(0)
-            onComplete?.()
-          }}
+          onTimeUpdate={handleAudioTimeUpdate}
+          onEnded={handleAudioEnded}
         />
       )}
 
@@ -116,7 +117,6 @@ function AudioPlayer({
       </button>
 
       <div className="audio-player__main">
-
         <div className="audio-player__waveform">
           {Array.from({ length: 32 }).map((_, index) => (
             <span
@@ -137,13 +137,11 @@ function AudioPlayer({
             }}
           />
         </div>
-
       </div>
 
       <div className="audio-player__timer">
         0:{String(timeLeft).padStart(2, '0')}
       </div>
-
     </div>
   )
 }
