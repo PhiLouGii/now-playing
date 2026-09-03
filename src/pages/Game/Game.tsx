@@ -31,11 +31,32 @@ function Game() {
   const [isTimeUp, setIsTimeUp] = useState(false)
   const [isGameComplete, setIsGameComplete] = useState(false)
 
-  const [questions] = useState(() =>
-  generateGameQuestions(songs, 5, {
-    difficulty: 'medium',
-  }),
-)
+  const [questions] = useState(() => {
+  const questionTypes = [
+    'name-the-song',
+    'name-the-artist',
+    'name-the-song',
+    'guess-the-year',
+    'name-the-album',
+  ] as const
+
+  const shuffledSongs = [...songs].sort(
+    () => Math.random() - 0.5,
+  )
+
+  return shuffledSongs
+    .slice(0, 5)
+    .map((song, index) =>
+      generateGameQuestions(
+        [song],
+        1,
+        {
+          type: questionTypes[index],
+          difficulty: 'medium',
+        },
+      )[0],
+    )
+})
 
   const question = questions[currentQuestion]
 
@@ -157,10 +178,32 @@ function Game() {
 
         <main className="game-content">
           <p className="game-content__category">
-            NAME THAT SONG
+            {question.type === 'name-the-song' &&
+              'NAME THAT SONG'}
+
+            {question.type === 'name-the-artist' &&
+              'NAME THAT ARTIST'}
+
+            {question.type === 'name-the-album' &&
+              'NAME THAT ALBUM'}
+
+            {question.type === 'guess-the-year' &&
+              'GUESS THE YEAR'}
           </p>
 
-          <h1>What song is this?</h1>
+          <h1>
+            {question.type === 'name-the-song' &&
+              'What song is this?'}
+
+            {question.type === 'name-the-artist' &&
+              'Who performs this song?'}
+
+            {question.type === 'name-the-album' &&
+              'Which album is this from?'}
+
+            {question.type === 'guess-the-year' &&
+              'When was this song released?'}
+          </h1>
 
           <div className="game-question">
             <div className="game-question__art">
