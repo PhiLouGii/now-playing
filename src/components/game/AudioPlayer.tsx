@@ -5,12 +5,14 @@ import './AudioPlayer.css'
 type AudioPlayerProps = {
   audioUrl?: string
   duration?: number
+  onTimeUpdate?: (timeRemaining: number) => void
   onComplete?: () => void
 }
 
 function AudioPlayer({
   audioUrl,
   duration = 10,
+  onTimeUpdate,
   onComplete,
 }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -34,35 +36,43 @@ function AudioPlayer({
       setTimeLeft((current) => {
         if (current <= 1) {
           window.clearInterval(interval)
+
           setIsPlaying(false)
           setProgress(100)
+
+          onTimeUpdate?.(0)
           onComplete?.()
+
           return 0
         }
 
-        return current - 1
+        const nextTime = current - 1
+
+        onTimeUpdate?.(nextTime)
+
+        return nextTime
       })
 
       setProgress((current) =>
-        Math.min(
-          100,
-          current + (100 / duration),
-        ),
+        Math.min(100, current + (100 / duration)),
       )
     }, 1000)
 
     return () => {
       window.clearInterval(interval)
     }
-  }, [isPlaying, duration, onComplete])
+  }, [isPlaying, duration, onComplete, onTimeUpdate])
 
   async function handlePlayPause() {
-    if (timeLeft <= 0) {
-      setTimeLeft(duration)
-      setProgress(0)
+    if (!audioUrl) {
+      return
     }
 
-    if (audioUrl && audioRef.current) {
+    if (timeLeft <= 0) {
+      return
+    }
+
+    if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause()
       } else {
@@ -84,6 +94,7 @@ function AudioPlayer({
             setIsPlaying(false)
             setTimeLeft(0)
             setProgress(100)
+            onTimeUpdate?.(0)
             onComplete?.()
           }}
         />
@@ -91,9 +102,9 @@ function AudioPlayer({
 
       <button
         type="button"
-        disabled={!audioUrl}
         className="audio-player__button"
         onClick={handlePlayPause}
+        disabled={!audioUrl}
         aria-label={isPlaying ? 'Pause song' : 'Play song'}
       >
         {isPlaying ? (
