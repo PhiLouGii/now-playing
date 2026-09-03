@@ -5,6 +5,7 @@ export type Song = {
   album: string
   releaseYear: number
   artworkUrl: string
+  audioUrl?: string
 }
 
 export type Question = {
