@@ -5,7 +5,7 @@ import GameHeader from '../../components/game/GameHeader'
 import GameProgress from '../../components/game/GameProgress'
 import ResultsScreen from '../../components/game/ResultsScreen'
 import { songs } from '../../data/songs'
-import { generateGameQuestions } from '../../lib/questionGenerator'
+import { generateQuestion } from '../../lib/questionGenerator'
 import {
   calculateFinalPoints,
   calculatePoints,
@@ -47,14 +47,14 @@ function Game() {
   return shuffledSongs
     .slice(0, 5)
     .map((song, index) =>
-      generateGameQuestions(
-        [song],
-        1,
+      generateQuestion(
+        song,
+        songs,
         {
           type: questionTypes[index],
           difficulty: 'medium',
         },
-      )[0],
+      ),
     )
 })
 
