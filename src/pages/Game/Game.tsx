@@ -13,6 +13,7 @@ function Game() {
   const [score, setScore] = useState(0)
   const [streak, setStreak] = useState(0)
   const [timeRemaining, setTimeRemaining] = useState(10)
+  const [answerTime, setAnswerTime] = useState<number | null>(null)
 
   const question = mockQuestions[currentQuestion]
 
@@ -27,17 +28,20 @@ function Game() {
     [isAnswered],
   )
 
-  function handleAnswer(answer: string) {
+  const handleAnswer = (answer: string) => {
     if (isAnswered) {
       return
     }
 
+    const timeAtAnswer = timeRemaining
+
     setSelectedAnswer(answer)
+    setAnswerTime(timeAtAnswer)
 
     const isCorrect = answer === question.correctAnswer
 
     if (isCorrect) {
-      const points = calculatePoints(timeRemaining)
+      const points = calculatePoints(timeAtAnswer)
 
       setScore((currentScore) => currentScore + points)
       setStreak((currentStreak) => currentStreak + 1)
@@ -46,20 +50,20 @@ function Game() {
     }
   }
 
-  function handleNextQuestion() {
+  const handleNextQuestion = () => {
     if (currentQuestion >= mockQuestions.length - 1) {
       return
     }
 
     setCurrentQuestion((current) => current + 1)
     setSelectedAnswer(null)
+    setAnswerTime(null)
     setTimeRemaining(10)
   }
 
   return (
     <div className="game-page">
       <div className="game-page__container">
-
         <GameHeader
           currentQuestion={currentQuestion + 1}
           totalQuestions={mockQuestions.length}
@@ -72,21 +76,15 @@ function Game() {
         />
 
         <main className="game-content">
-
           <p className="game-content__category">
             NAME THAT SONG
           </p>
 
-          <h1>
-            What song is this?
-          </h1>
+          <h1>What song is this?</h1>
 
           <div className="game-question">
-
             <div className="game-question__art">
-              <span>
-                ?
-              </span>
+              <span>?</span>
             </div>
 
             <AudioPlayer
@@ -94,7 +92,6 @@ function Game() {
               duration={10}
               onTimeUpdate={handleTimeUpdate}
             />
-
           </div>
 
           <AnswerGrid
@@ -106,25 +103,18 @@ function Game() {
           />
 
           <div className="game-status">
-
             <div className="game-streak">
-              <span>
-                STREAK
-              </span>
-
-              <strong>
-                {streak}
-              </strong>
+              <span>STREAK</span>
+              <strong>{streak}</strong>
             </div>
 
             {isAnswered && (
               <div className="game-result">
                 {selectedAnswer === question.correctAnswer
-                  ? `CORRECT +${calculatePoints(timeRemaining)}`
+                  ? `CORRECT +${calculatePoints(answerTime ?? 0)}`
                   : 'INCORRECT'}
               </div>
             )}
-
           </div>
 
           {isAnswered && (
@@ -132,18 +122,14 @@ function Game() {
               type="button"
               className="game-next"
               onClick={handleNextQuestion}
-              disabled={
-                currentQuestion >= mockQuestions.length - 1
-              }
+              disabled={currentQuestion >= mockQuestions.length - 1}
             >
               {currentQuestion >= mockQuestions.length - 1
                 ? 'GAME COMPLETE'
                 : 'NEXT QUESTION'}
             </button>
           )}
-
         </main>
-
       </div>
     </div>
   )

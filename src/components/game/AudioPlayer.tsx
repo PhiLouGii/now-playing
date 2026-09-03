@@ -20,6 +20,7 @@ function AudioPlayer({
   const [isPlaying, setIsPlaying] = useState(false)
   const [timeLeft, setTimeLeft] = useState(duration)
   const [progress, setProgress] = useState(0)
+  
 
   useEffect(() => {
     setTimeLeft(duration)
