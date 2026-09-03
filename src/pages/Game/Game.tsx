@@ -14,10 +14,11 @@ function Game() {
   const [streak, setStreak] = useState(0)
   const [timeRemaining, setTimeRemaining] = useState(10)
   const [answerTime, setAnswerTime] = useState<number | null>(null)
+  const [isTimeUp, setIsTimeUp] = useState(false)
 
   const question = mockQuestions[currentQuestion]
 
-  const isAnswered = selectedAnswer !== null
+  const isAnswered = selectedAnswer !== null || isTimeUp
 
   const handleTimeUpdate = useCallback(
     (time: number) => {
@@ -27,6 +28,17 @@ function Game() {
     },
     [isAnswered],
   )
+
+  const handleTimeComplete = useCallback(() => {
+    if (isAnswered) {
+      return
+    }
+
+    setTimeRemaining(0)
+    setAnswerTime(0)
+    setIsTimeUp(true)
+    setStreak(0)
+  }, [isAnswered])
 
   const handleAnswer = (answer: string) => {
     if (isAnswered) {
@@ -57,6 +69,7 @@ function Game() {
 
     setCurrentQuestion((current) => current + 1)
     setSelectedAnswer(null)
+    setIsTimeUp(false)
     setAnswerTime(null)
     setTimeRemaining(10)
   }
@@ -91,6 +104,7 @@ function Game() {
               audioUrl={question.song.audioUrl}
               duration={10}
               onTimeUpdate={handleTimeUpdate}
+              onComplete={handleTimeComplete}
             />
           </div>
 
@@ -110,9 +124,11 @@ function Game() {
 
             {isAnswered && (
               <div className="game-result">
-                {selectedAnswer === question.correctAnswer
-                  ? `CORRECT +${calculatePoints(answerTime ?? 0)}`
-                  : 'INCORRECT'}
+                {isTimeUp
+                  ? "TIME'S UP"
+                  : selectedAnswer === question.correctAnswer
+                    ? `CORRECT +${calculatePoints(answerTime ?? 0)}`
+                    : 'INCORRECT'}
               </div>
             )}
           </div>
