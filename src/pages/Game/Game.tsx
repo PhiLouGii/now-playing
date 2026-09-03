@@ -4,7 +4,8 @@ import AnswerGrid from '../../components/game/AnswerGrid'
 import GameHeader from '../../components/game/GameHeader'
 import GameProgress from '../../components/game/GameProgress'
 import ResultsScreen from '../../components/game/ResultsScreen'
-import { mockQuestions } from '../../data/mockSongs'
+import { songs } from '../../data/songs'
+import { generateGameQuestions } from '../../lib/questionGenerator'
 import {
   calculateFinalPoints,
   calculatePoints,
@@ -15,18 +16,26 @@ import './Game.css'
 function Game() {
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
+
   const [score, setScore] = useState(0)
   const [streak, setStreak] = useState(0)
   const [bestStreak, setBestStreak] = useState(0)
-const [correctAnswers, setCorrectAnswers] = useState(0)
-const [isGameComplete, setIsGameComplete] = useState(false)
+  const [correctAnswers, setCorrectAnswers] = useState(0)
+
   const [timeRemaining, setTimeRemaining] = useState(10)
   const [answerTime, setAnswerTime] = useState<number | null>(null)
+
   const [pointsEarned, setPointsEarned] = useState(0)
   const [multiplierEarned, setMultiplierEarned] = useState(1)
-  const [isTimeUp, setIsTimeUp] = useState(false)
 
-  const question = mockQuestions[currentQuestion]
+  const [isTimeUp, setIsTimeUp] = useState(false)
+  const [isGameComplete, setIsGameComplete] = useState(false)
+
+  const [questions] = useState(() =>
+    generateGameQuestions(songs, 5),
+  )
+
+  const question = questions[currentQuestion]
 
   const isAnswered = selectedAnswer !== null || isTimeUp
 
@@ -65,13 +74,18 @@ const [isGameComplete, setIsGameComplete] = useState(false)
 
     if (isCorrect) {
       const nextStreak = streak + 1
+
       setCorrectAnswers((current) => current + 1)
+
       setBestStreak((current) =>
         Math.max(current, nextStreak),
       )
 
       const basePoints = calculatePoints(timeAtAnswer)
-      const multiplier = calculateStreakMultiplier(nextStreak)
+
+      const multiplier =
+        calculateStreakMultiplier(nextStreak)
+
       const finalPoints = calculateFinalPoints(
         timeAtAnswer,
         nextStreak,
@@ -80,7 +94,10 @@ const [isGameComplete, setIsGameComplete] = useState(false)
       setPointsEarned(finalPoints)
       setMultiplierEarned(multiplier)
 
-      setScore((currentScore) => currentScore + finalPoints)
+      setScore(
+        (currentScore) => currentScore + finalPoints,
+      )
+
       setStreak(nextStreak)
 
       console.log(
@@ -94,46 +111,46 @@ const [isGameComplete, setIsGameComplete] = useState(false)
   }
 
   const handleNextQuestion = () => {
-  if (currentQuestion >= mockQuestions.length - 1) {
-    setIsGameComplete(true)
-    return
+    if (currentQuestion >= questions.length - 1) {
+      setIsGameComplete(true)
+      return
+    }
+
+    setCurrentQuestion((current) => current + 1)
+    setSelectedAnswer(null)
+    setIsTimeUp(false)
+    setAnswerTime(null)
+    setPointsEarned(0)
+    setMultiplierEarned(1)
+    setTimeRemaining(10)
   }
 
-  setCurrentQuestion((current) => current + 1)
-  setSelectedAnswer(null)
-  setIsTimeUp(false)
-  setAnswerTime(null)
-  setPointsEarned(0)
-  setMultiplierEarned(1)
-  setTimeRemaining(10)
-}
-
   const isCorrect =
-  selectedAnswer === question.correctAnswer
+    selectedAnswer === question.correctAnswer
 
-if (isGameComplete) {
-  return (
-    <ResultsScreen
-      score={score}
-      totalQuestions={mockQuestions.length}
-      correctAnswers={correctAnswers}
-      bestStreak={bestStreak}
-    />
-  )
-}
+  if (isGameComplete) {
+    return (
+      <ResultsScreen
+        score={score}
+        totalQuestions={questions.length}
+        correctAnswers={correctAnswers}
+        bestStreak={bestStreak}
+      />
+    )
+  }
 
   return (
     <div className="game-page">
       <div className="game-page__container">
         <GameHeader
           currentQuestion={currentQuestion + 1}
-          totalQuestions={mockQuestions.length}
+          totalQuestions={questions.length}
           score={score}
         />
 
         <GameProgress
           current={currentQuestion + 1}
-          total={mockQuestions.length}
+          total={questions.length}
         />
 
         <main className="game-content">
@@ -149,6 +166,7 @@ if (isGameComplete) {
             </div>
 
             <AudioPlayer
+              key={question.id}
               audioUrl={question.song.audioUrl}
               duration={10}
               onTimeUpdate={handleTimeUpdate}
@@ -189,6 +207,7 @@ if (isGameComplete) {
               {isCorrect && !isTimeUp && (
                 <div className="game-feedback__points">
                   +{pointsEarned.toLocaleString()} POINTS
+
                   {multiplierEarned > 1 && (
                     <span>
                       {' '}×{multiplierEarned}
@@ -212,7 +231,7 @@ if (isGameComplete) {
               className="game-next"
               onClick={handleNextQuestion}
             >
-              {currentQuestion >= mockQuestions.length - 1
+              {currentQuestion >= questions.length - 1
                 ? 'SEE RESULTS'
                 : 'NEXT QUESTION'}
             </button>
