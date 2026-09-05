@@ -1,5 +1,6 @@
 import type { MusicTrack } from './musicProvider.js'
 import { deezerMusicProvider } from './deezerMusicProvider.js'
+import { filterGameTracks } from './musicTrackFilter.js'
 
 const DISCOVERY_QUERIES = [
   'Sabrina Carpenter',
@@ -20,43 +21,13 @@ function shuffle<T>(items: T[]): T[] {
   )
 }
 
-function isUsableTrack(
-  track: MusicTrack,
-): boolean {
-  return Boolean(
-    track.title &&
-      track.artist &&
-      track.album &&
-      track.previewUrl,
-  )
-}
-
-function removeDuplicates(
-  tracks: MusicTrack[],
-): MusicTrack[] {
-  const seen = new Set<string>()
-
-  return tracks.filter((track) => {
-    const key =
-      `${track.title.toLowerCase()}-${track.artist.toLowerCase()}`
-
-    if (seen.has(key)) {
-      return false
-    }
-
-    seen.add(key)
-
-    return true
-  })
-}
-
 export async function discoverTracks(
   limit = 20,
 ): Promise<MusicTrack[]> {
   const queries =
     shuffle(DISCOVERY_QUERIES)
 
-  const tracks: MusicTrack[] = []
+  const candidates: MusicTrack[] = []
 
   for (const query of queries) {
     const results =
@@ -65,20 +36,22 @@ export async function discoverTracks(
         10,
       )
 
-    tracks.push(...results)
+    candidates.push(...results)
 
-    if (
-      removeDuplicates(
-        tracks,
-      ).length >= limit
-    ) {
-      break
+    const usable =
+      filterGameTracks(
+        candidates,
+      )
+
+    if (usable.length >= limit) {
+      return usable.slice(
+        0,
+        limit,
+      )
     }
   }
 
-  return removeDuplicates(
-    tracks,
-  )
-    .filter(isUsableTrack)
-    .slice(0, limit)
+  return filterGameTracks(
+    candidates,
+  ).slice(0, limit)
 }
