@@ -42,34 +42,37 @@ function containsExcludedPattern(
   )
 }
 
-export function isGamePlayableTrack(
+export function isValidMusicTrack(
   track: MusicTrack,
 ): boolean {
-  if (!track.title) {
-    return false
-  }
+  return Boolean(
+    track.title &&
+      track.artist &&
+      track.album,
+  )
+}
 
-  if (!track.artist) {
-    return false
-  }
+export function isPlayableMusicTrack(
+  track: MusicTrack,
+): boolean {
+  return Boolean(
+    isValidMusicTrack(track) &&
+      track.previewUrl &&
+      !containsExcludedPattern(
+        track.title,
+      ),
+  )
+}
 
-  if (!track.album) {
-    return false
-  }
-
-  if (!track.previewUrl) {
-    return false
-  }
-
-  if (
-    containsExcludedPattern(
-      track.title,
-    )
-  ) {
-    return false
-  }
-
-  return true
+export function isValidGameCandidate(
+  track: MusicTrack,
+): boolean {
+  return Boolean(
+    isValidMusicTrack(track) &&
+      !containsExcludedPattern(
+        track.title,
+      ),
+  )
 }
 
 export function filterGameTracks(
@@ -79,7 +82,7 @@ export function filterGameTracks(
 
   return tracks.filter((track) => {
     if (
-      !isGamePlayableTrack(track)
+      !isValidGameCandidate(track)
     ) {
       return false
     }

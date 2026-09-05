@@ -3,15 +3,20 @@ import { deezerMusicProvider } from './deezerMusicProvider.js'
 import { lastFmMusicProvider } from './lastFmMusicProvider.js'
 import { filterGameTracks } from './musicTrackFilter.js'
 
+export type CandidateSource =
+  | 'same-artist'
+  | 'same-album'
+  | 'similar'
+
 export type MusicCandidate = {
   track: MusicTrack
+  source: CandidateSource
   similarity?: number
-  source:
-    | 'same-artist'
-    | 'similar'
 }
 
-function normalize(value: string): string {
+function normalize(
+  value: string,
+): string {
   return value
     .toLowerCase()
     .replace(/[()[\]{}]/g, ' ')
@@ -29,6 +34,36 @@ function isSameTrack(
     normalize(first.artist) ===
       normalize(second.artist)
   )
+}
+
+function addCandidate(
+  candidates: MusicCandidate[],
+  candidate: MusicCandidate,
+  correctTrack: MusicTrack,
+) {
+  if (
+    isSameTrack(
+      candidate.track,
+      correctTrack,
+    )
+  ) {
+    return
+  }
+
+  const alreadyExists =
+    candidates.some(
+      (existing) =>
+        isSameTrack(
+          existing.track,
+          candidate.track,
+        ),
+    )
+
+  if (alreadyExists) {
+    return
+  }
+
+  candidates.push(candidate)
 }
 
 async function findDeezerTrack(
@@ -53,14 +88,77 @@ async function findDeezerTrack(
           normalize(artist),
     )
 
-  return (
-    exactMatch ??
-    usable[0] ??
-    null
-  )
+  return exactMatch ?? null
 }
 
-export async function getSimilarCandidates(
+async function getSameArtistCandidates(
+  correctTrack: MusicTrack,
+  limit = 10,
+): Promise<MusicCandidate[]> {
+  const results =
+    await deezerMusicProvider.searchTracks(
+      correctTrack.artist,
+      limit,
+    )
+
+  return filterGameTracks(
+    results,
+  )
+    .filter(
+      (track) =>
+        normalize(track.artist) ===
+        normalize(correctTrack.artist),
+    )
+    .filter(
+      (track) =>
+        !isSameTrack(
+          track,
+          correctTrack,
+        ),
+    )
+    .map((track) => ({
+      track,
+      source: 'same-artist' as const,
+    }))
+}
+
+async function getSameAlbumCandidates(
+  correctTrack: MusicTrack,
+  limit = 10,
+): Promise<MusicCandidate[]> {
+  const results =
+    await deezerMusicProvider.searchTracks(
+      `"${correctTrack.album}" ${correctTrack.artist}`,
+      limit,
+    )
+
+  return filterGameTracks(
+    results,
+  )
+    .filter(
+      (track) =>
+        normalize(track.artist) ===
+        normalize(correctTrack.artist),
+    )
+    .filter(
+      (track) =>
+        normalize(track.album) ===
+        normalize(correctTrack.album),
+    )
+    .filter(
+      (track) =>
+        !isSameTrack(
+          track,
+          correctTrack,
+        ),
+    )
+    .map((track) => ({
+      track,
+      source: 'same-album' as const,
+    }))
+}
+
+async function getSimilarCandidates(
   correctTrack: MusicTrack,
   limit = 10,
 ): Promise<MusicCandidate[]> {
@@ -94,12 +192,67 @@ export async function getSimilarCandidates(
       continue
     }
 
-    candidates.push({
-      track: deezerTrack,
-      similarity:
-        similar.similarity,
-      source: 'similar',
-    })
+    addCandidate(
+      candidates,
+      {
+        track: deezerTrack,
+        similarity:
+          similar.similarity,
+        source: 'similar',
+      },
+      correctTrack,
+    )
+  }
+
+  return candidates
+}
+
+export async function getCandidatePool(
+  correctTrack: MusicTrack,
+): Promise<MusicCandidate[]> {
+  const candidates:
+    MusicCandidate[] = []
+
+  const sameArtist =
+    await getSameArtistCandidates(
+      correctTrack,
+      10,
+    )
+
+  for (const candidate of sameArtist) {
+    addCandidate(
+      candidates,
+      candidate,
+      correctTrack,
+    )
+  }
+
+  const sameAlbum =
+    await getSameAlbumCandidates(
+      correctTrack,
+      10,
+    )
+
+  for (const candidate of sameAlbum) {
+    addCandidate(
+      candidates,
+      candidate,
+      correctTrack,
+    )
+  }
+
+  const similar =
+    await getSimilarCandidates(
+      correctTrack,
+      10,
+    )
+
+  for (const candidate of similar) {
+    addCandidate(
+      candidates,
+      candidate,
+      correctTrack,
+    )
   }
 
   return candidates

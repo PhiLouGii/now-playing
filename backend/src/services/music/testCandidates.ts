@@ -1,5 +1,5 @@
 import { deezerMusicProvider } from './deezerMusicProvider.js'
-import { getSimilarCandidates } from './musicCandidateService.js'
+import { getCandidatePool } from './musicCandidateService.js'
 
 async function test() {
   const results =
@@ -17,9 +17,8 @@ async function test() {
   }
 
   const candidates =
-    await getSimilarCandidates(
+    await getCandidatePool(
       correctTrack,
-      10,
     )
 
   console.log(
