@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import { db } from './config/firebase.js'
+import songRoutes from './routes/songRoutes.js'
 
 dotenv.config()
 
@@ -10,6 +11,8 @@ const PORT = process.env.PORT || 3000
 
 app.use(cors())
 app.use(express.json())
+
+app.use('/api/songs', songRoutes)
 
 app.get('/api/health', async (_req, res) => {
   try {
