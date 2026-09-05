@@ -1,39 +1,68 @@
-import { songs } from '../data/songs'
 import type { Song } from '../types/game'
 
-export async function getSongs(): Promise<Song[]> {
-  return songs
+const API_URL =
+  'http://localhost:3000/api'
+
+type MusicTrackResponse = {
+  track: Song
+}
+
+type MusicSearchResponse = {
+  tracks: Song[]
+}
+
+export async function searchSongs(
+  query: string,
+  limit = 10,
+): Promise<Song[]> {
+  const normalizedQuery =
+    query.trim()
+
+  if (!normalizedQuery) {
+    return []
+  }
+
+  const response =
+    await fetch(
+      `${API_URL}/music/search?q=${encodeURIComponent(
+        normalizedQuery,
+      )}&limit=${limit}`,
+    )
+
+  if (!response.ok) {
+    throw new Error(
+      'Failed to search music',
+    )
+  }
+
+  const data =
+    (await response.json()) as MusicSearchResponse
+
+  return data.tracks
 }
 
 export async function getSongById(
   id: string,
 ): Promise<Song | undefined> {
-  return songs.find(
-    (song) => song.id === id,
-  )
-}
+  const response =
+    await fetch(
+      `${API_URL}/music/${encodeURIComponent(
+        id,
+      )}`,
+    )
 
-export async function searchSongs(
-  query: string,
-): Promise<Song[]> {
-  const normalizedQuery =
-    query.trim().toLowerCase()
-
-  if (!normalizedQuery) {
-    return songs
+  if (response.status === 404) {
+    return undefined
   }
 
-  return songs.filter((song) => {
-    return (
-      song.title
-        .toLowerCase()
-        .includes(normalizedQuery) ||
-      song.artist
-        .toLowerCase()
-        .includes(normalizedQuery) ||
-      song.album
-        .toLowerCase()
-        .includes(normalizedQuery)
+  if (!response.ok) {
+    throw new Error(
+      'Failed to fetch music track',
     )
-  })
+  }
+
+  const data =
+    (await response.json()) as MusicTrackResponse
+
+  return data.track
 }

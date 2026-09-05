@@ -3,6 +3,7 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import { db } from './config/firebase.js'
 import songRoutes from './routes/songRoutes.js'
+import musicRoutes from './routes/musicRoutes.js'
 
 dotenv.config()
 
@@ -13,6 +14,8 @@ app.use(cors())
 app.use(express.json())
 
 app.use('/api/songs', songRoutes)
+
+app.use('/api/music', musicRoutes)
 
 app.get('/api/health', async (_req, res) => {
   try {

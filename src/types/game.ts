@@ -7,6 +7,8 @@ export type Song = {
   artworkUrl: string
   audioUrl?: string
   genres: string[]
+  provider?: string
+  providerId?: string
 }
 
 export type QuestionType =
