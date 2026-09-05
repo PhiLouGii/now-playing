@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express'
 import { deezerMusicProvider } from '../services/music/deezerMusicProvider.js'
+import { discoverTracks } from '../services/music/musicDiscoveryService.js'
 
 export async function searchMusic(
   req: Request,
@@ -80,6 +81,38 @@ export async function getMusicTrack(
 
     return res.status(500).json({
       error: 'Failed to get music track',
+    })
+  }
+}
+
+export async function discoverMusic(
+  req: Request,
+  res: Response,
+) {
+  try {
+    const limit =
+      typeof req.query.limit === 'string'
+        ? Number(req.query.limit)
+        : 20
+
+    const tracks =
+      await discoverTracks(
+        Number.isFinite(limit)
+          ? Math.min(Math.max(limit, 1), 50)
+          : 20,
+      )
+
+    return res.json({
+      tracks,
+    })
+  } catch (error) {
+    console.error(
+      'Music discovery failed:',
+      error,
+    )
+
+    return res.status(500).json({
+      error: 'Failed to discover music',
     })
   }
 }
