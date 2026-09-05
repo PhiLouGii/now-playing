@@ -49,20 +49,24 @@ export async function getSong(
   res: Response,
 ) {
   try {
-    const { id } = req.params
+    const id = req.params.id
+
+    if (typeof id !== 'string') {
+      return res.status(400).json({
+        error: 'Song ID is required',
+      })
+    }
 
     const song =
       await getSongById(id)
 
     if (!song) {
-      res.status(404).json({
+      return res.status(404).json({
         error: 'Song not found',
       })
-
-      return
     }
 
-    res.json({
+    return res.json({
       song,
     })
   } catch (error) {
@@ -71,7 +75,7 @@ export async function getSong(
       error,
     )
 
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Failed to get song',
     })
   }

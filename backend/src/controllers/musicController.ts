@@ -51,18 +51,16 @@ export async function getMusicTrack(
   res: Response,
 ) {
   try {
-    const { id } = req.params
+    const id = req.params.id
 
-    if (!id) {
+    if (typeof id !== 'string') {
       return res.status(400).json({
         error: 'Track ID is required',
       })
     }
 
     const track =
-      await deezerMusicProvider.getTrackById(
-        id,
-      )
+      await deezerMusicProvider.getTrackById(id)
 
     if (!track) {
       return res.status(404).json({
@@ -70,9 +68,7 @@ export async function getMusicTrack(
       })
     }
 
-    return res.json({
-      track,
-    })
+    return res.json({ track })
   } catch (error) {
     console.error(
       'Music track lookup failed:',
