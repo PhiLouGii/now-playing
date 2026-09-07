@@ -2,48 +2,57 @@ import type {
   Question,
   RoundConfig,
 } from '../types/game'
-import { generateQuestion } from '../lib/questionGenerator'
-import { getSongs } from './songService'
 
-function shuffle<T>(items: T[]) {
-  return [...items].sort(
-    () => Math.random() - 0.5,
+const API_URL = 'http://localhost:3000/api'
+
+type GeneratedQuestionResponse = {
+  question: Question
+}
+
+async function fetchQuestion(
+  type: Question['type'],
+  difficulty: Question['difficulty'],
+): Promise<Question> {
+  const response = await fetch(
+    `${API_URL}/game/question?type=${encodeURIComponent(type)}&difficulty=${encodeURIComponent(difficulty)}`,
   )
+
+  if (!response.ok) {
+    throw new Error(
+      'Failed to generate game question',
+    )
+  }
+
+  const data =
+    (await response.json()) as GeneratedQuestionResponse
+
+  return data.question
 }
 
 export async function generateRound(
   roundConfig: RoundConfig,
 ): Promise<Question[]> {
-  const songs = await getSongs()
+  const questions: Question[] = []
 
-  const shuffledSongs = shuffle(songs)
+  for (
+    let index = 0;
+    index < roundConfig.questionCount;
+    index++
+  ) {
+    const type =
+      roundConfig.questionTypes[
+        index %
+          roundConfig.questionTypes.length
+      ]
 
-  const selectedSongs =
-    shuffledSongs.slice(
-      0,
-      Math.min(
-        roundConfig.questionCount,
-        songs.length,
-      ),
-    )
-
-  return selectedSongs.map(
-    (song, index) => {
-      const type =
-        roundConfig.questionTypes[
-          index %
-            roundConfig.questionTypes.length
-        ]
-
-      return generateQuestion(
-        song,
-        songs,
-        {
-          type,
-          difficulty:
-            roundConfig.difficulty,
-        },
+    const question =
+      await fetchQuestion(
+        type,
+        roundConfig.difficulty,
       )
-    },
-  )
+
+    questions.push(question)
+  }
+
+  return questions
 }
