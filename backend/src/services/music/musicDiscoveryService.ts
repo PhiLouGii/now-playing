@@ -2,7 +2,7 @@ import type { MusicTrack } from './musicProvider.js'
 import { deezerMusicProvider } from './deezerMusicProvider.js'
 import { filterGameTracks } from './musicTrackFilter.js'
 
-const DISCOVERY_QUERIES = [
+const DISCOVERY_ARTISTS = [
   'Sabrina Carpenter',
   'The Weeknd',
   'Arctic Monkeys',
@@ -15,43 +15,64 @@ const DISCOVERY_QUERIES = [
   'Bruno Mars',
 ]
 
+function normalize(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[()[\]{}]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 function shuffle<T>(items: T[]): T[] {
   return [...items].sort(
     () => Math.random() - 0.5,
   )
 }
 
+function isArtistMatch(
+  track: MusicTrack,
+  artist: string,
+): boolean {
+  return (
+    normalize(track.artist) ===
+    normalize(artist)
+  )
+}
+
 export async function discoverTracks(
   limit = 20,
 ): Promise<MusicTrack[]> {
-  const queries =
-    shuffle(DISCOVERY_QUERIES)
+  const artists =
+    shuffle(DISCOVERY_ARTISTS)
 
   const candidates: MusicTrack[] = []
 
-  for (const query of queries) {
+  for (const artist of artists) {
     const results =
       await deezerMusicProvider.searchTracks(
-        query,
+        artist,
         10,
       )
 
-    candidates.push(...results)
-
-    const usable =
-      filterGameTracks(
-        candidates,
+    const artistTracks =
+      results.filter((track) =>
+        isArtistMatch(track, artist),
       )
 
+    candidates.push(...artistTracks)
+
+    const usable =
+      filterGameTracks(candidates)
+
     if (usable.length >= limit) {
-      return usable.slice(
+      return shuffle(usable).slice(
         0,
         limit,
       )
     }
   }
 
-  return filterGameTracks(
-    candidates,
+  return shuffle(
+    filterGameTracks(candidates),
   ).slice(0, limit)
 }
