@@ -94,18 +94,13 @@ function getDistractorAnswer(
 function toGeneratedSong(
   track: MusicTrack,
 ): GeneratedSong {
-  if (track.releaseYear === undefined) {
-    throw new Error(
-      'Track does not have a release year',
-    )
-  }
-
   return {
     id: track.id,
     title: track.title,
     artist: track.artist,
     album: track.album,
-    releaseYear: track.releaseYear,
+    releaseYear:
+      track.releaseYear ?? 0,
     artworkUrl:
       track.artworkUrl ?? '',
     audioUrl: track.previewUrl,
@@ -114,7 +109,6 @@ function toGeneratedSong(
     providerId: track.providerId,
   }
 }
-
 export async function generateQuestion(
   correctTrack: MusicTrack,
   type: QuestionType = 'name-the-song',

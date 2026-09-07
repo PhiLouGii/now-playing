@@ -4,6 +4,7 @@ import dotenv from 'dotenv'
 import { db } from './config/firebase.js'
 import songRoutes from './routes/songRoutes.js'
 import musicRoutes from './routes/musicRoutes.js'
+import gameRoutes from './routes/gameRoutes.js'
 
 dotenv.config()
 
@@ -16,6 +17,7 @@ app.use(express.json())
 app.use('/api/songs', songRoutes)
 
 app.use('/api/music', musicRoutes)
+app.use('/api/game', gameRoutes)
 
 app.get('/api/health', async (_req, res) => {
   try {
