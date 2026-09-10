@@ -107,6 +107,13 @@ function Game() {
   const [multiplierEarned, setMultiplierEarned] =
     useState(1)
 
+  /*
+   * True once the full Deezer preview has
+   * finished after revealing the answer.
+   */
+  const [previewComplete, setPreviewComplete] =
+    useState(false)
+
   const [isGameComplete, setIsGameComplete] =
     useState(false)
 
@@ -275,9 +282,10 @@ function Game() {
   const maxListenDuration =
     LISTENING_STAGES[listeningStage]
 
-  const isCorrect =
-    answerStatus === 'correct'
-
+  /*
+   * Handle audio timer updates while
+   * the player is guessing.
+   */
   function handleTimeUpdate(
     time: number,
   ) {
@@ -286,13 +294,27 @@ function Game() {
     }
   }
 
+  /*
+   * A listening stage has ended.
+   *
+   * The AudioPlayer now pauses at the exact
+   * stage position rather than resetting to 0.
+   */
   function handleStageComplete() {
     setTimeRemaining(0)
   }
 
   /*
-   * Record the player's recognition
-   * performance for the current song.
+   * Called when the complete Deezer preview
+   * finishes after the answer was revealed.
+   */
+  function handlePreviewComplete() {
+    setPreviewComplete(true)
+    setTimeRemaining(0)
+  }
+
+  /*
+   * Record recognition performance.
    */
   function recordRecognition(
     result: RecognitionResult,
@@ -383,8 +405,7 @@ function Game() {
     }
 
     /*
-     * Incorrect answers end the question,
-     * but do NOT advance the listening stage.
+     * Incorrect answers end the question.
      */
     setAnswerStatus('incorrect')
     setStreak(0)
@@ -433,9 +454,9 @@ function Game() {
   /*
    * Player chooses to reveal the answer.
    *
-   * A revealed answer is recorded as an
-   * unrecognized song at the stage where
-   * the player gave up.
+   * The answer is revealed immediately,
+   * but the audio player switches into
+   * full-preview mode and continues playing.
    */
   function handleRevealAnswer() {
     if (isAnswered) {
@@ -444,9 +465,12 @@ function Game() {
 
     setAnswerStatus('revealed')
     setSelectedAnswer(null)
+
     setStreak(0)
     setPointsEarned(0)
     setMultiplierEarned(1)
+
+    setPreviewComplete(false)
 
     recordRecognition({
       questionNumber:
@@ -468,18 +492,23 @@ function Game() {
   function resetQuestionState() {
     setSelectedAnswer(null)
     setAnswerStatus('idle')
+
     setListeningStage(0)
+
     setPointsEarned(0)
     setMultiplierEarned(1)
+
+    setPreviewComplete(false)
+
     setTimeRemaining(
       LISTENING_STAGES[0],
     )
   }
 
   /*
-   * Move to the next question.
+   * Move to the next song.
    */
-  async function handleNextQuestion() {
+  async function handleNextSong() {
     if (
       currentQuestion >=
       roundConfig.questionCount - 1
@@ -654,7 +683,19 @@ function Game() {
               onStageComplete={
                 handleStageComplete
               }
-              disabled={isAnswered}
+              onPreviewComplete={
+                handlePreviewComplete
+              }
+              /*
+               * Keep the player disabled for
+               * correct/incorrect answers.
+               *
+               * Revealed songs stay playable.
+               */
+              disabled={
+                answerStatus === 'correct' ||
+                answerStatus === 'incorrect'
+              }
               playFullSong={
                 answerStatus ===
                 'revealed'
@@ -746,9 +787,11 @@ function Game() {
           {isAnswered && (
             <div
               className={`game-feedback ${
-                answerStatus === 'revealed'
+                answerStatus ===
+                'revealed'
                   ? 'game-feedback--timeout'
-                  : answerStatus === 'correct'
+                  : answerStatus ===
+                      'correct'
                     ? 'game-feedback--correct'
                     : 'game-feedback--incorrect'
               }`}
@@ -787,6 +830,15 @@ function Game() {
                   )}
                 </div>
               )}
+
+              {answerStatus ===
+                'revealed' && (
+                <div className="game-feedback__points">
+                  {previewComplete
+                    ? 'PREVIEW COMPLETE'
+                    : 'PREVIEW CONTINUES'}
+                </div>
+              )}
             </div>
           )}
 
@@ -817,24 +869,40 @@ function Game() {
           </div>
 
           {isAnswered && (
-            <button
-              type="button"
-              className="game-next"
-              onClick={
-                handleNextQuestion
-              }
-              disabled={
-                isLoadingNext
-              }
-            >
-              {isLoadingNext
-                ? 'LOADING...'
-                : currentQuestion >=
-                    roundConfig.questionCount -
-                      1
-                  ? 'SEE RESULTS'
-                  : 'NEXT QUESTION'}
-            </button>
+            <>
+              {answerStatus ===
+                'revealed' &&
+                !previewComplete && (
+                  <div className="game-next-status">
+                    <span>
+                      PREVIEW PLAYING
+                    </span>
+                  </div>
+                )}
+
+              {(answerStatus !==
+                'revealed' ||
+                previewComplete) && (
+                <button
+                  type="button"
+                  className="game-next"
+                  onClick={
+                    handleNextSong
+                  }
+                  disabled={
+                    isLoadingNext
+                  }
+                >
+                  {isLoadingNext
+                    ? 'LOADING...'
+                    : currentQuestion >=
+                        roundConfig.questionCount -
+                          1
+                      ? 'SEE RESULTS'
+                      : 'NEXT SONG →'}
+                </button>
+              )}
+            </>
           )}
         </main>
       </div>

@@ -1,12 +1,24 @@
-import { Pause, Play } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import {
+  Pause,
+  Play,
+} from 'lucide-react'
+
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
+
 import './AudioPlayer.css'
 
 type AudioPlayerProps = {
   audioUrl?: string
   maxListenDuration?: number
-  onTimeUpdate?: (timeRemaining: number) => void
+  onTimeUpdate?: (
+    timeRemaining: number,
+  ) => void
   onStageComplete?: () => void
+  onPreviewComplete?: () => void
   disabled?: boolean
   playFullSong?: boolean
 }
@@ -16,6 +28,7 @@ function AudioPlayer({
   maxListenDuration = 0.1,
   onTimeUpdate,
   onStageComplete,
+  onPreviewComplete,
   disabled = false,
   playFullSong = false,
 }: AudioPlayerProps) {
@@ -37,16 +50,21 @@ function AudioPlayer({
   const [hasError, setHasError] =
     useState(false)
 
+  const [previewDuration, setPreviewDuration] =
+    useState(0)
+
   /*
    * Reset everything when the song changes.
    */
   useEffect(() => {
-    const audio = audioRef.current
+    const audio =
+      audioRef.current
 
     setIsPlaying(false)
     setTimeLeft(maxListenDuration)
     setProgress(0)
     setHasError(false)
+    setPreviewDuration(0)
 
     stageCompleteRef.current = false
 
@@ -57,11 +75,18 @@ function AudioPlayer({
   }, [audioUrl])
 
   /*
-   * Reset playback whenever a new listening stage
-   * is unlocked.
+   * When a new listening stage is unlocked,
+   * restart the song from the beginning.
+   *
+   * This is intentional:
+   *
+   * 0.1s → replay from 0 for 0.5s
+   * 0.5s → replay from 0 for 2s
+   * etc.
    */
   useEffect(() => {
-    const audio = audioRef.current
+    const audio =
+      audioRef.current
 
     if (
       !audio ||
@@ -81,7 +106,9 @@ function AudioPlayer({
     setTimeLeft(maxListenDuration)
     setProgress(0)
 
-    onTimeUpdate?.(maxListenDuration)
+    onTimeUpdate?.(
+      maxListenDuration,
+    )
   }, [
     maxListenDuration,
     disabled,
@@ -90,11 +117,18 @@ function AudioPlayer({
   ])
 
   /*
-   * When the answer is revealed, allow the
-   * complete preview to continue playing.
+   * When the answer is revealed,
+   * switch from stage mode into full-preview mode.
+   *
+   * IMPORTANT:
+   * We do NOT reset currentTime here.
+   *
+   * So if the player had listened to 2 seconds,
+   * the reveal continues from 2 seconds.
    */
   useEffect(() => {
-    const audio = audioRef.current
+    const audio =
+      audioRef.current
 
     if (
       !audio ||
@@ -104,29 +138,31 @@ function AudioPlayer({
       return
     }
 
-    stageCompleteRef.current = true
-
     /*
-     * If the player reveals the answer before
-     * the current stage has finished, continue
-     * from the current position.
-     *
-     * If the stage already reset to 0, start
-     * from the beginning of the preview.
+     * Make sure we know the total preview
+     * duration once the browser has loaded it.
      */
     if (
-      audio.currentTime === 0
+      Number.isFinite(audio.duration) &&
+      audio.duration > 0
     ) {
-      audio.currentTime = 0
+      setPreviewDuration(
+        audio.duration,
+      )
     }
 
-    audio.play()
+    /*
+     * Continue playing from the current
+     * position.
+     */
+    audio
+      .play()
       .then(() => {
         setIsPlaying(true)
       })
       .catch((error) => {
         console.error(
-          'Unable to continue full song:',
+          'Unable to continue preview:',
           error,
         )
       })
@@ -135,28 +171,98 @@ function AudioPlayer({
     hasError,
   ])
 
+  /*
+   * Get the full preview duration.
+   */
+  function handleLoadedMetadata() {
+    const audio =
+      audioRef.current
+
+    if (!audio) {
+      return
+    }
+
+    if (
+      Number.isFinite(audio.duration) &&
+      audio.duration > 0
+    ) {
+      setPreviewDuration(
+        audio.duration,
+      )
+    }
+  }
+
+  /*
+   * Handle playback progress.
+   */
   function handleAudioTimeUpdate() {
-    const audio = audioRef.current
+    const audio =
+      audioRef.current
 
     if (!audio) {
       return
     }
 
     /*
-     * Once the answer is revealed, the listening
-     * limit no longer applies.
+     * FULL PREVIEW MODE
+     *
+     * No listening-stage limit.
      */
     if (playFullSong) {
-      setIsPlaying(!audio.paused)
+      const duration =
+        audio.duration
+
+      if (
+        Number.isFinite(duration) &&
+        duration > 0
+      ) {
+        const percentage =
+          Math.min(
+            100,
+            (audio.currentTime /
+              duration) *
+              100,
+          )
+
+        const remaining =
+          Math.max(
+            0,
+            duration -
+              audio.currentTime,
+          )
+
+        setPreviewDuration(
+          duration,
+        )
+
+        setProgress(
+          percentage,
+        )
+
+        setTimeLeft(
+          remaining,
+        )
+      }
+
+      setIsPlaying(
+        !audio.paused,
+      )
+
       return
     }
 
-    const elapsed = audio.currentTime
+    /*
+     * NORMAL LISTENING MODE
+     */
+    const elapsed =
+      audio.currentTime
 
-    const remaining = Math.max(
-      0,
-      maxListenDuration - elapsed,
-    )
+    const remaining =
+      Math.max(
+        0,
+        maxListenDuration -
+          elapsed,
+      )
 
     const percentage =
       maxListenDuration > 0
@@ -168,20 +274,33 @@ function AudioPlayer({
           )
         : 0
 
-    setTimeLeft(remaining)
-    setProgress(percentage)
+    setTimeLeft(
+      remaining,
+    )
 
-    onTimeUpdate?.(remaining)
+    setProgress(
+      percentage,
+    )
 
+    onTimeUpdate?.(
+      remaining,
+    )
+
+    /*
+     * Stage reached.
+     *
+     * IMPORTANT:
+     * Do NOT reset currentTime.
+     */
     if (
-      elapsed >= maxListenDuration &&
+      elapsed >=
+        maxListenDuration &&
       !stageCompleteRef.current
     ) {
-      stageCompleteRef.current = true
+      stageCompleteRef.current =
+        true
 
       audio.pause()
-
-      audio.currentTime = 0
 
       setIsPlaying(false)
       setTimeLeft(0)
@@ -192,14 +311,36 @@ function AudioPlayer({
     }
   }
 
+  /*
+   * Audio reached its actual end.
+   */
   function handleAudioEnded() {
     setIsPlaying(false)
 
+    /*
+     * If we are playing the complete preview,
+     * notify Game.tsx that the player can now
+     * move to the next song.
+     */
+    if (playFullSong) {
+      setProgress(100)
+      setTimeLeft(0)
+
+      onTimeUpdate?.(0)
+      onPreviewComplete?.()
+
+      return
+    }
+
+    /*
+     * Normal stage playback.
+     */
     if (stageCompleteRef.current) {
       return
     }
 
-    stageCompleteRef.current = true
+    stageCompleteRef.current =
+      true
 
     setTimeLeft(0)
     setProgress(100)
@@ -214,7 +355,8 @@ function AudioPlayer({
   }
 
   async function handlePlayPause() {
-    const audio = audioRef.current
+    const audio =
+      audioRef.current
 
     if (
       !audio ||
@@ -224,8 +366,7 @@ function AudioPlayer({
     }
 
     /*
-     * Once the answer is revealed, the player
-     * remains usable for the full preview.
+     * Pause.
      */
     if (isPlaying) {
       audio.pause()
@@ -241,12 +382,22 @@ function AudioPlayer({
         return
       }
 
-      if (stageCompleteRef.current) {
+      /*
+       * If the stage was already completed,
+       * replay that stage from the beginning.
+       */
+      if (
+        stageCompleteRef.current
+      ) {
         audio.currentTime = 0
 
-        stageCompleteRef.current = false
+        stageCompleteRef.current =
+          false
 
-        setTimeLeft(maxListenDuration)
+        setTimeLeft(
+          maxListenDuration,
+        )
+
         setProgress(0)
 
         onTimeUpdate?.(
@@ -269,7 +420,9 @@ function AudioPlayer({
     }
   }
 
-  function formatTime(value: number) {
+  function formatTime(
+    value: number,
+  ) {
     if (value < 1) {
       return `${value.toFixed(1)}s`
     }
@@ -286,18 +439,27 @@ function AudioPlayer({
           ref={audioRef}
           src={audioUrl}
           preload="auto"
+          onLoadedMetadata={
+            handleLoadedMetadata
+          }
           onTimeUpdate={
             handleAudioTimeUpdate
           }
-          onEnded={handleAudioEnded}
-          onError={handleAudioError}
+          onEnded={
+            handleAudioEnded
+          }
+          onError={
+            handleAudioError
+          }
         />
       )}
 
       <button
         type="button"
         className="audio-player__button"
-        onClick={handlePlayPause}
+        onClick={
+          handlePlayPause
+        }
         disabled={
           !audioUrl ||
           (!playFullSong &&
@@ -338,8 +500,14 @@ function AudioPlayer({
         {hasError
           ? 'ERROR'
           : playFullSong
-            ? 'PLAYING'
-            : formatTime(timeLeft)}
+            ? previewDuration > 0
+              ? formatTime(
+                  timeLeft,
+                )
+              : 'PLAYING'
+            : formatTime(
+                timeLeft,
+              )}
       </div>
     </div>
   )

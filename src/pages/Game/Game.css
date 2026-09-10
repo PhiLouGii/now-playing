@@ -138,6 +138,29 @@
   opacity: 0.5;
 }
 
+.game-next-status {
+  margin-top: 24px;
+
+  color: var(--color-subtle);
+
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
 .game-status {
   width: min(100%, 720px);
   min-height: 28px;
@@ -234,6 +257,109 @@
   letter-spacing: 0.12em;
 }
 
+/* =========================
+   GAME ACTIONS
+   ========================= */
+
+.game-actions {
+  width: min(100%, 720px);
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* Advance */
+
+.game-advance {
+  min-height: 44px;
+  padding: 0 20px;
+
+  color: var(--color-subtle);
+  background: var(--color-surface);
+
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+
+  cursor: pointer;
+
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-normal);
+}
+
+.game-advance:hover:not(:disabled) {
+  color: var(--color-white);
+  background: var(--color-surface-hover);
+  border-color: rgba(139, 92, 246, 0.45);
+
+  transform: translateY(-2px);
+
+  box-shadow: 0 0 24px rgba(139, 92, 246, 0.12);
+}
+
+.game-advance:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.game-advance:disabled {
+  color: var(--muted);
+  background: transparent;
+  border-color: var(--border-subtle);
+
+  opacity: 0.45;
+  cursor: default;
+}
+
+
+/* Reveal Answer */
+
+.game-reveal {
+  min-height: 44px;
+  padding: 0 20px;
+
+  color: var(--color-pink);
+  background: rgba(236, 72, 153, 0.05);
+
+  border: 1px solid rgba(236, 72, 153, 0.2);
+  border-radius: var(--radius-md);
+
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+
+  cursor: pointer;
+
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-normal);
+}
+
+.game-reveal:hover {
+  color: var(--color-white);
+  background: rgba(236, 72, 153, 0.1);
+  border-color: rgba(236, 72, 153, 0.4);
+
+  transform: translateY(-2px);
+
+  box-shadow: 0 0 24px rgba(236, 72, 153, 0.12);
+}
+
+.game-reveal:active {
+  transform: translateY(0);
+}
+
 @media (max-width: 768px) {
   .game-page {
     padding: 32px 20px 60px;
@@ -254,5 +380,16 @@
   .game-answers {
     grid-template-columns: 1fr;
     margin-top: 32px;
+  }
+}
+
+@media (max-width: 600px) {
+  .game-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .game-actions button {
+    width: 100%;
   }
 }
