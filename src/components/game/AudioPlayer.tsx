@@ -19,6 +19,7 @@ function AudioPlayer({
 }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const stageCompleteRef = useRef(false)
+  const shouldResumeRef = useRef(false)
 
   const [isPlaying, setIsPlaying] = useState(false)
   const [timeLeft, setTimeLeft] =
@@ -26,12 +27,17 @@ function AudioPlayer({
   const [progress, setProgress] = useState(0)
   const [hasError, setHasError] = useState(false)
 
+  /*
+   * Reset when a completely new song loads.
+   */
   useEffect(() => {
     setTimeLeft(maxListenDuration)
     setProgress(0)
     setIsPlaying(false)
     setHasError(false)
+
     stageCompleteRef.current = false
+    shouldResumeRef.current = false
 
     if (audioRef.current) {
       audioRef.current.pause()
@@ -39,42 +45,73 @@ function AudioPlayer({
     }
   }, [audioUrl])
 
+  /*
+   * When the listening window increases,
+   * continue playing from the current position.
+   */
   useEffect(() => {
     const audio = audioRef.current
 
-    if (!audio) {
+    if (!audio || disabled || hasError) {
+      return
+    }
+
+    /*
+     * Don't do anything for the initial
+     * render of the player.
+     */
+    if (audio.currentTime === 0) {
       return
     }
 
     stageCompleteRef.current = false
 
-    if (audio.currentTime >= maxListenDuration) {
-      audio.pause()
-      audio.currentTime = maxListenDuration
-      setIsPlaying(false)
-      setTimeLeft(0)
-      setProgress(100)
-    } else {
-      const remaining = Math.max(
-        0,
-        maxListenDuration - audio.currentTime,
-      )
+    const remaining = Math.max(
+      0,
+      maxListenDuration - audio.currentTime,
+    )
 
-      setTimeLeft(remaining)
+    setTimeLeft(remaining)
 
-      const percentage =
-        maxListenDuration > 0
-          ? Math.min(
+    const percentage =
+      maxListenDuration > 0
+        ? Math.min(
+            100,
+            (audio.currentTime /
+              maxListenDuration) *
               100,
-              (audio.currentTime /
-                maxListenDuration) *
-                100,
-            )
-          : 0
+          )
+        : 0
 
-      setProgress(percentage)
+    setProgress(percentage)
+
+    /*
+     * Resume automatically when the
+     * listening window has been extended.
+     */
+    if (shouldResumeRef.current) {
+      shouldResumeRef.current = false
+
+      audio
+        .play()
+        .then(() => {
+          setIsPlaying(true)
+        })
+        .catch((error) => {
+          console.error(
+            'Unable to resume audio:',
+            error,
+          )
+
+          setHasError(true)
+          setIsPlaying(false)
+        })
     }
-  }, [maxListenDuration])
+  }, [
+    maxListenDuration,
+    disabled,
+    hasError,
+  ])
 
   function handleAudioTimeUpdate() {
     const audio = audioRef.current
@@ -84,6 +121,7 @@ function AudioPlayer({
     }
 
     const elapsed = audio.currentTime
+
     const remaining = Math.max(
       0,
       maxListenDuration - elapsed,
@@ -104,6 +142,9 @@ function AudioPlayer({
 
     onTimeUpdate?.(remaining)
 
+    /*
+     * Current listening window reached.
+     */
     if (
       elapsed >= maxListenDuration &&
       !stageCompleteRef.current
@@ -123,6 +164,11 @@ function AudioPlayer({
     }
   }
 
+  /*
+   * The actual preview ended.
+   *
+   * This does NOT reveal the answer.
+   */
   function handleAudioEnded() {
     setIsPlaying(false)
 
