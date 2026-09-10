@@ -1,17 +1,114 @@
 .audio-player {
   width: min(100%, 620px);
+
   display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 12px 16px;
-  background: var(--color-surface);
+  flex-direction: column;
+
+  padding: 16px 18px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(139, 92, 246, 0.06),
+      rgba(34, 211, 238, 0.025) 55%,
+      rgba(236, 72, 153, 0.035)
+    ),
+    var(--color-surface);
+
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-lg);
+
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.025);
+
+  transition:
+    border-color var(--transition-normal),
+    box-shadow var(--transition-normal),
+    background var(--transition-normal);
 }
 
-.audio-player__button {
+/* --------------------------------
+   PLAYING STATES
+-------------------------------- */
+
+.audio-player--playing {
+  border-color: rgba(139, 92, 246, 0.35);
+
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.14),
+    0 0 30px rgba(139, 92, 246, 0.08);
+}
+
+.audio-player--full {
+  border-color: rgba(34, 211, 238, 0.3);
+}
+
+.audio-player--full.audio-player--playing {
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.14),
+    0 0 30px rgba(34, 211, 238, 0.08);
+}
+
+/* --------------------------------
+   TOP LABEL
+-------------------------------- */
+
+.audio-player__top {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 12px;
+}
+
+.audio-player__label,
+.audio-player__stage {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.audio-player__label {
+  color: var(--color-subtle);
+}
+
+.audio-player--playing .audio-player__label {
+  color: var(--color-purple-light);
+}
+
+.audio-player--full .audio-player__label {
+  color: var(--color-cyan);
+}
+
+.audio-player__stage {
+  color: var(--muted);
+}
+
+/* --------------------------------
+   MAIN PLAYER
+-------------------------------- */
+
+.audio-player__main {
+  width: 100%;
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+
+  gap: 16px;
+}
+
+/* --------------------------------
+   PLAY BUTTON
+-------------------------------- */
+
+.audio-player__play {
   width: 46px;
   height: 46px;
+
   flex-shrink: 0;
 
   display: flex;
@@ -19,89 +116,297 @@
   justify-content: center;
 
   color: var(--color-white);
+
   background: var(--gradient-primary);
+
   border: 0;
   border-radius: 50%;
 
   box-shadow: var(--glow-purple);
+
+  cursor: pointer;
 
   transition:
     transform var(--transition-fast),
     box-shadow var(--transition-normal);
 }
 
-.audio-player__button:hover:not(:disabled) {
+.audio-player__play:hover:not(:disabled) {
   transform: scale(1.06);
-  box-shadow: 0 0 30px rgba(139, 92, 246, 0.38);
+
+  box-shadow:
+    0 0 30px rgba(139, 92, 246, 0.38);
 }
 
-.audio-player__button:active:not(:disabled) {
+.audio-player__play:active:not(:disabled) {
   transform: scale(0.98);
 }
 
-.audio-player__main {
-  min-width: 0;
-  flex: 1;
-  display: flex;
-  align-items: center;
-}
-
-.audio-player__progress {
-  width: 100%;
-  height: 5px;
-
-  overflow: hidden;
-
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-pill);
-}
-
-.audio-player__progress-bar {
-  height: 100%;
-  width: 0;
-
-  background: var(--gradient-primary);
-  border-radius: inherit;
-
-  transition: width 0.08s linear;
-}
-
-.audio-player__timer {
-  min-width: 42px;
-
-  color: var(--color-white);
-
-  font-family: var(--font-display);
-  font-size: 13px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-
-  text-align: right;
-}
-
-.audio-player__button:disabled {
+.audio-player__play:disabled {
   cursor: not-allowed;
   opacity: 0.45;
   box-shadow: none;
 }
 
-.audio-player__button:disabled:hover {
+.audio-player__play:disabled:hover {
   transform: none;
 }
 
-@media (max-width: 600px) {
-  .audio-player {
-    gap: 12px;
-    padding: 11px 12px;
+/* --------------------------------
+   PLAY ICON
+-------------------------------- */
+
+.audio-player__play-icon {
+  width: 0;
+  height: 0;
+
+  margin-left: 3px;
+
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  border-left: 10px solid var(--color-white);
+}
+
+/* --------------------------------
+   PAUSE ICON
+-------------------------------- */
+
+.audio-player__pause-icon {
+  position: relative;
+
+  width: 12px;
+  height: 15px;
+}
+
+.audio-player__pause-icon::before,
+.audio-player__pause-icon::after {
+  content: '';
+
+  position: absolute;
+  top: 0;
+
+  width: 4px;
+  height: 15px;
+
+  border-radius: 2px;
+
+  background: var(--color-white);
+}
+
+.audio-player__pause-icon::before {
+  left: 0;
+}
+
+.audio-player__pause-icon::after {
+  right: 0;
+}
+
+/* --------------------------------
+   WAVEFORM
+-------------------------------- */
+
+.audio-player__wave {
+  min-width: 0;
+  flex: 1;
+
+  height: 54px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 3px;
+
+  overflow: hidden;
+}
+
+.audio-player__bar {
+  flex: 1;
+
+  min-width: 2px;
+  max-width: 6px;
+
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.1);
+
+  opacity: 0.7;
+
+  transform: scaleY(1);
+
+  transform-origin: center;
+
+  transition:
+    background var(--transition-fast),
+    opacity var(--transition-fast),
+    box-shadow var(--transition-normal);
+}
+
+/* Bars reached by playback */
+
+.audio-player__bar--active {
+  background: linear-gradient(
+    to top,
+    var(--color-purple),
+    var(--color-cyan)
+  );
+
+  opacity: 1;
+
+  box-shadow:
+    0 0 8px rgba(139, 92, 246, 0.2);
+}
+
+/* --------------------------------
+   ANIMATED WAVEFORM
+-------------------------------- */
+
+.audio-player--playing .audio-player__bar {
+  animation: waveform-pulse 850ms ease-in-out infinite
+    alternate;
+}
+
+.audio-player--full.audio-player--playing
+  .audio-player__bar {
+  animation-duration: 620ms;
+}
+
+/*
+ * Full preview gets the cyan/purple treatment.
+ */
+
+.audio-player--full
+  .audio-player__bar--active {
+  background: linear-gradient(
+    to top,
+    var(--color-cyan),
+    var(--color-purple-light)
+  );
+
+  box-shadow:
+    0 0 9px rgba(34, 211, 238, 0.25);
+}
+
+@keyframes waveform-pulse {
+  0% {
+    transform: scaleY(0.65);
   }
 
-  .audio-player__button {
+  100% {
+    transform: scaleY(1);
+  }
+}
+
+/* --------------------------------
+   BOTTOM PROGRESS
+-------------------------------- */
+
+.audio-player__bottom {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  margin-top: 10px;
+
+  color: var(--muted);
+
+  font-size: 9px;
+  font-weight: 600;
+
+  font-variant-numeric: tabular-nums;
+}
+
+.audio-player__track {
+  position: relative;
+
+  flex: 1;
+
+  height: 4px;
+
+  overflow: hidden;
+
+  background: rgba(255, 255, 255, 0.08);
+
+  border-radius: var(--radius-pill);
+}
+
+.audio-player__track-fill {
+  height: 100%;
+  width: 0;
+
+  background: var(--gradient-primary);
+
+  border-radius: inherit;
+
+  box-shadow:
+    0 0 10px rgba(139, 92, 246, 0.25);
+
+  transition: width 0.08s linear;
+}
+
+.audio-player--full .audio-player__track-fill {
+  background: linear-gradient(
+    90deg,
+    var(--color-cyan),
+    var(--color-purple)
+  );
+}
+
+/* --------------------------------
+   ERROR
+-------------------------------- */
+
+.audio-player__error {
+  width: 100%;
+
+  margin-top: 10px;
+
+  color: var(--color-pink);
+
+  font-size: 9px;
+  font-weight: 700;
+
+  letter-spacing: 0.12em;
+
+  text-align: center;
+}
+
+/* --------------------------------
+   MOBILE
+-------------------------------- */
+
+@media (max-width: 600px) {
+  .audio-player {
+    padding: 14px 13px;
+    border-radius: var(--radius-lg);
+  }
+
+  .audio-player__main {
+    gap: 12px;
+  }
+
+  .audio-player__play {
     width: 42px;
     height: 42px;
   }
 
-  .audio-player__timer {
-    min-width: 38px;
-    font-size: 12px;
+  .audio-player__wave {
+    height: 48px;
+    gap: 2px;
+  }
+
+  .audio-player__bar {
+    max-width: 5px;
+  }
+
+  .audio-player__top {
+    margin-bottom: 10px;
+  }
+
+  .audio-player__bottom {
+    gap: 7px;
   }
 }

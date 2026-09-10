@@ -5,9 +5,8 @@ import {
 } from 'react'
 import { useLocation } from 'react-router-dom'
 
-import AudioPlayer, {
-  AudioPlayerHandle,
-} from '../../components/game/AudioPlayer'
+import AudioPlayer from '../../components/game/AudioPlayer'
+import type { AudioPlayerHandle } from '../../components/game/AudioPlayer'
 import AnswerGrid from '../../components/game/AnswerGrid'
 import GameHeader from '../../components/game/GameHeader'
 import GameProgress from '../../components/game/GameProgress'
@@ -24,6 +23,7 @@ import type {
 } from '../../types/game'
 
 import {
+  calculatePoints,
   calculateFinalPoints,
   calculateStreakMultiplier,
 } from '../../lib/gameScoring'
@@ -63,6 +63,12 @@ function Game() {
       } | null
     )?.roundConfig ?? defaultRound
 
+  /*
+   * --------------------------------------------------
+   * QUESTION STATE
+   * --------------------------------------------------
+   */
+
   const [questions, setQuestions] =
     useState<Question[]>([])
 
@@ -75,11 +81,23 @@ function Game() {
   const [currentQuestion, setCurrentQuestion] =
     useState(0)
 
+  /*
+   * --------------------------------------------------
+   * ANSWER STATE
+   * --------------------------------------------------
+   */
+
   const [selectedAnswer, setSelectedAnswer] =
     useState<string | null>(null)
 
   const [answerStatus, setAnswerStatus] =
     useState<AnswerStatus>('idle')
+
+  /*
+   * --------------------------------------------------
+   * SCORE STATE
+   * --------------------------------------------------
+   */
 
   const [score, setScore] =
     useState(0)
@@ -93,17 +111,6 @@ function Game() {
   const [correctAnswers, setCorrectAnswers] =
     useState(0)
 
-  const [recognitionResults, setRecognitionResults] =
-    useState<RecognitionResult[]>([])
-
-  const [timeRemaining, setTimeRemaining] =
-    useState(
-      LISTENING_STAGES[0],
-    )
-
-  const [listeningStage, setListeningStage] =
-    useState(0)
-
   const [pointsEarned, setPointsEarned] =
     useState(0)
 
@@ -111,21 +118,62 @@ function Game() {
     useState(1)
 
   /*
-   * True once the full Deezer preview has
-   * finished after revealing the answer.
+   * --------------------------------------------------
+   * RECOGNITION / RESULTS
+   * --------------------------------------------------
    */
+
+  const [recognitionResults, setRecognitionResults] =
+    useState<RecognitionResult[]>([])
+
+  /*
+   * --------------------------------------------------
+   * LISTENING STATE
+   * --------------------------------------------------
+   */
+
+  const [listeningStage, setListeningStage] =
+    useState(0)
+
+  const [timeRemaining, setTimeRemaining] =
+    useState(LISTENING_STAGES[0])
+
+  /*
+   * --------------------------------------------------
+   * FULL PREVIEW STATE
+   * --------------------------------------------------
+   *
+   * This becomes true when the full Deezer preview
+   * has finished after an answer/reveal.
+   */
+
   const [previewComplete, setPreviewComplete] =
     useState(false)
 
-  const [isGameComplete, setIsGameComplete] =
-  useState(false)
+  /*
+   * --------------------------------------------------
+   * GAME STATE
+   * --------------------------------------------------
+   */
 
-const audioPlayerRef =
-  useRef<AudioPlayerHandle | null>(null)
+  const [isGameComplete, setIsGameComplete] =
+    useState(false)
 
   /*
-   * Load the first question.
+   * --------------------------------------------------
+   * AUDIO PLAYER REF
+   * --------------------------------------------------
    */
+
+  const audioPlayerRef =
+    useRef<AudioPlayerHandle | null>(null)
+
+  /*
+   * --------------------------------------------------
+   * LOAD FIRST QUESTION
+   * --------------------------------------------------
+   */
+
   useEffect(() => {
     let isMounted = true
 
@@ -166,9 +214,11 @@ const audioPlayerRef =
   }, [roundConfig])
 
   /*
-   * Preload the next question while
-   * the player is playing the current one.
+   * --------------------------------------------------
+   * PRELOAD NEXT QUESTION
+   * --------------------------------------------------
    */
+
   useEffect(() => {
     if (
       questions.length === 0 ||
@@ -233,8 +283,11 @@ const audioPlayerRef =
   ])
 
   /*
-   * Loading state.
+   * --------------------------------------------------
+   * LOADING STATE
+   * --------------------------------------------------
    */
+
   if (isLoading) {
     return (
       <div className="game-page">
@@ -254,8 +307,11 @@ const audioPlayerRef =
   }
 
   /*
-   * Failed to generate a question.
+   * --------------------------------------------------
+   * NO QUESTIONS
+   * --------------------------------------------------
    */
+
   if (questions.length === 0) {
     return (
       <div className="game-page">
@@ -279,6 +335,12 @@ const audioPlayerRef =
     )
   }
 
+  /*
+   * --------------------------------------------------
+   * CURRENT QUESTION
+   * --------------------------------------------------
+   */
+
   const question =
     questions[currentQuestion]
 
@@ -289,39 +351,53 @@ const audioPlayerRef =
     LISTENING_STAGES[listeningStage]
 
   /*
-   * Handle audio timer updates while
-   * the player is guessing.
+   * --------------------------------------------------
+   * AUDIO TIMER
+   * --------------------------------------------------
    */
+
   function handleTimeUpdate(
     time: number,
   ) {
+    /*
+     * Only show the stage timer while the player
+     * is still guessing.
+     *
+     * Once an answer is given, the AudioPlayer
+     * controls the full preview timer.
+     */
     if (!isAnswered) {
       setTimeRemaining(time)
     }
   }
 
   /*
-   * A listening stage has ended.
-   *
-   * The AudioPlayer now pauses at the exact
-   * stage position rather than resetting to 0.
+   * --------------------------------------------------
+   * LISTENING STAGE COMPLETE
+   * --------------------------------------------------
    */
+
   function handleStageComplete() {
     setTimeRemaining(0)
   }
 
   /*
-   * Called when the complete Deezer preview
-   * finishes after the answer was revealed.
+   * --------------------------------------------------
+   * FULL PREVIEW COMPLETE
+   * --------------------------------------------------
    */
+
   function handlePreviewComplete() {
     setPreviewComplete(true)
     setTimeRemaining(0)
   }
 
   /*
-   * Record recognition performance.
+   * --------------------------------------------------
+   * RECORD RECOGNITION
+   * --------------------------------------------------
    */
+
   function recordRecognition(
     result: RecognitionResult,
   ) {
@@ -334,8 +410,11 @@ const audioPlayerRef =
   }
 
   /*
-   * Handle an answer.
+   * --------------------------------------------------
+   * ANSWER QUESTION
+   * --------------------------------------------------
    */
+
   function handleAnswer(
     answer: string,
   ) {
@@ -343,12 +422,43 @@ const audioPlayerRef =
       return
     }
 
-    const isAnswerCorrect =
+    const isCorrect =
       answer === question.correctAnswer
 
+    /*
+     * IMPORTANT:
+     *
+     * Start the full preview directly from the
+     * user's answer click.
+     *
+     * This happens before React changes state so
+     * browser autoplay restrictions don't interfere.
+     */
+    audioPlayerRef.current?.playPreview()
+
+    /*
+     * The answer has now been submitted.
+     */
     setSelectedAnswer(answer)
 
-    if (isAnswerCorrect) {
+    setAnswerStatus(
+      isCorrect
+        ? 'correct'
+        : 'incorrect',
+    )
+
+    /*
+     * The full preview has just started.
+     */
+    setPreviewComplete(false)
+
+    /*
+     * ----------------------------------------------
+     * CORRECT
+     * ----------------------------------------------
+     */
+
+    if (isCorrect) {
       const nextStreak =
         streak + 1
 
@@ -357,53 +467,57 @@ const audioPlayerRef =
           nextStreak,
         )
 
-      const finalPoints =
-        calculateFinalPoints(
+      const basePoints =
+        calculatePoints(
           maxListenDuration,
-          nextStreak,
         )
 
-      setAnswerStatus('correct')
+      const points =
+        calculateFinalPoints(
+          basePoints,
+          multiplier,
+        )
 
-      setCorrectAnswers(
-        (current) => current + 1,
-      )
+      setStreak(nextStreak)
 
       setBestStreak(
-        (current) =>
+        (previous) =>
           Math.max(
-            current,
+            previous,
             nextStreak,
           ),
       )
 
-      setPointsEarned(
-        finalPoints,
+      setScore(
+        (previous) =>
+          previous + points,
       )
 
+      setCorrectAnswers(
+        (previous) =>
+          previous + 1,
+      )
+
+      setPointsEarned(points)
       setMultiplierEarned(
         multiplier,
       )
 
-      setScore(
-        (currentScore) =>
-          currentScore +
-          finalPoints,
-      )
-
-      setStreak(nextStreak)
-
       recordRecognition({
         questionNumber:
           currentQuestion + 1,
+
         title:
           question.song.title,
+
         artist:
           question.song.artist,
+
         listenDuration:
           maxListenDuration,
-        points:
-          finalPoints,
+
+        points,
+
         correct: true,
       })
 
@@ -411,9 +525,11 @@ const audioPlayerRef =
     }
 
     /*
-     * Incorrect answers end the question.
+     * ----------------------------------------------
+     * INCORRECT
+     * ----------------------------------------------
      */
-    setAnswerStatus('incorrect')
+
     setStreak(0)
     setPointsEarned(0)
     setMultiplierEarned(1)
@@ -421,20 +537,35 @@ const audioPlayerRef =
     recordRecognition({
       questionNumber:
         currentQuestion + 1,
+
       title:
         question.song.title,
+
       artist:
         question.song.artist,
+
       listenDuration:
         maxListenDuration,
+
       points: 0,
+
       correct: false,
     })
   }
 
   /*
-   * Player chooses to hear more of the song.
+   * --------------------------------------------------
+   * ADVANCE LISTENING STAGE
+   * --------------------------------------------------
+   *
+   * The player is asking:
+   *
+   * "I don't know yet. Give me more of the song."
+   *
+   * Each new stage starts from the BEGINNING of
+   * the song.
    */
+
   function handleAdvance() {
     if (isAnswered) {
       return
@@ -458,60 +589,71 @@ const audioPlayerRef =
   }
 
   /*
-   * Player chooses to reveal the answer.
+   * --------------------------------------------------
+   * REVEAL ANSWER
+   * --------------------------------------------------
    *
-   * The answer is revealed immediately,
-   * but the audio player switches into
-   * full-preview mode and continues playing.
+   * Reveal is effectively:
+   *
+   * "I give up — show me the answer."
+   *
+   * It also starts the full preview.
    */
+
   function handleRevealAnswer() {
-  if (isAnswered) {
-    return
+    if (isAnswered) {
+      return
+    }
+
+    /*
+     * Start full preview directly from the
+     * user's Reveal Answer click.
+     */
+    audioPlayerRef.current?.playPreview()
+
+    setAnswerStatus('revealed')
+    setSelectedAnswer(null)
+
+    setStreak(0)
+    setPointsEarned(0)
+    setMultiplierEarned(1)
+
+    setPreviewComplete(false)
+
+    recordRecognition({
+      questionNumber:
+        currentQuestion + 1,
+
+      title:
+        question.song.title,
+
+      artist:
+        question.song.artist,
+
+      listenDuration:
+        maxListenDuration,
+
+      points: 0,
+
+      correct: false,
+    })
   }
 
   /*
-   * Start the preview immediately from the
-   * user's Reveal Answer click.
-   *
-   * This is important because calling
-   * audio.play() from a React useEffect can
-   * be blocked by browser autoplay policy.
+   * --------------------------------------------------
+   * RESET QUESTION STATE
+   * --------------------------------------------------
    */
-  audioPlayerRef.current?.playPreview()
 
-  setAnswerStatus('revealed')
-  setSelectedAnswer(null)
-
-  setStreak(0)
-  setPointsEarned(0)
-  setMultiplierEarned(1)
-
-  setPreviewComplete(false)
-
-  recordRecognition({
-    questionNumber:
-      currentQuestion + 1,
-    title:
-      question.song.title,
-    artist:
-      question.song.artist,
-    listenDuration:
-      maxListenDuration,
-    points: 0,
-    correct: false,
-  })
-}
-
-  /*
-   * Reset all question-specific state.
-   */
   function resetQuestionState() {
     setSelectedAnswer(null)
+
     setAnswerStatus('idle')
 
     setListeningStage(0)
 
     setPointsEarned(0)
+
     setMultiplierEarned(1)
 
     setPreviewComplete(false)
@@ -522,9 +664,15 @@ const audioPlayerRef =
   }
 
   /*
-   * Move to the next song.
+   * --------------------------------------------------
+   * NEXT SONG
+   * --------------------------------------------------
    */
+
   async function handleNextSong() {
+    /*
+     * Last question.
+     */
     if (
       currentQuestion >=
       roundConfig.questionCount - 1
@@ -536,12 +684,21 @@ const audioPlayerRef =
     const nextIndex =
       currentQuestion + 1
 
+    /*
+     * The next question has already been
+     * preloaded.
+     */
     if (questions[nextIndex]) {
       setCurrentQuestion(nextIndex)
+
       resetQuestionState()
+
       return
     }
 
+    /*
+     * Otherwise generate it now.
+     */
     setIsLoadingNext(true)
 
     try {
@@ -573,6 +730,7 @@ const audioPlayerRef =
       )
 
       setCurrentQuestion(nextIndex)
+
       resetQuestionState()
     } catch (error) {
       console.error(
@@ -585,8 +743,11 @@ const audioPlayerRef =
   }
 
   /*
-   * Results screen.
+   * --------------------------------------------------
+   * RESULTS SCREEN
+   * --------------------------------------------------
    */
+
   if (isGameComplete) {
     return (
       <ResultsScreen
@@ -597,7 +758,9 @@ const audioPlayerRef =
         correctAnswers={
           correctAnswers
         }
-        bestStreak={bestStreak}
+        bestStreak={
+          bestStreak
+        }
         recognitionResults={
           recognitionResults
         }
@@ -605,9 +768,16 @@ const audioPlayerRef =
     )
   }
 
+  /*
+   * --------------------------------------------------
+   * GAME UI
+   * --------------------------------------------------
+   */
+
   return (
     <div className="game-page">
       <div className="game-page__container">
+
         <GameHeader
           currentQuestion={
             currentQuestion + 1
@@ -628,6 +798,9 @@ const audioPlayerRef =
         />
 
         <main className="game-content">
+
+          {/* CATEGORY */}
+
           <p className="game-content__category">
             {question.type ===
               'name-the-song' &&
@@ -645,6 +818,8 @@ const audioPlayerRef =
               'guess-the-year' &&
               'GUESS THE YEAR'}
           </p>
+
+          {/* QUESTION */}
 
           <h1>
             {question.type ===
@@ -664,7 +839,12 @@ const audioPlayerRef =
               'When was this song released?'}
           </h1>
 
+          {/* SONG */}
+
           <div className="game-question">
+
+            {/* ARTWORK */}
+
             <div
               className={`game-question__art ${
                 isAnswered
@@ -685,35 +865,38 @@ const audioPlayerRef =
               )}
             </div>
 
+            {/* AUDIO PLAYER */}
+
             <AudioPlayer
-  ref={audioPlayerRef}
-  key={question.id}
-  audioUrl={
-    question.song.audioUrl
-  }
-  maxListenDuration={
-    maxListenDuration
-  }
-  onTimeUpdate={
-    handleTimeUpdate
-  }
-  onStageComplete={
-    handleStageComplete
-  }
-  onPreviewComplete={
-    handlePreviewComplete
-  }
-  disabled={
-    answerStatus === 'correct' ||
-    answerStatus === 'incorrect'
-  }
-  playFullSong={
-    answerStatus === 'revealed'
-  }
-/>
+              ref={audioPlayerRef}
+              key={question.id}
+              audioUrl={
+                question.song.audioUrl
+              }
+              maxListenDuration={
+                maxListenDuration
+              }
+              onTimeUpdate={
+                handleTimeUpdate
+              }
+              onStageComplete={
+                handleStageComplete
+              }
+              onPreviewComplete={
+                handlePreviewComplete
+              }
+              disabled={false}
+              playFullSong={
+                answerStatus ===
+                'revealed'
+              }
+            />
+
+            {/* SONG DETAILS */}
 
             {isAnswered && (
               <div className="game-song-reveal">
+
                 <p className="game-song-reveal__title">
                   {question.song.title}
                 </p>
@@ -737,9 +920,13 @@ const audioPlayerRef =
                       }
                     </p>
                   )}
+
               </div>
             )}
+
           </div>
+
+          {/* ANSWERS */}
 
           <AnswerGrid
             answers={
@@ -759,8 +946,13 @@ const audioPlayerRef =
             }
           />
 
+          {/* ----------------------------------------
+              BEFORE ANSWER
+              ---------------------------------------- */}
+
           {!isAnswered && (
             <div className="game-actions">
+
               <button
                 type="button"
                 className="game-advance"
@@ -791,8 +983,13 @@ const audioPlayerRef =
               >
                 REVEAL ANSWER
               </button>
+
             </div>
           )}
+
+          {/* ----------------------------------------
+              ANSWER FEEDBACK
+              ---------------------------------------- */}
 
           {isAnswered && (
             <div
@@ -806,6 +1003,7 @@ const audioPlayerRef =
                     : 'game-feedback--incorrect'
               }`}
             >
+
               <div className="game-feedback__label">
                 {answerStatus ===
                 'revealed'
@@ -821,6 +1019,8 @@ const audioPlayerRef =
                   question.correctAnswer
                 }
               </div>
+
+              {/* CORRECT POINTS */}
 
               {answerStatus ===
                 'correct' && (
@@ -841,6 +1041,17 @@ const audioPlayerRef =
                 </div>
               )}
 
+              {/* FULL PREVIEW STATUS */}
+
+              {answerStatus !==
+                'revealed' && (
+                <div className="game-feedback__points">
+                  {previewComplete
+                    ? 'PREVIEW COMPLETE'
+                    : 'PREVIEW CONTINUES'}
+                </div>
+              )}
+
               {answerStatus ===
                 'revealed' && (
                 <div className="game-feedback__points">
@@ -849,10 +1060,16 @@ const audioPlayerRef =
                     : 'PREVIEW CONTINUES'}
                 </div>
               )}
+
             </div>
           )}
 
+          {/* ----------------------------------------
+              GAME STATUS
+              ---------------------------------------- */}
+
           <div className="game-status">
+
             <div className="game-streak">
               <span>
                 STREAK
@@ -876,23 +1093,24 @@ const audioPlayerRef =
                     )}s`}
               </strong>
             </div>
+
           </div>
+
+          {/* ----------------------------------------
+              NEXT SONG
+              ---------------------------------------- */}
 
           {isAnswered && (
             <>
-              {answerStatus ===
-                'revealed' &&
-                !previewComplete && (
-                  <div className="game-next-status">
-                    <span>
-                      PREVIEW PLAYING
-                    </span>
-                  </div>
-                )}
+              {!previewComplete && (
+                <div className="game-next-status">
+                  <span>
+                    PREVIEW PLAYING
+                  </span>
+                </div>
+              )}
 
-              {(answerStatus !==
-                'revealed' ||
-                previewComplete) && (
+              {previewComplete && (
                 <button
                   type="button"
                   className="game-next"
@@ -914,6 +1132,7 @@ const audioPlayerRef =
               )}
             </>
           )}
+
         </main>
       </div>
     </div>
