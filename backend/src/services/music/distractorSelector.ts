@@ -1,8 +1,11 @@
 import type { MusicTrack } from './musicProvider.js'
+
 import type {
   MusicCandidate,
   CandidateSource,
 } from './musicCandidateService.js'
+
+import type { QuestionType } from '../game/gameTypes.js'
 
 export type RankedDistractor = {
   track: MusicTrack
@@ -64,17 +67,6 @@ function calculateScore(
 ): number {
   let score = 0
 
-  /*
-   * Candidate source strength.
-   *
-   * Same-album is strongest because the songs
-   * share an explicit album relationship.
-   *
-   * Same-artist is also very believable.
-   *
-   * Similar tracks are useful for cross-artist
-   * contextual distractors.
-   */
   if (
     candidate.source === 'same-album'
   ) {
@@ -93,21 +85,12 @@ function calculateScore(
     score += 20
   }
 
-  /*
-   * Last.fm similarity is a useful signal,
-   * but it should not completely dominate
-   * the selection.
-   */
   if (
     candidate.similarity !== undefined
   ) {
     score += candidate.similarity * 50
   }
 
-  /*
-   * Songs released around the same time are
-   * generally more believable distractors.
-   */
   const difference =
     yearDifference(
       candidate.track,
@@ -124,9 +107,6 @@ function calculateScore(
     }
   }
 
-  /*
-   * Add explicit relationship bonuses.
-   */
   if (
     sameArtist(
       candidate.track,
@@ -174,10 +154,34 @@ function artistKey(
   return normalize(track.artist)
 }
 
-function candidateKey(
+function trackKey(
   track: MusicTrack,
 ): string {
   return `${normalize(track.title)}::${artistKey(track)}`
+}
+
+function getAnswerValue(
+  track: MusicTrack,
+  type: QuestionType,
+): string | null {
+  switch (type) {
+    case 'name-the-song':
+      return normalize(track.title)
+
+    case 'name-the-artist':
+      return normalize(track.artist)
+
+    case 'name-the-album':
+      return normalize(track.album)
+
+    case 'guess-the-year':
+      return track.releaseYear !== undefined
+        ? String(track.releaseYear)
+        : null
+
+    default:
+      return null
+  }
 }
 
 function isSameArtistAsAnySelected(
@@ -191,35 +195,75 @@ function isSameArtistAsAnySelected(
   )
 }
 
+function hasAnswerValue(
+  candidate: RankedDistractor,
+  selected: RankedDistractor[],
+  correctTrack: MusicTrack,
+  type: QuestionType,
+): boolean {
+  const candidateAnswer =
+    getAnswerValue(
+      candidate.track,
+      type,
+    )
+
+  if (candidateAnswer === null) {
+    return true
+  }
+
+  const correctAnswer =
+    getAnswerValue(
+      correctTrack,
+      type,
+    )
+
+  if (
+    correctAnswer !== null &&
+    candidateAnswer === correctAnswer
+  ) {
+    return true
+  }
+
+  return selected.some(
+    (item) =>
+      getAnswerValue(
+        item.track,
+        type,
+      ) === candidateAnswer,
+  )
+}
+
 function findBestCandidate(
   ranked: RankedDistractor[],
   predicate: (
     candidate: RankedDistractor,
   ) => boolean,
   selected: RankedDistractor[],
+  correctTrack: MusicTrack,
+  type: QuestionType,
 ): RankedDistractor | undefined {
   return ranked.find(
     (candidate) =>
       !selected.some(
         (item) =>
-          candidateKey(item.track) ===
-          candidateKey(candidate.track),
+          trackKey(item.track) ===
+          trackKey(candidate.track),
+      ) &&
+      !hasAnswerValue(
+        candidate,
+        selected,
+        correctTrack,
+        type,
       ) &&
       predicate(candidate),
   )
 }
 
-/**
- * Builds an answer set rather than simply
- * taking the three highest-scoring candidates.
- *
- * The goal is to make the three distractors
- * believable while keeping the artists varied.
- */
 function selectWithComposition(
   ranked: RankedDistractor[],
   count: number,
   correctTrack: MusicTrack,
+  type: QuestionType,
 ): RankedDistractor[] {
   const selected: RankedDistractor[] = []
 
@@ -228,13 +272,12 @@ function selectWithComposition(
   }
 
   /*
-   * SLOT 1
+   * First preference:
+   * keep one same-artist distractor when possible.
    *
-   * Prefer the strongest same-artist candidate.
-   *
-   * This gives the answer set a very believable
-   * "you know this artist, but do you know this song?"
-   * option.
+   * This creates a believable option without
+   * forcing every distractor to come from the
+   * same artist.
    */
   const sameArtistCandidate =
     findBestCandidate(
@@ -245,6 +288,8 @@ function selectWithComposition(
           correctTrack,
         ),
       selected,
+      correctTrack,
+      type,
     )
 
   if (sameArtistCandidate) {
@@ -254,13 +299,8 @@ function selectWithComposition(
   }
 
   /*
-   * SLOT 2
-   *
-   * Prefer the strongest similar candidate
-   * from another artist.
-   *
-   * This prevents all three distractors from
-   * becoming songs by the correct artist.
+   * Second preference:
+   * use a strong cross-artist similar track.
    */
   if (selected.length < count) {
     const crossArtistSimilar =
@@ -278,6 +318,8 @@ function selectWithComposition(
             selected,
           ),
         selected,
+        correctTrack,
+        type,
       )
 
     if (crossArtistSimilar) {
@@ -288,12 +330,8 @@ function selectWithComposition(
   }
 
   /*
-   * SLOT 3+
-   *
-   * Prefer a completely new artist.
-   *
-   * We still respect candidate ranking,
-   * so this is not random variety.
+   * Continue looking for candidates from
+   * artists that have not already been used.
    */
   while (selected.length < count) {
     const newArtistCandidate =
@@ -305,6 +343,8 @@ function selectWithComposition(
             selected,
           ),
         selected,
+        correctTrack,
+        type,
       )
 
     if (!newArtistCandidate) {
@@ -317,11 +357,9 @@ function selectWithComposition(
   }
 
   /*
-   * FALLBACK
-   *
-   * If the candidate pool doesn't contain
-   * enough different artists, fill the remaining
-   * slots using the best unused candidates.
+   * Final fallback:
+   * allow an already-used artist if necessary,
+   * but still require a completely unique answer.
    */
   while (selected.length < count) {
     const fallback =
@@ -329,6 +367,8 @@ function selectWithComposition(
         ranked,
         () => true,
         selected,
+        correctTrack,
+        type,
       )
 
     if (!fallback) {
@@ -344,6 +384,7 @@ function selectWithComposition(
 export function selectDistractors(
   candidates: MusicCandidate[],
   correctTrack: MusicTrack,
+  type: QuestionType,
   count = 3,
 ): RankedDistractor[] {
   const ranked =
@@ -356,5 +397,6 @@ export function selectDistractors(
     ranked,
     count,
     correctTrack,
+    type,
   )
 }

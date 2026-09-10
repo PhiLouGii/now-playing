@@ -119,12 +119,12 @@ export async function generateQuestion(
     )
 
   const distractors =
-    selectDistractors(
-      candidates,
-      correctTrack,
-      3,
-    )
-
+  selectDistractors(
+    candidates,
+    correctTrack,
+    type,
+    3,
+  )
   if (distractors.length !== 3) {
     throw new Error(
       `Could not generate exactly 3 distractors. Found ${distractors.length}.`,
