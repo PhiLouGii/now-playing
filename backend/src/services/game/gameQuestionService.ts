@@ -19,7 +19,13 @@ import {
   deezerMusicProvider,
 } from '../music/deezerMusicProvider.js'
 
-import type { MusicTrack } from '../music/musicProvider.js'
+import type {
+  MusicTrack,
+} from '../music/musicProvider.js'
+
+import {
+  getReliableReleaseYear,
+} from '../music/releaseYearService.js'
 
 async function hydrateTrack(
   track: MusicTrack,
@@ -33,6 +39,20 @@ async function hydrateTrack(
     return detailedTrack ?? track
   } catch {
     return track
+  }
+}
+
+async function enrichReleaseYear(
+  track: MusicTrack,
+): Promise<MusicTrack> {
+  const releaseYear =
+    await getReliableReleaseYear(
+      track,
+    )
+
+  return {
+    ...track,
+    releaseYear,
   }
 }
 
@@ -51,18 +71,17 @@ async function getEligibleTracks(
     return eligibleTracks
   }
 
-  /*
-   * Deezer search results do not reliably
-   * contain release_date.
-   *
-   * Year questions therefore need the
-   * full track details before we can
-   * determine whether a track is usable.
-   */
   eligibleTracks =
     await Promise.all(
       eligibleTracks.map(
         hydrateTrack,
+      ),
+    )
+
+  eligibleTracks =
+    await Promise.all(
+      eligibleTracks.map(
+        enrichReleaseYear,
       ),
     )
 
@@ -107,3 +126,4 @@ export async function generateGameQuestion(
     difficulty,
   )
 }
+
