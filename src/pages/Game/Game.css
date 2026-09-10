@@ -39,27 +39,66 @@
 .game-question__art {
   width: 280px;
   aspect-ratio: 1;
-  margin: 0 auto;
+  margin: 0 auto 24px;
+  border-radius: 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
-  background:
-    linear-gradient(
-      135deg,
-      rgba(139, 92, 246, 0.18),
-      rgba(236, 72, 153, 0.08)
-    ),
-    var(--color-surface);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
+  overflow: hidden;
 }
 
 .game-question__art span {
-  font-family: var(--font-display);
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 72px;
   font-weight: 700;
-  color: var(--color-subtle);
+  color: var(--muted);
+}
+
+.game-question__art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.game-question__art--revealed {
+  border-color: var(--purple);
+}
+
+.game-song-reveal {
+  text-align: center;
+  margin: 24px auto 0;
+}
+
+.game-song-reveal__title {
+  margin: 0;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--white);
+}
+
+.game-song-reveal__artist {
+  margin: 6px 0 0;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--purple-light);
+}
+
+.game-song-reveal__album {
+  margin: 5px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.game-song-reveal__year {
+  margin: 10px 0 0;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--cyan);
 }
 
 .game-question .audio-player {

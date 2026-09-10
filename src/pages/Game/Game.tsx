@@ -377,8 +377,24 @@ function Game() {
           </h1>
 
           <div className="game-question">
-            <div className="game-question__art">
-              <span>?</span>
+            <div
+              className={`game-question__art ${
+                isAnswered
+                  ? 'game-question__art--revealed'
+                  : ''
+              }`}
+            >
+              {isAnswered &&
+              question.song.artworkUrl ? (
+                <img
+                  src={
+                    question.song.artworkUrl
+                  }
+                  alt={`${question.song.album} album artwork`}
+                />
+              ) : (
+                <span>?</span>
+              )}
             </div>
 
             <AudioPlayer
@@ -394,6 +410,34 @@ function Game() {
                 handleTimeComplete
               }
             />
+
+            {isAnswered && (
+              <div className="game-song-reveal">
+                <p className="game-song-reveal__title">
+                  {question.song.title}
+                </p>
+
+                <p className="game-song-reveal__artist">
+                  {question.song.artist}
+                </p>
+
+                <p className="game-song-reveal__album">
+                  {question.song.album}
+                </p>
+
+                {question.type ===
+                  'guess-the-year' &&
+                  question.song.releaseYear !==
+                    undefined && (
+                    <p className="game-song-reveal__year">
+                      {
+                        question.song
+                          .releaseYear
+                      }
+                    </p>
+                  )}
+              </div>
+            )}
           </div>
 
           <AnswerGrid
