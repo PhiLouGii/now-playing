@@ -1,24 +1,24 @@
-import { deezerMusicProvider } from './deezerMusicProvider.js'
 import {
   getCandidatePool,
 } from './musicCandidateService.js'
+
 import {
   selectDistractors,
 } from './distractorSelector.js'
 
-async function test() {
-  const results =
-    await deezerMusicProvider.searchTracks(
-      'Espresso Sabrina Carpenter',
-      1,
-    )
+import {
+  deezerMusicProvider,
+} from './deezerMusicProvider.js'
 
+async function test() {
   const correctTrack =
-    results[0]
+    await deezerMusicProvider.getTrackById(
+      'deezer-62724014',
+    )
 
   if (!correctTrack) {
     throw new Error(
-      'Could not find Espresso',
+      'Could not find test track',
     )
   }
 
@@ -31,30 +31,24 @@ async function test() {
     selectDistractors(
       candidates,
       correctTrack,
+      'name-the-album',
       3,
     )
 
+  console.log('\nCORRECT:')
   console.log(
-    '\nCORRECT:',
+    `${correctTrack.title} — ${correctTrack.artist} — ${correctTrack.album}`,
   )
 
-  console.log(
-    `${correctTrack.title} — ${correctTrack.artist}`,
-  )
+  console.log('\nDISTRACTORS:')
 
-  console.log(
-    '\nDISTRACTORS:',
-  )
-
-  for (
-    const distractor of distractors
-  ) {
+  for (const distractor of distractors) {
     console.log(
-      `${distractor.track.title} — ${distractor.track.artist}`,
+      `${distractor.track.title} — ${distractor.track.artist} — ${distractor.track.album}`,
     )
 
     console.log(
-      `  score: ${distractor.score.toFixed(2)}`,
+      `  score: ${distractor.score}`,
     )
 
     console.log(
@@ -62,19 +56,20 @@ async function test() {
     )
 
     if (
-      distractor.similarity !==
-      undefined
+      distractor.similarity !== undefined
     ) {
       console.log(
         `  similarity: ${distractor.similarity}`,
       )
     }
-
-    console.log()
   }
 }
 
 test().catch((error) => {
-  console.error(error)
+  console.error(
+    'Distractor selector test failed:',
+    error,
+  )
+
   process.exit(1)
 })
