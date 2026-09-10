@@ -6,6 +6,7 @@ import type {
 type DeezerTrack = {
   id: number
   title?: string
+  isrc?: string
   artist?: {
     id?: number
     name?: string
