@@ -3,14 +3,13 @@ import type {
   RoundConfig,
 } from '../types/game'
 
-const API_URL =
-  'http://localhost:3000/api'
+const API_URL = 'http://localhost:3000/api'
 
 type GeneratedQuestionResponse = {
   question: Question
 }
 
-async function fetchQuestion(
+export async function generateQuestion(
   type: Question['type'],
   difficulty: Question['difficulty'],
 ): Promise<Question> {
@@ -46,7 +45,7 @@ export async function generateRound(
               roundConfig.questionTypes.length
           ]
 
-        return fetchQuestion(
+        return generateQuestion(
           type,
           roundConfig.difficulty,
         )

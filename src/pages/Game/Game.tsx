@@ -11,7 +11,9 @@ import GameProgress from '../../components/game/GameProgress'
 import ResultsScreen from '../../components/game/ResultsScreen'
 
 import { defaultRound } from '../../data/defaultRound'
-import { generateRound } from '../../services/gameService'
+import {
+  generateQuestion,
+} from '../../services/gameService'
 
 import type {
   Question,
@@ -41,6 +43,9 @@ function Game() {
 
   const [isLoading, setIsLoading] =
     useState(true)
+
+  const [isLoadingNext, setIsLoadingNext] =
+    useState(false)
 
   const [currentQuestion, setCurrentQuestion] =
     useState(0)
@@ -75,25 +80,33 @@ function Game() {
   const [isGameComplete, setIsGameComplete] =
     useState(false)
 
+  /*
+   * Load the first question
+   */
+
   useEffect(() => {
     let isMounted = true
 
-    async function loadRound() {
+    async function loadFirstQuestion() {
       setIsLoading(true)
 
       try {
-        const generatedQuestions =
-          await generateRound(roundConfig)
+        const firstType =
+          roundConfig.questionTypes[0]
+
+        const question =
+          await generateQuestion(
+            firstType,
+            roundConfig.difficulty,
+          )
 
         if (isMounted) {
-          setQuestions(
-            generatedQuestions,
-          )
+          setQuestions([question])
           setIsLoading(false)
         }
       } catch (error) {
         console.error(
-          'Failed to generate round:',
+          'Failed to generate first question:',
           error,
         )
 
@@ -103,12 +116,81 @@ function Game() {
       }
     }
 
-    loadRound()
+    loadFirstQuestion()
 
     return () => {
       isMounted = false
     }
   }, [roundConfig])
+
+  /*
+   * Preload the next question in the background
+   *
+   * This hook MUST remain above every conditional return.
+   */
+
+  useEffect(() => {
+    if (
+      questions.length === 0 ||
+      questions.length >=
+        roundConfig.questionCount
+    ) {
+      return
+    }
+
+    const nextIndex =
+      questions.length
+
+    let isMounted = true
+
+    async function preloadNextQuestion() {
+      try {
+        const nextType =
+          roundConfig.questionTypes[
+            nextIndex %
+              roundConfig.questionTypes.length
+          ]
+
+        const nextQuestion =
+          await generateQuestion(
+            nextType,
+            roundConfig.difficulty,
+          )
+
+        if (isMounted) {
+          setQuestions(
+            (current) => {
+              if (
+                current.length >
+                nextIndex
+              ) {
+                return current
+              }
+
+              return [
+                ...current,
+                nextQuestion,
+              ]
+            },
+          )
+        }
+      } catch (error) {
+        console.error(
+          'Failed to preload next question:',
+          error,
+        )
+      }
+    }
+
+    preloadNextQuestion()
+
+    return () => {
+      isMounted = false
+    }
+  }, [
+    questions.length,
+    roundConfig,
+  ])
 
   /*
    * Loading state
@@ -267,27 +349,89 @@ function Game() {
   }
 
   /*
-   * Next question
+   * Reset question-specific state
    */
 
-  function handleNextQuestion() {
-    if (
-      currentQuestion >=
-      questions.length - 1
-    ) {
-      setIsGameComplete(true)
-      return
-    }
-
-    setCurrentQuestion(
-      (current) => current + 1,
-    )
-
+  function resetQuestionState() {
     setSelectedAnswer(null)
     setIsTimeUp(false)
     setPointsEarned(0)
     setMultiplierEarned(1)
     setTimeRemaining(10)
+  }
+
+  /*
+   * Move to the next question
+   */
+
+  async function handleNextQuestion() {
+    if (
+      currentQuestion >=
+      roundConfig.questionCount - 1
+    ) {
+      setIsGameComplete(true)
+      return
+    }
+
+    const nextIndex =
+      currentQuestion + 1
+
+    /*
+     * The next question may already have
+     * been generated in the background.
+     */
+
+    if (questions[nextIndex]) {
+      setCurrentQuestion(nextIndex)
+      resetQuestionState()
+      return
+    }
+
+    /*
+     * Fallback: generate the next question
+     * if the background request hasn't finished.
+     */
+
+    setIsLoadingNext(true)
+
+    try {
+      const nextType =
+        roundConfig.questionTypes[
+          nextIndex %
+            roundConfig.questionTypes.length
+        ]
+
+      const nextQuestion =
+        await generateQuestion(
+          nextType,
+          roundConfig.difficulty,
+        )
+
+      setQuestions(
+        (current) => {
+          if (
+            current[nextIndex]
+          ) {
+            return current
+          }
+
+          return [
+            ...current,
+            nextQuestion,
+          ]
+        },
+      )
+
+      setCurrentQuestion(nextIndex)
+      resetQuestionState()
+    } catch (error) {
+      console.error(
+        'Failed to generate next question:',
+        error,
+      )
+    } finally {
+      setIsLoadingNext(false)
+    }
   }
 
   /*
@@ -299,7 +443,7 @@ function Game() {
       <ResultsScreen
         score={score}
         totalQuestions={
-          questions.length
+          roundConfig.questionCount
         }
         correctAnswers={
           correctAnswers
@@ -309,13 +453,13 @@ function Game() {
     )
   }
 
-  /*
-   * Game
-   */
-
   const isCorrect =
     selectedAnswer ===
     question.correctAnswer
+
+  /*
+   * Game
+   */
 
   return (
     <div className="game-page">
@@ -325,7 +469,7 @@ function Game() {
             currentQuestion + 1
           }
           totalQuestions={
-            questions.length
+            roundConfig.questionCount
           }
           score={score}
         />
@@ -335,7 +479,7 @@ function Game() {
             currentQuestion + 1
           }
           total={
-            questions.length
+            roundConfig.questionCount
           }
         />
 
@@ -522,11 +666,15 @@ function Game() {
               onClick={
                 handleNextQuestion
               }
+              disabled={isLoadingNext}
             >
-              {currentQuestion >=
-              questions.length - 1
-                ? 'SEE RESULTS'
-                : 'NEXT QUESTION'}
+              {isLoadingNext
+                ? 'LOADING...'
+                : currentQuestion >=
+                    roundConfig.questionCount -
+                      1
+                  ? 'SEE RESULTS'
+                  : 'NEXT QUESTION'}
             </button>
           )}
         </main>
