@@ -8,6 +8,7 @@ type AudioPlayerProps = {
   onTimeUpdate?: (timeRemaining: number) => void
   onStageComplete?: () => void
   disabled?: boolean
+  playFullSong?: boolean
 }
 
 function AudioPlayer({
@@ -16,6 +17,7 @@ function AudioPlayer({
   onTimeUpdate,
   onStageComplete,
   disabled = false,
+  playFullSong = false,
 }: AudioPlayerProps) {
   const audioRef =
     useRef<HTMLAudioElement | null>(null)
@@ -57,14 +59,16 @@ function AudioPlayer({
   /*
    * Reset playback whenever a new listening stage
    * is unlocked.
-   *
-   * The new stage always starts from the beginning
-   * of the song.
    */
   useEffect(() => {
     const audio = audioRef.current
 
-    if (!audio || disabled || hasError) {
+    if (
+      !audio ||
+      disabled ||
+      hasError ||
+      playFullSong
+    ) {
       return
     }
 
@@ -82,12 +86,68 @@ function AudioPlayer({
     maxListenDuration,
     disabled,
     hasError,
+    playFullSong,
+  ])
+
+  /*
+   * When the answer is revealed, allow the
+   * complete preview to continue playing.
+   */
+  useEffect(() => {
+    const audio = audioRef.current
+
+    if (
+      !audio ||
+      !playFullSong ||
+      hasError
+    ) {
+      return
+    }
+
+    stageCompleteRef.current = true
+
+    /*
+     * If the player reveals the answer before
+     * the current stage has finished, continue
+     * from the current position.
+     *
+     * If the stage already reset to 0, start
+     * from the beginning of the preview.
+     */
+    if (
+      audio.currentTime === 0
+    ) {
+      audio.currentTime = 0
+    }
+
+    audio.play()
+      .then(() => {
+        setIsPlaying(true)
+      })
+      .catch((error) => {
+        console.error(
+          'Unable to continue full song:',
+          error,
+        )
+      })
+  }, [
+    playFullSong,
+    hasError,
   ])
 
   function handleAudioTimeUpdate() {
     const audio = audioRef.current
 
     if (!audio) {
+      return
+    }
+
+    /*
+     * Once the answer is revealed, the listening
+     * limit no longer applies.
+     */
+    if (playFullSong) {
+      setIsPlaying(!audio.paused)
       return
     }
 
@@ -121,11 +181,6 @@ function AudioPlayer({
 
       audio.pause()
 
-      /*
-       * Reset the actual audio position so the
-       * next Play starts this stage from the
-       * beginning.
-       */
       audio.currentTime = 0
 
       setIsPlaying(false)
@@ -163,14 +218,14 @@ function AudioPlayer({
 
     if (
       !audio ||
-      disabled ||
       hasError
     ) {
       return
     }
 
     /*
-     * Pause without losing the current position.
+     * Once the answer is revealed, the player
+     * remains usable for the full preview.
      */
     if (isPlaying) {
       audio.pause()
@@ -179,19 +234,25 @@ function AudioPlayer({
     }
 
     /*
-     * If the previous playback reached the stage
-     * limit, start this stage again from the
-     * beginning.
+     * Normal game playback.
      */
-    if (stageCompleteRef.current) {
-      audio.currentTime = 0
+    if (!playFullSong) {
+      if (disabled) {
+        return
+      }
 
-      stageCompleteRef.current = false
+      if (stageCompleteRef.current) {
+        audio.currentTime = 0
 
-      setTimeLeft(maxListenDuration)
-      setProgress(0)
+        stageCompleteRef.current = false
 
-      onTimeUpdate?.(maxListenDuration)
+        setTimeLeft(maxListenDuration)
+        setProgress(0)
+
+        onTimeUpdate?.(
+          maxListenDuration,
+        )
+      }
     }
 
     try {
@@ -239,7 +300,8 @@ function AudioPlayer({
         onClick={handlePlayPause}
         disabled={
           !audioUrl ||
-          disabled ||
+          (!playFullSong &&
+            disabled) ||
           hasError
         }
         aria-label={
@@ -275,7 +337,9 @@ function AudioPlayer({
       <div className="audio-player__timer">
         {hasError
           ? 'ERROR'
-          : formatTime(timeLeft)}
+          : playFullSong
+            ? 'PLAYING'
+            : formatTime(timeLeft)}
       </div>
     </div>
   )

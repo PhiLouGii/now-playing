@@ -35,6 +35,21 @@ const LISTENING_STAGES = [
   15,
 ]
 
+type AnswerStatus =
+  | 'idle'
+  | 'correct'
+  | 'incorrect'
+  | 'revealed'
+
+export type RecognitionResult = {
+  questionNumber: number
+  title: string
+  artist: string
+  listenDuration: number
+  points: number
+  correct: boolean
+}
+
 function Game() {
   const location = useLocation()
 
@@ -60,6 +75,9 @@ function Game() {
   const [selectedAnswer, setSelectedAnswer] =
     useState<string | null>(null)
 
+  const [answerStatus, setAnswerStatus] =
+    useState<AnswerStatus>('idle')
+
   const [score, setScore] =
     useState(0)
 
@@ -71,6 +89,9 @@ function Game() {
 
   const [correctAnswers, setCorrectAnswers] =
     useState(0)
+
+  const [recognitionResults, setRecognitionResults] =
+    useState<RecognitionResult[]>([])
 
   const [timeRemaining, setTimeRemaining] =
     useState(
@@ -85,9 +106,6 @@ function Game() {
 
   const [multiplierEarned, setMultiplierEarned] =
     useState(1)
-
-  const [isGivingUp, setIsGivingUp] =
-    useState(false)
 
   const [isGameComplete, setIsGameComplete] =
     useState(false)
@@ -251,19 +269,14 @@ function Game() {
   const question =
     questions[currentQuestion]
 
-  /*
-   * The song is revealed ONLY when:
-   *
-   * 1. The player answers correctly
-   * 2. The player gives up
-   */
   const isAnswered =
-    selectedAnswer ===
-      question.correctAnswer ||
-    isGivingUp
+    answerStatus !== 'idle'
 
   const maxListenDuration =
     LISTENING_STAGES[listeningStage]
+
+  const isCorrect =
+    answerStatus === 'correct'
 
   function handleTimeUpdate(
     time: number,
@@ -273,14 +286,23 @@ function Game() {
     }
   }
 
-  /*
-   * Called when the current listening
-   * stage reaches its limit.
-   *
-   * This DOES NOT reveal the answer.
-   */
   function handleStageComplete() {
     setTimeRemaining(0)
+  }
+
+  /*
+   * Record the player's recognition
+   * performance for the current song.
+   */
+  function recordRecognition(
+    result: RecognitionResult,
+  ) {
+    setRecognitionResults(
+      (current) => [
+        ...current,
+        result,
+      ],
+    )
   }
 
   /*
@@ -293,22 +315,12 @@ function Game() {
       return
     }
 
-    const isCorrect =
+    const isAnswerCorrect =
       answer === question.correctAnswer
 
-    if (isCorrect) {
-      /*
-       * The current listening stage determines
-       * the base score.
-       *
-       * Earlier stages are worth more:
-       *
-       * 0.1s = 1000
-       * 0.5s = 800
-       * 2s   = 600
-       * 8s   = 400
-       * 15s  = 200
-       */
+    setSelectedAnswer(answer)
+
+    if (isAnswerCorrect) {
       const nextStreak =
         streak + 1
 
@@ -323,7 +335,7 @@ function Game() {
           nextStreak,
         )
 
-      setSelectedAnswer(answer)
+      setAnswerStatus('correct')
 
       setCorrectAnswers(
         (current) => current + 1,
@@ -353,55 +365,101 @@ function Game() {
 
       setStreak(nextStreak)
 
-      console.log(
-        `Stage: ${maxListenDuration}s | Multiplier: x${multiplier} | Final: ${finalPoints}`,
-      )
+      recordRecognition({
+        questionNumber:
+          currentQuestion + 1,
+        title:
+          question.song.title,
+        artist:
+          question.song.artist,
+        listenDuration:
+          maxListenDuration,
+        points:
+          finalPoints,
+        correct: true,
+      })
 
       return
     }
 
     /*
-     * Wrong answer:
-     *
-     * Do NOT reveal the song.
-     * Do NOT end the question.
-     *
-     * Move to the next listening stage.
+     * Incorrect answers end the question,
+     * but do NOT advance the listening stage.
      */
-    setSelectedAnswer(null)
+    setAnswerStatus('incorrect')
     setStreak(0)
     setPointsEarned(0)
     setMultiplierEarned(1)
 
-    if (
-      listeningStage <
-      LISTENING_STAGES.length - 1
-    ) {
-      setListeningStage(
-        (current) => current + 1,
-      )
-
-      setTimeRemaining(
-        LISTENING_STAGES[
-          listeningStage + 1
-        ],
-      )
-    }
+    recordRecognition({
+      questionNumber:
+        currentQuestion + 1,
+      title:
+        question.song.title,
+      artist:
+        question.song.artist,
+      listenDuration:
+        maxListenDuration,
+      points: 0,
+      correct: false,
+    })
   }
 
   /*
-   * Player chooses to stop guessing.
+   * Player chooses to hear more of the song.
    */
-  function handleGiveUp() {
+  function handleAdvance() {
     if (isAnswered) {
       return
     }
 
-    setIsGivingUp(true)
+    if (
+      listeningStage >=
+      LISTENING_STAGES.length - 1
+    ) {
+      return
+    }
+
+    const nextStage =
+      listeningStage + 1
+
+    setListeningStage(nextStage)
+
+    setTimeRemaining(
+      LISTENING_STAGES[nextStage],
+    )
+  }
+
+  /*
+   * Player chooses to reveal the answer.
+   *
+   * A revealed answer is recorded as an
+   * unrecognized song at the stage where
+   * the player gave up.
+   */
+  function handleRevealAnswer() {
+    if (isAnswered) {
+      return
+    }
+
+    setAnswerStatus('revealed')
     setSelectedAnswer(null)
     setStreak(0)
     setPointsEarned(0)
     setMultiplierEarned(1)
+
+    recordRecognition({
+      questionNumber:
+        currentQuestion + 1,
+      title:
+        question.song.title,
+      artist:
+        question.song.artist,
+      listenDuration:
+        maxListenDuration,
+      points: 0,
+      correct: false,
+    })
   }
 
   /*
@@ -409,7 +467,7 @@ function Game() {
    */
   function resetQuestionState() {
     setSelectedAnswer(null)
-    setIsGivingUp(false)
+    setAnswerStatus('idle')
     setListeningStage(0)
     setPointsEarned(0)
     setMultiplierEarned(1)
@@ -433,20 +491,12 @@ function Game() {
     const nextIndex =
       currentQuestion + 1
 
-    /*
-     * If the next question was already
-     * preloaded, use it immediately.
-     */
     if (questions[nextIndex]) {
       setCurrentQuestion(nextIndex)
       resetQuestionState()
       return
     }
 
-    /*
-     * Fallback if preloading hasn't
-     * finished yet.
-     */
     setIsLoadingNext(true)
 
     try {
@@ -503,13 +553,12 @@ function Game() {
           correctAnswers
         }
         bestStreak={bestStreak}
+        recognitionResults={
+          recognitionResults
+        }
       />
     )
   }
-
-  const isCorrect =
-    selectedAnswer ===
-    question.correctAnswer
 
   return (
     <div className="game-page">
@@ -606,6 +655,10 @@ function Game() {
                 handleStageComplete
               }
               disabled={isAnswered}
+              playFullSong={
+                answerStatus ===
+                'revealed'
+              }
             />
 
             {isAnswered && (
@@ -656,31 +709,56 @@ function Game() {
           />
 
           {!isAnswered && (
-            <button
-              type="button"
-              className="game-give-up"
-              onClick={
-                handleGiveUp
-              }
-            >
-              GIVE UP
-            </button>
+            <div className="game-actions">
+              <button
+                type="button"
+                className="game-advance"
+                onClick={
+                  handleAdvance
+                }
+                disabled={
+                  listeningStage >=
+                  LISTENING_STAGES.length - 1
+                }
+              >
+                {listeningStage <
+                LISTENING_STAGES.length - 1
+                  ? `ADVANCE → ${
+                      LISTENING_STAGES[
+                        listeningStage + 1
+                      ]
+                    }s`
+                  : 'MAX LISTEN TIME'}
+              </button>
+
+              <button
+                type="button"
+                className="game-reveal"
+                onClick={
+                  handleRevealAnswer
+                }
+              >
+                REVEAL ANSWER
+              </button>
+            </div>
           )}
 
           {isAnswered && (
             <div
               className={`game-feedback ${
-                isGivingUp
+                answerStatus === 'revealed'
                   ? 'game-feedback--timeout'
-                  : isCorrect
+                  : answerStatus === 'correct'
                     ? 'game-feedback--correct'
                     : 'game-feedback--incorrect'
               }`}
             >
               <div className="game-feedback__label">
-                {isGivingUp
+                {answerStatus ===
+                'revealed'
                   ? 'ANSWER REVEALED'
-                  : isCorrect
+                  : answerStatus ===
+                      'correct'
                     ? 'CORRECT'
                     : 'INCORRECT'}
               </div>
@@ -691,24 +769,24 @@ function Game() {
                 }
               </div>
 
-              {isCorrect &&
-                !isGivingUp && (
-                  <div className="game-feedback__points">
-                    +
-                    {pointsEarned.toLocaleString()}{' '}
-                    POINTS
+              {answerStatus ===
+                'correct' && (
+                <div className="game-feedback__points">
+                  +
+                  {pointsEarned.toLocaleString()}{' '}
+                  POINTS
 
-                    {multiplierEarned >
-                      1 && (
-                      <span>
-                        {' '}×
-                        {
-                          multiplierEarned
-                        }
-                      </span>
-                    )}
-                  </div>
-                )}
+                  {multiplierEarned >
+                    1 && (
+                    <span>
+                      {' '}×
+                      {
+                        multiplierEarned
+                      }
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
