@@ -28,6 +28,14 @@ import {
 
 import './Game.css'
 
+const LISTENING_STAGES = [
+  0.1,
+  0.5,
+  2,
+  8,
+  15,
+]
+
 function Game() {
   const location = useLocation()
 
@@ -66,7 +74,12 @@ function Game() {
     useState(0)
 
   const [timeRemaining, setTimeRemaining] =
-    useState(10)
+    useState(
+      LISTENING_STAGES[0],
+    )
+
+  const [listeningStage, setListeningStage] =
+    useState(0)
 
   const [pointsEarned, setPointsEarned] =
     useState(0)
@@ -74,16 +87,15 @@ function Game() {
   const [multiplierEarned, setMultiplierEarned] =
     useState(1)
 
-  const [isTimeUp, setIsTimeUp] =
+  const [isGivingUp, setIsGivingUp] =
     useState(false)
 
   const [isGameComplete, setIsGameComplete] =
     useState(false)
 
   /*
-   * Load the first question
+   * Load the first question.
    */
-
   useEffect(() => {
     let isMounted = true
 
@@ -124,11 +136,9 @@ function Game() {
   }, [roundConfig])
 
   /*
-   * Preload the next question in the background
-   *
-   * This hook MUST remain above every conditional return.
+   * Preload the next question while
+   * the player is playing the current one.
    */
-
   useEffect(() => {
     if (
       questions.length === 0 ||
@@ -193,9 +203,8 @@ function Game() {
   ])
 
   /*
-   * Loading state
+   * Loading state.
    */
-
   if (isLoading) {
     return (
       <div className="game-page">
@@ -215,9 +224,8 @@ function Game() {
   }
 
   /*
-   * Safety check
+   * Failed to generate a question.
    */
-
   if (questions.length === 0) {
     return (
       <div className="game-page">
@@ -244,12 +252,19 @@ function Game() {
   const question =
     questions[currentQuestion]
 
-  const isAnswered =
-    selectedAnswer !== null || isTimeUp
-
   /*
-   * Timer
+   * The song is revealed ONLY when:
+   *
+   * 1. The player answers correctly
+   * 2. The player gives up
    */
+  const isAnswered =
+    selectedAnswer ===
+      question.correctAnswer ||
+    isGivingUp
+
+  const maxListenDuration =
+    LISTENING_STAGES[listeningStage]
 
   function handleTimeUpdate(
     time: number,
@@ -259,22 +274,19 @@ function Game() {
     }
   }
 
-  function handleTimeComplete() {
-    if (isAnswered) {
-      return
-    }
-
+  /*
+   * Called when the current listening
+   * stage reaches its limit.
+   *
+   * This DOES NOT reveal the answer.
+   */
+  function handleStageComplete() {
     setTimeRemaining(0)
-    setPointsEarned(0)
-    setMultiplierEarned(1)
-    setIsTimeUp(true)
-    setStreak(0)
   }
 
   /*
-   * Answer selection
+   * Handle an answer.
    */
-
   function handleAnswer(
     answer: string,
   ) {
@@ -282,17 +294,17 @@ function Game() {
       return
     }
 
-    const timeAtAnswer =
-      timeRemaining
-
     const isCorrect =
       answer === question.correctAnswer
 
-    setSelectedAnswer(answer)
-
     if (isCorrect) {
+      const timeAtAnswer =
+        maxListenDuration
+
       const nextStreak =
         streak + 1
+
+      setSelectedAnswer(answer)
 
       setCorrectAnswers(
         (current) => current + 1,
@@ -341,29 +353,71 @@ function Game() {
       console.log(
         `Base: ${basePoints} | Multiplier: x${multiplier} | Final: ${finalPoints}`,
       )
-    } else {
-      setPointsEarned(0)
-      setMultiplierEarned(1)
-      setStreak(0)
+
+      return
+    }
+
+    /*
+     * Wrong answer:
+     *
+     * Do NOT reveal the song.
+     * Do NOT end the question.
+     *
+     * Move to the next listening stage.
+     */
+    setSelectedAnswer(null)
+    setStreak(0)
+    setPointsEarned(0)
+    setMultiplierEarned(1)
+
+    if (
+      listeningStage <
+      LISTENING_STAGES.length - 1
+    ) {
+      setListeningStage(
+        (current) => current + 1,
+      )
+
+      setTimeRemaining(
+        LISTENING_STAGES[
+          listeningStage + 1
+        ],
+      )
     }
   }
 
   /*
-   * Reset question-specific state
+   * Player chooses to stop guessing.
    */
+  function handleGiveUp() {
+    if (isAnswered) {
+      return
+    }
 
-  function resetQuestionState() {
+    setIsGivingUp(true)
     setSelectedAnswer(null)
-    setIsTimeUp(false)
+    setStreak(0)
     setPointsEarned(0)
     setMultiplierEarned(1)
-    setTimeRemaining(10)
   }
 
   /*
-   * Move to the next question
+   * Reset all question-specific state.
    */
+  function resetQuestionState() {
+    setSelectedAnswer(null)
+    setIsGivingUp(false)
+    setListeningStage(0)
+    setPointsEarned(0)
+    setMultiplierEarned(1)
+    setTimeRemaining(
+      LISTENING_STAGES[0],
+    )
+  }
 
+  /*
+   * Move to the next question.
+   */
   async function handleNextQuestion() {
     if (
       currentQuestion >=
@@ -377,10 +431,9 @@ function Game() {
       currentQuestion + 1
 
     /*
-     * The next question may already have
-     * been generated in the background.
+     * If the next question was already
+     * preloaded, use it immediately.
      */
-
     if (questions[nextIndex]) {
       setCurrentQuestion(nextIndex)
       resetQuestionState()
@@ -388,10 +441,9 @@ function Game() {
     }
 
     /*
-     * Fallback: generate the next question
-     * if the background request hasn't finished.
+     * Fallback if preloading hasn't
+     * finished yet.
      */
-
     setIsLoadingNext(true)
 
     try {
@@ -435,9 +487,8 @@ function Game() {
   }
 
   /*
-   * Results
+   * Results screen.
    */
-
   if (isGameComplete) {
     return (
       <ResultsScreen
@@ -456,10 +507,6 @@ function Game() {
   const isCorrect =
     selectedAnswer ===
     question.correctAnswer
-
-  /*
-   * Game
-   */
 
   return (
     <div className="game-page">
@@ -546,14 +593,31 @@ function Game() {
               audioUrl={
                 question.song.audioUrl
               }
-              duration={10}
+              maxListenDuration={
+                maxListenDuration
+              }
               onTimeUpdate={
                 handleTimeUpdate
               }
-              onComplete={
-                handleTimeComplete
+              onStageComplete={
+                handleStageComplete
               }
+              disabled={isAnswered}
             />
+
+            <div className="game-listening-stage">
+              <span>
+                LISTENING STAGE
+              </span>
+
+              <strong>
+                {listeningStage + 1}
+              </strong>
+
+              <span>
+                / {LISTENING_STAGES.length}
+              </span>
+            </div>
 
             {isAnswered && (
               <div className="game-song-reveal">
@@ -602,10 +666,22 @@ function Game() {
             }
           />
 
+          {!isAnswered && (
+            <button
+              type="button"
+              className="game-give-up"
+              onClick={
+                handleGiveUp
+              }
+            >
+              GIVE UP
+            </button>
+          )}
+
           {isAnswered && (
             <div
               className={`game-feedback ${
-                isTimeUp
+                isGivingUp
                   ? 'game-feedback--timeout'
                   : isCorrect
                     ? 'game-feedback--correct'
@@ -613,8 +689,8 @@ function Game() {
               }`}
             >
               <div className="game-feedback__label">
-                {isTimeUp
-                  ? "TIME'S UP"
+                {isGivingUp
+                  ? 'ANSWER REVEALED'
                   : isCorrect
                     ? 'CORRECT'
                     : 'INCORRECT'}
@@ -627,7 +703,7 @@ function Game() {
               </div>
 
               {isCorrect &&
-                !isTimeUp && (
+                !isGivingUp && (
                   <div className="game-feedback__points">
                     +
                     {pointsEarned.toLocaleString()}{' '}
@@ -657,6 +733,20 @@ function Game() {
                 {streak}
               </strong>
             </div>
+
+            <div className="game-listening-time">
+              <span>
+                LISTEN TIME
+              </span>
+
+              <strong>
+                {timeRemaining < 1
+                  ? `${timeRemaining.toFixed(1)}s`
+                  : `${Math.ceil(
+                      timeRemaining,
+                    )}s`}
+              </strong>
+            </div>
           </div>
 
           {isAnswered && (
@@ -666,7 +756,9 @@ function Game() {
               onClick={
                 handleNextQuestion
               }
-              disabled={isLoadingNext}
+              disabled={
+                isLoadingNext
+              }
             >
               {isLoadingNext
                 ? 'LOADING...'

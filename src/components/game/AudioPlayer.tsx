@@ -4,33 +4,77 @@ import './AudioPlayer.css'
 
 type AudioPlayerProps = {
   audioUrl?: string
-  duration?: number
+  maxListenDuration?: number
   onTimeUpdate?: (timeRemaining: number) => void
-  onComplete?: () => void
+  onStageComplete?: () => void
+  disabled?: boolean
 }
 
 function AudioPlayer({
   audioUrl,
-  duration = 10,
+  maxListenDuration = 0.1,
   onTimeUpdate,
-  onComplete,
+  onStageComplete,
+  disabled = false,
 }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const stageCompleteRef = useRef(false)
 
   const [isPlaying, setIsPlaying] = useState(false)
-  const [timeLeft, setTimeLeft] = useState(duration)
+  const [timeLeft, setTimeLeft] =
+    useState(maxListenDuration)
   const [progress, setProgress] = useState(0)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
-    setTimeLeft(duration)
+    setTimeLeft(maxListenDuration)
     setProgress(0)
     setIsPlaying(false)
+    setHasError(false)
+    stageCompleteRef.current = false
 
     if (audioRef.current) {
       audioRef.current.pause()
       audioRef.current.currentTime = 0
     }
-  }, [duration, audioUrl])
+  }, [audioUrl])
+
+  useEffect(() => {
+    const audio = audioRef.current
+
+    if (!audio) {
+      return
+    }
+
+    stageCompleteRef.current = false
+
+    if (audio.currentTime >= maxListenDuration) {
+      audio.pause()
+      audio.currentTime = maxListenDuration
+      setIsPlaying(false)
+      setTimeLeft(0)
+      setProgress(100)
+    } else {
+      const remaining = Math.max(
+        0,
+        maxListenDuration - audio.currentTime,
+      )
+
+      setTimeLeft(remaining)
+
+      const percentage =
+        maxListenDuration > 0
+          ? Math.min(
+              100,
+              (audio.currentTime /
+                maxListenDuration) *
+                100,
+            )
+          : 0
+
+      setProgress(percentage)
+    }
+  }, [maxListenDuration])
 
   function handleAudioTimeUpdate() {
     const audio = audioRef.current
@@ -40,40 +84,70 @@ function AudioPlayer({
     }
 
     const elapsed = audio.currentTime
-    const remaining = Math.max(0, duration - elapsed)
-    const percentage = Math.min(100, (elapsed / duration) * 100)
+    const remaining = Math.max(
+      0,
+      maxListenDuration - elapsed,
+    )
 
-    setTimeLeft(Math.ceil(remaining))
+    const percentage =
+      maxListenDuration > 0
+        ? Math.min(
+            100,
+            (elapsed /
+              maxListenDuration) *
+              100,
+          )
+        : 0
+
+    setTimeLeft(remaining)
     setProgress(percentage)
 
-    onTimeUpdate?.(Math.ceil(remaining))
+    onTimeUpdate?.(remaining)
 
-    if (remaining <= 0) {
+    if (
+      elapsed >= maxListenDuration &&
+      !stageCompleteRef.current
+    ) {
+      stageCompleteRef.current = true
+
       audio.pause()
+      audio.currentTime =
+        maxListenDuration
+
       setIsPlaying(false)
       setTimeLeft(0)
       setProgress(100)
+
       onTimeUpdate?.(0)
-      onComplete?.()
+      onStageComplete?.()
     }
   }
 
   function handleAudioEnded() {
     setIsPlaying(false)
-    setTimeLeft(0)
-    setProgress(100)
-    onTimeUpdate?.(0)
-    onComplete?.()
+
+    if (!stageCompleteRef.current) {
+      stageCompleteRef.current = true
+      onStageComplete?.()
+    }
+  }
+
+  function handleAudioError() {
+    setIsPlaying(false)
+    setHasError(true)
   }
 
   async function handlePlayPause() {
     const audio = audioRef.current
 
-    if (!audio) {
+    if (!audio || disabled || hasError) {
       return
     }
 
-    if (timeLeft <= 0) {
+    if (
+      audio.currentTime >=
+      maxListenDuration
+    ) {
       return
     }
 
@@ -87,8 +161,24 @@ function AudioPlayer({
       await audio.play()
       setIsPlaying(true)
     } catch (error) {
-      console.error('Unable to play audio:', error)
+      console.error(
+        'Unable to play audio:',
+        error,
+      )
+
+      setHasError(true)
+      setIsPlaying(false)
     }
+  }
+
+  function formatTime(value: number) {
+    if (value < 1) {
+      return `${value.toFixed(1)}s`
+    }
+
+    return `0:${String(
+      Math.ceil(value),
+    ).padStart(2, '0')}`
   }
 
   return (
@@ -97,8 +187,12 @@ function AudioPlayer({
         <audio
           ref={audioRef}
           src={audioUrl}
-          onTimeUpdate={handleAudioTimeUpdate}
+          preload="auto"
+          onTimeUpdate={
+            handleAudioTimeUpdate
+          }
           onEnded={handleAudioEnded}
+          onError={handleAudioError}
         />
       )}
 
@@ -106,24 +200,47 @@ function AudioPlayer({
         type="button"
         className="audio-player__button"
         onClick={handlePlayPause}
-        disabled={!audioUrl}
-        aria-label={isPlaying ? 'Pause song' : 'Play song'}
+        disabled={
+          !audioUrl ||
+          disabled ||
+          hasError ||
+          timeLeft <= 0
+        }
+        aria-label={
+          isPlaying
+            ? 'Pause song'
+            : 'Play song'
+        }
       >
         {isPlaying ? (
-          <Pause size={20} fill="currentColor" />
+          <Pause
+            size={20}
+            fill="currentColor"
+          />
         ) : (
-          <Play size={20} fill="currentColor" />
+          <Play
+            size={20}
+            fill="currentColor"
+          />
         )}
       </button>
 
       <div className="audio-player__main">
         <div className="audio-player__waveform">
-          {Array.from({ length: 32 }).map((_, index) => (
+          {Array.from({
+            length: 32,
+          }).map((_, index) => (
             <span
               key={index}
-              className={isPlaying ? 'is-playing' : ''}
+              className={
+                isPlaying
+                  ? 'is-playing'
+                  : ''
+              }
               style={{
-                animationDelay: `${index * 35}ms`,
+                animationDelay: `${
+                  index * 35
+                }ms`,
               }}
             />
           ))}
@@ -140,7 +257,9 @@ function AudioPlayer({
       </div>
 
       <div className="audio-player__timer">
-        0:{String(timeLeft).padStart(2, '0')}
+        {hasError
+          ? 'ERROR'
+          : formatTime(timeLeft)}
       </div>
     </div>
   )
