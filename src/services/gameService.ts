@@ -3,7 +3,8 @@ import type {
   RoundConfig,
 } from '../types/game'
 
-const API_URL = 'http://localhost:3000/api'
+const API_URL =
+  'http://localhost:3000/api'
 
 type GeneratedQuestionResponse = {
   question: Question
@@ -32,27 +33,27 @@ async function fetchQuestion(
 export async function generateRound(
   roundConfig: RoundConfig,
 ): Promise<Question[]> {
-  const questions: Question[] = []
+  const questionRequests =
+    Array.from(
+      {
+        length:
+          roundConfig.questionCount,
+      },
+      (_, index) => {
+        const type =
+          roundConfig.questionTypes[
+            index %
+              roundConfig.questionTypes.length
+          ]
 
-  for (
-    let index = 0;
-    index < roundConfig.questionCount;
-    index++
-  ) {
-    const type =
-      roundConfig.questionTypes[
-        index %
-          roundConfig.questionTypes.length
-      ]
+        return fetchQuestion(
+          type,
+          roundConfig.difficulty,
+        )
+      },
+    )
 
-    const question =
-      await fetchQuestion(
-        type,
-        roundConfig.difficulty,
-      )
-
-    questions.push(question)
-  }
-
-  return questions
+  return Promise.all(
+    questionRequests,
+  )
 }
