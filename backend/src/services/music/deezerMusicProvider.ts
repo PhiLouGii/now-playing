@@ -50,23 +50,24 @@ function transformTrack(
       : undefined
 
   return {
-    id: `deezer-${track.id}`,
-    title: track.title,
-    artist: track.artist.name,
-    album: track.album.title,
-    releaseYear:
-      releaseYear &&
-      !Number.isNaN(releaseYear)
-        ? releaseYear
-        : undefined,
-    artworkUrl:
-      track.album.cover_big ??
-      track.album.cover_medium,
-    previewUrl: track.preview,
-    genres: [],
-    provider: 'deezer',
-    providerId: String(track.id),
-  }
+  id: `deezer-${track.id}`,
+  title: track.title,
+  artist: track.artist.name,
+  album: track.album.title,
+  releaseYear:
+    releaseYear &&
+    !Number.isNaN(releaseYear)
+      ? releaseYear
+      : undefined,
+  isrc: track.isrc,
+  artworkUrl:
+    track.album.cover_big ??
+    track.album.cover_medium,
+  previewUrl: track.preview,
+  genres: [],
+  provider: 'deezer',
+  providerId: String(track.id),
+}
 }
 
 class DeezerMusicProvider
@@ -142,10 +143,6 @@ class DeezerMusicProvider
     const data =
   (await response.json()) as DeezerTrackResponse
 
-console.log(
-  'Deezer track details:',
-  JSON.stringify(data, null, 2),
-)
 
 return transformTrack(data)
   }
