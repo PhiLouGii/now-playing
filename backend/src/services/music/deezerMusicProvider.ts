@@ -101,6 +101,7 @@ class DeezerMusicProvider
     const data =
       (await response.json()) as DeezerSearchResponse
 
+
     return (data.data ?? [])
       .map(transformTrack)
       .filter(

@@ -49,10 +49,10 @@ export async function discoverTracks(
 
   for (const artist of artists) {
     const results =
-      await deezerMusicProvider.searchTracks(
-        artist,
-        10,
-      )
+  await deezerMusicProvider.searchTracks(
+    artist,
+    50,
+  )
 
     const artistTracks =
       results.filter((track) =>
@@ -73,6 +73,6 @@ export async function discoverTracks(
   }
 
   return shuffle(
-    filterGameTracks(candidates),
-  ).slice(0, limit)
+  filterGameTracks(candidates),
+).slice(0, limit)
 }

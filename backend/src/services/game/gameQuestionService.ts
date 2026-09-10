@@ -15,32 +15,91 @@ import {
   isPlayableMusicTrack,
 } from '../music/musicTrackFilter.js'
 
+import {
+  deezerMusicProvider,
+} from '../music/deezerMusicProvider.js'
+
+import type { MusicTrack } from '../music/musicProvider.js'
+
+async function hydrateTrack(
+  track: MusicTrack,
+): Promise<MusicTrack> {
+  try {
+    const detailedTrack =
+      await deezerMusicProvider.getTrackById(
+        track.id,
+      )
+
+    return detailedTrack ?? track
+  } catch {
+    return track
+  }
+}
+
+async function getEligibleTracks(
+  type: QuestionType,
+): Promise<MusicTrack[]> {
+  const discoveredTracks =
+    await discoverTracks(20)
+
+  let eligibleTracks =
+    discoveredTracks.filter(
+      isPlayableMusicTrack,
+    )
+
+  if (type !== 'guess-the-year') {
+    return eligibleTracks
+  }
+
+  /*
+   * Deezer search results do not reliably
+   * contain release_date.
+   *
+   * Year questions therefore need the
+   * full track details before we can
+   * determine whether a track is usable.
+   */
+  eligibleTracks =
+    await Promise.all(
+      eligibleTracks.map(
+        hydrateTrack,
+      ),
+    )
+
+  return eligibleTracks.filter(
+    (track) =>
+      track.releaseYear !== undefined,
+  )
+}
+
+function pickRandomTrack(
+  tracks: MusicTrack[],
+): MusicTrack {
+  const randomIndex =
+    Math.floor(
+      Math.random() * tracks.length,
+    )
+
+  return tracks[randomIndex]
+}
+
 export async function generateGameQuestion(
   type: QuestionType,
   difficulty: QuestionDifficulty,
 ) {
-  const tracks =
-    await discoverTracks(20)
+  const eligibleTracks =
+    await getEligibleTracks(type)
 
-  const playableTracks =
-    tracks.filter(
-      isPlayableMusicTrack,
-    )
-
-  if (playableTracks.length === 0) {
+  if (eligibleTracks.length === 0) {
     throw new Error(
-      'Could not find a playable track',
+      `Could not find an eligible track for question type: ${type}`,
     )
   }
 
-  const randomIndex =
-    Math.floor(
-      Math.random() *
-        playableTracks.length,
-    )
-
   const correctTrack =
-    playableTracks[randomIndex]
+    pickRandomTrack(
+      eligibleTracks,
+    )
 
   return generateQuestion(
     correctTrack,

@@ -14,9 +14,11 @@ export type MusicCandidate = {
   similarity?: number
 }
 
-function normalize(
-  value: string,
-): string {
+type CandidatePoolOptions = {
+  requireReleaseYear?: boolean
+}
+
+function normalize(value: string): string {
   return value
     .toLowerCase()
     .replace(/[()[\]{}]/g, ' ')
@@ -40,7 +42,7 @@ function addCandidate(
   candidates: MusicCandidate[],
   candidate: MusicCandidate,
   correctTrack: MusicTrack,
-) {
+): void {
   if (
     isSameTrack(
       candidate.track,
@@ -79,21 +81,20 @@ async function findDeezerTrack(
   const usable =
     filterGameTracks(results)
 
-  const exactMatch =
+  return (
     usable.find(
       (track) =>
         normalize(track.title) ===
           normalize(title) &&
         normalize(track.artist) ===
           normalize(artist),
-    )
-
-  return exactMatch ?? null
+    ) ?? null
+  )
 }
 
 async function getSameArtistCandidates(
   correctTrack: MusicTrack,
-  limit = 10,
+  limit = 20,
 ): Promise<MusicCandidate[]> {
   const results =
     await deezerMusicProvider.searchTracks(
@@ -101,9 +102,7 @@ async function getSameArtistCandidates(
       limit,
     )
 
-  return filterGameTracks(
-    results,
-  )
+  return filterGameTracks(results)
     .filter(
       (track) =>
         normalize(track.artist) ===
@@ -124,7 +123,7 @@ async function getSameArtistCandidates(
 
 async function getSameAlbumCandidates(
   correctTrack: MusicTrack,
-  limit = 10,
+  limit = 20,
 ): Promise<MusicCandidate[]> {
   const results =
     await deezerMusicProvider.searchTracks(
@@ -132,9 +131,7 @@ async function getSameAlbumCandidates(
       limit,
     )
 
-  return filterGameTracks(
-    results,
-  )
+  return filterGameTracks(results)
     .filter(
       (track) =>
         normalize(track.artist) ===
@@ -169,8 +166,7 @@ async function getSimilarCandidates(
       limit,
     )
 
-  const candidates:
-    MusicCandidate[] = []
+  const candidates: MusicCandidate[] = []
 
   for (const similar of similarTracks) {
     const deezerTrack =
@@ -183,22 +179,12 @@ async function getSimilarCandidates(
       continue
     }
 
-    if (
-      isSameTrack(
-        deezerTrack,
-        correctTrack,
-      )
-    ) {
-      continue
-    }
-
     addCandidate(
       candidates,
       {
         track: deezerTrack,
-        similarity:
-          similar.similarity,
         source: 'similar',
+        similarity: similar.similarity,
       },
       correctTrack,
     )
@@ -207,16 +193,63 @@ async function getSimilarCandidates(
   return candidates
 }
 
+async function hydrateCandidate(
+  candidate: MusicCandidate,
+): Promise<MusicCandidate> {
+  try {
+    const detailedTrack =
+      await deezerMusicProvider.getTrackById(
+        candidate.track.id,
+      )
+
+    if (!detailedTrack) {
+      return candidate
+    }
+
+    return {
+      ...candidate,
+      track: detailedTrack,
+    }
+  } catch {
+    return candidate
+  }
+}
+
+async function hydrateCandidates(
+  candidates: MusicCandidate[],
+): Promise<MusicCandidate[]> {
+  return Promise.all(
+    candidates.map(
+      hydrateCandidate,
+    ),
+  )
+}
+
+function filterCandidatesByRequirements(
+  candidates: MusicCandidate[],
+  options: CandidatePoolOptions,
+): MusicCandidate[] {
+  if (!options.requireReleaseYear) {
+    return candidates
+  }
+
+  return candidates.filter(
+    (candidate) =>
+      candidate.track.releaseYear !==
+      undefined,
+  )
+}
+
 export async function getCandidatePool(
   correctTrack: MusicTrack,
+  options: CandidatePoolOptions = {},
 ): Promise<MusicCandidate[]> {
-  const candidates:
-    MusicCandidate[] = []
+  const candidates: MusicCandidate[] = []
 
   const sameArtist =
     await getSameArtistCandidates(
       correctTrack,
-      10,
+      20,
     )
 
   for (const candidate of sameArtist) {
@@ -230,7 +263,7 @@ export async function getCandidatePool(
   const sameAlbum =
     await getSameAlbumCandidates(
       correctTrack,
-      10,
+      20,
     )
 
   for (const candidate of sameAlbum) {
@@ -240,6 +273,7 @@ export async function getCandidatePool(
       correctTrack,
     )
   }
+
 
   const similar =
     await getSimilarCandidates(
@@ -252,6 +286,18 @@ export async function getCandidatePool(
       candidates,
       candidate,
       correctTrack,
+    )
+  }
+
+  if (options.requireReleaseYear) {
+    const hydratedCandidates =
+      await hydrateCandidates(
+        candidates,
+      )
+
+    return filterCandidatesByRequirements(
+      hydratedCandidates,
+      options,
     )
   }
 

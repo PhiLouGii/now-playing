@@ -42,11 +42,9 @@ function getCorrectAnswer(
       return track.album
 
     case 'guess-the-year':
-      if (
-        track.releaseYear === undefined
-      ) {
+      if (track.releaseYear === undefined) {
         throw new Error(
-          'Track does not have a release year',
+          'Correct track does not have a release year',
         )
       }
 
@@ -74,9 +72,7 @@ function getDistractorAnswer(
       return track.album
 
     case 'guess-the-year':
-      if (
-        track.releaseYear === undefined
-      ) {
+      if (track.releaseYear === undefined) {
         throw new Error(
           'Distractor does not have a release year',
         )
@@ -99,16 +95,15 @@ function toGeneratedSong(
     title: track.title,
     artist: track.artist,
     album: track.album,
-    releaseYear:
-      track.releaseYear ?? 0,
-    artworkUrl:
-      track.artworkUrl ?? '',
+    releaseYear: track.releaseYear,
+    artworkUrl: track.artworkUrl ?? '',
     audioUrl: track.previewUrl,
     genres: track.genres,
     provider: track.provider,
     providerId: track.providerId,
   }
 }
+
 export async function generateQuestion(
   correctTrack: MusicTrack,
   type: QuestionType = 'name-the-song',
@@ -117,6 +112,10 @@ export async function generateQuestion(
   const candidates =
     await getCandidatePool(
       correctTrack,
+      {
+        requireReleaseYear:
+          type === 'guess-the-year',
+      },
     )
 
   const distractors =

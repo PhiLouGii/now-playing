@@ -14,7 +14,7 @@ export type GeneratedSong = {
   title: string
   artist: string
   album: string
-  releaseYear: number
+  releaseYear?: number
   artworkUrl: string
   audioUrl?: string
   genres: string[]
