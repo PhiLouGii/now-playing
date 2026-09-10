@@ -139,9 +139,14 @@ class DeezerMusicProvider
     }
 
     const data =
-      (await response.json()) as DeezerTrackResponse
+  (await response.json()) as DeezerTrackResponse
 
-    return transformTrack(data)
+console.log(
+  'Deezer track details:',
+  JSON.stringify(data, null, 2),
+)
+
+return transformTrack(data)
   }
 }
 
