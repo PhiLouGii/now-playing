@@ -1,10 +1,13 @@
 import {
   useEffect,
+  useRef,
   useState,
 } from 'react'
 import { useLocation } from 'react-router-dom'
 
-import AudioPlayer from '../../components/game/AudioPlayer'
+import AudioPlayer, {
+  AudioPlayerHandle,
+} from '../../components/game/AudioPlayer'
 import AnswerGrid from '../../components/game/AnswerGrid'
 import GameHeader from '../../components/game/GameHeader'
 import GameProgress from '../../components/game/GameProgress'
@@ -115,7 +118,10 @@ function Game() {
     useState(false)
 
   const [isGameComplete, setIsGameComplete] =
-    useState(false)
+  useState(false)
+
+const audioPlayerRef =
+  useRef<AudioPlayerHandle | null>(null)
 
   /*
    * Load the first question.
@@ -459,32 +465,42 @@ function Game() {
    * full-preview mode and continues playing.
    */
   function handleRevealAnswer() {
-    if (isAnswered) {
-      return
-    }
-
-    setAnswerStatus('revealed')
-    setSelectedAnswer(null)
-
-    setStreak(0)
-    setPointsEarned(0)
-    setMultiplierEarned(1)
-
-    setPreviewComplete(false)
-
-    recordRecognition({
-      questionNumber:
-        currentQuestion + 1,
-      title:
-        question.song.title,
-      artist:
-        question.song.artist,
-      listenDuration:
-        maxListenDuration,
-      points: 0,
-      correct: false,
-    })
+  if (isAnswered) {
+    return
   }
+
+  /*
+   * Start the preview immediately from the
+   * user's Reveal Answer click.
+   *
+   * This is important because calling
+   * audio.play() from a React useEffect can
+   * be blocked by browser autoplay policy.
+   */
+  audioPlayerRef.current?.playPreview()
+
+  setAnswerStatus('revealed')
+  setSelectedAnswer(null)
+
+  setStreak(0)
+  setPointsEarned(0)
+  setMultiplierEarned(1)
+
+  setPreviewComplete(false)
+
+  recordRecognition({
+    questionNumber:
+      currentQuestion + 1,
+    title:
+      question.song.title,
+    artist:
+      question.song.artist,
+    listenDuration:
+      maxListenDuration,
+    points: 0,
+    correct: false,
+  })
+}
 
   /*
    * Reset all question-specific state.
@@ -670,37 +686,31 @@ function Game() {
             </div>
 
             <AudioPlayer
-              key={question.id}
-              audioUrl={
-                question.song.audioUrl
-              }
-              maxListenDuration={
-                maxListenDuration
-              }
-              onTimeUpdate={
-                handleTimeUpdate
-              }
-              onStageComplete={
-                handleStageComplete
-              }
-              onPreviewComplete={
-                handlePreviewComplete
-              }
-              /*
-               * Keep the player disabled for
-               * correct/incorrect answers.
-               *
-               * Revealed songs stay playable.
-               */
-              disabled={
-                answerStatus === 'correct' ||
-                answerStatus === 'incorrect'
-              }
-              playFullSong={
-                answerStatus ===
-                'revealed'
-              }
-            />
+  ref={audioPlayerRef}
+  key={question.id}
+  audioUrl={
+    question.song.audioUrl
+  }
+  maxListenDuration={
+    maxListenDuration
+  }
+  onTimeUpdate={
+    handleTimeUpdate
+  }
+  onStageComplete={
+    handleStageComplete
+  }
+  onPreviewComplete={
+    handlePreviewComplete
+  }
+  disabled={
+    answerStatus === 'correct' ||
+    answerStatus === 'incorrect'
+  }
+  playFullSong={
+    answerStatus === 'revealed'
+  }
+/>
 
             {isAnswered && (
               <div className="game-song-reveal">
