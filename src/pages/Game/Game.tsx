@@ -22,7 +22,6 @@ import type {
 
 import {
   calculateFinalPoints,
-  calculatePoints,
   calculateStreakMultiplier,
 } from '../../lib/gameScoring'
 
@@ -106,14 +105,14 @@ function Game() {
         const firstType =
           roundConfig.questionTypes[0]
 
-        const question =
+        const firstQuestion =
           await generateQuestion(
             firstType,
             roundConfig.difficulty,
           )
 
         if (isMounted) {
-          setQuestions([question])
+          setQuestions([firstQuestion])
           setIsLoading(false)
         }
       } catch (error) {
@@ -298,11 +297,31 @@ function Game() {
       answer === question.correctAnswer
 
     if (isCorrect) {
-      const timeAtAnswer =
-        maxListenDuration
-
+      /*
+       * The current listening stage determines
+       * the base score.
+       *
+       * Earlier stages are worth more:
+       *
+       * 0.1s = 1000
+       * 0.5s = 800
+       * 2s   = 600
+       * 8s   = 400
+       * 15s  = 200
+       */
       const nextStreak =
         streak + 1
+
+      const multiplier =
+        calculateStreakMultiplier(
+          nextStreak,
+        )
+
+      const finalPoints =
+        calculateFinalPoints(
+          maxListenDuration,
+          nextStreak,
+        )
 
       setSelectedAnswer(answer)
 
@@ -317,22 +336,6 @@ function Game() {
             nextStreak,
           ),
       )
-
-      const basePoints =
-        calculatePoints(
-          timeAtAnswer,
-        )
-
-      const multiplier =
-        calculateStreakMultiplier(
-          nextStreak,
-        )
-
-      const finalPoints =
-        calculateFinalPoints(
-          timeAtAnswer,
-          nextStreak,
-        )
 
       setPointsEarned(
         finalPoints,
@@ -351,7 +354,7 @@ function Game() {
       setStreak(nextStreak)
 
       console.log(
-        `Base: ${basePoints} | Multiplier: x${multiplier} | Final: ${finalPoints}`,
+        `Stage: ${maxListenDuration}s | Multiplier: x${multiplier} | Final: ${finalPoints}`,
       )
 
       return
@@ -604,20 +607,6 @@ function Game() {
               }
               disabled={isAnswered}
             />
-
-            <div className="game-listening-stage">
-              <span>
-                LISTENING STAGE
-              </span>
-
-              <strong>
-                {listeningStage + 1}
-              </strong>
-
-              <span>
-                / {LISTENING_STAGES.length}
-              </span>
-            </div>
 
             {isAnswered && (
               <div className="game-song-reveal">

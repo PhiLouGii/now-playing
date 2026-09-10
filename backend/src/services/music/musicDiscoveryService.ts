@@ -3,16 +3,16 @@ import { deezerMusicProvider } from './deezerMusicProvider.js'
 import { filterGameTracks } from './musicTrackFilter.js'
 
 const DISCOVERY_ARTISTS = [
-  'Sabrina Carpenter',
-  'The Weeknd',
+  'Beyoncé',
+  'Jay-Z',
   'Arctic Monkeys',
-  'Tyla',
-  'Dua Lipa',
-  'Billie Eilish',
-  'Taylor Swift',
-  'Ariana Grande',
-  'Olivia Rodrigo',
-  'Bruno Mars',
+  'Kanye West',
+  'Drake',
+  'Labrinth',
+  '21 Savage',
+  'Rihanna',
+  'kwn',
+  'Kehlani',
 ]
 
 function normalize(value: string): string {
