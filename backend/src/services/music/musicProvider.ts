@@ -4,6 +4,7 @@ export type MusicTrack = {
   artist: string
   album: string
   releaseYear?: number
+  isrc?: string
   artworkUrl?: string
   previewUrl?: string
   genres: string[]
