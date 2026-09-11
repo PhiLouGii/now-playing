@@ -15,6 +15,26 @@
   margin: 0 auto;
 }
 
+.artist-game__loading {
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.artist-game__loading h1 {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 4rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.artist-game__loading p:last-child {
+  margin-top: 14px;
+  color: var(--color-text-muted);
+}
+
 /* =========================
    HEADER
 ========================= */

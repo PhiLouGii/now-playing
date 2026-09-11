@@ -3,130 +3,276 @@ import {
   useRef,
   useState,
 } from 'react'
-import { Pause, Play, ArrowRight } from 'lucide-react'
+import { ArrowRight, Pause, Play } from 'lucide-react'
+
+import { generateQuestion } from '../../services/gameService'
+
+import type { Question } from '../../types/game'
+
 import './ArtistGame.css'
 
-type TestQuestion = {
-  id: number
-  title: string
-  artist: string
-  album: string
-  artworkUrl: string
-  audioUrl: string
-  answers: string[]
-  correctAnswer: string
-}
-
-const TEST_QUESTIONS: TestQuestion[] = [
-  {
-    id: 1,
-    title: 'Espresso',
-    artist: 'Sabrina Carpenter',
-    album: 'Short n’ Sweet',
-    artworkUrl:
-      'https://e-cdns-images.dzcdn.net/images/cover/ab67616d0000b273/placeholder/500x500-000000-80-0-0.jpg',
-    audioUrl:
-      'https://cdnt-preview.dzcdn.net/api/1/1/placeholder.mp3',
-    answers: [
-      'Sabrina Carpenter',
-      'Olivia Rodrigo',
-      'Ariana Grande',
-      'Chappell Roan',
-    ],
-    correctAnswer: 'Sabrina Carpenter',
-  },
-  {
-    id: 2,
-    title: 'Good Luck, Babe!',
-    artist: 'Chappell Roan',
-    album: 'The Rise and Fall of a Midwest Princess',
-    artworkUrl:
-      'https://e-cdns-images.dzcdn.net/images/cover/placeholder/500x500-000000-80-0-0.jpg',
-    audioUrl:
-      'https://cdnt-preview.dzcdn.net/api/1/1/placeholder.mp3',
-    answers: [
-      'Chappell Roan',
-      'Sabrina Carpenter',
-      'Billie Eilish',
-      'Gracie Abrams',
-    ],
-    correctAnswer: 'Chappell Roan',
-  },
-]
-
 const ROUND_LENGTH = 10
+const TOTAL_QUESTIONS = 10
+
+type AnswerStatus =
+  | 'idle'
+  | 'correct'
+  | 'incorrect'
+  | 'timeout'
 
 function ArtistGame() {
-  const [questionIndex, setQuestionIndex] =
+  /*
+   * --------------------------------------------------
+   * QUESTION STATE
+   * --------------------------------------------------
+   */
+
+  const [questions, setQuestions] =
+    useState<Question[]>([])
+
+  const [currentQuestion, setCurrentQuestion] =
     useState(0)
 
-  const [isPlaying, setIsPlaying] =
+  const [isLoading, setIsLoading] =
+    useState(true)
+
+  const [isLoadingNext, setIsLoadingNext] =
     useState(false)
 
-  const [timeLeft, setTimeLeft] =
-    useState(ROUND_LENGTH)
+  /*
+   * --------------------------------------------------
+   * ANSWER STATE
+   * --------------------------------------------------
+   */
 
   const [selectedAnswer, setSelectedAnswer] =
     useState<string | null>(null)
 
-  const [isRevealed, setIsRevealed] =
+  const [answerStatus, setAnswerStatus] =
+    useState<AnswerStatus>('idle')
+
+  /*
+   * --------------------------------------------------
+   * TIMER STATE
+   * --------------------------------------------------
+   */
+
+  const [timeRemaining, setTimeRemaining] =
+    useState(ROUND_LENGTH)
+
+  const [isPlaying, setIsPlaying] =
     useState(false)
+
+  /*
+   * --------------------------------------------------
+   * GAME STATE
+   * --------------------------------------------------
+   */
+
+  const [isGameComplete, setIsGameComplete] =
+    useState(false)
+
+  /*
+   * --------------------------------------------------
+   * AUDIO
+   * --------------------------------------------------
+   */
 
   const audioRef =
     useRef<HTMLAudioElement | null>(null)
 
-  const question =
-    TEST_QUESTIONS[questionIndex]
+  /*
+   * --------------------------------------------------
+   * LOAD FIRST QUESTION
+   * --------------------------------------------------
+   */
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadFirstQuestion() {
+      setIsLoading(true)
+
+      try {
+        const firstQuestion =
+          await generateQuestion(
+            'name-the-artist',
+            'medium',
+          )
+
+        if (!isMounted) {
+          return
+        }
+
+        setQuestions([firstQuestion])
+        setIsLoading(false)
+      } catch (error) {
+        console.error(
+          'Failed to generate artist question:',
+          error,
+        )
+
+        if (isMounted) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    loadFirstQuestion()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   /*
-   * Reset the game whenever the question changes.
+   * --------------------------------------------------
+   * PRELOAD NEXT QUESTION
+   * --------------------------------------------------
    */
+
   useEffect(() => {
-    setTimeLeft(ROUND_LENGTH)
+    if (
+      questions.length === 0 ||
+      questions.length >= TOTAL_QUESTIONS
+    ) {
+      return
+    }
+
+    const nextIndex = questions.length
+
+    let isMounted = true
+
+    async function preloadNextQuestion() {
+      try {
+        const nextQuestion =
+          await generateQuestion(
+            'name-the-artist',
+            'medium',
+          )
+
+        if (!isMounted) {
+          return
+        }
+
+        setQuestions((current) => {
+          if (current.length > nextIndex) {
+            return current
+          }
+
+          return [
+            ...current,
+            nextQuestion,
+          ]
+        })
+      } catch (error) {
+        console.error(
+          'Failed to preload artist question:',
+          error,
+        )
+      }
+    }
+
+    preloadNextQuestion()
+
+    return () => {
+      isMounted = false
+    }
+  }, [questions.length])
+
+  /*
+   * --------------------------------------------------
+   * CURRENT QUESTION
+   * --------------------------------------------------
+   */
+
+  const question =
+    questions[currentQuestion]
+
+  /*
+   * --------------------------------------------------
+   * RESET WHEN QUESTION CHANGES
+   * --------------------------------------------------
+   */
+
+  useEffect(() => {
+    setTimeRemaining(ROUND_LENGTH)
     setSelectedAnswer(null)
-    setIsRevealed(false)
+    setAnswerStatus('idle')
     setIsPlaying(false)
 
     if (audioRef.current) {
       audioRef.current.pause()
       audioRef.current.currentTime = 0
     }
-  }, [questionIndex])
+  }, [currentQuestion])
 
   /*
-   * Countdown timer.
+   * --------------------------------------------------
+   * 10 SECOND COUNTDOWN
+   * --------------------------------------------------
    */
+
   useEffect(() => {
-    if (!isPlaying || isRevealed) {
+    if (
+      !isPlaying ||
+      answerStatus !== 'idle'
+    ) {
       return
     }
 
-    const timer = window.setInterval(() => {
-      setTimeLeft((current) => {
-        if (current <= 1) {
-          window.clearInterval(timer)
+    const timer =
+      window.setInterval(() => {
+        setTimeRemaining((current) => {
+          if (current <= 0.1) {
+            window.clearInterval(timer)
 
-          setIsPlaying(false)
-          setIsRevealed(true)
+            finishTimeLimit()
 
-          if (audioRef.current) {
-            audioRef.current.pause()
+            return 0
           }
 
-          return 0
-        }
-
-        return current - 1
-      })
-    }, 1000)
+          return Math.max(
+            0,
+            current - 0.1,
+          )
+        })
+      }, 100)
 
     return () => {
       window.clearInterval(timer)
     }
-  }, [isPlaying, isRevealed])
+  }, [
+    isPlaying,
+    answerStatus,
+  ])
 
-  function handlePlayPause() {
-    if (!audioRef.current || isRevealed) {
+  /*
+   * --------------------------------------------------
+   * TIME LIMIT
+   * --------------------------------------------------
+   */
+
+  function finishTimeLimit() {
+    setIsPlaying(false)
+    setAnswerStatus('timeout')
+
+    if (audioRef.current) {
+      audioRef.current.pause()
+    }
+  }
+
+  /*
+   * --------------------------------------------------
+   * PLAY / PAUSE
+   * --------------------------------------------------
+   */
+
+  async function handlePlayPause() {
+    if (
+      !audioRef.current ||
+      answerStatus !== 'idle'
+    ) {
       return
     }
 
@@ -136,61 +282,223 @@ function ArtistGame() {
       return
     }
 
-    audioRef.current.play()
-      .then(() => {
-        setIsPlaying(true)
-      })
-      .catch((error) => {
-        console.error(
-          'Could not play audio:',
-          error,
-        )
-      })
+    try {
+      await audioRef.current.play()
+      setIsPlaying(true)
+    } catch (error) {
+      console.error(
+        'Could not play audio:',
+        error,
+      )
+    }
   }
 
-  function handleAnswer(answer: string) {
-    if (isRevealed) {
+  /*
+   * --------------------------------------------------
+   * ANSWER
+   * --------------------------------------------------
+   */
+
+  function handleAnswer(
+    answer: string,
+  ) {
+    if (answerStatus !== 'idle') {
       return
     }
 
+    const isCorrect =
+      answer === question.correctAnswer
+
     setSelectedAnswer(answer)
+    setAnswerStatus(
+      isCorrect
+        ? 'correct'
+        : 'incorrect',
+    )
+
     setIsPlaying(false)
-    setIsRevealed(true)
 
     if (audioRef.current) {
       audioRef.current.pause()
     }
   }
 
-  function handleNextSong() {
+  /*
+   * --------------------------------------------------
+   * AUDIO ENDED
+   * --------------------------------------------------
+   *
+   * Deezer previews can be shorter than the full
+   * 10-second window. If the audio ends naturally,
+   * stop playback but don't reveal the answer yet.
+   *
+   * The player can be restarted while time remains.
+   */
+
+  function handleAudioEnded() {
+    setIsPlaying(false)
+  }
+
+  /*
+   * --------------------------------------------------
+   * NEXT SONG
+   * --------------------------------------------------
+   */
+
+  async function handleNextSong() {
     if (
-      questionIndex <
-      TEST_QUESTIONS.length - 1
+      currentQuestion >=
+      TOTAL_QUESTIONS - 1
     ) {
-      setQuestionIndex(
-        (current) => current + 1,
+      setIsGameComplete(true)
+      return
+    }
+
+    const nextIndex =
+      currentQuestion + 1
+
+    if (questions[nextIndex]) {
+      setCurrentQuestion(nextIndex)
+      return
+    }
+
+    setIsLoadingNext(true)
+
+    try {
+      const nextQuestion =
+        await generateQuestion(
+          'name-the-artist',
+          'medium',
+        )
+
+      setQuestions((current) => {
+        if (current[nextIndex]) {
+          return current
+        }
+
+        return [
+          ...current,
+          nextQuestion,
+        ]
+      })
+
+      setCurrentQuestion(nextIndex)
+    } catch (error) {
+      console.error(
+        'Failed to generate next artist question:',
+        error,
       )
-    } else {
-      // Temporary behaviour for testing.
-      // We'll replace this with the real results screen.
-      setQuestionIndex(0)
+    } finally {
+      setIsLoadingNext(false)
     }
   }
 
-  const isCorrect =
-    selectedAnswer ===
-    question.correctAnswer
+  /*
+   * --------------------------------------------------
+   * LOADING
+   * --------------------------------------------------
+   */
+
+  if (isLoading) {
+    return (
+      <div className="artist-game">
+        <div className="artist-game__container">
+          <main className="artist-game__loading">
+            <p className="artist-game__eyebrow">
+              QUICK MODE
+            </p>
+
+            <h1>
+              GETTING YOUR SONG READY
+            </h1>
+
+            <p>
+              Finding something you might
+              recognize...
+            </p>
+          </main>
+        </div>
+      </div>
+    )
+  }
+
+  /*
+   * --------------------------------------------------
+   * NO QUESTION
+   * --------------------------------------------------
+   */
+
+  if (!question) {
+    return (
+      <div className="artist-game">
+        <div className="artist-game__container">
+          <main className="artist-game__loading">
+            <p className="artist-game__eyebrow">
+              GUESS THE ARTIST
+            </p>
+
+            <h1>
+              NO SONG AVAILABLE
+            </h1>
+
+            <p>
+              We couldn't generate a song
+              right now.
+            </p>
+          </main>
+        </div>
+      </div>
+    )
+  }
+
+  /*
+   * --------------------------------------------------
+   * GAME COMPLETE
+   * --------------------------------------------------
+   *
+   * Temporary until we build a dedicated Artist
+   * Game results screen.
+   */
+
+  if (isGameComplete) {
+    return (
+      <div className="artist-game">
+        <div className="artist-game__container">
+          <main className="artist-game__loading">
+            <p className="artist-game__eyebrow">
+              ROUND COMPLETE
+            </p>
+
+            <h1>
+              NICE WORK.
+            </h1>
+
+            <p>
+              You've completed Guess the Artist.
+            </p>
+          </main>
+        </div>
+      </div>
+    )
+  }
 
   const progress =
-    ((ROUND_LENGTH - timeLeft) /
+    ((ROUND_LENGTH - timeRemaining) /
       ROUND_LENGTH) *
     100
+
+  const isRevealed =
+    answerStatus !== 'idle'
+
+  const isCorrect =
+    answerStatus === 'correct'
 
   return (
     <div className="artist-game">
       <div className="artist-game__container">
 
         {/* HEADER */}
+
         <header className="artist-game__header">
           <div>
             <p className="artist-game__eyebrow">
@@ -204,52 +512,61 @@ function ArtistGame() {
 
           <div className="artist-game__round">
             <span>ROUND</span>
+
             <strong>
-              {questionIndex + 1}
-              <small>/{TEST_QUESTIONS.length}</small>
+              {currentQuestion + 1}
+              <small>
+                /{TOTAL_QUESTIONS}
+              </small>
             </strong>
           </div>
         </header>
 
         {/* QUESTION */}
+
         <section className="artist-game__question">
           <p className="artist-game__prompt">
             WHO IS THIS?
           </p>
 
           <h2>
-            Can you recognize the artist?
+            Who performs this song?
           </h2>
         </section>
 
-        {/* AUDIO PLAYER */}
+        {/* AUDIO */}
+
         <section className="artist-game__audio">
+
           <audio
             ref={audioRef}
-            src={question.audioUrl}
+            key={question.id}
+            src={question.song.audioUrl}
             preload="auto"
+            onEnded={
+              handleAudioEnded
+            }
           />
 
           <div className="artist-game__audio-top">
             <span>
-              {isRevealed
-                ? 'LISTENING COMPLETE'
-                : '10 SECOND SNIPPET'}
+              10 SECOND SNIPPET
             </span>
 
             <strong
               className={
-                timeLeft <= 3 &&
+                timeRemaining <= 3 &&
                 !isRevealed
                   ? 'artist-game__timer artist-game__timer--urgent'
                   : 'artist-game__timer'
               }
             >
-              {timeLeft}s
+              {timeRemaining.toFixed(1)}s
             </strong>
           </div>
 
           <div className="artist-game__player">
+
             <button
               type="button"
               className="artist-game__play"
@@ -311,16 +628,23 @@ function ArtistGame() {
           <p className="artist-game__hint">
             {isRevealed
               ? 'The answer has been revealed.'
-              : 'Choose an artist whenever you know it.'}
+              : 'Pick an artist as soon as you know it.'}
           </p>
         </section>
 
         {/* ANSWERS */}
+
         {!isRevealed && (
           <section className="artist-game__answers">
+
             <div className="artist-game__answers-header">
-              <span>CHOOSE ONE</span>
-              <span>4 OPTIONS</span>
+              <span>
+                CHOOSE ONE
+              </span>
+
+              <span>
+                4 OPTIONS
+              </span>
             </div>
 
             <div className="artist-game__answer-grid">
@@ -353,6 +677,7 @@ function ArtistGame() {
         )}
 
         {/* REVEAL */}
+
         {isRevealed && (
           <section className="artist-game__reveal">
 
@@ -364,28 +689,35 @@ function ArtistGame() {
               }
             >
               <span>
-                {selectedAnswer
-                  ? isCorrect
+                {answerStatus ===
+                'timeout'
+                  ? "TIME'S UP"
+                  : isCorrect
                     ? 'CORRECT'
-                    : 'NOT QUITE'
-                  : "TIME'S UP"}
+                    : 'NOT QUITE'}
               </span>
 
-              {selectedAnswer && (
-                <strong>
-                  {isCorrect
+              <strong>
+                {answerStatus ===
+                'timeout'
+                  ? `The artist was ${question.correctAnswer}.`
+                  : isCorrect
                     ? 'You got it.'
-                    : `The artist was ${question.artist}.`}
-                </strong>
-              )}
+                    : `The artist was ${question.correctAnswer}.`}
+              </strong>
             </div>
 
             <div className="artist-game__song-card">
-              <img
-                src={question.artworkUrl}
-                alt={`${question.album} album cover`}
-                className="artist-game__artwork"
-              />
+
+              {question.song.artworkUrl && (
+                <img
+                  src={
+                    question.song.artworkUrl
+                  }
+                  alt={`${question.song.album} album cover`}
+                  className="artist-game__artwork"
+                />
+              )}
 
               <div className="artist-game__song-info">
                 <p className="artist-game__song-label">
@@ -393,15 +725,15 @@ function ArtistGame() {
                 </p>
 
                 <h3>
-                  {question.title}
+                  {question.song.title}
                 </h3>
 
                 <p className="artist-game__artist">
-                  {question.artist}
+                  {question.song.artist}
                 </p>
 
                 <p className="artist-game__album">
-                  {question.album}
+                  {question.song.album}
                 </p>
               </div>
             </div>
@@ -412,17 +744,27 @@ function ArtistGame() {
               onClick={
                 handleNextSong
               }
+              disabled={isLoadingNext}
             >
               <span>
-                NEXT SONG
+                {isLoadingNext
+                  ? 'LOADING...'
+                  : currentQuestion >=
+                      TOTAL_QUESTIONS - 1
+                    ? 'SEE RESULTS'
+                    : 'NEXT SONG'}
               </span>
 
-              <ArrowRight
-                size={20}
-              />
+              {!isLoadingNext && (
+                <ArrowRight
+                  size={20}
+                />
+              )}
             </button>
+
           </section>
         )}
+
       </div>
     </div>
   )
