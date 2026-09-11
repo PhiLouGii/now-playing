@@ -6,6 +6,7 @@ import Explore from '../pages/Explore/Explore'
 import Leaderboard from '../pages/Leaderboard/Leaderboard'
 import Profile from '../pages/Profile/Profile'
 import Game from '../pages/Game/Game'
+import ArtistGame from '../pages/ArtistGame/ArtistGame'
 
 function AppRoutes() {
   return (
@@ -13,8 +14,15 @@ function AppRoutes() {
       <Route path="/" element={<Home />} />
       <Route path="/play" element={<Play />} />
       <Route path="/game" element={<Game />} />
+      <Route
+        path="/artist-game"
+        element={<ArtistGame />}
+      />
       <Route path="/explore" element={<Explore />} />
-      <Route path="/leaderboard" element={<Leaderboard />} />
+      <Route
+        path="/leaderboard"
+        element={<Leaderboard />}
+      />
       <Route path="/profile" element={<Profile />} />
     </Routes>
   )
