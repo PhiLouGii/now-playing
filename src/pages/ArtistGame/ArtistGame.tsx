@@ -3,7 +3,17 @@ import {
   useRef,
   useState,
 } from 'react'
-import { ArrowRight, Pause, Play } from 'lucide-react'
+import {
+  ArrowRight,
+  Check,
+  Pause,
+  Play,
+  RotateCcw,
+  Trophy,
+  X,
+} from 'lucide-react'
+
+import { useNavigate } from 'react-router-dom'
 
 import { generateQuestion } from '../../services/gameService'
 
@@ -20,7 +30,19 @@ type AnswerStatus =
   | 'incorrect'
   | 'timeout'
 
+type ArtistRecognitionResult = {
+  questionNumber: number
+  title: string
+  artist: string
+  album: string
+  artworkUrl: string
+  recognitionTime: number
+  correct: boolean
+}
+
 function ArtistGame() {
+  const navigate = useNavigate()
+
   /*
    * --------------------------------------------------
    * QUESTION STATE
@@ -65,9 +87,12 @@ function ArtistGame() {
 
   /*
    * --------------------------------------------------
-   * GAME STATE
+   * RESULTS STATE
    * --------------------------------------------------
    */
+
+  const [recognitionResults, setRecognitionResults] =
+    useState<ArtistRecognitionResult[]>([])
 
   const [isGameComplete, setIsGameComplete] =
     useState(false)
@@ -191,7 +216,7 @@ function ArtistGame() {
 
   /*
    * --------------------------------------------------
-   * RESET WHEN QUESTION CHANGES
+   * RESET QUESTION
    * --------------------------------------------------
    */
 
@@ -227,7 +252,40 @@ function ArtistGame() {
           if (current <= 0.1) {
             window.clearInterval(timer)
 
-            finishTimeLimit()
+            setIsPlaying(false)
+            setAnswerStatus('timeout')
+
+            setRecognitionResults(
+              (currentResults) => [
+                ...currentResults,
+                {
+                  questionNumber:
+                    currentQuestion + 1,
+
+                  title:
+                    question.song.title,
+
+                  artist:
+                    question.song.artist,
+
+                  album:
+                    question.song.album,
+
+                  artworkUrl:
+                    question.song
+                      .artworkUrl ?? '',
+
+                  recognitionTime:
+                    ROUND_LENGTH,
+
+                  correct: false,
+                },
+              ],
+            )
+
+            if (audioRef.current) {
+              audioRef.current.pause()
+            }
 
             return 0
           }
@@ -245,22 +303,9 @@ function ArtistGame() {
   }, [
     isPlaying,
     answerStatus,
+    currentQuestion,
+    question,
   ])
-
-  /*
-   * --------------------------------------------------
-   * TIME LIMIT
-   * --------------------------------------------------
-   */
-
-  function finishTimeLimit() {
-    setIsPlaying(false)
-    setAnswerStatus('timeout')
-
-    if (audioRef.current) {
-      audioRef.current.pause()
-    }
-  }
 
   /*
    * --------------------------------------------------
@@ -309,7 +354,16 @@ function ArtistGame() {
     const isCorrect =
       answer === question.correctAnswer
 
+    const recognitionTime = Math.min(
+      ROUND_LENGTH,
+      Math.max(
+        0,
+        ROUND_LENGTH - timeRemaining,
+      ),
+    )
+
     setSelectedAnswer(answer)
+
     setAnswerStatus(
       isCorrect
         ? 'correct'
@@ -321,18 +375,37 @@ function ArtistGame() {
     if (audioRef.current) {
       audioRef.current.pause()
     }
+
+    setRecognitionResults(
+      (currentResults) => [
+        ...currentResults,
+        {
+          questionNumber:
+            currentQuestion + 1,
+
+          title:
+            question.song.title,
+
+          artist:
+            question.song.artist,
+
+          album:
+            question.song.album,
+
+          artworkUrl:
+            question.song.artworkUrl ?? '',
+
+          recognitionTime,
+          correct: isCorrect,
+        },
+      ],
+    )
   }
 
   /*
    * --------------------------------------------------
    * AUDIO ENDED
    * --------------------------------------------------
-   *
-   * Deezer previews can be shorter than the full
-   * 10-second window. If the audio ends naturally,
-   * stop playback but don't reveal the answer yet.
-   *
-   * The player can be restarted while time remains.
    */
 
   function handleAudioEnded() {
@@ -350,6 +423,10 @@ function ArtistGame() {
       currentQuestion >=
       TOTAL_QUESTIONS - 1
     ) {
+      if (audioRef.current) {
+        audioRef.current.pause()
+      }
+
       setIsGameComplete(true)
       return
     }
@@ -428,7 +505,7 @@ function ArtistGame() {
    * --------------------------------------------------
    */
 
-  if (!question) {
+  if (!question && !isGameComplete) {
     return (
       <div className="artist-game">
         <div className="artist-game__container">
@@ -453,32 +530,21 @@ function ArtistGame() {
 
   /*
    * --------------------------------------------------
-   * GAME COMPLETE
+   * RESULTS
    * --------------------------------------------------
-   *
-   * Temporary until we build a dedicated Artist
-   * Game results screen.
    */
 
   if (isGameComplete) {
     return (
-      <div className="artist-game">
-        <div className="artist-game__container">
-          <main className="artist-game__loading">
-            <p className="artist-game__eyebrow">
-              ROUND COMPLETE
-            </p>
-
-            <h1>
-              NICE WORK.
-            </h1>
-
-            <p>
-              You've completed Guess the Artist.
-            </p>
-          </main>
-        </div>
-      </div>
+      <ArtistResultsScreen
+        results={recognitionResults}
+        onPlayAgain={() =>
+          window.location.reload()
+        }
+        onBackToPlay={() =>
+          navigate('/play')
+        }
+      />
     )
   }
 
@@ -764,6 +830,380 @@ function ArtistGame() {
 
           </section>
         )}
+
+      </div>
+    </div>
+  )
+}
+
+/*
+ * ==================================================
+ * ARTIST RESULTS SCREEN
+ * ==================================================
+ */
+
+type ArtistResultsScreenProps = {
+  results: ArtistRecognitionResult[]
+  onPlayAgain: () => void
+  onBackToPlay: () => void
+}
+
+function ArtistResultsScreen({
+  results,
+  onPlayAgain,
+  onBackToPlay,
+}: ArtistResultsScreenProps) {
+  const correctResults =
+    results.filter(
+      (result) => result.correct,
+    )
+
+  const recognizedCount =
+    correctResults.length
+
+  const accuracy =
+    results.length > 0
+      ? Math.round(
+          (recognizedCount /
+            results.length) *
+            100,
+        )
+      : 0
+
+  const recognitionTimes =
+    correctResults.map(
+      (result) =>
+        result.recognitionTime,
+    )
+
+  const averageTime =
+    recognitionTimes.length > 0
+      ? recognitionTimes.reduce(
+          (total, time) =>
+            total + time,
+          0,
+        ) /
+        recognitionTimes.length
+      : 0
+
+  const fastestTime =
+    recognitionTimes.length > 0
+      ? Math.min(
+          ...recognitionTimes,
+        )
+      : 0
+
+  const fastestResult =
+    correctResults.find(
+      (result) =>
+        result.recognitionTime ===
+        fastestTime,
+    )
+
+  const confettiPieces =
+    Array.from({
+      length: 36,
+    })
+
+  return (
+    <div className="artist-results">
+
+      {/* CONFETTI */}
+
+      <div
+        className="artist-results__confetti"
+        aria-hidden="true"
+      >
+        {confettiPieces.map(
+          (_, index) => (
+            <span
+              key={index}
+              className="artist-results__confetti-piece"
+              style={{
+                left: `${(index * 29) % 100}%`,
+                animationDelay: `${
+                  (index % 12) * 0.08
+                }s`,
+                animationDuration: `${
+                  2.4 +
+                  (index % 5) * 0.35
+                }s`,
+                transform: `rotate(${
+                  index * 37
+                }deg)`,
+              }}
+            />
+          ),
+        )}
+      </div>
+
+      <div className="artist-results__container">
+
+        {/* HEADER */}
+
+        <header className="artist-results__header">
+
+          <div className="artist-results__trophy">
+            <Trophy
+              size={28}
+              strokeWidth={1.8}
+            />
+          </div>
+
+          <p className="artist-results__eyebrow">
+            ROUND COMPLETE
+          </p>
+
+          <h1>
+            You know your music.
+          </h1>
+
+          <p>
+            Let's see how quickly you
+            recognized the artists.
+          </p>
+
+        </header>
+
+        {/* HERO STATS */}
+
+        <section className="artist-results__hero">
+
+          <div className="artist-results__hero-main">
+            <span>
+              ARTISTS RECOGNIZED
+            </span>
+
+            <strong>
+              {recognizedCount}
+              <small>
+                /{results.length}
+              </small>
+            </strong>
+          </div>
+
+          <div className="artist-results__accuracy">
+            <span>
+              ACCURACY
+            </span>
+
+            <strong>
+              {accuracy}%
+            </strong>
+          </div>
+
+        </section>
+
+        {/* SPEED */}
+
+        <section className="artist-results__speed">
+
+          <div className="artist-results__section-heading">
+            <p>
+              RECOGNITION SPEED
+            </p>
+
+            <h2>
+              How fast did you know?
+            </h2>
+          </div>
+
+          <div className="artist-results__speed-grid">
+
+            <div className="artist-results__speed-stat">
+              <span>
+                AVERAGE
+              </span>
+
+              <strong>
+                {averageTime.toFixed(1)}s
+              </strong>
+            </div>
+
+            <div className="artist-results__speed-stat artist-results__speed-stat--fastest">
+              <span>
+                FASTEST
+              </span>
+
+              <strong>
+                {fastestTime > 0
+                  ? `${fastestTime.toFixed(1)}s`
+                  : '—'}
+              </strong>
+
+              {fastestResult && (
+                <small>
+                  {fastestResult.artist}
+                </small>
+              )}
+            </div>
+
+          </div>
+
+        </section>
+
+        {/* BREAKDOWN */}
+
+        <section className="artist-results__breakdown">
+
+          <div className="artist-results__section-heading">
+            <p>
+              ROUND RECAP
+            </p>
+
+            <h2>
+              Your artists
+            </h2>
+          </div>
+
+          <div className="artist-results__list">
+
+            {results.map(
+              (result) => (
+                <div
+                  key={`${result.questionNumber}-${result.title}`}
+                  className={
+                    result.correct
+                      ? 'artist-results__item artist-results__item--correct'
+                      : 'artist-results__item artist-results__item--missed'
+                  }
+                >
+
+                  <div className="artist-results__number">
+                    {String(
+                      result.questionNumber,
+                    ).padStart(2, '0')}
+                  </div>
+
+                  <div className="artist-results__artwork-wrapper">
+                    {result.artworkUrl ? (
+                      <img
+                        src={
+                          result.artworkUrl
+                        }
+                        alt=""
+                        className="artist-results__artwork"
+                      />
+                    ) : (
+                      <div className="artist-results__artwork artist-results__artwork--empty">
+                        ?
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="artist-results__song-info">
+
+                    <strong>
+                      {result.artist}
+                    </strong>
+
+                    <span>
+                      {result.title}
+                    </span>
+
+                  </div>
+
+                  <div className="artist-results__result-meta">
+
+                    {result.correct ? (
+                      <>
+                        <span className="artist-results__time">
+                          {result.recognitionTime.toFixed(
+                            1,
+                          )}s
+                        </span>
+
+                        <Check
+                          size={18}
+                          strokeWidth={2.5}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <span className="artist-results__missed-label">
+                          MISSED
+                        </span>
+
+                        <X
+                          size={18}
+                          strokeWidth={2.5}
+                        />
+                      </>
+                    )}
+
+                  </div>
+
+                </div>
+              ),
+            )}
+
+          </div>
+
+        </section>
+
+        {/* FASTEST RECOGNITION */}
+
+        {fastestResult && (
+          <section className="artist-results__fastest">
+
+            <div className="artist-results__fastest-icon">
+              <Trophy
+                size={20}
+              />
+            </div>
+
+            <div>
+              <span>
+                FASTEST RECOGNITION
+              </span>
+
+              <strong>
+                {fastestResult.artist}
+              </strong>
+
+              <p>
+                Recognized in{' '}
+                {fastestResult.recognitionTime.toFixed(
+                  1,
+                )}
+                seconds.
+              </p>
+            </div>
+
+          </section>
+        )}
+
+        {/* ACTIONS */}
+
+        <div className="artist-results__actions">
+
+          <button
+            type="button"
+            className="artist-results__play-again"
+            onClick={
+              onPlayAgain
+            }
+          >
+            <RotateCcw
+              size={18}
+            />
+
+            <span>
+              PLAY AGAIN
+            </span>
+          </button>
+
+          <button
+            type="button"
+            className="artist-results__back"
+            onClick={
+              onBackToPlay
+            }
+          >
+            BACK TO PLAY
+          </button>
+
+        </div>
 
       </div>
     </div>
