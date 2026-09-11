@@ -3,16 +3,7 @@ import { deezerMusicProvider } from './deezerMusicProvider.js'
 import { filterGameTracks } from './musicTrackFilter.js'
 
 const DISCOVERY_ARTISTS = [
-  'Beyoncé',
-  'Jay-Z',
   'Arctic Monkeys',
-  'Kanye West',
-  'Drake',
-  'Labrinth',
-  '21 Savage',
-  'Rihanna',
-  'kwn',
-  'Kehlani',
 ]
 
 function normalize(value: string): string {
