@@ -1097,41 +1097,36 @@ function Game() {
           </div>
 
           {/* ----------------------------------------
-              NEXT SONG
-              ---------------------------------------- */}
+    NEXT SONG
+    ---------------------------------------- */}
 
-          {isAnswered && (
-            <>
-              {!previewComplete && (
-                <div className="game-next-status">
-                  <span>
-                    PREVIEW PLAYING
-                  </span>
-                </div>
-              )}
+{isAnswered && (
+  <div className="game-next-area">
 
-              {previewComplete && (
-                <button
-                  type="button"
-                  className="game-next"
-                  onClick={
-                    handleNextSong
-                  }
-                  disabled={
-                    isLoadingNext
-                  }
-                >
-                  {isLoadingNext
-                    ? 'LOADING...'
-                    : currentQuestion >=
-                        roundConfig.questionCount -
-                          1
-                      ? 'SEE RESULTS'
-                      : 'NEXT SONG →'}
-                </button>
-              )}
-            </>
-          )}
+    {!previewComplete && (
+      <div className="game-next-status">
+        <span>
+          PREVIEW PLAYING
+        </span>
+      </div>
+    )}
+
+    <button
+      type="button"
+      className="game-next"
+      onClick={handleNextSong}
+      disabled={isLoadingNext}
+    >
+      {isLoadingNext
+        ? 'LOADING...'
+        : currentQuestion >=
+            roundConfig.questionCount - 1
+          ? 'SEE RESULTS'
+          : 'NEXT SONG →'}
+    </button>
+
+  </div>
+)}
 
         </main>
       </div>
