@@ -1,87 +1,52 @@
-import {
-  FieldValue,
-} from 'firebase-admin/firestore'
-
-import { db } from '../../config/firebase.js'
-
-import {
-  generateGameQuestion,
-} from '../game/gameQuestionService.js'
-
 import type {
   Question,
-} from '../game/gameTypes.js'
+} from '../types/game'
 
-import {
-  getDailyTheme,
-  getDailyTwist,
-} from './dailyChallengeUtils.js'
-
-import type {
-  DailyChallenge,
-} from './dailyChallengeTypes.js'
-
-const DAILY_QUESTION_COUNT = 10
-
-const dailyChallengesCollection =
-  db.collection('dailyChallenges')
-
-function getToday(): string {
-  return new Date()
-    .toISOString()
-    .split('T')[0]
+export type DailyTheme = {
+  name: string
+  description: string
 }
 
+export type DailyTwistType =
+  | 'lightning'
+  | 'streak-rush'
+  | 'deep-cut'
+  | 'mixed-bag'
+  | 'perfect-ten'
+
+export type DailyTwist = {
+  type: DailyTwistType
+  name: string
+  description: string
+}
+
+export type DailyChallenge = {
+  id: string
+  date: string
+  theme: DailyTheme
+  twist: DailyTwist
+  questions: Question[]
+  questionCount: number
+}
+
+const API_URL =
+  'http://localhost:3000/api'
+
 export async function getDailyChallenge(): Promise<DailyChallenge> {
-  const date = getToday()
+  const response = await fetch(
+    `${API_URL}/daily-challenge`,
+  )
 
-  const challengeRef =
-    dailyChallengesCollection.doc(date)
-
-  const existing =
-    await challengeRef.get()
-
-  if (existing.exists) {
-    return existing.data() as DailyChallenge
+  if (!response.ok) {
+    throw new Error(
+      'Failed to load daily challenge',
+    )
   }
 
-  const theme =
-    getDailyTheme(date)
+  const data =
+    (await response.json()) as {
+      challenge: DailyChallenge
+    }
 
-  const twist =
-    getDailyTwist(date)
-
-  const questions: Question[] = []
-
-  for (
-    let index = 0;
-    index < DAILY_QUESTION_COUNT;
-    index++
-  ) {
-    const question =
-      await generateGameQuestion(
-        'name-the-song',
-        'medium',
-      )
-
-    questions.push(question)
-  }
-
-  const challenge: DailyChallenge = {
-    id: date,
-    date,
-    theme,
-    twist,
-    questions,
-    questionCount:
-      DAILY_QUESTION_COUNT,
-  }
-
-  await challengeRef.create({
-    ...challenge,
-    createdAt:
-      FieldValue.serverTimestamp(),
-  })
-
-  return challenge
+  return data.challenge
 }

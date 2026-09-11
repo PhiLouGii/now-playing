@@ -1,4 +1,11 @@
-import type { Question } from '../game/gameTypes.js'
+import type {
+  generateGameQuestion,
+} from '../game/gameQuestionService.js'
+
+export type DailyQuestion =
+  Awaited<
+    ReturnType<typeof generateGameQuestion>
+  >
 
 export type DailyTwistType =
   | 'lightning'
@@ -23,6 +30,6 @@ export type DailyChallenge = {
   date: string
   theme: DailyTheme
   twist: DailyTwist
-  questions: Question[]
+  questions: DailyQuestion[]
   questionCount: number
 }
