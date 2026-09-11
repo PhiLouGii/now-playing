@@ -5,6 +5,7 @@ import { db } from './config/firebase.js'
 import songRoutes from './routes/songRoutes.js'
 import musicRoutes from './routes/musicRoutes.js'
 import gameRoutes from './routes/gameRoutes.js'
+import dailyChallengeRoutes from './routes/dailyChallengeRoutes.js'
 
 dotenv.config()
 
@@ -18,7 +19,7 @@ app.use('/api/songs', songRoutes)
 
 app.use('/api/music', musicRoutes)
 app.use('/api/game', gameRoutes)
-
+app.use('/api/daily-challenge', dailyChallengeRoutes)
 app.get('/api/health', async (_req, res) => {
   try {
     await db.listCollections()
