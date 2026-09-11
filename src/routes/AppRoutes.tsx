@@ -8,6 +8,7 @@ import Profile from '../pages/Profile/Profile'
 import Game from '../pages/Game/Game'
 import ArtistGame from '../pages/ArtistGame/ArtistGame'
 import AlbumGame from '../pages/AlbumGame/AlbumGame'
+import YearGame from '../pages/YearGame/YearGame'
 
 function AppRoutes() {
   return (
@@ -20,9 +21,10 @@ function AppRoutes() {
         element={<ArtistGame />}
       />
       <Route
-  path="/album-game"
-  element={<AlbumGame />}
-/>
+        path="/album-game"
+        element={<AlbumGame />}
+      />
+      <Route path="/year-game" element={<YearGame />} />
       <Route path="/explore" element={<Explore />} />
       <Route
         path="/leaderboard"
