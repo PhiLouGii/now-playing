@@ -60,7 +60,7 @@ function getDifficulty(
   ]
 }
 
-export async function generateDailyChallenge(
+export async function getDailyChallenge(
   date: string = getTodayDate(),
 ): Promise<DailyChallenge> {
   const theme = getDailyTheme(date)
