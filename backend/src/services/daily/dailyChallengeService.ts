@@ -1,52 +1,99 @@
+import {
+  generateGameQuestion,
+} from '../game/gameQuestionService.js'
+
 import type {
-  Question,
-} from '../types/game'
+  QuestionType,
+  QuestionDifficulty,
+} from '../game/gameTypes.js'
 
-export type DailyTheme = {
-  name: string
-  description: string
+import {
+  getDailyTheme,
+  getDailyTwist,
+} from './dailyChallengeUtils.js'
+
+import type {
+  DailyChallenge,
+  DailyQuestion,
+} from './dailyChallengeTypes.js'
+
+const DAILY_QUESTION_COUNT = 10
+
+const QUESTION_TYPES: QuestionType[] = [
+  'name-the-song',
+  'name-the-artist',
+  'name-the-album',
+  'guess-the-year',
+]
+
+const DIFFICULTIES: QuestionDifficulty[] = [
+  'easy',
+  'medium',
+  'hard',
+]
+
+function getTodayDate(): string {
+  return new Date()
+    .toISOString()
+    .split('T')[0]
 }
 
-export type DailyTwistType =
-  | 'lightning'
-  | 'streak-rush'
-  | 'deep-cut'
-  | 'mixed-bag'
-  | 'perfect-ten'
-
-export type DailyTwist = {
-  type: DailyTwistType
-  name: string
-  description: string
+function createDailyId(
+  date: string,
+): string {
+  return `daily-${date}`
 }
 
-export type DailyChallenge = {
-  id: string
-  date: string
-  theme: DailyTheme
-  twist: DailyTwist
-  questions: Question[]
-  questionCount: number
+function getQuestionType(
+  index: number,
+): QuestionType {
+  return QUESTION_TYPES[
+    index % QUESTION_TYPES.length
+  ]
 }
 
-const API_URL =
-  'http://localhost:3000/api'
+function getDifficulty(
+  index: number,
+): QuestionDifficulty {
+  return DIFFICULTIES[
+    index % DIFFICULTIES.length
+  ]
+}
 
-export async function getDailyChallenge(): Promise<DailyChallenge> {
-  const response = await fetch(
-    `${API_URL}/daily-challenge`,
-  )
+export async function generateDailyChallenge(
+  date: string = getTodayDate(),
+): Promise<DailyChallenge> {
+  const theme = getDailyTheme(date)
+  const twist = getDailyTwist(date)
 
-  if (!response.ok) {
-    throw new Error(
-      'Failed to load daily challenge',
-    )
+  const questions: DailyQuestion[] = []
+
+  for (
+    let index = 0;
+    index < DAILY_QUESTION_COUNT;
+    index += 1
+  ) {
+    const questionType =
+      getQuestionType(index)
+
+    const difficulty =
+      getDifficulty(index)
+
+    const question =
+      await generateGameQuestion(
+        questionType,
+        difficulty,
+      )
+
+    questions.push(question)
   }
 
-  const data =
-    (await response.json()) as {
-      challenge: DailyChallenge
-    }
-
-  return data.challenge
+  return {
+    id: createDailyId(date),
+    date,
+    theme,
+    twist,
+    questions,
+    questionCount: questions.length,
+  }
 }
