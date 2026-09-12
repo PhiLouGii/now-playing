@@ -1,15 +1,14 @@
-import {
-  calculateFinalPoints,
-} from './gameScoring'
+type DailyTwistType =
+  | 'lightning'
+  | 'streak-rush'
+  | 'deep-cut'
+  | 'mixed-bag'
+  | 'perfect-ten'
 
-import type {
-  DailyTwistType,
-} from '../dailyChallengeService'
-
-type DailyScoringResult = {
+type DailyPointsResult = {
   basePoints: number
   streakMultiplier: number
-  twistBonus: number
+  twistMultiplier: number
   finalPoints: number
 }
 
@@ -17,52 +16,41 @@ export function calculateDailyPoints(
   listenDuration: number,
   streak: number,
   twist: DailyTwistType,
-): DailyScoringResult {
-  const baseWithStreak =
-    calculateFinalPoints(
-      listenDuration,
-      streak,
+): DailyPointsResult {
+  const basePoints = Math.max(
+    100,
+    Math.round(
+      1000 -
+      listenDuration * 50,
+    ),
+  )
+
+  const streakMultiplier =
+    Math.min(
+      1 + (streak - 1) * 0.25,
+      3,
     )
 
-  let twistBonus = 0
+  const twistMultiplier =
+    twist === 'lightning'
+      ? 1.5
+      : twist === 'streak-rush'
+        ? 1.25
+        : twist === 'perfect-ten'
+          ? 1.2
+          : 1
 
-  if (twist === 'lightning') {
-    if (listenDuration <= 0.1) {
-      twistBonus = 250
-    } else if (listenDuration <= 0.5) {
-      twistBonus = 150
-    } else if (listenDuration <= 2) {
-      twistBonus = 75
-    }
-  }
-
-  if (twist === 'streak-rush') {
-    if (streak >= 5) {
-      twistBonus = 250
-    } else if (streak >= 3) {
-      twistBonus = 100
-    }
-  }
+  const finalPoints =
+    Math.round(
+      basePoints *
+      streakMultiplier *
+      twistMultiplier,
+    )
 
   return {
-    basePoints: baseWithStreak,
-    streakMultiplier:
-      baseWithStreak /
-      Math.max(
-        1,
-        Math.round(
-          baseWithStreak /
-            Math.max(
-              1,
-              calculateFinalPoints(
-                listenDuration,
-                1,
-              ),
-            ),
-        ),
-      ),
-    twistBonus,
-    finalPoints:
-      baseWithStreak + twistBonus,
+    basePoints,
+    streakMultiplier,
+    twistMultiplier,
+    finalPoints,
   }
 }

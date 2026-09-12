@@ -870,9 +870,7 @@ function Game() {
             <AudioPlayer
               ref={audioPlayerRef}
               key={question.id}
-              audioUrl={
-                question.song.audioUrl
-              }
+              audioUrl={question.song.audioUrl ?? ''}
               maxListenDuration={
                 maxListenDuration
               }

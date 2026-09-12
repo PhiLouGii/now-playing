@@ -67,7 +67,7 @@ function ArtistGame() {
    * --------------------------------------------------
    */
 
-  const [selectedAnswer, setSelectedAnswer] =
+  const [, setSelectedAnswer] =
     useState<string | null>(null)
 
   const [answerStatus, setAnswerStatus] =

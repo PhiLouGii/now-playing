@@ -20,8 +20,6 @@ import {
 
 import AudioPlayer from '../../components/game/AudioPlayer'
 
-import AnswerGrid from '../../components/game/AnswerGrid'
-
 import './DailyChallenge.css'
 
 const LISTENING_STAGES = [
@@ -119,9 +117,7 @@ function DailyChallenge() {
 
           <button
             type="button"
-            onClick={() =>
-              navigate('/')
-            }
+            onClick={() => navigate('/')}
           >
             BACK HOME
           </button>
@@ -130,8 +126,12 @@ function DailyChallenge() {
     )
   }
 
+  const currentChallenge = challenge
+
   const question: Question =
-    challenge.questions[currentQuestion]
+    currentChallenge.questions[
+      currentQuestion
+    ]
 
   const isAnswered =
     answerStatus !== 'idle'
@@ -149,6 +149,7 @@ function DailyChallenge() {
     audioPlayerRef.current?.playPreview()
 
     setSelectedAnswer(answer)
+
     setAnswerStatus(
       correct
         ? 'correct'
@@ -165,10 +166,11 @@ function DailyChallenge() {
             listeningStage
           ],
           nextStreak,
-          challenge.twist.type,
+          currentChallenge.twist.type,
         )
 
       setStreak(nextStreak)
+
       setScore(
         (current) =>
           current +
@@ -214,22 +216,24 @@ function DailyChallenge() {
     audioPlayerRef.current?.playPreview()
 
     setAnswerStatus('revealed')
+
     setSelectedAnswer(
       question.correctAnswer,
     )
+
     setStreak(0)
   }
 
   function handleNext() {
     if (
       currentQuestion >=
-      challenge.questions.length - 1
+      currentChallenge.questions.length - 1
     ) {
       navigate(
         '/daily-challenge/results',
         {
           state: {
-            challenge,
+            challenge: currentChallenge,
             score,
             correctAnswers,
             streak,
@@ -245,8 +249,11 @@ function DailyChallenge() {
     )
 
     setSelectedAnswer(null)
+
     setAnswerStatus('idle')
+
     setListeningStage(0)
+
     setTimeRemaining(
       LISTENING_STAGES[0],
     )
@@ -263,11 +270,11 @@ function DailyChallenge() {
             </p>
 
             <h1>
-              {challenge.theme.name}
+              {currentChallenge.theme.name}
             </h1>
 
             <p>
-              {challenge.theme.description}
+              {currentChallenge.theme.description}
             </p>
           </div>
 
@@ -276,8 +283,9 @@ function DailyChallenge() {
 
             <div>
               <small>TWIST</small>
+
               <strong>
-                {challenge.twist.name}
+                {currentChallenge.twist.name}
               </strong>
             </div>
           </div>
@@ -286,7 +294,7 @@ function DailyChallenge() {
         <div className="daily-game__progress">
           SONG {currentQuestion + 1}
           {' / '}
-          {challenge.questionCount}
+          {currentChallenge.questionCount}
         </div>
 
         <section className="daily-game__song">
@@ -326,7 +334,7 @@ function DailyChallenge() {
           audioUrl={
             question.song.audioUrl ?? ''
           }
-          duration={
+          maxListenDuration={
             LISTENING_STAGES[
               listeningStage
             ]
@@ -334,23 +342,45 @@ function DailyChallenge() {
           onTimeUpdate={
             setTimeRemaining
           }
+          onStageComplete={() => {
+            setTimeRemaining(0)
+          }}
         />
 
-        <AnswerGrid
-          answers={question.answers}
-          correctAnswer={
-            question.correctAnswer
-          }
-          selectedAnswer={
-            selectedAnswer
-          }
-          answerStatus={
-            answerStatus
-          }
-          onAnswer={
-            handleAnswer
-          }
-        />
+        <div className="daily-game__answers">
+          {question.answers.map(
+            (answer) => {
+              const isSelected =
+                selectedAnswer === answer
+
+              const isCorrect =
+                answer ===
+                question.correctAnswer
+
+              return (
+                <button
+                  key={answer}
+                  type="button"
+                  onClick={() =>
+                    handleAnswer(answer)
+                  }
+                  disabled={isAnswered}
+                  className={
+                    isAnswered
+                      ? isCorrect
+                        ? 'correct'
+                        : isSelected
+                          ? 'incorrect'
+                          : ''
+                      : ''
+                  }
+                >
+                  {answer}
+                </button>
+              )
+            },
+          )}
+        </div>
 
         {!isAnswered && (
           <div className="daily-game__actions">
@@ -397,7 +427,7 @@ function DailyChallenge() {
               }
             >
               {currentQuestion >=
-              challenge.questions.length - 1
+              currentChallenge.questions.length - 1
                 ? 'SEE RESULTS'
                 : 'NEXT SONG →'}
             </button>
