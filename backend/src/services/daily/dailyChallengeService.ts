@@ -32,6 +32,8 @@ const DIFFICULTIES: QuestionDifficulty[] = [
   'hard',
 ]
 
+const MAX_ATTEMPTS_PER_QUESTION = 5
+
 function getTodayDate(): string {
   return new Date()
     .toISOString()
@@ -60,6 +62,50 @@ function getDifficulty(
   ]
 }
 
+async function generateDailyQuestion(
+  index: number,
+): Promise<DailyQuestion> {
+  const questionType =
+    getQuestionType(index)
+
+  const difficulty =
+    getDifficulty(index)
+
+  let lastError: unknown
+
+  for (
+    let attempt = 0;
+    attempt < MAX_ATTEMPTS_PER_QUESTION;
+    attempt += 1
+  ) {
+    try {
+      return await generateGameQuestion(
+        questionType,
+        difficulty,
+      )
+    } catch (error) {
+      lastError = error
+
+      console.warn(
+        `Daily question ${index + 1} attempt ${
+          attempt + 1
+        } failed:`,
+        error,
+      )
+    }
+  }
+
+  throw new Error(
+    `Could not generate daily question ${
+      index + 1
+    } after ${MAX_ATTEMPTS_PER_QUESTION} attempts. Last error: ${
+      lastError instanceof Error
+        ? lastError.message
+        : String(lastError)
+    }`,
+  )
+}
+
 export async function getDailyChallenge(
   date: string = getTodayDate(),
 ): Promise<DailyChallenge> {
@@ -73,17 +119,8 @@ export async function getDailyChallenge(
     index < DAILY_QUESTION_COUNT;
     index += 1
   ) {
-    const questionType =
-      getQuestionType(index)
-
-    const difficulty =
-      getDifficulty(index)
-
     const question =
-      await generateGameQuestion(
-        questionType,
-        difficulty,
-      )
+      await generateDailyQuestion(index)
 
     questions.push(question)
   }
