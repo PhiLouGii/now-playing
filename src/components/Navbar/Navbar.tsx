@@ -15,12 +15,18 @@ import './Navbar.css'
 function Navbar() {
   const navigate = useNavigate()
 
-  const {
+    const {
     user,
     profile,
     loading,
     logout,
   } = useAuth()
+
+  console.log('NAVBAR:', {
+    user,
+    profile,
+    loading,
+  })
 
   async function handleLogout() {
     try {
