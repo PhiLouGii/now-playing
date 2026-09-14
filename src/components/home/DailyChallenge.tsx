@@ -1,8 +1,16 @@
-import { Flame, ArrowRight } from 'lucide-react'
+import {
+  Flame,
+  ArrowRight,
+} from 'lucide-react'
+import {
+  useNavigate,
+} from 'react-router-dom'
 import Button from '../ui/Button'
 import './DailyChallenge.css'
 
 function DailyChallenge() {
+  const navigate = useNavigate()
+
   return (
     <section className="daily">
       <div className="daily__container">
@@ -28,28 +36,33 @@ function DailyChallenge() {
           <div className="daily__main">
             <div className="daily__heading">
               <p className="daily__category">
-                NAME THAT SONG
+                DAILY MIX
               </p>
 
               <h2>
-                Can you identify today's hit?
+                Today's music challenge is waiting.
               </h2>
             </div>
 
             <p className="daily__description">
-              One mystery track. Four possible answers.
-              How quickly can you get it?
+              Ten mystery tracks. Different ways to
+              test how well you really know your music.
             </p>
 
             <div className="daily__details">
-              <span>1 SONG</span>
-              <span>4 ANSWERS</span>
+              <span>10 SONGS</span>
+              <span>4 QUESTION TYPES</span>
               <span>TIME BONUS</span>
             </div>
           </div>
 
           <div className="daily__action">
-            <Button variant="secondary">
+            <Button
+              variant="secondary"
+              onClick={() =>
+                navigate('/daily-challenge')
+              }
+            >
               PLAY
               <ArrowRight size={17} />
             </Button>
@@ -62,4 +75,3 @@ function DailyChallenge() {
 }
 
 export default DailyChallenge
-

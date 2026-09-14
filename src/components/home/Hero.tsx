@@ -1,9 +1,14 @@
 import { ArrowRight } from 'lucide-react'
+import {
+  useNavigate,
+} from 'react-router-dom'
 import Button from '../ui/Button'
 import Waveform from '../music/Waveform'
 import './Hero.css'
 
 function Hero() {
+  const navigate = useNavigate()
+
   return (
     <section className="hero">
       <Waveform />
@@ -23,7 +28,12 @@ function Hero() {
         </p>
 
         <div className="hero__actions">
-          <Button size="lg">
+          <Button
+            size="lg"
+            onClick={() =>
+              navigate('/game')
+            }
+          >
             PLAY NOW
             <ArrowRight size={18} />
           </Button>
@@ -38,4 +48,3 @@ function Hero() {
 }
 
 export default Hero
-
