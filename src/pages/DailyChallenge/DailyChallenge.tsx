@@ -618,57 +618,95 @@ const question: Question =
         )}
 
         {isAnswered && (
-          <div className="daily-game__after">
-            <div className="daily-game__result">
-              <span
-                className={
-                  answerStatus === 'correct'
-                    ? 'daily-game__result-icon daily-game__result-icon--correct'
-                    : 'daily-game__result-icon daily-game__result-icon--wrong'
-                }
-              >
-                {answerStatus === 'correct'
-                  ? '✓'
-                  : answerStatus === 'revealed'
-                    ? '!'
-                    : '×'}
+  <div className="daily-game__after">
+
+    <div className="daily-game__reveal-card">
+
+      <img
+        src={question.song.artworkUrl}
+        alt={`${question.song.title} artwork`}
+        className="daily-game__reveal-artwork"
+      />
+
+      <div className="daily-game__reveal-content">
+
+        <span className="daily-game__reveal-eyebrow">
+          {answerStatus === 'correct'
+            ? '✓ CORRECT'
+            : answerStatus === 'revealed'
+              ? '! ANSWER REVEALED'
+              : '× NOT QUITE'}
+        </span>
+
+        <h3>
+          {question.song.title}
+        </h3>
+
+        <p className="daily-game__reveal-artist">
+          {question.song.artist}
+        </p>
+
+        <div className="daily-game__reveal-meta">
+
+          <span>
+            {question.song.album}
+          </span>
+
+          {question.song.releaseYear && (
+            <>
+              <span className="daily-game__reveal-dot">
+                •
               </span>
 
-              <div>
-                <p>
-                  {answerStatus ===
-                  'correct'
-                    ? 'CORRECT'
-                    : answerStatus ===
-                        'revealed'
-                      ? 'ANSWER REVEALED'
-                      : 'NOT QUITE'}
-                </p>
+              <span>
+                {question.song.releaseYear}
+              </span>
+            </>
+          )}
 
-                <span>
-                  {answerStatus ===
-                  'correct'
-                    ? `+${questionResults.at(-1)?.points ?? 0} POINTS`
-                    : question.correctAnswer}
-                </span>
-              </div>
-            </div>
+        </div>
 
-            <button
-              type="button"
-              onClick={
-                handleNext
-              }
-              className="daily-game__next"
-            >
-              {currentQuestion >=
-              challenge.questions.length - 1
-                ? 'SEE RESULTS'
-                : 'NEXT SONG'}
-              <span>→</span>
-            </button>
-          </div>
+        {answerStatus === 'correct' && (
+          <strong className="daily-game__reveal-points">
+            +{questionResults.at(-1)?.points ?? 0} POINTS
+          </strong>
         )}
+
+        {answerStatus !== 'correct' && (
+          <span className="daily-game__reveal-answer">
+            ANSWER: {question.correctAnswer}
+          </span>
+        )}
+
+      </div>
+
+      <div className="daily-game__reveal-status">
+        <span>
+          {answerStatus === 'correct'
+            ? 'NICE CATCH'
+            : answerStatus === 'revealed'
+              ? 'NOW YOU KNOW'
+              : 'KEEP LISTENING'}
+        </span>
+      </div>
+
+    </div>
+
+    <button
+      type="button"
+      onClick={handleNext}
+      className="daily-game__next"
+    >
+      {currentQuestion >=
+      challenge.questions.length - 1
+        ? 'SEE RESULTS'
+        : 'NEXT SONG'}
+
+      <span>→</span>
+    </button>
+
+  </div>
+)}
 
         <footer className="daily-game__stats">
           <div>

@@ -13,6 +13,14 @@ import type {
 
 import './DailyChallengeResults.css'
 
+type ConfettiPiece = {
+  id: number
+  left: number
+  delay: number
+  duration: number
+  rotation: number
+}
+
 type QuestionResult = {
   questionId: string
   questionType: QuestionType
@@ -78,10 +86,13 @@ function DailyChallengeResults() {
       | null
 
   const challenge = state?.challenge
+
   const questionResults =
     state?.questionResults ?? []
 
-  const score = state?.score ?? 0
+  const score =
+    state?.score ?? 0
+
   const correctAnswers =
     state?.correctAnswers ?? 0
 
@@ -116,6 +127,49 @@ function DailyChallengeResults() {
       [questionResults],
     )
 
+  const celebrationLevel =
+    accuracy >= 90
+      ? 'full'
+      : accuracy >= 70
+        ? 'high'
+        : accuracy >= 40
+          ? 'subtle'
+          : 'none'
+
+  const confettiPieces =
+    useMemo<ConfettiPiece[]>(() => {
+      if (
+        celebrationLevel ===
+        'none'
+      ) {
+        return []
+      }
+
+      const count =
+        celebrationLevel ===
+        'full'
+          ? 70
+          : celebrationLevel ===
+              'high'
+            ? 45
+            : 20
+
+      return Array.from({
+        length: count,
+      }).map((_, index) => ({
+        id: index,
+        left:
+          Math.random() * 100,
+        delay:
+          Math.random() * 2,
+        duration:
+          3 +
+          Math.random() * 3,
+        rotation:
+          Math.random() * 360,
+      }))
+    }, [celebrationLevel])
+
   const resultMessage =
     accuracy === 100
       ? 'PERFECT RUN.'
@@ -127,7 +181,10 @@ function DailyChallengeResults() {
             ? 'THE MUSIC FOUGHT BACK.'
             : 'ROUGH ONE. RUN IT BACK.'
 
-  if (!state || !challenge) {
+  if (
+    !state ||
+    !challenge
+  ) {
     return (
       <main className="daily-results">
         <div className="daily-results__error">
@@ -140,8 +197,8 @@ function DailyChallengeResults() {
           </h1>
 
           <p>
-            Finish a Daily Challenge first
-            to see your results.
+            Finish a Daily Challenge
+            first to see your results.
           </p>
 
           <button
@@ -162,6 +219,22 @@ function DailyChallengeResults() {
 
   return (
     <main className="daily-results">
+
+      {confettiPieces.map(
+        (piece) => (
+          <span
+            key={piece.id}
+            className={`daily-results__confetti daily-results__confetti--${celebrationLevel}`}
+            style={{
+              left: `${piece.left}%`,
+              animationDelay: `${piece.delay}s`,
+              animationDuration: `${piece.duration}s`,
+              transform: `rotate(${piece.rotation}deg)`,
+            }}
+          />
+        ),
+      )}
+
       <div className="daily-results__container">
 
         <div className="daily-results__orb daily-results__orb--one" />
@@ -186,13 +259,17 @@ function DailyChallengeResults() {
           </p>
 
           <div className="daily-results__score">
-            <span>FINAL SCORE</span>
+            <span>
+              FINAL SCORE
+            </span>
 
             <strong>
               {score.toLocaleString()}
             </strong>
 
-            <small>POINTS</small>
+            <small>
+              POINTS
+            </small>
           </div>
 
         </header>
@@ -264,7 +341,9 @@ function DailyChallengeResults() {
                 {totalListeningTime.toFixed(
                   1,
                 )}
-                <span>s</span>
+                <span>
+                  s
+                </span>
               </strong>
             </div>
           </div>
@@ -314,6 +393,7 @@ function DailyChallengeResults() {
         <section className="daily-results__breakdown">
 
           <div className="daily-results__section-heading">
+
             <div>
               <p>
                 YOUR RUN
@@ -329,6 +409,7 @@ function DailyChallengeResults() {
               {' '}
               QUESTIONS
             </span>
+
           </div>
 
           <div className="daily-results__questions">
@@ -433,6 +514,7 @@ function DailyChallengeResults() {
                   </div>
 
                   <div className="daily-results__question-points">
+
                     <span>
                       POINTS
                     </span>
@@ -442,6 +524,7 @@ function DailyChallengeResults() {
                         ? `+${result.points}`
                         : '—'}
                     </strong>
+
                   </div>
 
                 </article>
@@ -455,6 +538,7 @@ function DailyChallengeResults() {
         <section className="daily-results__bottom">
 
           <div className="daily-results__bottom-message">
+
             <span>
               TOMORROW'S ANOTHER ROUND.
             </span>
@@ -462,6 +546,7 @@ function DailyChallengeResults() {
             <strong>
               Think you can beat this score?
             </strong>
+
           </div>
 
           <div className="daily-results__actions">
@@ -494,6 +579,7 @@ function DailyChallengeResults() {
         </section>
 
       </div>
+
     </main>
   )
 }

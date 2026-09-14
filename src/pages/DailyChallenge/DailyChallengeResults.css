@@ -696,3 +696,65 @@
     flex-direction: column;
   }
 }
+
+/* --------------------------------------------------
+   Celebration confetti
+-------------------------------------------------- */
+
+.daily-results__confetti {
+  position: fixed;
+  top: -18px;
+  z-index: 20;
+  width: 7px;
+  height: 12px;
+  border-radius: 2px;
+  background: #a78bfa;
+  pointer-events: none;
+  animation-name: dailyConfettiFall;
+  animation-timing-function: linear;
+  animation-iteration-count: 1;
+}
+
+.daily-results__confetti:nth-child(3n) {
+  background: #22d3ee;
+}
+
+.daily-results__confetti:nth-child(4n) {
+  background: #f472b6;
+}
+
+.daily-results__confetti:nth-child(5n) {
+  background: #facc15;
+}
+
+.daily-results__confetti--subtle {
+  opacity: 0.7;
+}
+
+.daily-results__confetti--high {
+  width: 8px;
+  height: 14px;
+}
+
+.daily-results__confetti--full {
+  width: 9px;
+  height: 15px;
+  box-shadow:
+    0 0 8px rgba(167, 139, 250, 0.4);
+}
+
+@keyframes dailyConfettiFall {
+  0% {
+    top: -20px;
+    opacity: 1;
+  }
+
+  70% {
+    opacity: 1;
+  }
+
+  100% {
+    top: 105vh;
+    opacity: 0;
+  }
+}
