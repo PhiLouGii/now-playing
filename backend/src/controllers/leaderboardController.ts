@@ -4,75 +4,100 @@ import { getFirestore } from 'firebase-admin/firestore'
 const db = getFirestore()
 
 export async function getLeaderboard(
-  _req: Request,
+  req: Request,
   res: Response,
 ) {
   try {
-    const scoresSnapshot =
-      await db
+    const gameMode =
+      typeof req.query.gameMode === 'string'
+        ? req.query.gameMode
+        : null
+
+    let scoresQuery =
+      db
         .collection('scores')
         .orderBy('score', 'desc')
         .limit(50)
-        .get()
 
-    const leaderboard = await Promise.all(
-      scoresSnapshot.docs.map(
-        async (scoreDoc, index) => {
-          const scoreData =
-            scoreDoc.data()
+    if (gameMode) {
+      scoresQuery =
+        db
+          .collection('scores')
+          .where(
+            'gameMode',
+            '==',
+            gameMode,
+          )
+          .orderBy('score', 'desc')
+          .limit(50)
+    }
 
-          const userId =
-            scoreData.userId
+    const scoresSnapshot =
+      await scoresQuery.get()
 
-          let username = 'Player'
-          let displayName = 'Player'
+    const leaderboard =
+      await Promise.all(
+        scoresSnapshot.docs.map(
+          async (scoreDoc, index) => {
+            const scoreData =
+              scoreDoc.data()
 
-          if (userId) {
-            const userSnapshot =
-              await db
-                .collection('users')
-                .doc(userId)
-                .get()
+            const userId =
+              scoreData.userId
 
-            if (userSnapshot.exists) {
-              const userData =
-                userSnapshot.data()
+            let username = 'Player'
+            let displayName = 'Player'
 
-              username =
-                userData?.username ||
-                'Player'
+            if (userId) {
+              const userSnapshot =
+                await db
+                  .collection('users')
+                  .doc(userId)
+                  .get()
 
-              displayName =
-                userData?.displayName ||
-                username
+              if (userSnapshot.exists) {
+                const userData =
+                  userSnapshot.data()
+
+                username =
+                  userData?.username ||
+                  'Player'
+
+                displayName =
+                  userData?.displayName ||
+                  username
+              }
             }
-          }
 
-          return {
-            rank: index + 1,
-            username,
-            displayName,
-            score: scoreData.score,
-            accuracy: scoreData.accuracy,
-            bestStreak:
-              scoreData.bestStreak,
-            questions:
-              scoreData.questions,
-            correctAnswers:
-              scoreData.correctAnswers,
-            totalListeningTime:
-              scoreData.totalListeningTime,
-            gameMode:
-              scoreData.gameMode,
-            completedAt:
-              scoreData.completedAt,
-          }
-        },
-      ),
-    )
+            return {
+              rank: index + 1,
+              username,
+              displayName,
+              score: scoreData.score,
+              accuracy:
+                scoreData.accuracy,
+              bestStreak:
+                scoreData.bestStreak,
+              questions:
+                scoreData.questions,
+              correctAnswers:
+                scoreData.correctAnswers,
+              totalListeningTime:
+                scoreData.totalListeningTime,
+              gameMode:
+                scoreData.gameMode,
+              completedAt:
+                scoreData.completedAt,
+            }
+          },
+        ),
+      )
 
     console.log(
       'LEADERBOARD FETCHED:',
+      gameMode
+        ? `mode=${gameMode}`
+        : 'all modes',
       leaderboard.length,
       'scores',
     )

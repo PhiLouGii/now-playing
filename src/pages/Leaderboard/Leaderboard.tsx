@@ -3,13 +3,48 @@ import { useEffect, useState } from 'react'
 import {
   getLeaderboard,
   type LeaderboardEntry,
+  type LeaderboardGameMode,
 } from '../../services/leaderboardService'
 
 import './Leaderboard.css'
 
+const GAME_MODES: {
+  label: string
+  value?: LeaderboardGameMode
+}[] = [
+  {
+    label: 'All Time',
+  },
+  {
+    label: 'Name That Song',
+    value: 'name-that-song',
+  },
+  {
+    label: 'Name the Artist',
+    value: 'name-the-artist',
+  },
+  {
+    label: 'Name the Album',
+    value: 'name-the-album',
+  },
+  {
+    label: 'Guess the Year',
+    value: 'guess-the-year',
+  },
+  {
+    label: 'Daily Challenge',
+    value: 'daily-challenge',
+  },
+]
+
 function Leaderboard() {
   const [entries, setEntries] =
     useState<LeaderboardEntry[]>([])
+
+  const [selectedMode, setSelectedMode] =
+    useState<
+      LeaderboardGameMode | undefined
+    >(undefined)
 
   const [isLoading, setIsLoading] =
     useState(true)
@@ -24,7 +59,9 @@ function Leaderboard() {
         setError(null)
 
         const leaderboard =
-          await getLeaderboard()
+          await getLeaderboard(
+            selectedMode,
+          )
 
         setEntries(leaderboard)
       } catch (error) {
@@ -42,7 +79,13 @@ function Leaderboard() {
     }
 
     loadLeaderboard()
-  }, [])
+  }, [selectedMode])
+
+  function handleModeChange(
+    mode: LeaderboardGameMode | undefined,
+  ) {
+    setSelectedMode(mode)
+  }
 
   if (isLoading) {
     return (
@@ -89,6 +132,27 @@ function Leaderboard() {
       <h1 className="display-lg">
         See who knows music.
       </h1>
+
+      <div className="leaderboard-modes">
+        {GAME_MODES.map((mode) => (
+          <button
+            key={mode.label}
+            type="button"
+            className={
+              selectedMode === mode.value
+                ? 'active'
+                : ''
+            }
+            onClick={() =>
+              handleModeChange(
+                mode.value,
+              )
+            }
+          >
+            {mode.label}
+          </button>
+        ))}
+      </div>
 
       {entries.length === 0 ? (
         <p className="body-lg">

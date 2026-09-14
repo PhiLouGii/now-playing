@@ -1,3 +1,10 @@
+export type LeaderboardGameMode =
+  | 'name-that-song'
+  | 'name-the-artist'
+  | 'name-the-album'
+  | 'guess-the-year'
+  | 'daily-challenge'
+
 export interface LeaderboardEntry {
   rank: number
   username: string
@@ -15,11 +22,22 @@ export interface LeaderboardEntry {
   }
 }
 
-export async function getLeaderboard(): Promise<
-  LeaderboardEntry[]
-> {
-  const response = await fetch(
+export async function getLeaderboard(
+  gameMode?: LeaderboardGameMode,
+): Promise<LeaderboardEntry[]> {
+  const url = new URL(
     'http://localhost:3000/api/leaderboard',
+  )
+
+  if (gameMode) {
+    url.searchParams.set(
+      'gameMode',
+      gameMode,
+    )
+  }
+
+  const response = await fetch(
+    url.toString(),
   )
 
   const data = await response.json()
@@ -33,6 +51,9 @@ export async function getLeaderboard(): Promise<
 
   console.log(
     'LEADERBOARD LOADED:',
+    gameMode
+      ? `mode=${gameMode}`
+      : 'all modes',
     data,
   )
 
