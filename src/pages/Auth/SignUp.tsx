@@ -39,12 +39,16 @@ function SignUp() {
     }
 
     if (trimmedUsername.length < 3) {
-      setError('Username must be at least 3 characters.')
+      setError(
+        'Username must be at least 3 characters.',
+      )
       return
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters.')
+      setError(
+        'Password must be at least 6 characters.',
+      )
       return
     }
 
@@ -64,24 +68,40 @@ function SignUp() {
         displayName: trimmedUsername,
       })
 
-      await setDoc(doc(firestore, 'users', user.uid), {
-        username: trimmedUsername,
-        displayName: trimmedUsername,
-        email: user.email,
-        createdAt: serverTimestamp(),
-      })
+      await setDoc(
+        doc(firestore, 'users', user.uid),
+        {
+          username: trimmedUsername,
+          displayName: trimmedUsername,
+          email: user.email,
+          createdAt: serverTimestamp(),
+        },
+      )
 
       navigate('/')
     } catch (err: unknown) {
-      console.error('Sign up failed:', err)
+      console.error('SIGN UP ERROR:', err)
+
+      if (err instanceof Error) {
+        console.error(
+          'Error message:',
+          err.message,
+        )
+      }
 
       if (
-        err instanceof Error &&
+        typeof err === 'object' &&
+        err !== null &&
         'code' in err
       ) {
-        const firebaseError = err as Error & {
+        const firebaseError = err as {
           code: string
         }
+
+        console.error(
+          'Firebase error code:',
+          firebaseError.code,
+        )
 
         switch (firebaseError.code) {
           case 'auth/email-already-in-use':
@@ -91,7 +111,9 @@ function SignUp() {
             break
 
           case 'auth/invalid-email':
-            setError('Please enter a valid email address.')
+            setError(
+              'Please enter a valid email address.',
+            )
             break
 
           case 'auth/weak-password':
@@ -102,12 +124,16 @@ function SignUp() {
 
           default:
             setError(
-              'Something went wrong. Please try again.',
+              err instanceof Error
+                ? err.message
+                : 'Something went wrong. Please try again.',
             )
         }
       } else {
         setError(
-          'Something went wrong. Please try again.',
+          err instanceof Error
+            ? err.message
+            : 'Something went wrong. Please try again.',
         )
       }
     } finally {
@@ -119,13 +145,16 @@ function SignUp() {
     <main className="auth-page">
       <section className="auth-card">
         <div className="auth-header">
-          <p className="auth-eyebrow">NOW PLAYING</p>
+          <p className="auth-eyebrow">
+            NOW PLAYING
+          </p>
 
           <h1>Create your account</h1>
 
           <p>
             Make an account to save your scores,
-            track your progress, and climb the leaderboard.
+            track your progress, and climb the
+            leaderboard.
           </p>
         </div>
 
