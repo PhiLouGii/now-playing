@@ -2,10 +2,12 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import { db } from './config/firebase.js'
+
 import songRoutes from './routes/songRoutes.js'
 import musicRoutes from './routes/musicRoutes.js'
 import gameRoutes from './routes/gameRoutes.js'
 import dailyChallengeRoutes from './routes/dailyChallengeRoutes.js'
+import scoreRoutes from './routes/scoreRoutes.js'
 
 dotenv.config()
 
@@ -16,10 +18,11 @@ app.use(cors())
 app.use(express.json())
 
 app.use('/api/songs', songRoutes)
-
 app.use('/api/music', musicRoutes)
 app.use('/api/game', gameRoutes)
 app.use('/api/daily-challenge', dailyChallengeRoutes)
+app.use('/api/scores', scoreRoutes)
+
 app.get('/api/health', async (_req, res) => {
   try {
     await db.listCollections()
