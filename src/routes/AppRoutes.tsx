@@ -11,6 +11,7 @@ import AlbumGame from '../pages/AlbumGame/AlbumGame'
 import YearGame from '../pages/YearGame/YearGame'
 import DailyChallenge from '../pages/DailyChallenge/DailyChallenge'
 import DailyChallengeResults from '../pages/DailyChallenge/DailyChallengeResults'
+import SignUp from '../pages/Auth/SignUp'
 
 function AppRoutes() {
   return (
@@ -35,6 +36,7 @@ function AppRoutes() {
         element={<Leaderboard />}
       />
       <Route path="/profile" element={<Profile />} />
+      <Route path="/signup" element={<SignUp />} />
     </Routes>
   )
 }
