@@ -13,20 +13,25 @@ import GameProgress from '../../components/game/GameProgress'
 import ResultsScreen from '../../components/game/ResultsScreen'
 
 import { defaultRound } from '../../data/defaultRound'
+
 import {
   generateQuestion,
 } from '../../services/gameService'
+
+import {
+  calculateFinalPoints,
+  calculatePoints,
+  calculateStreakMultiplier,
+} from '../../lib/gameScoring'
+
+import {
+  submitScore,
+} from '../../services/scoreService'
 
 import type {
   Question,
   RoundConfig,
 } from '../../types/game'
-
-import {
-  calculatePoints,
-  calculateFinalPoints,
-  calculateStreakMultiplier,
-} from '../../lib/gameScoring'
 
 import './Game.css'
 
@@ -123,8 +128,10 @@ function Game() {
    * --------------------------------------------------
    */
 
-  const [recognitionResults, setRecognitionResults] =
-    useState<RecognitionResult[]>([])
+  const [
+    recognitionResults,
+    setRecognitionResults,
+  ] = useState<RecognitionResult[]>([])
 
   /*
    * --------------------------------------------------
@@ -142,9 +149,6 @@ function Game() {
    * --------------------------------------------------
    * FULL PREVIEW STATE
    * --------------------------------------------------
-   *
-   * This becomes true when the full Deezer preview
-   * has finished after an answer/reveal.
    */
 
   const [previewComplete, setPreviewComplete] =
@@ -158,6 +162,9 @@ function Game() {
 
   const [isGameComplete, setIsGameComplete] =
     useState(false)
+
+  const scoreSubmitted =
+    useRef(false)
 
   /*
    * --------------------------------------------------
@@ -284,6 +291,83 @@ function Game() {
 
   /*
    * --------------------------------------------------
+   * SAVE SCORE
+   * --------------------------------------------------
+   *
+   * This hook must remain above all conditional
+   * returns so React always calls hooks in the
+   * same order.
+   */
+
+  useEffect(() => {
+    if (
+      !isGameComplete ||
+      scoreSubmitted.current
+    ) {
+      return
+    }
+
+    scoreSubmitted.current = true
+
+    const totalListeningTime =
+      recognitionResults.reduce(
+        (total, result) =>
+          total + result.listenDuration,
+        0,
+      )
+
+    const accuracy =
+      roundConfig.questionCount > 0
+        ? (correctAnswers /
+            roundConfig.questionCount) *
+          100
+        : 0
+
+    async function saveScore() {
+      try {
+        await submitScore({
+          gameMode: 'name-that-song',
+          score,
+          accuracy,
+          bestStreak,
+          questions:
+            roundConfig.questionCount,
+          correctAnswers,
+          totalListeningTime,
+        })
+
+        console.log(
+          'GAME SCORE SAVED:',
+          {
+            score,
+            accuracy,
+            bestStreak,
+            questions:
+              roundConfig.questionCount,
+            correctAnswers,
+            totalListeningTime,
+          },
+        )
+      } catch (error) {
+        console.error(
+          'FAILED TO SAVE GAME SCORE:',
+          error,
+        )
+      }
+    }
+
+    saveScore()
+  }, [
+    isGameComplete,
+    score,
+    correctAnswers,
+    bestStreak,
+    recognitionResults,
+    roundConfig.questionCount,
+  ])
+
+  /*
+   * --------------------------------------------------
    * LOADING STATE
    * --------------------------------------------------
    */
@@ -359,13 +443,6 @@ function Game() {
   function handleTimeUpdate(
     time: number,
   ) {
-    /*
-     * Only show the stage timer while the player
-     * is still guessing.
-     *
-     * Once an answer is given, the AudioPlayer
-     * controls the full preview timer.
-     */
     if (!isAnswered) {
       setTimeRemaining(time)
     }
@@ -426,19 +503,12 @@ function Game() {
       answer === question.correctAnswer
 
     /*
-     * IMPORTANT:
-     *
      * Start the full preview directly from the
      * user's answer click.
-     *
-     * This happens before React changes state so
-     * browser autoplay restrictions don't interfere.
      */
+
     audioPlayerRef.current?.playPreview()
 
-    /*
-     * The answer has now been submitted.
-     */
     setSelectedAnswer(answer)
 
     setAnswerStatus(
@@ -447,9 +517,6 @@ function Game() {
         : 'incorrect',
     )
 
-    /*
-     * The full preview has just started.
-     */
     setPreviewComplete(false)
 
     /*
@@ -499,6 +566,7 @@ function Game() {
       )
 
       setPointsEarned(points)
+
       setMultiplierEarned(
         multiplier,
       )
@@ -557,13 +625,6 @@ function Game() {
    * --------------------------------------------------
    * ADVANCE LISTENING STAGE
    * --------------------------------------------------
-   *
-   * The player is asking:
-   *
-   * "I don't know yet. Give me more of the song."
-   *
-   * Each new stage starts from the BEGINNING of
-   * the song.
    */
 
   function handleAdvance() {
@@ -592,12 +653,6 @@ function Game() {
    * --------------------------------------------------
    * REVEAL ANSWER
    * --------------------------------------------------
-   *
-   * Reveal is effectively:
-   *
-   * "I give up — show me the answer."
-   *
-   * It also starts the full preview.
    */
 
   function handleRevealAnswer() {
@@ -606,9 +661,10 @@ function Game() {
     }
 
     /*
-     * Start full preview directly from the
+     * Start the full preview directly from the
      * user's Reveal Answer click.
      */
+
     audioPlayerRef.current?.playPreview()
 
     setAnswerStatus('revealed')
@@ -673,6 +729,7 @@ function Game() {
     /*
      * Last question.
      */
+
     if (
       currentQuestion >=
       roundConfig.questionCount - 1
@@ -688,6 +745,7 @@ function Game() {
      * The next question has already been
      * preloaded.
      */
+
     if (questions[nextIndex]) {
       setCurrentQuestion(nextIndex)
 
@@ -699,6 +757,7 @@ function Game() {
     /*
      * Otherwise generate it now.
      */
+
     setIsLoadingNext(true)
 
     try {
@@ -870,7 +929,9 @@ function Game() {
             <AudioPlayer
               ref={audioPlayerRef}
               key={question.id}
-              audioUrl={question.song.audioUrl ?? ''}
+              audioUrl={
+                question.song.audioUrl ?? ''
+              }
               maxListenDuration={
                 maxListenDuration
               }
@@ -944,9 +1005,7 @@ function Game() {
             }
           />
 
-          {/* ----------------------------------------
-              BEFORE ANSWER
-              ---------------------------------------- */}
+          {/* BEFORE ANSWER */}
 
           {!isAnswered && (
             <div className="game-actions">
@@ -985,9 +1044,7 @@ function Game() {
             </div>
           )}
 
-          {/* ----------------------------------------
-              ANSWER FEEDBACK
-              ---------------------------------------- */}
+          {/* ANSWER FEEDBACK */}
 
           {isAnswered && (
             <div
@@ -1039,32 +1096,18 @@ function Game() {
                 </div>
               )}
 
-              {/* FULL PREVIEW STATUS */}
+              {/* PREVIEW STATUS */}
 
-              {answerStatus !==
-                'revealed' && (
-                <div className="game-feedback__points">
-                  {previewComplete
-                    ? 'PREVIEW COMPLETE'
-                    : 'PREVIEW CONTINUES'}
-                </div>
-              )}
-
-              {answerStatus ===
-                'revealed' && (
-                <div className="game-feedback__points">
-                  {previewComplete
-                    ? 'PREVIEW COMPLETE'
-                    : 'PREVIEW CONTINUES'}
-                </div>
-              )}
+              <div className="game-feedback__points">
+                {previewComplete
+                  ? 'PREVIEW COMPLETE'
+                  : 'PREVIEW CONTINUES'}
+              </div>
 
             </div>
           )}
 
-          {/* ----------------------------------------
-              GAME STATUS
-              ---------------------------------------- */}
+          {/* GAME STATUS */}
 
           <div className="game-status">
 
@@ -1094,37 +1137,39 @@ function Game() {
 
           </div>
 
-          {/* ----------------------------------------
-    NEXT SONG
-    ---------------------------------------- */}
+          {/* NEXT SONG */}
 
-{isAnswered && (
-  <div className="game-next-area">
+          {isAnswered && (
+            <div className="game-next-area">
 
-    {!previewComplete && (
-      <div className="game-next-status">
-        <span>
-          PREVIEW PLAYING
-        </span>
-      </div>
-    )}
+              {!previewComplete && (
+                <div className="game-next-status">
+                  <span>
+                    PREVIEW PLAYING
+                  </span>
+                </div>
+              )}
 
-    <button
-      type="button"
-      className="game-next"
-      onClick={handleNextSong}
-      disabled={isLoadingNext}
-    >
-      {isLoadingNext
-        ? 'LOADING...'
-        : currentQuestion >=
-            roundConfig.questionCount - 1
-          ? 'SEE RESULTS'
-          : 'NEXT SONG →'}
-    </button>
+              <button
+                type="button"
+                className="game-next"
+                onClick={
+                  handleNextSong
+                }
+                disabled={
+                  isLoadingNext
+                }
+              >
+                {isLoadingNext
+                  ? 'LOADING...'
+                  : currentQuestion >=
+                      roundConfig.questionCount - 1
+                    ? 'SEE RESULTS'
+                    : 'NEXT SONG →'}
+              </button>
 
-  </div>
-)}
+            </div>
+          )}
 
         </main>
       </div>
@@ -1133,3 +1178,4 @@ function Game() {
 }
 
 export default Game
+
