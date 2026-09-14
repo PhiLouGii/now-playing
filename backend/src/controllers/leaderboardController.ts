@@ -14,59 +14,97 @@ export async function getLeaderboard(
         : null
 
     let scoresQuery =
-      db
-        .collection('scores')
-        .orderBy('score', 'desc')
-        .limit(50)
+      db.collection('scores')
 
     if (gameMode) {
       scoresQuery =
-        db
-          .collection('scores')
-          .where(
-            'gameMode',
-            '==',
-            gameMode,
-          )
-          .orderBy('score', 'desc')
-          .limit(50)
+        scoresQuery.where(
+          'gameMode',
+          '==',
+          gameMode,
+        )
     }
 
     const scoresSnapshot =
       await scoresQuery.get()
 
+    /*
+     * Keep only the best score for each player.
+     */
+    const bestScoresByUser =
+      new Map<string, FirebaseFirestore.DocumentData>()
+
+    scoresSnapshot.docs.forEach(
+      (scoreDoc) => {
+        const scoreData =
+          scoreDoc.data()
+
+        const userId =
+          scoreData.userId
+
+        if (!userId) {
+          return
+        }
+
+        const existingScore =
+          bestScoresByUser.get(userId)
+
+        if (
+          !existingScore ||
+          scoreData.score >
+            existingScore.score
+        ) {
+          bestScoresByUser.set(
+            userId,
+            scoreData,
+          )
+        }
+      },
+    )
+
+    /*
+     * Convert the map into an array and
+     * sort players by their best score.
+     */
+    const sortedScores = Array.from(
+      bestScoresByUser.entries(),
+    )
+      .sort(
+        ([, scoreA], [, scoreB]) =>
+          scoreB.score - scoreA.score,
+      )
+      .slice(0, 50)
+
+    /*
+     * Build the final leaderboard.
+     */
     const leaderboard =
       await Promise.all(
-        scoresSnapshot.docs.map(
-          async (scoreDoc, index) => {
-            const scoreData =
-              scoreDoc.data()
-
-            const userId =
-              scoreData.userId
-
+        sortedScores.map(
+          async (
+            [userId, scoreData],
+            index,
+          ) => {
             let username = 'Player'
             let displayName = 'Player'
 
-            if (userId) {
-              const userSnapshot =
-                await db
-                  .collection('users')
-                  .doc(userId)
-                  .get()
+            const userSnapshot =
+              await db
+                .collection('users')
+                .doc(userId)
+                .get()
 
-              if (userSnapshot.exists) {
-                const userData =
-                  userSnapshot.data()
+            if (userSnapshot.exists) {
+              const userData =
+                userSnapshot.data()
 
-                username =
-                  userData?.username ||
-                  'Player'
+              username =
+                userData?.username ||
+                'Player'
 
-                displayName =
-                  userData?.displayName ||
-                  username
-              }
+              displayName =
+                userData?.displayName ||
+                username
             }
 
             return {
@@ -99,7 +137,7 @@ export async function getLeaderboard(
         ? `mode=${gameMode}`
         : 'all modes',
       leaderboard.length,
-      'scores',
+      'players',
     )
 
     return res.json(leaderboard)
