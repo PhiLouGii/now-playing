@@ -358,7 +358,7 @@ const question: Question =
 
     if (isLastQuestion) {
       navigate(
-        '/daily-challenge/results',
+        '/daily-challenge-results',
         {
           state: {
             challenge,
