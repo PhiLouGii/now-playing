@@ -1,3 +1,7 @@
+import { getIdToken } from 'firebase/auth'
+
+import { auth } from '../config/firebase'
+
 export type LeaderboardGameMode =
   | 'name-that-song'
   | 'name-the-artist'
@@ -22,9 +26,19 @@ export interface LeaderboardEntry {
   }
 }
 
+export interface CurrentUserLeaderboard {
+  rank: number | null
+  score: number | null
+}
+
+export interface LeaderboardResponse {
+  leaderboard: LeaderboardEntry[]
+  currentUser: CurrentUserLeaderboard | null
+}
+
 export async function getLeaderboard(
   gameMode?: LeaderboardGameMode,
-): Promise<LeaderboardEntry[]> {
+): Promise<LeaderboardResponse> {
   const url = new URL(
     'http://localhost:3000/api/leaderboard',
   )
@@ -36,11 +50,33 @@ export async function getLeaderboard(
     )
   }
 
+  const currentUser =
+    auth.currentUser
+
+  const headers: HeadersInit = {}
+
+  /*
+   * Send the Firebase token when logged in.
+   *
+   * The backend treats this as optional.
+   */
+  if (currentUser) {
+    const idToken =
+      await getIdToken(currentUser)
+
+    headers.Authorization =
+      `Bearer ${idToken}`
+  }
+
   const response = await fetch(
     url.toString(),
+    {
+      headers,
+    },
   )
 
-  const data = await response.json()
+  const data =
+    await response.json()
 
   if (!response.ok) {
     throw new Error(

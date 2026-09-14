@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 
 import {
   getLeaderboard,
+  type CurrentUserLeaderboard,
   type LeaderboardEntry,
   type LeaderboardGameMode,
 } from '../../services/leaderboardService'
@@ -41,6 +42,11 @@ function Leaderboard() {
   const [entries, setEntries] =
     useState<LeaderboardEntry[]>([])
 
+  const [currentUser, setCurrentUser] =
+    useState<CurrentUserLeaderboard | null>(
+      null,
+    )
+
   const [selectedMode, setSelectedMode] =
     useState<
       LeaderboardGameMode | undefined
@@ -58,12 +64,18 @@ function Leaderboard() {
         setIsLoading(true)
         setError(null)
 
-        const leaderboard =
+        const result =
           await getLeaderboard(
             selectedMode,
           )
 
-        setEntries(leaderboard)
+        setEntries(
+          result.leaderboard,
+        )
+
+        setCurrentUser(
+          result.currentUser,
+        )
       } catch (error) {
         console.error(
           'FAILED TO LOAD LEADERBOARD:',
@@ -82,7 +94,9 @@ function Leaderboard() {
   }, [selectedMode])
 
   function handleModeChange(
-    mode: LeaderboardGameMode | undefined,
+    mode:
+      | LeaderboardGameMode
+      | undefined,
   ) {
     setSelectedMode(mode)
   }
@@ -153,6 +167,30 @@ function Leaderboard() {
           </button>
         ))}
       </div>
+
+      {currentUser && (
+        <div className="leaderboard-your-rank">
+          <div>
+            <span>Your Rank</span>
+
+            <strong>
+              {currentUser.rank !== null
+                ? `#${currentUser.rank}`
+                : 'Unranked'}
+            </strong>
+          </div>
+
+          <div>
+            <span>Your Best Score</span>
+
+            <strong>
+              {currentUser.score !== null
+                ? `${currentUser.score} points`
+                : 'No score yet'}
+            </strong>
+          </div>
+        </div>
+      )}
 
       {entries.length === 0 ? (
         <p className="body-lg">

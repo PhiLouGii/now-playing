@@ -65,3 +65,28 @@
   background: currentColor;
   color: white;
 }
+
+.leaderboard-your-rank {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border: 1px solid currentColor;
+}
+
+.leaderboard-your-rank div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.leaderboard-your-rank span {
+  opacity: 0.6;
+  font-size: 0.875rem;
+}
+
+.leaderboard-your-rank strong {
+  font-size: 1.25rem;
+}
