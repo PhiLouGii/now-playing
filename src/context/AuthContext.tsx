@@ -8,6 +8,7 @@ import {
 
 import {
   onAuthStateChanged,
+  signOut,
   type User,
 } from 'firebase/auth'
 
@@ -16,11 +17,15 @@ import {
   getDoc,
 } from 'firebase/firestore'
 
-import { auth, firestore } from '../config/firebase'
+import {
+  auth,
+  firestore,
+} from '../config/firebase'
 
 interface UserProfile {
   username: string
   displayName: string
+  email?: string
   createdAt?: unknown
 }
 
@@ -28,6 +33,7 @@ interface AuthContextValue {
   user: User | null
   profile: UserProfile | null
   loading: boolean
+  logout: () => Promise<void>
 }
 
 const AuthContext =
@@ -56,44 +62,73 @@ export function AuthProvider({
       onAuthStateChanged(
         auth,
         async (currentUser) => {
+          console.log(
+            'AUTH STATE:',
+            currentUser
+              ? `Logged in as ${currentUser.email}`
+              : 'Logged out',
+          )
+
           setUser(currentUser)
 
-          if (currentUser) {
-            try {
-              const userRef = doc(
-                firestore,
-                'users',
-                currentUser.uid,
-              )
-
-              const userSnapshot =
-                await getDoc(userRef)
-
-              if (userSnapshot.exists()) {
-                setProfile(
-                  userSnapshot.data() as UserProfile,
-                )
-              } else {
-                setProfile(null)
-              }
-            } catch (error) {
-              console.error(
-                'Failed to load user profile:',
-                error,
-              )
-
-              setProfile(null)
-            }
-          } else {
+          if (!currentUser) {
             setProfile(null)
+            setLoading(false)
+            return
           }
 
-          setLoading(false)
+          try {
+            const userRef = doc(
+              firestore,
+              'users',
+              currentUser.uid,
+            )
+
+            const userSnapshot =
+              await getDoc(userRef)
+
+            if (userSnapshot.exists()) {
+              setProfile(
+                userSnapshot.data() as UserProfile,
+              )
+            } else {
+              setProfile(null)
+
+              console.warn(
+                'No Firestore profile found for user:',
+                currentUser.uid,
+              )
+            }
+          } catch (error) {
+            console.error(
+              'Failed to load user profile:',
+              error,
+            )
+
+            setProfile(null)
+          } finally {
+            setLoading(false)
+          }
         },
       )
 
     return unsubscribe
   }, [])
+
+  async function logout() {
+    try {
+      await signOut(auth)
+
+      console.log('LOGOUT SUCCESS')
+    } catch (error) {
+      console.error(
+        'LOGOUT ERROR:',
+        error,
+      )
+
+      throw error
+    }
+  }
 
   return (
     <AuthContext.Provider
@@ -101,6 +136,7 @@ export function AuthProvider({
         user,
         profile,
         loading,
+        logout,
       }}
     >
       {children}
