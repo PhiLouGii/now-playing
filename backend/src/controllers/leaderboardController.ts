@@ -1,4 +1,6 @@
 import type { Request, Response } from 'express'
+import type { Query } from 'firebase-admin/firestore'
+
 import { getAuth } from 'firebase-admin/auth'
 import { getFirestore } from 'firebase-admin/firestore'
 
@@ -42,17 +44,17 @@ export async function getLeaderboard(
         ? req.query.gameMode
         : null
 
-    let scoresQuery =
-      db.collection('scores')
+    let scoresQuery: Query =
+  db.collection('scores')
 
-    if (gameMode) {
-      scoresQuery =
-        scoresQuery.where(
-          'gameMode',
-          '==',
-          gameMode,
-        )
-    }
+if (gameMode) {
+  scoresQuery =
+    scoresQuery.where(
+      'gameMode',
+      '==',
+      gameMode,
+    )
+}
 
     const scoresSnapshot =
       await scoresQuery.get()

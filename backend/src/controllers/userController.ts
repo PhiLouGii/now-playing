@@ -232,9 +232,6 @@ export async function getUserScores(
 
     const userId = req.user.uid
 
-    /*
-     * Get the user's most recent scores.
-     */
     const scoresSnapshot =
       await db
         .collection('scores')
@@ -245,26 +242,41 @@ export async function getUserScores(
         )
         .get()
 
-    const scores =
-      scoresSnapshot.docs
-        .map((scoreDoc) => ({
+    const scores = scoresSnapshot.docs
+      .map((scoreDoc) => {
+        const data =
+          scoreDoc.data()
+
+        return {
           id: scoreDoc.id,
-          ...scoreDoc.data(),
-        }))
-        .sort(
-          (scoreA, scoreB) => {
-            const dateA =
-              scoreA.completedAt?.toMillis?.() ??
-              0
+          userId: data.userId,
+          gameMode: data.gameMode,
+          score: data.score,
+          accuracy: data.accuracy,
+          bestStreak: data.bestStreak,
+          questions: data.questions,
+          correctAnswers:
+            data.correctAnswers,
+          totalListeningTime:
+            data.totalListeningTime,
+          completedAt:
+            data.completedAt,
+        }
+      })
+      .sort(
+        (scoreA, scoreB) => {
+          const dateA =
+            scoreA.completedAt?.toMillis?.() ??
+            0
 
-            const dateB =
-              scoreB.completedAt?.toMillis?.() ??
-              0
+          const dateB =
+            scoreB.completedAt?.toMillis?.() ??
+            0
 
-            return dateB - dateA
-          },
-        )
-        .slice(0, 20)
+          return dateB - dateA
+        },
+      )
+      .slice(0, 20)
 
     console.log(
       'USER SCORE HISTORY FETCHED:',
