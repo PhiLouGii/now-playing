@@ -31,6 +31,32 @@ function deduplicateTracks(
   })
 }
 
+function limitTracksPerArtist(
+  tracks: MusicTrack[],
+  maxPerArtist = 2,
+): MusicTrack[] {
+  const artistCounts = new Map<string, number>()
+
+  return shuffle(tracks).filter((track) => {
+    const artist =
+      track.artist.toLowerCase()
+
+    const count =
+      artistCounts.get(artist) ?? 0
+
+    if (count >= maxPerArtist) {
+      return false
+    }
+
+    artistCounts.set(
+      artist,
+      count + 1,
+    )
+
+    return true
+  })
+}
+
 async function discoverFromGenres(
   target: number,
 ): Promise<MusicTrack[]> {
@@ -75,8 +101,14 @@ async function discoverFromGenres(
       const unique =
         deduplicateTracks(candidates)
 
+      const diverse =
+        limitTracksPerArtist(
+          unique,
+          2,
+        )
+
       const usable =
-        filterGameTracks(unique)
+        filterGameTracks(diverse)
 
       if (usable.length >= target) {
         return usable
@@ -84,9 +116,16 @@ async function discoverFromGenres(
     }
   }
 
-  return filterGameTracks(
-    deduplicateTracks(candidates),
-  )
+  const unique =
+    deduplicateTracks(candidates)
+
+  const diverse =
+    limitTracksPerArtist(
+      unique,
+      2,
+    )
+
+  return filterGameTracks(diverse)
 }
 
 export async function discoverTracks(
@@ -94,10 +133,6 @@ export async function discoverTracks(
 ): Promise<MusicTrack[]> {
   const candidates: MusicTrack[] = []
 
-  /*
-   * Start with the global Deezer chart.
-   * This gives us a reliable pool immediately.
-   */
   try {
     const chartTracks =
       await deezerMusicProvider.getChartTracks(
@@ -112,10 +147,6 @@ export async function discoverTracks(
     )
   }
 
-  /*
-   * Expand the pool using artists discovered
-   * dynamically through Deezer genres.
-   */
   try {
     const genreTracks =
       await discoverFromGenres(
@@ -133,8 +164,14 @@ export async function discoverTracks(
   const unique =
     deduplicateTracks(candidates)
 
+  const diverse =
+    limitTracksPerArtist(
+      unique,
+      2,
+    )
+
   const usable =
-    filterGameTracks(unique)
+    filterGameTracks(diverse)
 
   return shuffle(usable).slice(
     0,

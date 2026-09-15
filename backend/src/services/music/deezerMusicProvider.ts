@@ -49,6 +49,16 @@ type DeezerArtistResponse = {
   data?: DeezerArtist[]
 }
 
+type DeezerAlbum = {
+  id: number
+  title?: string
+  release_date?: string
+  cover_medium?: string
+  cover_big?: string
+}
+
+type DeezerAlbumResponse = DeezerAlbum
+
 function transformTrack(
   track: DeezerTrack,
 ): MusicTrack | null {
@@ -174,6 +184,29 @@ class DeezerMusicProvider
       (await response.json()) as DeezerTrackResponse
 
     return transformTrack(data)
+  }
+
+  async getAlbumById(
+    albumId: number,
+  ): Promise<DeezerAlbum | null> {
+    const response =
+      await fetch(
+        `https://api.deezer.com/album/${albumId}`,
+      )
+
+    if (response.status === 404) {
+      return null
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        `Deezer album request failed: ${response.status}`,
+      )
+    }
+
+    return (
+      await response.json()
+    ) as DeezerAlbumResponse
   }
 
   async getChartTracks(
