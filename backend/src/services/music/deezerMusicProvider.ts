@@ -183,7 +183,49 @@ class DeezerMusicProvider
     const data =
       (await response.json()) as DeezerTrackResponse
 
-    return transformTrack(data)
+    const track =
+      transformTrack(data)
+
+    if (!track) {
+      return null
+    }
+
+    if (track.releaseYear) {
+      return track
+    }
+
+    const albumId =
+      data.album?.id
+
+    if (!albumId) {
+      return track
+    }
+
+    const album =
+      await this.getAlbumById(albumId)
+
+    if (!album?.release_date) {
+      return track
+    }
+
+    const releaseYear =
+      Number(
+        album.release_date.slice(
+          0,
+          4,
+        ),
+      )
+
+    if (
+      Number.isNaN(releaseYear)
+    ) {
+      return track
+    }
+
+    return {
+      ...track,
+      releaseYear,
+    }
   }
 
   async getAlbumById(
@@ -208,6 +250,111 @@ class DeezerMusicProvider
       await response.json()
     ) as DeezerAlbumResponse
   }
+
+  async enrichReleaseYears(
+  tracks: MusicTrack[],
+): Promise<MusicTrack[]> {
+  const missingYearTracks =
+    tracks.filter(
+      (track) =>
+        !track.releaseYear,
+    )
+
+  const enriched =
+    await Promise.all(
+      missingYearTracks.map(
+        async (track) => {
+          const deezerId =
+            track.id.startsWith(
+              'deezer-',
+            )
+              ? track.id.replace(
+                  'deezer-',
+                  '',
+                )
+              : track.id
+
+          try {
+            const response =
+              await fetch(
+                `https://api.deezer.com/track/${deezerId}`,
+              )
+
+            if (!response.ok) {
+              return {
+                id: track.id,
+                releaseYear:
+                  undefined,
+              }
+            }
+
+            const data =
+              (await response.json()) as DeezerTrackResponse
+
+            const releaseYear =
+              data.release_date
+                ? Number(
+                    data.release_date.slice(
+                      0,
+                      4,
+                    ),
+                  )
+                : undefined
+
+            return {
+              id: track.id,
+              releaseYear:
+                releaseYear &&
+                !Number.isNaN(
+                  releaseYear,
+                )
+                  ? releaseYear
+                  : undefined,
+            }
+          } catch (error) {
+            console.error(
+              `Failed to enrich release year for ${track.id}:`,
+              error,
+            )
+
+            return {
+              id: track.id,
+              releaseYear:
+                undefined,
+            }
+          }
+        },
+      ),
+    )
+
+  const releaseYears =
+    new Map(
+      enriched.map(
+        (item) => [
+          item.id,
+          item.releaseYear,
+        ],
+      ),
+    )
+
+  return tracks.map(
+    (track) => {
+      const releaseYear =
+        releaseYears.get(
+          track.id,
+        )
+
+      if (!releaseYear) {
+        return track
+      }
+
+      return {
+        ...track,
+        releaseYear,
+      }
+    },
+  )
+}
 
   async getChartTracks(
     limit = 100,

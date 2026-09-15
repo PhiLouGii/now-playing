@@ -1,48 +1,13 @@
-import {
-  deezerMusicProvider,
-} from './deezerMusicProvider.js'
+import { discoverTracks } from './musicDiscoveryService.js'
 
-import {
-  getReliableReleaseYear,
-} from './releaseYearService.js'
+async function main() {
+  const tracks = await discoverTracks(1)
 
-async function test() {
-  const track =
-    await deezerMusicProvider.getTrackById(
-      'deezer-1375215222',
-    )
-
-  if (!track) {
-    throw new Error(
-      'Could not find Dangerous Woman',
-    )
-  }
-
-  console.log('\nTRACK:')
-  console.log(
-    `${track.title} — ${track.artist}`,
-  )
-
-  console.log('\nDEEZER YEAR:')
-  console.log(track.releaseYear)
-
-  console.log('\nISRC:')
-  console.log(track.isrc)
-
-  const reliableYear =
-    await getReliableReleaseYear(
-      track,
-    )
-
-  console.log('\nRELIABLE YEAR:')
-  console.log(reliableYear)
+  console.log('\nTRACK OBJECT:\n')
+  console.log(JSON.stringify(tracks[0], null, 2))
 }
 
-test().catch((error) => {
-  console.error(
-    'Release year test failed:',
-    error,
-  )
-
+main().catch((error) => {
+  console.error('Discovery test failed:', error)
   process.exit(1)
 })

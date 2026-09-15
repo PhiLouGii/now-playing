@@ -1,20 +1,24 @@
 import { discoverTracks } from './musicDiscoveryService.js'
 
 async function main() {
-  const tracks = await discoverTracks(20)
+  const tracks = await discoverTracks(1)
 
-  console.log('\nDISCOVERED TRACKS:\n')
+  console.log('\nTRACK OBJECT:\n')
 
-  for (const track of tracks) {
-    console.log(
-      `${track.artist} — ${track.title} (${track.releaseYear ?? 'unknown'})`,
-    )
-  }
-
-  console.log(`\nTotal tracks: ${tracks.length}`)
+  console.log(
+    JSON.stringify(
+      tracks[0],
+      null,
+      2,
+    ),
+  )
 }
 
 main().catch((error) => {
-  console.error('Discovery test failed:', error)
+  console.error(
+    'Discovery test failed:',
+    error,
+  )
+
   process.exit(1)
 })
