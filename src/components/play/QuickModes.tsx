@@ -4,6 +4,8 @@ import {
   SlidersHorizontal,
   ArrowUpRight,
 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+
 import './QuickModes.css'
 
 type QuickMode = {
@@ -46,6 +48,8 @@ type QuickModesProps = {
 function QuickModes({
   onSelectRound,
 }: QuickModesProps) {
+  const navigate = useNavigate()
+
   return (
     <section className="quick-modes">
       <div className="quick-modes__header">
@@ -65,12 +69,14 @@ function QuickModes({
               className="quick-mode"
               onClick={() => {
                 if (mode.roundId) {
-                  onSelectRound(
-                    mode.roundId,
-                  )
+                  onSelectRound(mode.roundId)
+                  return
+                }
+
+                if (mode.label === 'CUSTOM') {
+                  navigate('/build-game')
                 }
               }}
-              disabled={!mode.roundId}
             >
               <div className="quick-mode__top">
                 <div className="quick-mode__icon">
@@ -91,13 +97,9 @@ function QuickModes({
                   {mode.label}
                 </span>
 
-                <h3>
-                  {mode.title}
-                </h3>
+                <h3>{mode.title}</h3>
 
-                <p>
-                  {mode.description}
-                </p>
+                <p>{mode.description}</p>
               </div>
             </button>
           )

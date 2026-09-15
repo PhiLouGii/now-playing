@@ -14,6 +14,7 @@ import DailyChallengeResults from '../pages/DailyChallenge/DailyChallengeResults
 import SignUp from '../pages/Auth/SignUp'
 import Login from '../pages/Auth/Login'
 import EndlessGame from '../pages/EndlessGame/EndlessGame'
+import BuildGame from '../pages/BuildGame/BuildGame'
 
 function AppRoutes() {
   return (
@@ -33,6 +34,10 @@ function AppRoutes() {
       <Route
   path="/endless"
   element={<EndlessGame />}
+/>
+<Route
+  path="/build-game"
+  element={<BuildGame />}
 />
       <Route path="/daily-challenge" element={<DailyChallenge />} />
       <Route path="/daily-challenge-results" element={<DailyChallengeResults />} />
