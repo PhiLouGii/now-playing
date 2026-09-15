@@ -16,6 +16,11 @@ import {
 import { useNavigate } from 'react-router-dom'
 
 import { generateQuestion } from '../../services/gameService'
+import { submitScore } from '../../services/scoreService'
+
+import {
+  calculateFinalPoints,
+} from '../../lib/gameScoring'
 
 import type { Question } from '../../types/game'
 
@@ -38,6 +43,7 @@ type ArtistRecognitionResult = {
   artworkUrl: string
   recognitionTime: number
   correct: boolean
+  points: number
 }
 
 function ArtistGame() {
@@ -87,6 +93,21 @@ function ArtistGame() {
 
   /*
    * --------------------------------------------------
+   * SCORE STATE
+   * --------------------------------------------------
+   */
+
+  const [score, setScore] =
+    useState(0)
+
+  const [streak, setStreak] =
+    useState(0)
+
+  const [bestStreak, setBestStreak] =
+    useState(0)
+
+  /*
+   * --------------------------------------------------
    * RESULTS STATE
    * --------------------------------------------------
    */
@@ -96,6 +117,15 @@ function ArtistGame() {
 
   const [isGameComplete, setIsGameComplete] =
     useState(false)
+
+  /*
+   * --------------------------------------------------
+   * SCORE SUBMISSION
+   * --------------------------------------------------
+   */
+
+  const scoreSubmitted =
+    useRef(false)
 
   /*
    * --------------------------------------------------
@@ -207,6 +237,87 @@ function ArtistGame() {
 
   /*
    * --------------------------------------------------
+   * SAVE SCORE WHEN GAME IS COMPLETE
+   * --------------------------------------------------
+   */
+
+  useEffect(() => {
+    if (
+      !isGameComplete ||
+      scoreSubmitted.current
+    ) {
+      return
+    }
+
+    if (
+      recognitionResults.length <
+      TOTAL_QUESTIONS
+    ) {
+      return
+    }
+
+    scoreSubmitted.current = true
+
+    const correctAnswers =
+      recognitionResults.filter(
+        (result) => result.correct,
+      ).length
+
+    const accuracy =
+      TOTAL_QUESTIONS > 0
+        ? (correctAnswers /
+            TOTAL_QUESTIONS) *
+          100
+        : 0
+
+    const totalListeningTime =
+      recognitionResults.reduce(
+        (total, result) =>
+          total + result.recognitionTime,
+        0,
+      )
+
+    async function saveScore() {
+      try {
+        await submitScore({
+          gameMode: 'name-the-artist',
+          score,
+          accuracy,
+          bestStreak,
+          questions: TOTAL_QUESTIONS,
+          correctAnswers,
+          totalListeningTime,
+        })
+
+        console.log(
+          'ARTIST GAME SCORE SAVED:',
+          {
+            score,
+            accuracy,
+            bestStreak,
+            questions: TOTAL_QUESTIONS,
+            correctAnswers,
+            totalListeningTime,
+          },
+        )
+      } catch (error) {
+        console.error(
+          'FAILED TO SAVE ARTIST GAME SCORE:',
+          error,
+        )
+      }
+    }
+
+    saveScore()
+  }, [
+    isGameComplete,
+    recognitionResults,
+    score,
+    bestStreak,
+  ])
+
+  /*
+   * --------------------------------------------------
    * CURRENT QUESTION
    * --------------------------------------------------
    */
@@ -241,7 +352,8 @@ function ArtistGame() {
   useEffect(() => {
     if (
       !isPlaying ||
-      answerStatus !== 'idle'
+      answerStatus !== 'idle' ||
+      !question
     ) {
       return
     }
@@ -254,6 +366,8 @@ function ArtistGame() {
 
             setIsPlaying(false)
             setAnswerStatus('timeout')
+
+            setStreak(0)
 
             setRecognitionResults(
               (currentResults) => [
@@ -279,6 +393,8 @@ function ArtistGame() {
                     ROUND_LENGTH,
 
                   correct: false,
+
+                  points: 0,
                 },
               ],
             )
@@ -347,7 +463,10 @@ function ArtistGame() {
   function handleAnswer(
     answer: string,
   ) {
-    if (answerStatus !== 'idle') {
+    if (
+      answerStatus !== 'idle' ||
+      !question
+    ) {
       return
     }
 
@@ -362,6 +481,19 @@ function ArtistGame() {
       ),
     )
 
+    const nextStreak =
+      isCorrect
+        ? streak + 1
+        : 0
+
+    const earnedPoints =
+      isCorrect
+        ? calculateFinalPoints(
+            recognitionTime,
+            nextStreak,
+          )
+        : 0
+
     setSelectedAnswer(answer)
 
     setAnswerStatus(
@@ -371,6 +503,23 @@ function ArtistGame() {
     )
 
     setIsPlaying(false)
+
+    setStreak(nextStreak)
+
+    if (isCorrect) {
+      setBestStreak(
+        (currentBest) =>
+          Math.max(
+            currentBest,
+            nextStreak,
+          ),
+      )
+    }
+
+    setScore(
+      (currentScore) =>
+        currentScore + earnedPoints,
+    )
 
     if (audioRef.current) {
       audioRef.current.pause()
@@ -397,6 +546,7 @@ function ArtistGame() {
 
           recognitionTime,
           correct: isCorrect,
+          points: earnedPoints,
         },
       ],
     )
@@ -538,6 +688,8 @@ function ArtistGame() {
     return (
       <ArtistResultsScreen
         results={recognitionResults}
+        score={score}
+        bestStreak={bestStreak}
         onPlayAgain={() =>
           window.location.reload()
         }
@@ -844,12 +996,16 @@ function ArtistGame() {
 
 type ArtistResultsScreenProps = {
   results: ArtistRecognitionResult[]
+  score: number
+  bestStreak: number
   onPlayAgain: () => void
   onBackToPlay: () => void
 }
 
 function ArtistResultsScreen({
   results,
+  score,
+  bestStreak,
   onPlayAgain,
   onBackToPlay,
 }: ArtistResultsScreenProps) {
@@ -964,6 +1120,32 @@ function ArtistResultsScreen({
           </p>
 
         </header>
+
+        {/* SCORE */}
+
+        <section className="artist-results__hero">
+
+          <div className="artist-results__hero-main">
+            <span>
+              FINAL SCORE
+            </span>
+
+            <strong>
+              {score}
+            </strong>
+          </div>
+
+          <div className="artist-results__accuracy">
+            <span>
+              BEST STREAK
+            </span>
+
+            <strong>
+              {bestStreak}
+            </strong>
+          </div>
+
+        </section>
 
         {/* HERO STATS */}
 
@@ -1108,6 +1290,7 @@ function ArtistResultsScreen({
                     {result.correct ? (
                       <>
                         <span className="artist-results__time">
+                          +{result.points} ·{' '}
                           {result.recognitionTime.toFixed(
                             1,
                           )}s

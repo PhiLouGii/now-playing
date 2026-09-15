@@ -14,6 +14,12 @@ import {
 } from 'lucide-react'
 
 import { generateQuestion } from '../../services/gameService'
+import { submitScore } from '../../services/scoreService'
+
+import {
+  calculateFinalPoints,
+} from '../../lib/gameScoring'
+
 import type { Question } from '../../types/game'
 
 import './AlbumGame.css'
@@ -29,6 +35,7 @@ type AlbumRecognitionResult = {
   artworkUrl: string
   recognitionTime: number
   correct: boolean
+  points: number
 }
 
 function AlbumGame() {
@@ -67,6 +74,26 @@ function AlbumGame() {
   const [error, setError] =
     useState<string | null>(null)
 
+  /*
+   * SCORE
+   */
+
+  const [score, setScore] =
+    useState(0)
+
+  const [streak, setStreak] =
+    useState(0)
+
+  const [bestStreak, setBestStreak] =
+    useState(0)
+
+  /*
+   * SCORE SUBMISSION
+   */
+
+  const scoreSubmitted =
+    useRef(false)
+
   const audioRef =
     useRef<HTMLAudioElement | null>(null)
 
@@ -76,6 +103,7 @@ function AlbumGame() {
   /*
    * Generate the first question.
    */
+
   useEffect(() => {
     loadQuestion()
   }, [])
@@ -83,6 +111,7 @@ function AlbumGame() {
   /*
    * Clean up timer and audio.
    */
+
   useEffect(() => {
     return () => {
       if (timerRef.current !== null) {
@@ -98,6 +127,7 @@ function AlbumGame() {
   /*
    * Countdown.
    */
+
   useEffect(() => {
     if (
       !isPlaying ||
@@ -144,8 +174,88 @@ function AlbumGame() {
   ])
 
   /*
+   * SAVE SCORE WHEN RESULTS ARE SHOWN.
+   */
+
+  useEffect(() => {
+    if (
+      !showResults ||
+      scoreSubmitted.current
+    ) {
+      return
+    }
+
+    if (
+      results.length <
+      TOTAL_QUESTIONS
+    ) {
+      return
+    }
+
+    scoreSubmitted.current = true
+
+    const correctAnswers =
+      results.filter(
+        (result) => result.correct,
+      ).length
+
+    const accuracy =
+      TOTAL_QUESTIONS > 0
+        ? (correctAnswers /
+            TOTAL_QUESTIONS) *
+          100
+        : 0
+
+    const totalListeningTime =
+      results.reduce(
+        (total, result) =>
+          total + result.recognitionTime,
+        0,
+      )
+
+    async function saveScore() {
+      try {
+        await submitScore({
+          gameMode: 'name-the-album',
+          score,
+          accuracy,
+          bestStreak,
+          questions: TOTAL_QUESTIONS,
+          correctAnswers,
+          totalListeningTime,
+        })
+
+        console.log(
+          'ALBUM GAME SCORE SAVED:',
+          {
+            score,
+            accuracy,
+            bestStreak,
+            questions: TOTAL_QUESTIONS,
+            correctAnswers,
+            totalListeningTime,
+          },
+        )
+      } catch (error) {
+        console.error(
+          'FAILED TO SAVE ALBUM GAME SCORE:',
+          error,
+        )
+      }
+    }
+
+    saveScore()
+  }, [
+    showResults,
+    results,
+    score,
+    bestStreak,
+  ])
+
+  /*
    * Generate a new album question.
    */
+
   async function loadQuestion() {
     setIsLoading(true)
     setError(null)
@@ -184,6 +294,7 @@ function AlbumGame() {
   /*
    * Start / pause the preview.
    */
+
   function togglePlayback() {
     const audio =
       audioRef.current
@@ -214,6 +325,7 @@ function AlbumGame() {
   /*
    * Submit an album answer.
    */
+
   function handleAnswer(
     answer: string,
   ) {
@@ -237,9 +349,39 @@ function AlbumGame() {
       answer ===
       question.correctAnswer
 
+    const nextStreak =
+      correct
+        ? streak + 1
+        : 0
+
+    const earnedPoints =
+      correct
+        ? calculateFinalPoints(
+            recognitionTime,
+            nextStreak,
+          )
+        : 0
+
     setSelectedAnswer(answer)
     setHasAnswered(true)
     setIsPlaying(false)
+
+    setStreak(nextStreak)
+
+    if (correct) {
+      setBestStreak(
+        (currentBest) =>
+          Math.max(
+            currentBest,
+            nextStreak,
+          ),
+      )
+    }
+
+    setScore(
+      (currentScore) =>
+        currentScore + earnedPoints,
+    )
 
     if (timerRef.current !== null) {
       window.clearInterval(
@@ -260,6 +402,7 @@ function AlbumGame() {
           question.song.artworkUrl,
         recognitionTime,
         correct,
+        points: earnedPoints,
       },
     ])
   }
@@ -267,6 +410,7 @@ function AlbumGame() {
   /*
    * Handle the player reaching 10 seconds.
    */
+
   function handleTimeUp() {
     if (
       hasAnswered ||
@@ -278,6 +422,7 @@ function AlbumGame() {
 
     setIsTimeUp(true)
     setIsPlaying(false)
+    setStreak(0)
 
     audioRef.current?.pause()
 
@@ -298,6 +443,7 @@ function AlbumGame() {
           question.song.artworkUrl,
         recognitionTime: ROUND_LENGTH,
         correct: false,
+        points: 0,
       },
     ])
   }
@@ -305,6 +451,7 @@ function AlbumGame() {
   /*
    * Move to the next question.
    */
+
   async function handleNext() {
     if (
       questionNumber >= TOTAL_QUESTIONS
@@ -323,6 +470,7 @@ function AlbumGame() {
   /*
    * Retry if question generation fails.
    */
+
   function handleRetry() {
     loadQuestion()
   }
@@ -330,6 +478,7 @@ function AlbumGame() {
   /*
    * Restart the complete round.
    */
+
   function handlePlayAgain() {
     window.location.reload()
   }
@@ -338,6 +487,8 @@ function AlbumGame() {
     return (
       <AlbumResultsScreen
         results={results}
+        score={score}
+        bestStreak={bestStreak}
         onPlayAgain={
           handlePlayAgain
         }
@@ -380,6 +531,7 @@ function AlbumGame() {
         {isLoading && (
           <div className="album-game__loading">
             <div className="album-game__loading-spinner" />
+
             <p>
               Finding your next song...
             </p>
@@ -399,6 +551,7 @@ function AlbumGame() {
               <RotateCcw
                 size={18}
               />
+
               TRY AGAIN
             </button>
           </div>
@@ -658,12 +811,16 @@ function AlbumGame() {
 
 type AlbumResultsScreenProps = {
   results: AlbumRecognitionResult[]
+  score: number
+  bestStreak: number
   onPlayAgain: () => void
   onBack: () => void
 }
 
 function AlbumResultsScreen({
   results,
+  score,
+  bestStreak,
   onPlayAgain,
   onBack,
 }: AlbumResultsScreenProps) {
@@ -754,6 +911,28 @@ function AlbumResultsScreen({
         <section className="album-results__score">
           <div>
             <span>
+              FINAL SCORE
+            </span>
+
+            <strong>
+              {score}
+            </strong>
+          </div>
+
+          <div>
+            <span>
+              BEST STREAK
+            </span>
+
+            <strong>
+              {bestStreak}
+            </strong>
+          </div>
+        </section>
+
+        <section className="album-results__score">
+          <div>
+            <span>
               ALBUMS RECOGNIZED
             </span>
 
@@ -779,6 +958,7 @@ function AlbumResultsScreen({
         <section className="album-results__speed">
           <div className="album-results__section-heading">
             <p>ALBUM RECOGNITION SPEED</p>
+
             <span>
               HOW FAST DID YOU KNOW?
             </span>
@@ -787,6 +967,7 @@ function AlbumResultsScreen({
           <div className="album-results__speed-grid">
             <div>
               <span>AVERAGE</span>
+
               <strong>
                 {averageTime.toFixed(
                   1,
@@ -797,6 +978,7 @@ function AlbumResultsScreen({
 
             <div>
               <span>FASTEST</span>
+
               <strong>
                 {fastestTime > 0
                   ? `${fastestTime.toFixed(
@@ -808,6 +990,7 @@ function AlbumResultsScreen({
 
             <div>
               <span>FASTEST ALBUM</span>
+
               <strong>
                 {fastestResult
                   ?.album ?? '—'}
@@ -819,6 +1002,7 @@ function AlbumResultsScreen({
         <section className="album-results__breakdown">
           <div className="album-results__section-heading">
             <p>YOUR ALBUMS</p>
+
             <span>
               {results.length} SONGS
             </span>
@@ -875,7 +1059,7 @@ function AlbumResultsScreen({
                     }
                   >
                     {result.correct
-                      ? `${result.recognitionTime.toFixed(
+                      ? `+${result.points} · ${result.recognitionTime.toFixed(
                           1,
                         )}s ✓`
                       : 'MISSED ×'}

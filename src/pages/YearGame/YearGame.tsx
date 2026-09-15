@@ -14,6 +14,12 @@ import {
 } from 'lucide-react'
 
 import { generateQuestion } from '../../services/gameService'
+import { submitScore } from '../../services/scoreService'
+
+import {
+  calculateFinalPoints,
+} from '../../lib/gameScoring'
+
 import type { Question } from '../../types/game'
 
 import './YearGame.css'
@@ -30,6 +36,7 @@ type YearRecognitionResult = {
   releaseYear: number
   recognitionTime: number
   correct: boolean
+  points: number
 }
 
 function YearGame() {
@@ -68,15 +75,43 @@ function YearGame() {
   const [error, setError] =
     useState<string | null>(null)
 
+  /*
+   * SCORE
+   */
+
+  const [score, setScore] =
+    useState(0)
+
+  const [streak, setStreak] =
+    useState(0)
+
+  const [bestStreak, setBestStreak] =
+    useState(0)
+
+  /*
+   * SCORE SUBMISSION
+   */
+
+  const scoreSubmitted =
+    useRef(false)
+
   const audioRef =
     useRef<HTMLAudioElement | null>(null)
 
   const timerRef =
     useRef<number | null>(null)
 
+  /*
+   * LOAD FIRST QUESTION
+   */
+
   useEffect(() => {
     loadQuestion()
   }, [])
+
+  /*
+   * CLEANUP
+   */
 
   useEffect(() => {
     return () => {
@@ -89,6 +124,10 @@ function YearGame() {
       audioRef.current?.pause()
     }
   }, [])
+
+  /*
+   * COUNTDOWN
+   */
 
   useEffect(() => {
     if (
@@ -135,6 +174,89 @@ function YearGame() {
     isTimeUp,
   ])
 
+  /*
+   * SAVE SCORE WHEN RESULTS ARE SHOWN
+   */
+
+  useEffect(() => {
+    if (
+      !showResults ||
+      scoreSubmitted.current
+    ) {
+      return
+    }
+
+    if (
+      results.length <
+      TOTAL_QUESTIONS
+    ) {
+      return
+    }
+
+    scoreSubmitted.current = true
+
+    const correctAnswers =
+      results.filter(
+        (result) => result.correct,
+      ).length
+
+    const accuracy =
+      TOTAL_QUESTIONS > 0
+        ? (correctAnswers /
+            TOTAL_QUESTIONS) *
+          100
+        : 0
+
+    const totalListeningTime =
+      results.reduce(
+        (total, result) =>
+          total + result.recognitionTime,
+        0,
+      )
+
+    async function saveScore() {
+      try {
+        await submitScore({
+          gameMode: 'guess-the-year',
+          score,
+          accuracy,
+          bestStreak,
+          questions: TOTAL_QUESTIONS,
+          correctAnswers,
+          totalListeningTime,
+        })
+
+        console.log(
+          'YEAR GAME SCORE SAVED:',
+          {
+            score,
+            accuracy,
+            bestStreak,
+            questions: TOTAL_QUESTIONS,
+            correctAnswers,
+            totalListeningTime,
+          },
+        )
+      } catch (error) {
+        console.error(
+          'FAILED TO SAVE YEAR GAME SCORE:',
+          error,
+        )
+      }
+    }
+
+    saveScore()
+  }, [
+    showResults,
+    results,
+    score,
+    bestStreak,
+  ])
+
+  /*
+   * LOAD QUESTION
+   */
+
   async function loadQuestion() {
     setIsLoading(true)
     setError(null)
@@ -170,6 +292,10 @@ function YearGame() {
     }
   }
 
+  /*
+   * PLAY / PAUSE
+   */
+
   function togglePlayback() {
     const audio =
       audioRef.current
@@ -197,6 +323,10 @@ function YearGame() {
       })
   }
 
+  /*
+   * ANSWER
+   */
+
   function handleAnswer(
     answer: string,
   ) {
@@ -220,9 +350,39 @@ function YearGame() {
       answer ===
       question.correctAnswer
 
+    const nextStreak =
+      correct
+        ? streak + 1
+        : 0
+
+    const earnedPoints =
+      correct
+        ? calculateFinalPoints(
+            recognitionTime,
+            nextStreak,
+          )
+        : 0
+
     setSelectedAnswer(answer)
     setHasAnswered(true)
     setIsPlaying(false)
+
+    setStreak(nextStreak)
+
+    if (correct) {
+      setBestStreak(
+        (currentBest) =>
+          Math.max(
+            currentBest,
+            nextStreak,
+          ),
+      )
+    }
+
+    setScore(
+      (currentScore) =>
+        currentScore + earnedPoints,
+    )
 
     if (timerRef.current !== null) {
       window.clearInterval(
@@ -245,9 +405,14 @@ function YearGame() {
           question.song.releaseYear!,
         recognitionTime,
         correct,
+        points: earnedPoints,
       },
     ])
   }
+
+  /*
+   * TIME UP
+   */
 
   function handleTimeUp() {
     if (
@@ -260,6 +425,7 @@ function YearGame() {
 
     setIsTimeUp(true)
     setIsPlaying(false)
+    setStreak(0)
 
     audioRef.current?.pause()
 
@@ -282,9 +448,14 @@ function YearGame() {
           question.song.releaseYear!,
         recognitionTime: ROUND_LENGTH,
         correct: false,
+        points: 0,
       },
     ])
   }
+
+  /*
+   * NEXT QUESTION
+   */
 
   async function handleNext() {
     if (
@@ -301,9 +472,17 @@ function YearGame() {
     await loadQuestion()
   }
 
+  /*
+   * RETRY
+   */
+
   function handleRetry() {
     loadQuestion()
   }
+
+  /*
+   * PLAY AGAIN
+   */
 
   function handlePlayAgain() {
     window.location.reload()
@@ -313,6 +492,8 @@ function YearGame() {
     return (
       <YearResultsScreen
         results={results}
+        score={score}
+        bestStreak={bestStreak}
         onPlayAgain={
           handlePlayAgain
         }
@@ -355,6 +536,7 @@ function YearGame() {
         {isLoading && (
           <div className="year-game__loading">
             <div className="year-game__loading-spinner" />
+
             <p>
               Finding your next song...
             </p>
@@ -640,12 +822,16 @@ function YearGame() {
 
 type YearResultsScreenProps = {
   results: YearRecognitionResult[]
+  score: number
+  bestStreak: number
   onPlayAgain: () => void
   onBack: () => void
 }
 
 function YearResultsScreen({
   results,
+  score,
+  bestStreak,
   onPlayAgain,
   onBack,
 }: YearResultsScreenProps) {
@@ -733,6 +919,28 @@ function YearResultsScreen({
             songs correctly.
           </p>
         </header>
+
+        <section className="year-results__score">
+          <div>
+            <span>
+              FINAL SCORE
+            </span>
+
+            <strong>
+              {score}
+            </strong>
+          </div>
+
+          <div>
+            <span>
+              BEST STREAK
+            </span>
+
+            <strong>
+              {bestStreak}
+            </strong>
+          </div>
+        </section>
 
         <section className="year-results__score">
           <div>
@@ -865,7 +1073,7 @@ function YearResultsScreen({
                       }
                     >
                       {result.correct
-                        ? `${result.recognitionTime.toFixed(
+                        ? `+${result.points} · ${result.recognitionTime.toFixed(
                             1,
                           )}s ✓`
                         : 'MISSED ×'}
