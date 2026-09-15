@@ -132,3 +132,109 @@
 .endless-game__next {
   min-width: 180px;
 }
+
+.endless-game__reveal {
+  max-width: 720px;
+  margin-top: 3rem;
+}
+
+.endless-game__reveal-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.endless-game__spark {
+  font-size: 1.2rem;
+}
+
+.endless-game__song-card {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+  padding: 1.5rem;
+  border: 2px solid #111;
+  background: #f5f0e8;
+}
+
+.endless-game__cover {
+  flex: 0 0 220px;
+  width: 220px;
+  height: 220px;
+  background: #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.endless-game__cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.endless-game__cover span {
+  font-size: 4rem;
+}
+
+.endless-game__song-info {
+  min-width: 0;
+}
+
+.endless-game__song-info h2 {
+  margin: 0 0 0.5rem;
+  font-size: 2rem;
+  line-height: 1.05;
+}
+
+.endless-game__artist {
+  margin: 0 0 1.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.endless-game__song-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.endless-game__song-meta span:first-child::after {
+  content: '•';
+  margin-left: 0.5rem;
+}
+
+.endless-game__reveal--correct
+  .endless-game__song-card {
+  box-shadow: 8px 8px 0 #111;
+}
+
+.endless-game__artwork--hidden {
+  background: #111;
+  color: #f5f0e8;
+}
+
+@media (max-width: 700px) {
+  .endless-game__song-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .endless-game__cover {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+  }
+
+  .endless-game__song-info h2 {
+    font-size: 1.6rem;
+  }
+}

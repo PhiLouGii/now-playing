@@ -4,15 +4,19 @@ import {
   useState,
 } from 'react'
 
-import AudioPlayer from '../../components/game/AudioPlayer'
-import type { AudioPlayerHandle } from '../../components/game/AudioPlayer'
+import AudioPlayer, {
+  type AudioPlayerHandle,
+} from '../../components/game/AudioPlayer'
+
 import AnswerGrid from '../../components/game/AnswerGrid'
 
 import {
   generateQuestion,
 } from '../../services/gameService'
 
-import type { Question } from '../../types/game'
+import type {
+  Question,
+} from '../../types/game'
 
 import './EndlessGame.css'
 
@@ -37,13 +41,43 @@ type AnswerStatus =
   | 'incorrect'
   | 'revealed'
 
-function EndlessGame() {
-  /*
-   * --------------------------------------------------
-   * QUESTION STATE
-   * --------------------------------------------------
-   */
+function getQuestionLabel(
+  type: Question['type'],
+) {
+  switch (type) {
+    case 'name-the-song':
+      return 'NAME THAT SONG'
 
+    case 'name-the-artist':
+      return 'NAME THE ARTIST'
+
+    case 'name-the-album':
+      return 'NAME THE ALBUM'
+
+    case 'guess-the-year':
+      return 'GUESS THE YEAR'
+  }
+}
+
+function getQuestionPrompt(
+  type: Question['type'],
+) {
+  switch (type) {
+    case 'name-the-song':
+      return 'What song is this?'
+
+    case 'name-the-artist':
+      return 'Who performs this song?'
+
+    case 'name-the-album':
+      return 'Which album is this from?'
+
+    case 'guess-the-year':
+      return 'When was this song released?'
+  }
+}
+
+function EndlessGame() {
   const [question, setQuestion] =
     useState<Question | null>(null)
 
@@ -56,47 +90,25 @@ function EndlessGame() {
   const [error, setError] =
     useState<string | null>(null)
 
-  /*
-   * --------------------------------------------------
-   * ANSWER STATE
-   * --------------------------------------------------
-   */
-
   const [selectedAnswer, setSelectedAnswer] =
     useState<string | null>(null)
 
   const [answerStatus, setAnswerStatus] =
     useState<AnswerStatus>('idle')
 
-  /*
-   * --------------------------------------------------
-   * LISTENING STATE
-   * --------------------------------------------------
-   */
-
   const [listeningStage, setListeningStage] =
     useState(0)
 
   const [timeRemaining, setTimeRemaining] =
-    useState(LISTENING_STAGES[0])
+    useState(
+      LISTENING_STAGES[0],
+    )
 
   const [previewComplete, setPreviewComplete] =
     useState(false)
 
-  /*
-   * --------------------------------------------------
-   * AUDIO PLAYER REF
-   * --------------------------------------------------
-   */
-
   const audioPlayerRef =
     useRef<AudioPlayerHandle | null>(null)
-
-  /*
-   * --------------------------------------------------
-   * GENERATE QUESTION
-   * --------------------------------------------------
-   */
 
   async function loadQuestion() {
     const randomType =
@@ -126,16 +138,8 @@ function EndlessGame() {
     return generatedQuestion
   }
 
-  /*
-   * --------------------------------------------------
-   * LOAD FIRST QUESTION
-   * --------------------------------------------------
-   */
-
   useEffect(() => {
-    let isMounted = true
-
-    async function loadFirstQuestion() {
+    async function initialize() {
       try {
         setIsLoading(true)
         setError(null)
@@ -143,126 +147,60 @@ function EndlessGame() {
         const generatedQuestion =
           await loadQuestion()
 
-        if (isMounted) {
-          setQuestion(
-            generatedQuestion,
-          )
-        }
+        setQuestion(
+          generatedQuestion,
+        )
       } catch (error) {
         console.error(
           'ENDLESS QUESTION ERROR:',
           error,
         )
 
-        if (isMounted) {
-          setError(
-            'Failed to load question.',
-          )
-        }
+        setError(
+          'Failed to load the question.',
+        )
       } finally {
-        if (isMounted) {
-          setIsLoading(false)
-        }
+        setIsLoading(false)
       }
     }
 
-    loadFirstQuestion()
-
-    return () => {
-      isMounted = false
-    }
+    initialize()
   }, [])
 
-  /*
-   * --------------------------------------------------
-   * QUESTION LABEL
-   * --------------------------------------------------
-   */
-
-  function getQuestionLabel(
-    type: Question['type'],
-  ) {
-    switch (type) {
-      case 'name-the-song':
-        return 'NAME THAT SONG'
-
-      case 'name-the-artist':
-        return 'NAME THE ARTIST'
-
-      case 'name-the-album':
-        return 'NAME THE ALBUM'
-
-      case 'guess-the-year':
-        return 'GUESS THE YEAR'
-    }
-  }
-
-  /*
-   * --------------------------------------------------
-   * QUESTION PROMPT
-   * --------------------------------------------------
-   */
-
-  function getQuestionPrompt(
-    type: Question['type'],
-  ) {
-    switch (type) {
-      case 'name-the-song':
-        return 'What song is this?'
-
-      case 'name-the-artist':
-        return 'Who performs this song?'
-
-      case 'name-the-album':
-        return 'Which album is this from?'
-
-      case 'guess-the-year':
-        return 'When was this song released?'
-    }
-  }
-
-  /*
-   * --------------------------------------------------
-   * AUDIO TIMER
-   * --------------------------------------------------
-   */
-
   function handleTimeUpdate(
-    time: number,
+    currentTime: number,
   ) {
     if (
-      answerStatus === 'idle'
+      answerStatus !== 'idle'
     ) {
-      setTimeRemaining(time)
+      return
     }
-  }
 
-  /*
-   * --------------------------------------------------
-   * LISTENING STAGE COMPLETE
-   * --------------------------------------------------
-   */
+    const stageDuration =
+      LISTENING_STAGES[
+        listeningStage
+      ]
+
+    const remaining =
+      Math.max(
+        stageDuration -
+          currentTime,
+        0,
+      )
+
+    setTimeRemaining(
+      remaining,
+    )
+  }
 
   function handleStageComplete() {
     setTimeRemaining(0)
   }
 
-  /*
-   * --------------------------------------------------
-   * FULL PREVIEW COMPLETE
-   * --------------------------------------------------
-   */
-
   function handlePreviewComplete() {
     setPreviewComplete(true)
     setTimeRemaining(0)
   }
-
-  /*
-   * --------------------------------------------------
-   * ANSWER QUESTION
-   * --------------------------------------------------
-   */
 
   function handleAnswer(
     answer: string,
@@ -275,21 +213,18 @@ function EndlessGame() {
     }
 
     const isCorrect =
-      answer === question.correctAnswer
+      answer ===
+      question.correctAnswer
 
     console.log(
       'ENDLESS ANSWER:',
-      answer,
-      'CORRECT:',
-      isCorrect,
+      {
+        answer,
+        correctAnswer:
+          question.correctAnswer,
+        isCorrect,
+      },
     )
-
-    /*
-     * Start the full preview directly
-     * from the user's answer click.
-     */
-
-    audioPlayerRef.current?.playPreview()
 
     setSelectedAnswer(answer)
 
@@ -300,13 +235,10 @@ function EndlessGame() {
     )
 
     setPreviewComplete(false)
-  }
 
-  /*
-   * --------------------------------------------------
-   * ADVANCE LISTENING STAGE
-   * --------------------------------------------------
-   */
+    audioPlayerRef.current
+      ?.playPreview()
+  }
 
   function handleAdvance() {
     if (
@@ -319,6 +251,9 @@ function EndlessGame() {
       listeningStage >=
       LISTENING_STAGES.length - 1
     ) {
+      audioPlayerRef.current
+        ?.playPreview()
+
       return
     }
 
@@ -327,22 +262,25 @@ function EndlessGame() {
 
     console.log(
       'ENDLESS ADVANCE:',
-      LISTENING_STAGES[nextStage],
-      'seconds',
+      {
+        from: listeningStage,
+        to: nextStage,
+      },
     )
 
-    setListeningStage(nextStage)
+    setListeningStage(
+      nextStage,
+    )
 
     setTimeRemaining(
-      LISTENING_STAGES[nextStage],
+      LISTENING_STAGES[
+        nextStage
+      ],
     )
-  }
 
-  /*
-   * --------------------------------------------------
-   * REVEAL ANSWER
-   * --------------------------------------------------
-   */
+    audioPlayerRef.current
+      ?.playPreview()
+  }
 
   function handleRevealAnswer() {
     if (
@@ -357,20 +295,16 @@ function EndlessGame() {
       question.correctAnswer,
     )
 
-    audioPlayerRef.current?.playPreview()
+    audioPlayerRef.current
+      ?.playPreview()
 
-    setAnswerStatus('revealed')
+    setAnswerStatus(
+      'revealed',
+    )
 
     setSelectedAnswer(null)
-
     setPreviewComplete(false)
   }
-
-  /*
-   * --------------------------------------------------
-   * NEXT QUESTION
-   * --------------------------------------------------
-   */
 
   async function handleNextSong() {
     if (isLoadingNext) {
@@ -392,14 +326,8 @@ function EndlessGame() {
         nextQuestion,
       )
 
-      /*
-       * Reset the entire question state.
-       */
-
       setSelectedAnswer(null)
-
       setAnswerStatus('idle')
-
       setListeningStage(0)
 
       setTimeRemaining(
@@ -407,7 +335,6 @@ function EndlessGame() {
       )
 
       setPreviewComplete(false)
-
     } catch (error) {
       console.error(
         'ENDLESS NEXT QUESTION ERROR:',
@@ -422,72 +349,42 @@ function EndlessGame() {
     }
   }
 
-  /*
-   * --------------------------------------------------
-   * LOADING STATE
-   * --------------------------------------------------
-   */
-
   if (isLoading) {
     return (
-      <main className="endless-game">
+      <div className="endless-game">
         <div className="endless-game__container">
-          <p className="endless-game__mode">
-            ENDLESS MODE
-          </p>
-
-          <h1>
-            LOADING...
-          </h1>
+          <p>LOADING...</p>
         </div>
-      </main>
+      </div>
     )
   }
 
-  /*
-   * --------------------------------------------------
-   * ERROR STATE
-   * --------------------------------------------------
-   */
-
-  if (error || !question) {
+  if (
+    error ||
+    !question
+  ) {
     return (
-      <main className="endless-game">
+      <div className="endless-game">
         <div className="endless-game__container">
-          <p className="endless-game__mode">
-            ENDLESS MODE
-          </p>
-
-          <h1>
-            NO QUESTION AVAILABLE
-          </h1>
-
           <p>
-            {error ||
-              'We could not generate a question right now.'}
+            {error ??
+              'Something went wrong.'}
           </p>
         </div>
-      </main>
+      </div>
     )
   }
 
   const isAnswered =
     answerStatus !== 'idle'
 
-  const maxListenDuration =
-    LISTENING_STAGES[listeningStage]
-
   return (
-    <main className="endless-game">
+    <div className="endless-game">
       <div className="endless-game__container">
-
-        {/* MODE */}
 
         <p className="endless-game__mode">
           ENDLESS MODE
         </p>
-
-        {/* QUESTION TYPE */}
 
         <h1>
           {getQuestionLabel(
@@ -495,38 +392,31 @@ function EndlessGame() {
           )}
         </h1>
 
-        {/* ARTWORK */}
+        {!isAnswered && (
+          <>
+            <div className="endless-game__artwork endless-game__artwork--hidden">
+              <span>?</span>
+            </div>
 
-        <div
-          className={`endless-game__artwork ${
-            isAnswered
-              ? 'endless-game__artwork--revealed'
-              : ''
-          }`}
-        >
-          {isAnswered &&
-          question.song.artworkUrl ? (
-            <img
-              src={
-                question.song.artworkUrl
-              }
-              alt={`${question.song.album} album artwork`}
-            />
-          ) : (
-            <span>?</span>
-          )}
-        </div>
-
-        {/* AUDIO */}
+            <h2>
+              {getQuestionPrompt(
+                question.type,
+              )}
+            </h2>
+          </>
+        )}
 
         <AudioPlayer
-          ref={audioPlayerRef}
           key={question.id}
+          ref={audioPlayerRef}
           audioUrl={
-            question.song.audioUrl ?? ''
-          }
+  question.song.audioUrl ??
+  ''
+}
           maxListenDuration={
-            maxListenDuration
+            LISTENING_STAGES[
+              listeningStage
+            ]
           }
           onTimeUpdate={
             handleTimeUpdate
@@ -537,155 +427,129 @@ function EndlessGame() {
           onPreviewComplete={
             handlePreviewComplete
           }
-          disabled={false}
-          playFullSong={
-            answerStatus ===
-            'revealed'
-          }
+          disabled={isAnswered}
         />
-
-        {/* QUESTION */}
-
-        <h2>
-          {getQuestionPrompt(
-            question.type,
-          )}
-        </h2>
-
-        {/* ANSWERS */}
-
-        <AnswerGrid
-          answers={
-            question.answers
-          }
-          selectedAnswer={
-            selectedAnswer
-          }
-          correctAnswer={
-            question.correctAnswer
-          }
-          isAnswered={
-            isAnswered
-          }
-          onSelect={
-            handleAnswer
-          }
-        />
-
-        {/* BEFORE ANSWER */}
 
         {!isAnswered && (
-          <div className="endless-game__actions">
+          <>
+            <div className="endless-game__stage">
+              <span>
+                LISTENING TIME
+              </span>
 
-            <button
-              type="button"
-              className="endless-game__advance"
-              onClick={
-                handleAdvance
-              }
-              disabled={
-                listeningStage >=
-                LISTENING_STAGES.length - 1
-              }
-            >
-              {listeningStage <
-              LISTENING_STAGES.length - 1
-                ? `ADVANCE → ${
-                    LISTENING_STAGES[
-                      listeningStage + 1
-                    ]
-                  }s`
-                : 'MAX LISTEN TIME'}
-            </button>
-
-            <button
-              type="button"
-              className="endless-game__reveal"
-              onClick={
-                handleRevealAnswer
-              }
-            >
-              REVEAL ANSWER
-            </button>
-
-          </div>
-        )}
-
-        {/* ANSWER FEEDBACK */}
-
-        {isAnswered && (
-          <div
-            className={`endless-game__feedback ${
-              answerStatus ===
-              'revealed'
-                ? 'endless-game__feedback--revealed'
-                : answerStatus ===
-                    'correct'
-                  ? 'endless-game__feedback--correct'
-                  : 'endless-game__feedback--incorrect'
-            }`}
-          >
-            <div className="endless-game__feedback-label">
-              {answerStatus ===
-              'revealed'
-                ? 'ANSWER REVEALED'
-                : answerStatus ===
-                    'correct'
-                  ? 'CORRECT'
-                  : 'INCORRECT'}
+              <strong>
+                {timeRemaining.toFixed(1)}s
+              </strong>
             </div>
 
-            <div className="endless-game__feedback-answer">
-              {
+            <AnswerGrid
+              answers={
+                question.answers
+              }
+              selectedAnswer={
+                selectedAnswer
+              }
+              correctAnswer={
                 question.correctAnswer
               }
-            </div>
+              isAnswered={
+                isAnswered
+              }
+              onSelect={
+                handleAnswer
+              }
+            />
 
-            <div className="endless-game__preview-status">
-              {previewComplete
-                ? 'PREVIEW COMPLETE'
-                : 'PREVIEW PLAYING'}
+            <div className="endless-game__actions">
+              <button
+                type="button"
+                className="endless-game__advance"
+                onClick={
+                  handleAdvance
+                }
+                disabled={
+                  listeningStage >=
+                  LISTENING_STAGES.length -
+                    1
+                }
+              >
+                ADVANCE
+              </button>
+
+              <button
+                type="button"
+                className="endless-game__reveal"
+                onClick={
+                  handleRevealAnswer
+                }
+              >
+                GIVE UP
+              </button>
             </div>
-          </div>
+          </>
         )}
 
-        {/* GAME STATUS */}
+        {isAnswered && (
+          <section
+            className={`endless-game__reveal ${
+              answerStatus ===
+              'correct'
+                ? 'endless-game__reveal--correct'
+                : ''
+            }`}
+          >
+            <div className="endless-game__reveal-heading">
+              <span>
+                {answerStatus ===
+                'correct'
+                  ? 'YOU GOT IT!'
+                  : 'THE SONG WAS'}
+              </span>
 
-        <div className="endless-game__status">
+              <span className="endless-game__spark">
+                ✦
+              </span>
+            </div>
 
-          <div>
-            <span>
-              LISTEN TIME
-            </span>
+            <div className="endless-game__song-card">
+              <div className="endless-game__cover">
+                {question.song.artworkUrl ? (
+                  <img
+                    src={
+                      question.song.artworkUrl
+                    }
+                    alt={`${question.song.album} album artwork`}
+                  />
+                ) : (
+                  <span>♪</span>
+                )}
+              </div>
 
-            <strong>
-              {timeRemaining < 1
-                ? `${timeRemaining.toFixed(1)}s`
-                : `${Math.ceil(
-                    timeRemaining,
-                  )}s`}
-            </strong>
-          </div>
+              <div className="endless-game__song-info">
+                <h2>
+                  {question.song.title}
+                </h2>
 
-          <div>
-            <span>
-              STAGE
-            </span>
+                <p className="endless-game__artist">
+                  {question.song.artist}
+                </p>
 
-            <strong>
-              {listeningStage + 1}
-              /
-              {LISTENING_STAGES.length}
-            </strong>
-          </div>
+                <div className="endless-game__song-meta">
+                  <span>
+                    {question.song.album}
+                  </span>
 
-        </div>
-
-        {/* NEXT QUESTION */}
+                  <span>
+                    {question.song.releaseYear}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
 
         {isAnswered && (
           <div className="endless-game__next-area">
-
             {!previewComplete && (
               <div className="endless-game__next-status">
                 PREVIEW PLAYING — YOU CAN MOVE ON
@@ -706,12 +570,11 @@ function EndlessGame() {
                 ? 'LOADING...'
                 : 'NEXT SONG →'}
             </button>
-
           </div>
         )}
 
       </div>
-    </main>
+    </div>
   )
 }
 
