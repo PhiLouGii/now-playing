@@ -218,3 +218,71 @@ export async function getUserStats(
     })
   }
 }
+
+export async function getUserScores(
+  req: AuthenticatedRequest,
+  res: Response,
+) {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        error: 'Authentication required',
+      })
+    }
+
+    const userId = req.user.uid
+
+    /*
+     * Get the user's most recent scores.
+     */
+    const scoresSnapshot =
+      await db
+        .collection('scores')
+        .where(
+          'userId',
+          '==',
+          userId,
+        )
+        .get()
+
+    const scores =
+      scoresSnapshot.docs
+        .map((scoreDoc) => ({
+          id: scoreDoc.id,
+          ...scoreDoc.data(),
+        }))
+        .sort(
+          (scoreA, scoreB) => {
+            const dateA =
+              scoreA.completedAt?.toMillis?.() ??
+              0
+
+            const dateB =
+              scoreB.completedAt?.toMillis?.() ??
+              0
+
+            return dateB - dateA
+          },
+        )
+        .slice(0, 20)
+
+    console.log(
+      'USER SCORE HISTORY FETCHED:',
+      userId,
+      scores.length,
+      'scores',
+    )
+
+    return res.json(scores)
+  } catch (error) {
+    console.error(
+      'USER SCORE HISTORY ERROR:',
+      error,
+    )
+
+    return res.status(500).json({
+      error:
+        'Failed to load score history',
+    })
+  }
+}

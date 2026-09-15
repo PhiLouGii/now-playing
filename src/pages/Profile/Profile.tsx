@@ -1,12 +1,23 @@
 import { useEffect, useState } from 'react'
 
 import { useAuth } from '../../context/AuthContext'
+
 import {
+  getUserScores,
   getUserStats,
+  type UserScore,
   type UserStats,
 } from '../../services/userService'
 
 import './Profile.css'
+
+const GAME_MODE_LABELS = {
+  'name-that-song': 'Name That Song',
+  'name-the-artist': 'Name the Artist',
+  'name-the-album': 'Name the Album',
+  'guess-the-year': 'Guess the Year',
+  'daily-challenge': 'Daily Challenge',
+}
 
 function Profile() {
   const {
@@ -18,6 +29,9 @@ function Profile() {
   const [stats, setStats] =
     useState<UserStats | null>(null)
 
+  const [scores, setScores] =
+    useState<UserScore[]>([])
+
   const [isLoading, setIsLoading] =
     useState(true)
 
@@ -25,9 +39,10 @@ function Profile() {
     useState<string | null>(null)
 
   useEffect(() => {
-    async function loadStats() {
+    async function loadProfileData() {
       if (!user) {
         setStats(null)
+        setScores([])
         setIsLoading(false)
         return
       }
@@ -36,18 +51,24 @@ function Profile() {
         setIsLoading(true)
         setError(null)
 
-        const userStats =
-          await getUserStats()
+        const [
+          userStats,
+          userScores,
+        ] = await Promise.all([
+          getUserStats(),
+          getUserScores(),
+        ])
 
         setStats(userStats)
+        setScores(userScores)
       } catch (error) {
         console.error(
-          'FAILED TO LOAD USER STATS:',
+          'FAILED TO LOAD PROFILE DATA:',
           error,
         )
 
         setError(
-          'Failed to load your stats.',
+          'Failed to load your profile data.',
         )
       } finally {
         setIsLoading(false)
@@ -55,11 +76,14 @@ function Profile() {
     }
 
     if (!authLoading) {
-      loadStats()
+      loadProfileData()
     }
   }, [user, authLoading])
 
-  if (authLoading || isLoading) {
+  if (
+    authLoading ||
+    isLoading
+  ) {
     return (
       <section className="placeholder-page">
         <p className="label">
@@ -116,6 +140,23 @@ function Profile() {
 
   if (!stats) {
     return null
+  }
+
+  function formatDate(
+    completedAt: UserScore['completedAt'],
+  ) {
+    const date = new Date(
+      completedAt._seconds * 1000,
+    )
+
+    return date.toLocaleDateString(
+      undefined,
+      {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      },
+    )
   }
 
   return (
@@ -248,6 +289,70 @@ function Profile() {
         <strong className="profile-large-stat">
           {stats.totalCorrectAnswers}
         </strong>
+      </div>
+
+      <div className="profile-section">
+        <p className="label">
+          RECENT GAMES
+        </p>
+
+        {scores.length === 0 ? (
+          <p className="body-lg">
+            You haven't played any games yet.
+          </p>
+        ) : (
+          <div className="score-history">
+            {scores.map((game) => (
+              <div
+                key={game.id}
+                className="score-history-entry"
+              >
+                <div className="score-history-main">
+                  <strong>
+                    {
+                      GAME_MODE_LABELS[
+                        game.gameMode
+                      ]
+                    }
+                  </strong>
+
+                  <span>
+                    {formatDate(
+                      game.completedAt,
+                    )}
+                  </span>
+                </div>
+
+                <div className="score-history-score">
+                  <strong>
+                    {game.score}
+                  </strong>
+
+                  <span>
+                    points
+                  </span>
+                </div>
+
+                <div className="score-history-stats">
+                  <span>
+                    {game.accuracy}%
+                    accuracy
+                  </span>
+
+                  <span>
+                    🔥 {game.bestStreak}
+                  </span>
+
+                  <span>
+                    {game.correctAnswers}/
+                    {game.questions}
+                    {' '}correct
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   )

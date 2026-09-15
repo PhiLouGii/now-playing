@@ -19,26 +19,54 @@ export interface UserStats {
   personalBests: PersonalBests
 }
 
-export async function getUserStats(): Promise<UserStats> {
+export interface UserScore {
+  id: string
+  userId: string
+  gameMode:
+    | 'name-that-song'
+    | 'name-the-artist'
+    | 'name-the-album'
+    | 'guess-the-year'
+    | 'daily-challenge'
+  score: number
+  accuracy: number
+  bestStreak: number
+  questions: number
+  correctAnswers: number
+  totalListeningTime: number
+  completedAt: {
+    _seconds: number
+    _nanoseconds: number
+  }
+}
+
+async function getAuthHeaders() {
   const currentUser =
     auth.currentUser
 
   if (!currentUser) {
     throw new Error(
-      'You must be logged in to view your stats.',
+      'You must be logged in.',
     )
   }
 
   const idToken =
     await getIdToken(currentUser)
 
+  return {
+    Authorization:
+      `Bearer ${idToken}`,
+  }
+}
+
+export async function getUserStats(): Promise<UserStats> {
+  const headers =
+    await getAuthHeaders()
+
   const response = await fetch(
     'http://localhost:3000/api/users/stats',
     {
-      headers: {
-        Authorization:
-          `Bearer ${idToken}`,
-      },
+      headers,
     },
   )
 
@@ -54,6 +82,37 @@ export async function getUserStats(): Promise<UserStats> {
 
   console.log(
     'USER STATS LOADED:',
+    data,
+  )
+
+  return data
+}
+
+export async function getUserScores(): Promise<
+  UserScore[]
+> {
+  const headers =
+    await getAuthHeaders()
+
+  const response = await fetch(
+    'http://localhost:3000/api/users/scores',
+    {
+      headers,
+    },
+  )
+
+  const data =
+    await response.json()
+
+  if (!response.ok) {
+    throw new Error(
+      data.error ||
+        'Failed to load score history.',
+    )
+  }
+
+  console.log(
+    'USER SCORE HISTORY LOADED:',
     data,
   )
 
