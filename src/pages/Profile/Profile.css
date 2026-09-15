@@ -1,25 +1,134 @@
-.placeholder-page {
-  width: min(100% - 80px, var(--max-width));
-  min-height: calc(100vh - var(--navbar-height));
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
+.profile-page {
+  width: min(
+    100% - 80px,
+    var(--max-width)
+  );
+
+  min-height: calc(
+    100vh - var(--navbar-height)
+  );
+
   margin: 0 auto;
+
+  padding: 5rem 0;
 }
 
-.placeholder-page .label {
+.profile-header {
+  margin-bottom: 4rem;
+}
+
+.profile-header .label {
   margin-bottom: 16px;
   color: var(--color-pink);
 }
 
-.placeholder-page .body-lg {
-  margin-top: 20px;
+.profile-username {
+  margin-top: 12px;
   color: var(--color-muted);
 }
 
+.profile-stats {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, 1fr);
+
+  gap: 1rem;
+
+  margin-bottom: 5rem;
+}
+
+.profile-stat {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 0.75rem;
+
+  padding: 1.5rem;
+
+  border: 1px solid currentColor;
+}
+
+.profile-stat span {
+  color: var(--color-muted);
+
+  font-size: 0.875rem;
+}
+
+.profile-stat strong {
+  font-size: 2rem;
+}
+
+.profile-section {
+  margin-top: 4rem;
+}
+
+.profile-section > .label {
+  margin-bottom: 1.5rem;
+
+  color: var(--color-pink);
+}
+
+.personal-bests {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, 1fr);
+
+  gap: 1rem;
+}
+
+.personal-best {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 2rem;
+
+  padding: 1.25rem 1.5rem;
+
+  border: 1px solid currentColor;
+}
+
+.personal-best span {
+  color: var(--color-muted);
+}
+
+.personal-best strong {
+  font-size: 1.25rem;
+}
+
+.profile-large-stat {
+  display: block;
+
+  font-size: 4rem;
+}
+
 @media (max-width: 768px) {
-  .placeholder-page {
-    width: min(100% - 40px, var(--max-width));
+  .profile-page {
+    width: min(
+      100% - 40px,
+      var(--max-width)
+    );
+
+    padding: 3rem 0;
+  }
+
+  .profile-stats {
+    grid-template-columns:
+      repeat(2, 1fr);
+  }
+
+  .personal-bests {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-stats {
+    grid-template-columns: 1fr;
   }
 }
