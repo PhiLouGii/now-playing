@@ -13,7 +13,17 @@
   <img src="https://img.shields.io/badge/Node.js-Express" />
 </p>
 
-### What is Now Playing? 
-Now Playing is a music recognition game inspired by the feeling of hearing the first few seconds of a song and immediately knowing what it is.
+### What is Now Playing?
 
-Players listen to short song previews and race against the clock to identify the track. The faster you recognize it, the more points you earn.
+**Now Playing** is a music guessing game built around one simple question:
+
+> **How quickly can you recognize a song?**
+
+Listen to a short preview, identify the track, and lock in your answer before time runs out.
+
+But getting it right isn't the whole game.
+
+**The faster you know it, the more you score.**
+
+Build your streak, chase higher scores, and prove that you really know your music.
+
