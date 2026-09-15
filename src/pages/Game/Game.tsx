@@ -58,6 +58,27 @@ export type RecognitionResult = {
   correct: boolean
 }
 
+function getGameMode(
+  questionType: Question['type'],
+) {
+  switch (questionType) {
+    case 'name-the-song':
+      return 'name-that-song'
+
+    case 'name-the-artist':
+      return 'name-the-artist'
+
+    case 'name-the-album':
+      return 'name-the-album'
+
+    case 'guess-the-year':
+      return 'guess-the-year'
+
+    default:
+      return 'name-that-song'
+  }
+}
+
 function Game() {
   const location = useLocation()
 
@@ -326,7 +347,9 @@ function Game() {
     async function saveScore() {
       try {
         await submitScore({
-          gameMode: 'name-that-song',
+          gameMode: getGameMode(
+            roundConfig.questionTypes[0],
+          ),
           score,
           accuracy,
           bestStreak,
@@ -364,6 +387,7 @@ function Game() {
     bestStreak,
     recognitionResults,
     roundConfig.questionCount,
+    roundConfig.questionTypes,
   ])
 
   /*
@@ -1178,4 +1202,3 @@ function Game() {
 }
 
 export default Game
-
