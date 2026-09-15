@@ -1,5 +1,7 @@
 import {
+  useEffect,
   useMemo,
+  useRef,
 } from 'react'
 
 import {
@@ -10,6 +12,10 @@ import {
 import type {
   QuestionType,
 } from '../../types/game'
+
+import {
+  submitScore,
+} from '../../services/scoreService'
 
 import './DailyChallengeResults.css'
 
@@ -80,6 +86,9 @@ function DailyChallengeResults() {
   const location = useLocation()
   const navigate = useNavigate()
 
+  const scoreSubmitted =
+    useRef(false)
+
   const state =
     location.state as
       | DailyResultsState
@@ -126,6 +135,84 @@ function DailyChallengeResults() {
         ),
       [questionResults],
     )
+
+  /*
+   * Submit the completed Daily Challenge
+   * score to the backend.
+   *
+   * This only runs once for this results
+   * screen, even in React StrictMode.
+   */
+  useEffect(() => {
+    if (
+      !state ||
+      !challenge ||
+      scoreSubmitted.current
+    ) {
+      return
+    }
+
+    scoreSubmitted.current = true
+
+    const exactAccuracy =
+      questionCount > 0
+        ? (correctAnswers /
+            questionCount) *
+          100
+        : 0
+
+    async function saveDailyScore() {
+      try {
+        await submitScore({
+          gameMode:
+            'daily-challenge',
+
+          score,
+
+          accuracy:
+            exactAccuracy,
+
+          bestStreak,
+
+          questions:
+            questionCount,
+
+          correctAnswers,
+
+          totalListeningTime,
+        })
+
+        console.log(
+          'DAILY CHALLENGE SCORE SAVED:',
+          {
+            score,
+            accuracy:
+              exactAccuracy,
+            bestStreak,
+            questions:
+              questionCount,
+            correctAnswers,
+            totalListeningTime,
+          },
+        )
+      } catch (error) {
+        console.error(
+          'FAILED TO SAVE DAILY CHALLENGE SCORE:',
+          error,
+        )
+      }
+    }
+
+    saveDailyScore()
+  }, [
+    state,
+    challenge,
+    score,
+    correctAnswers,
+    bestStreak,
+    questionCount,
+    totalListeningTime,
+  ])
 
   const celebrationLevel =
     accuracy >= 90
@@ -238,6 +325,7 @@ function DailyChallengeResults() {
       <div className="daily-results__container">
 
         <div className="daily-results__orb daily-results__orb--one" />
+
         <div className="daily-results__orb daily-results__orb--two" />
 
         <header className="daily-results__hero">
@@ -259,6 +347,7 @@ function DailyChallengeResults() {
           </p>
 
           <div className="daily-results__score">
+
             <span>
               FINAL SCORE
             </span>
@@ -270,6 +359,7 @@ function DailyChallengeResults() {
             <small>
               POINTS
             </small>
+
           </div>
 
         </header>
@@ -277,30 +367,37 @@ function DailyChallengeResults() {
         <section className="daily-results__stats">
 
           <div className="daily-results__stat">
+
             <span className="daily-results__stat-icon">
               ✓
             </span>
 
             <div>
+
               <small>
                 CORRECT
               </small>
 
               <strong>
                 {correctAnswers}
+
                 <span>
                   /{questionCount}
                 </span>
               </strong>
+
             </div>
+
           </div>
 
           <div className="daily-results__stat">
+
             <span className="daily-results__stat-icon">
               %
             </span>
 
             <div>
+
               <small>
                 ACCURACY
               </small>
@@ -308,15 +405,19 @@ function DailyChallengeResults() {
               <strong>
                 {accuracy}%
               </strong>
+
             </div>
+
           </div>
 
           <div className="daily-results__stat">
+
             <span className="daily-results__stat-icon">
               🔥
             </span>
 
             <div>
+
               <small>
                 BEST STREAK
               </small>
@@ -324,15 +425,19 @@ function DailyChallengeResults() {
               <strong>
                 {bestStreak}
               </strong>
+
             </div>
+
           </div>
 
           <div className="daily-results__stat">
+
             <span className="daily-results__stat-icon">
               ♪
             </span>
 
             <div>
+
               <small>
                 LISTENED
               </small>
@@ -341,11 +446,14 @@ function DailyChallengeResults() {
                 {totalListeningTime.toFixed(
                   1,
                 )}
+
                 <span>
                   s
                 </span>
               </strong>
+
             </div>
+
           </div>
 
         </section>
@@ -353,6 +461,7 @@ function DailyChallengeResults() {
         <section className="daily-results__challenge-card">
 
           <div>
+
             <span>
               TODAY'S CHALLENGE
             </span>
@@ -364,6 +473,7 @@ function DailyChallengeResults() {
             <p>
               {challenge.theme.description}
             </p>
+
           </div>
 
           <div className="daily-results__twist">
@@ -373,6 +483,7 @@ function DailyChallengeResults() {
             </span>
 
             <div>
+
               <small>
                 DAILY TWIST
               </small>
@@ -384,6 +495,7 @@ function DailyChallengeResults() {
               <span>
                 {challenge.twist.description}
               </span>
+
             </div>
 
           </div>
@@ -395,6 +507,7 @@ function DailyChallengeResults() {
           <div className="daily-results__section-heading">
 
             <div>
+
               <p>
                 YOUR RUN
               </p>
@@ -402,6 +515,7 @@ function DailyChallengeResults() {
               <h2>
                 Question Breakdown
               </h2>
+
             </div>
 
             <span>
@@ -494,6 +608,7 @@ function DailyChallengeResults() {
                     {!result.isCorrect && (
                       <small>
                         ANSWER:{' '}
+
                         <strong>
                           {
                             result.correctAnswer
@@ -561,7 +676,10 @@ function DailyChallengeResults() {
               }
             >
               PLAY AGAIN
-              <span>↻</span>
+
+              <span>
+                ↻
+              </span>
             </button>
 
             <button
