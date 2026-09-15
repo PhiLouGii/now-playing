@@ -5,19 +5,10 @@ import { filterGameTracks } from './musicTrackFilter.js'
 const DISCOVERY_ARTISTS = [
   'Arctic Monkeys',
   'One Direction',
-  'Billie Eilish',
-  'The Last Shadow Puppets',
-  'The Strokes',
-  'The Killers',
   'Florence + The Machine',
-  'The 1975',
   'Lana Del Rey',
-  'Tame Impala',
   'blackbear',
-  'Tune-Yards',
-  'Sub Urban',
-  'Halsey',
-  'Harry Styles',
+  'Labrinth',
   'Two Feet',
 ]
 
