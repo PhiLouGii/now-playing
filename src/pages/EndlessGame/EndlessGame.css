@@ -9,12 +9,13 @@
 }
 
 .endless-game__mode {
+  margin: 0 0 0.5rem;
   font-size: 0.8rem;
   letter-spacing: 0.12em;
 }
 
 .endless-game__container h1 {
-  margin-bottom: 2rem;
+  margin: 0 0 2rem;
 }
 
 .endless-game__artwork {
@@ -41,4 +42,93 @@
 .endless-game__container h2 {
   margin-top: 2rem;
   margin-bottom: 1.5rem;
+}
+
+.endless-game__actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.endless-game__advance,
+.endless-game__reveal,
+.endless-game__next {
+  border: 0;
+  padding: 0.9rem 1.25rem;
+  cursor: pointer;
+}
+
+.endless-game__advance:disabled,
+.endless-game__next:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.endless-game__feedback {
+  margin-top: 2rem;
+  padding: 1.5rem;
+}
+
+.endless-game__feedback--correct {
+  border: 2px solid green;
+}
+
+.endless-game__feedback--incorrect {
+  border: 2px solid red;
+}
+
+.endless-game__feedback--revealed {
+  border: 2px solid #777;
+}
+
+.endless-game__feedback-label {
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  margin-bottom: 0.5rem;
+}
+
+.endless-game__feedback-answer {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.endless-game__preview-status {
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+}
+
+.endless-game__status {
+  display: flex;
+  gap: 3rem;
+  margin-top: 2rem;
+}
+
+.endless-game__status div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.endless-game__status span {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+}
+
+.endless-game__status strong {
+  font-size: 1.25rem;
+}
+
+.endless-game__next-area {
+  margin-top: 2rem;
+}
+
+.endless-game__next-status {
+  margin-bottom: 0.75rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+}
+
+.endless-game__next {
+  min-width: 180px;
 }
