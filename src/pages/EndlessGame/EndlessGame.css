@@ -1,0 +1,9 @@
+.endless-game {
+  min-height: 100vh;
+}
+
+.endless-game__container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 4rem 2rem;
+}

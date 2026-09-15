@@ -13,6 +13,7 @@ import DailyChallenge from '../pages/DailyChallenge/DailyChallenge'
 import DailyChallengeResults from '../pages/DailyChallenge/DailyChallengeResults'
 import SignUp from '../pages/Auth/SignUp'
 import Login from '../pages/Auth/Login'
+import EndlessGame from '../pages/EndlessGame/EndlessGame'
 
 function AppRoutes() {
   return (
@@ -29,6 +30,10 @@ function AppRoutes() {
         element={<AlbumGame />}
       />
       <Route path="/year-game" element={<YearGame />} />
+      <Route
+  path="/endless"
+  element={<EndlessGame />}
+/>
       <Route path="/daily-challenge" element={<DailyChallenge />} />
       <Route path="/daily-challenge-results" element={<DailyChallengeResults />} />
       <Route path="/explore" element={<Explore />} />
