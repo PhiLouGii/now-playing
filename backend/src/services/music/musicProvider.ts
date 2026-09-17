@@ -21,4 +21,9 @@ export interface MusicProvider {
   getTrackById(
     id: string,
   ): Promise<MusicTrack | null>
+
+  getArtistTracks(
+    artistName: string,
+    limit?: number,
+  ): Promise<MusicTrack[]>
 }

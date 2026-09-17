@@ -29,12 +29,12 @@ const genres = [
 ]
 
 const decades = [
-  '70s',
-  '80s',
-  '90s',
-  '2000s',
-  '2010s',
-  '2020s',
+  { label: '70s', value: 1970 },
+  { label: '80s', value: 1980 },
+  { label: '90s', value: 1990 },
+  { label: '2000s', value: 2000 },
+  { label: '2010s', value: 2010 },
+  { label: '2020s', value: 2020 },
 ]
 
 function Explore() {
@@ -79,6 +79,35 @@ function Explore() {
 
     loadDiscovery()
   }, [])
+
+  async function handleDecadeClick(
+    decade: number,
+  ) {
+    try {
+      setLoading(true)
+      setError(null)
+      setQuery('')
+
+      const tracks =
+        await discoverSongs(
+          20,
+          decade,
+        )
+
+      setSongs(tracks)
+    } catch (err) {
+      console.error(
+        'Failed to load decade music:',
+        err,
+      )
+
+      setError(
+        'Could not load music for this era.',
+      )
+    } finally {
+      setLoading(false)
+    }
+  }
 
   async function handleSearch(
     event: React.FormEvent,
@@ -223,7 +252,9 @@ function Explore() {
 
         {loading && (
           <div className="explore__state">
-            <p>Finding some music...</p>
+            <p>
+              Finding some music...
+            </p>
           </div>
         )}
 
@@ -249,9 +280,7 @@ function Explore() {
                   <div className="explore-track__artwork">
                     {song.artworkUrl ? (
                       <img
-                        src={
-                          song.artworkUrl
-                        }
+                        src={song.artworkUrl}
                         alt={`${song.album} artwork`}
                       />
                     ) : (
@@ -336,12 +365,17 @@ function Explore() {
         <div className="explore__decade-list">
           {decades.map((decade) => (
             <button
-              key={decade}
+              key={decade.value}
               type="button"
               className="explore-decade"
+              onClick={() =>
+                handleDecadeClick(
+                  decade.value,
+                )
+              }
             >
               <span>
-                {decade}
+                {decade.label}
               </span>
 
               <ArrowUpRight

@@ -91,11 +91,25 @@ export async function discoverMusic(
         ? Number(req.query.limit)
         : 20
 
+    const decade =
+      typeof req.query.decade === 'string'
+        ? Number(req.query.decade)
+        : undefined
+
+    const validDecade =
+      decade !== undefined &&
+      [1960, 1970, 1980, 1990, 2000, 2010, 2020].includes(
+        decade,
+      )
+        ? decade
+        : undefined
+
     const tracks =
       await discoverTracks(
         Number.isFinite(limit)
           ? Math.min(Math.max(limit, 1), 50)
           : 20,
+        validDecade,
       )
 
     return res.json({

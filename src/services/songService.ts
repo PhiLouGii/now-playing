@@ -43,10 +43,19 @@ export async function searchSongs(
 
 export async function discoverSongs(
   limit = 20,
+  decade?: number,
 ): Promise<Song[]> {
+  const params = new URLSearchParams()
+
+  params.set('limit', String(limit))
+
+  if (decade !== undefined) {
+    params.set('decade', String(decade))
+  }
+
   const response =
     await fetch(
-      `${API_URL}/music/discover?limit=${limit}`,
+      `${API_URL}/music/discover?${params.toString()}`,
     )
 
   if (!response.ok) {

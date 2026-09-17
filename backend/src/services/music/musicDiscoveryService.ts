@@ -138,11 +138,19 @@ async function discoverFromArtists(
               tracksPerArtist,
             )
 
-          return tracks.filter(
-            (track) =>
-              normalize(track.artist) ===
-              normalize(artist),
+          console.log(
+            `Artist: ${artist} | Deezer returned: ${tracks.length}`,
           )
+
+          console.log(
+            tracks.slice(0, 3).map((track) => ({
+              title: track.title,
+              artist: track.artist,
+              releaseYear: track.releaseYear,
+            })),
+          )
+
+          return tracks
         } catch (error) {
           console.error(
             `Failed to discover tracks for ${artist}:`,
