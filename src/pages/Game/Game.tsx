@@ -216,6 +216,7 @@ function Game() {
           await generateQuestion(
             firstType,
             roundConfig.difficulty,
+            roundConfig.decade,
           )
 
         if (isMounted) {
@@ -273,6 +274,7 @@ function Game() {
           await generateQuestion(
             nextType,
             roundConfig.difficulty,
+            roundConfig.decade,
           )
 
         if (isMounted) {
@@ -795,6 +797,7 @@ function Game() {
         await generateQuestion(
           nextType,
           roundConfig.difficulty,
+          roundConfig.decade,
         )
 
       setQuestions(
