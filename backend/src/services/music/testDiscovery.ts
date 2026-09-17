@@ -1,26 +1,43 @@
-import { discoverTracks } from './musicDiscoveryService.js'
+import {
+  generateGameQuestion,
+} from '../game/gameQuestionService.js'
 
 async function main() {
-  const tracks =
-    await discoverTracks(
-      20,
-      1990,
+  const question =
+    await generateGameQuestion(
+      'name-the-song',
+      'medium',
+      2020,
     )
 
   console.log(
-    `\nFOUND ${tracks.length} TRACKS:\n`,
+    '\nQUESTION:\n',
   )
 
-  for (const track of tracks) {
-    console.log(
-      `${track.releaseYear} — ${track.title} — ${track.artist}`,
-    )
+  console.log(
+    `Correct song: ${question.song.title}`,
+  )
+
+  console.log(
+    `Artist: ${question.song.artist}`,
+  )
+
+  console.log(
+    `Release year: ${question.song.releaseYear}`,
+  )
+
+  console.log(
+    '\nANSWERS:\n',
+  )
+
+  for (const answer of question.answers) {
+    console.log(answer)
   }
 }
 
 main().catch((error) => {
   console.error(
-    'Discovery test failed:',
+    'Question generation test failed:',
     error,
   )
 

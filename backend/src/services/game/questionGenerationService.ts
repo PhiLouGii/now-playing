@@ -96,7 +96,8 @@ function toGeneratedSong(
     artist: track.artist,
     album: track.album,
     releaseYear: track.releaseYear,
-    artworkUrl: track.artworkUrl ?? '',
+    artworkUrl:
+      track.artworkUrl ?? '',
     audioUrl: track.previewUrl,
     genres: track.genres,
     provider: track.provider,
@@ -108,6 +109,7 @@ export async function generateQuestion(
   correctTrack: MusicTrack,
   type: QuestionType = 'name-the-song',
   difficulty: QuestionDifficulty = 'medium',
+  decade?: number,
 ): Promise<GeneratedQuestion> {
   const candidates =
     await getCandidatePool(
@@ -115,16 +117,18 @@ export async function generateQuestion(
       {
         requireReleaseYear:
           type === 'guess-the-year',
+        decade,
       },
     )
 
   const distractors =
-  selectDistractors(
-    candidates,
-    correctTrack,
-    type,
-    3,
-  )
+    selectDistractors(
+      candidates,
+      correctTrack,
+      type,
+      3,
+    )
+
   if (distractors.length !== 3) {
     throw new Error(
       `Could not generate exactly 3 distractors. Found ${distractors.length}.`,

@@ -129,6 +129,7 @@ export async function generateGameQuestion(
     correctTrack,
     type,
     difficulty,
+    decade,
   )
 }
 

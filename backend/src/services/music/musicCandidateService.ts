@@ -1,12 +1,58 @@
 import type { MusicTrack } from './musicProvider.js'
+
 import { deezerMusicProvider } from './deezerMusicProvider.js'
 import { lastFmMusicProvider } from './lastFmMusicProvider.js'
 import { filterGameTracks } from './musicTrackFilter.js'
+
+import { artists1960s } from '../../data/eraArtists/1960s.js'
+import { artists1970s } from '../../data/eraArtists/1970s.js'
+import { artists1980s } from '../../data/eraArtists/1980s.js'
+import { artists1990s } from '../../data/eraArtists/1990s.js'
+import { artists2000s } from '../../data/eraArtists/2000s.js'
+import { artists2010s } from '../../data/eraArtists/2010s.js'
+import { artists2020s } from '../../data/eraArtists/2020s.js'
+
+function shuffle<T>(items: T[]): T[] {
+  return [...items].sort(
+    () => Math.random() - 0.5,
+  )
+}
+
+function getArtistsForDecade(
+  decade: number,
+): string[] {
+  switch (decade) {
+    case 1960:
+      return artists1960s
+
+    case 1970:
+      return artists1970s
+
+    case 1980:
+      return artists1980s
+
+    case 1990:
+      return artists1990s
+
+    case 2000:
+      return artists2000s
+
+    case 2010:
+      return artists2010s
+
+    case 2020:
+      return artists2020s
+
+    default:
+      return []
+  }
+}
 
 export type CandidateSource =
   | 'same-artist'
   | 'same-album'
   | 'similar'
+  | 'era'
 
 export type MusicCandidate = {
   track: MusicTrack
@@ -16,6 +62,7 @@ export type MusicCandidate = {
 
 type CandidatePoolOptions = {
   requireReleaseYear?: boolean
+  decade?: number
 }
 
 function normalize(value: string): string {
@@ -66,6 +113,24 @@ function addCandidate(
   }
 
   candidates.push(candidate)
+}
+
+function filterCandidatesByDecade(
+  candidates: MusicCandidate[],
+  decade: number,
+): MusicCandidate[] {
+  const decadeEnd =
+    decade + 10
+
+  return candidates.filter(
+    (candidate) =>
+      candidate.track.releaseYear !==
+        undefined &&
+      candidate.track.releaseYear >=
+        decade &&
+      candidate.track.releaseYear <
+        decadeEnd,
+  )
 }
 
 async function findDeezerTrack(
@@ -225,26 +290,119 @@ async function hydrateCandidates(
   )
 }
 
+async function getEraCandidates(
+  decade: number,
+  correctTrack: MusicTrack,
+  limit = 30,
+): Promise<MusicCandidate[]> {
+  const artists =
+    getArtistsForDecade(decade)
+
+  if (artists.length === 0) {
+    return []
+  }
+
+  const selectedArtists =
+    shuffle(artists).slice(
+      0,
+      Math.min(
+        15,
+        artists.length,
+      ),
+    )
+
+  const results =
+    await Promise.all(
+      selectedArtists.map(
+        async (artist) => {
+          try {
+            return await deezerMusicProvider.searchTracks(
+              artist,
+              10,
+            )
+          } catch (error) {
+            console.error(
+              `Failed to search Deezer for era artist ${artist}:`,
+              error,
+            )
+
+            return []
+          }
+        },
+      ),
+    )
+
+  const candidates: MusicCandidate[] =
+    []
+
+  for (const tracks of results) {
+    const usable =
+      filterGameTracks(tracks)
+
+    for (const track of usable) {
+      addCandidate(
+        candidates,
+        {
+          track,
+          source: 'era',
+        },
+        correctTrack,
+      )
+    }
+  }
+
+  const hydrated =
+    await hydrateCandidates(
+      candidates,
+    )
+
+  return filterCandidatesByDecade(
+    hydrated,
+    decade,
+  ).slice(
+    0,
+    limit,
+  )
+}
+
 function filterCandidatesByRequirements(
   candidates: MusicCandidate[],
   options: CandidatePoolOptions,
 ): MusicCandidate[] {
-  if (!options.requireReleaseYear) {
-    return candidates
+  let filtered =
+    candidates
+
+  if (
+    options.requireReleaseYear ||
+    options.decade !== undefined
+  ) {
+    filtered =
+      filtered.filter(
+        (candidate) =>
+          candidate.track.releaseYear !==
+          undefined,
+      )
   }
 
-  return candidates.filter(
-    (candidate) =>
-      candidate.track.releaseYear !==
-      undefined,
-  )
+  if (
+    options.decade !== undefined
+  ) {
+    filtered =
+      filterCandidatesByDecade(
+        filtered,
+        options.decade,
+      )
+  }
+
+  return filtered
 }
 
 export async function getCandidatePool(
   correctTrack: MusicTrack,
   options: CandidatePoolOptions = {},
 ): Promise<MusicCandidate[]> {
-  const candidates: MusicCandidate[] = []
+  const candidates: MusicCandidate[] =
+    []
 
   const sameArtist =
     await getSameArtistCandidates(
@@ -274,7 +432,6 @@ export async function getCandidatePool(
     )
   }
 
-
   const similar =
     await getSimilarCandidates(
       correctTrack,
@@ -289,7 +446,29 @@ export async function getCandidatePool(
     )
   }
 
-  if (options.requireReleaseYear) {
+  if (
+    options.decade !== undefined
+  ) {
+    const eraCandidates =
+      await getEraCandidates(
+        options.decade,
+        correctTrack,
+        30,
+      )
+
+    for (const candidate of eraCandidates) {
+      addCandidate(
+        candidates,
+        candidate,
+        correctTrack,
+      )
+    }
+  }
+
+  if (
+    options.requireReleaseYear ||
+    options.decade !== undefined
+  ) {
     const hydratedCandidates =
       await hydrateCandidates(
         candidates,
