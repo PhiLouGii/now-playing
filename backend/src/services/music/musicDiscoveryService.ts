@@ -154,6 +154,7 @@ async function discoverFromGenres(
 
 export async function discoverTracks(
   limit = 20,
+  decade?: number,
 ): Promise<MusicTrack[]> {
   const candidates: MusicTrack[] =
     []
@@ -204,10 +205,26 @@ export async function discoverTracks(
       2,
     )
 
-  const usable =
+  let usable =
     filterGameTracks(
       diverse,
     )
+
+  if (decade !== undefined) {
+    const decadeEnd =
+      decade + 10
+
+    usable =
+      usable.filter(
+        (track) =>
+          track.releaseYear !==
+            undefined &&
+          track.releaseYear >=
+            decade &&
+          track.releaseYear <
+            decadeEnd,
+      )
+  }
 
   return shuffle(
     usable,

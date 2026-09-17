@@ -58,9 +58,10 @@ async function enrichReleaseYear(
 
 async function getEligibleTracks(
   type: QuestionType,
+  decade?: number,
 ): Promise<MusicTrack[]> {
   const discoveredTracks =
-    await discoverTracks(20)
+    await discoverTracks(20, decade)
 
   let eligibleTracks =
     discoveredTracks.filter(
@@ -105,9 +106,13 @@ function pickRandomTrack(
 export async function generateGameQuestion(
   type: QuestionType,
   difficulty: QuestionDifficulty,
+  decade?: number,
 ) {
   const eligibleTracks =
-    await getEligibleTracks(type)
+    await getEligibleTracks(
+      type,
+      decade,
+    )
 
   if (eligibleTracks.length === 0) {
     throw new Error(

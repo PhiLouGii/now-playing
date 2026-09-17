@@ -35,6 +35,11 @@ export async function getGameQuestion(
         ? req.query.difficulty as QuestionDifficulty
         : 'medium'
 
+    const decade =
+      typeof req.query.decade === 'string'
+        ? Number(req.query.decade)
+        : undefined
+
     if (!QUESTION_TYPES.includes(type)) {
       return res.status(400).json({
         error: 'Invalid question type',
@@ -47,10 +52,22 @@ export async function getGameQuestion(
       })
     }
 
+    if (
+      decade !== undefined &&
+      (!Number.isInteger(decade) ||
+        decade < 1900 ||
+        decade > 2100)
+    ) {
+      return res.status(400).json({
+        error: 'Invalid decade',
+      })
+    }
+
     const question =
       await generateGameQuestion(
         type,
         difficulty,
+        decade,
       )
 
     return res.json({

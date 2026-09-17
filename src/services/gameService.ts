@@ -12,9 +12,10 @@ type GeneratedQuestionResponse = {
 export async function generateQuestion(
   type: Question['type'],
   difficulty: Question['difficulty'],
+  decade?: number,
 ): Promise<Question> {
   const response = await fetch(
-    `${API_URL}/game/question?type=${encodeURIComponent(type)}&difficulty=${encodeURIComponent(difficulty)}`,
+    `${API_URL}/game/question?type=${encodeURIComponent(type)}&difficulty=${encodeURIComponent(difficulty)}${decade !== undefined ? `&decade=${encodeURIComponent(decade)}` : ''}`,
   )
 
   if (!response.ok) {
@@ -48,6 +49,7 @@ export async function generateRound(
         return generateQuestion(
           type,
           roundConfig.difficulty,
+          roundConfig.decade,
         )
       },
     )
