@@ -1,135 +1,87 @@
-.modes {
-  padding: var(--space-4xl) 40px;
+.game-modes {
+  padding: 36px 40px 48px;
 }
 
-.modes__container {
+.game-modes__container {
   width: min(100%, var(--max-width));
   margin: 0 auto;
 }
 
-.modes__header {
+/* ========================================
+   HEADER
+   ======================================== */
+
+.game-modes__header {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 40px;
-  margin-bottom: 32px;
+
+  margin-bottom: 16px;
 }
 
-.modes__header .label {
-  display: block;
-  margin-bottom: 10px;
-  color: var(--color-cyan);
+.game-modes__header h2 {
+  margin-top: 5px;
+
+  font-size: 30px;
+  line-height: 1;
+  letter-spacing: -0.04em;
 }
 
-.modes__intro {
-  max-width: 300px;
+.game-modes__hint {
+  max-width: 330px;
+
   color: var(--color-muted);
-  font-size: 14px;
-  line-height: 1.6;
+
+  font-size: 12px;
+  line-height: 1.45;
   text-align: right;
 }
 
-.modes__grid {
+/* ========================================
+   GRID
+   ======================================== */
+
+.game-modes__grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  grid-template-columns: 1.35fr 1fr 1fr;
+  grid-template-rows: 126px 126px;
+  gap: 10px;
 }
 
-.mode-card::after {
-  content: '';
-  position: absolute;
-  width: 160px;
-  height: 160px;
-  right: -80px;
-  bottom: -80px;
-  border-radius: 50%;
-  background: rgba(139, 92, 246, 0.08);
-  filter: blur(30px);
-  opacity: 0;
-  transition: opacity var(--transition-normal);
-  pointer-events: none;
-}
+/* ========================================
+   GAME MODE
+   ======================================== */
 
-.mode-card:hover {
-  transform: translateY(-4px);
-  background: var(--color-surface-hover);
-  border-color: rgba(139, 92, 246, 0.35);
-  box-shadow: var(--shadow-md);
-}
+.game-mode {
+  position: relative;
+  overflow: hidden;
 
-.mode-card:hover::after {
-  opacity: 1;
-}
+  min-width: 0;
+  padding: 17px 18px;
 
-.mode-card__top {
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
   justify-content: space-between;
-}
 
-.mode-card__number {
-  color: var(--color-subtle);
-  font-family: var(--font-display);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-}
+  background: var(--color-surface);
 
-.mode-card__icon {
-  width: 42px;
-  height: 42px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-purple-light);
-  background: rgba(139, 92, 246, 0.08);
-  border: 1px solid rgba(139, 92, 246, 0.16);
-  border-radius: var(--radius-md);
-}
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-lg);
 
-.mode-card__content {
-  margin-top: auto;
-}
+  box-shadow: var(--shadow-sm);
 
-.mode-card__content h3 {
-  font-family: var(--font-display);
-  font-size: 21px;
-  font-weight: 600;
-  line-height: 1.15;
-  letter-spacing: -0.025em;
-}
+  text-align: left;
 
-.mode-card__content p {
-  margin-top: 9px;
-  color: var(--color-muted);
-  font-size: 13px;
-  line-height: 1.5;
-}
+  isolation: isolate;
 
-.mode-card__action {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin-top: 24px;
-  color: var(--color-subtle);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  opacity: 0.55;
-  transform: translateY(3px);
   transition:
-    color var(--transition-fast),
-    opacity var(--transition-fast),
+    border-color var(--transition-fast),
     transform var(--transition-fast);
 }
 
-.mode-card {
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
-}
+/* Faint artwork */
 
-.mode-card__artwork {
+.game-mode__artwork {
   position: absolute;
   inset: 0;
   z-index: -2;
@@ -138,88 +90,205 @@
   background-size: cover;
   background-repeat: no-repeat;
 
-  opacity: 0.18;
-  filter: saturate(0.8);
-  transform: scale(1.04);
+  opacity: 0.35;
 
-  transition:
-    opacity 0.3s ease,
-    transform 0.4s ease;
+  filter: saturate(0.7);
 }
 
-.mode-card__overlay {
+/* Keeps text readable */
+
+.game-mode__overlay {
   position: absolute;
   inset: 0;
   z-index: -1;
 
-  background:
-    linear-gradient(
-      180deg,
-      rgba(10, 7, 20, 0.35) 0%,
-      rgba(10, 7, 20, 0.72) 55%,
-      rgba(10, 7, 20, 0.94) 100%
-    );
+  background: var(--color-surface);
 
-  pointer-events: none;
+  opacity: 0.72;
 }
 
-.mode-card:hover .mode-card__artwork {
-  opacity: 0.28;
-  transform: scale(1.08);
-}
+/* Content stays above artwork */
 
-.mode-card__top,
-.mode-card__content,
-.mode-card__action {
+.game-mode__top,
+.game-mode__info {
   position: relative;
   z-index: 1;
 }
 
-.mode-card:hover .mode-card__action {
-  color: var(--color-white);
-  opacity: 1;
+.game-mode:hover {
+  background: var(--color-surface-hover);
+  border-color: var(--color-lilac);
+
+  transform: translateY(-2px);
+}
+
+.game-mode:active {
   transform: translateY(0);
 }
 
-@media (max-width: 1000px) {
-  .modes__grid {
-    grid-template-columns: repeat(2, 1fr);
+/* ========================================
+   PRIMARY MODE
+   ======================================== */
+
+.game-mode--primary {
+  grid-row: span 2;
+
+  background: var(--color-mauve);
+  border-color: var(--color-lilac);
+}
+
+.game-mode--primary:hover {
+  background: var(--color-periwinkle);
+  border-color: var(--color-periwinkle);
+}
+
+.game-mode--primary .game-mode__icon {
+  background: var(--color-surface);
+  border-color: var(--border-medium);
+}
+
+.game-mode--primary .game-mode__info h3 {
+  font-size: 28px;
+}
+
+/* ========================================
+   ENDLESS
+   ======================================== */
+
+.game-mode--endless {
+  background: var(--color-surface-alt);
+}
+
+.game-mode--endless .game-mode__icon {
+  color: var(--color-rose);
+}
+
+/* ========================================
+   TOP ROW
+   ======================================== */
+
+.game-mode__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.game-mode__icon {
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: var(--color-bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+
+  color: var(--color-text-secondary);
+}
+
+.game-mode__arrow {
+  color: var(--color-subtle);
+
+  transition:
+    transform var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.game-mode:hover .game-mode__arrow {
+  color: var(--color-text);
+  transform: translateX(3px);
+}
+
+/* ========================================
+   INFO
+   ======================================== */
+
+.game-mode__info h3 {
+  margin: 0;
+
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+}
+
+.game-mode__info p {
+  margin-top: 5px;
+
+  color: var(--color-muted);
+
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+@media (max-width: 900px) {
+  .game-modes {
+    padding-left: 32px;
+    padding-right: 32px;
   }
 
-  .mode-card {
-    min-height: 260px;
+  .game-modes__grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: repeat(3, 120px);
+  }
+
+  .game-mode--primary {
+    grid-row: span 2;
+  }
+
+  .game-mode--endless {
+    grid-column: span 2;
   }
 }
 
-@media (max-width: 768px) {
-  .modes {
-    padding: var(--space-3xl) 20px;
+@media (max-width: 700px) {
+  .game-modes {
+    padding: 28px 20px 40px;
   }
 
-  .modes__header {
+  .game-modes__header {
     align-items: flex-start;
     flex-direction: column;
-    gap: 14px;
-  }
-
-  .modes__intro {
-    max-width: 400px;
-    text-align: left;
-  }
-
-  .modes__grid {
-    grid-template-columns: 1fr;
     gap: 10px;
   }
 
-  .mode-card {
-    min-height: 210px;
+  .game-modes__hint {
+    max-width: 420px;
+    text-align: left;
+  }
+
+  .game-modes__grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: repeat(3, 115px);
   }
 }
 
 @media (max-width: 480px) {
-  .mode-card {
-    min-height: 190px;
-    padding: 20px;
+  .game-modes__header h2 {
+    font-size: 26px;
+  }
+
+  .game-modes__grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(5, 105px);
+  }
+
+  .game-mode--primary {
+    grid-row: auto;
+  }
+
+  .game-mode--endless {
+    grid-column: auto;
+  }
+
+  .game-mode--primary .game-mode__info h3 {
+    font-size: 22px;
   }
 }

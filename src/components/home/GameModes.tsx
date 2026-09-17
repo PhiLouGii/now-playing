@@ -1,45 +1,59 @@
 import {
-  Music,
-  Mic2,
   Disc3,
-  CalendarDays,
-  ArrowUpRight,
+  Headphones,
+  Mic2,
+  Radio,
+  Sparkles,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+
 import './GameModes.css'
 
-const modes = [
+const gameModes = [
   {
     number: '01',
-    icon: Music,
-    title: 'Name That Song',
-    description: 'Hear the track. Pick the song.',
-    route: '/game',
+    title: 'Name the Song',
+    description: 'Hear it. Name it.',
+    path: '/game',
+    icon: Disc3,
     artwork: '/images/home/song-mode.jpg',
+    className: 'game-mode--primary',
   },
   {
     number: '02',
+    title: 'Name the Artist',
+    description: 'Know who made it?',
+    path: '/artist-game',
     icon: Mic2,
-    title: 'Guess The Artist',
-    description: 'Can you recognize the voice?',
-    route: '/artist-game',
     artwork: '/images/home/artist-mode.jpg',
+    className: '',
   },
   {
     number: '03',
-    icon: Disc3,
-    title: 'Guess The Album',
-    description: 'Match the track to its album.',
-    route: '/album-game',
+    title: 'Name the Album',
+    description: 'Recognise the record.',
+    path: '/album-game',
+    icon: Radio,
     artwork: '/images/home/album-mode.jpg',
+    className: '',
   },
   {
     number: '04',
-    icon: CalendarDays,
-    title: 'Guess The Year',
-    description: 'When did this hit drop?',
-    route: '/year-game',
+    title: 'Guess the Year',
+    description: 'When did it drop?',
+    path: '/year-game',
+    icon: Headphones,
     artwork: '/images/home/year-mode.jpg',
+    className: '',
+  },
+  {
+    number: '05',
+    title: 'Endless',
+    description: 'Keep your streak alive.',
+    path: '/endless',
+    icon: Sparkles,
+    artwork: '/images/home/endless-mode.jpg',
+    className: 'game-mode--endless',
   },
 ]
 
@@ -47,83 +61,65 @@ function GameModes() {
   const navigate = useNavigate()
 
   return (
-    <section className="modes">
-      <div className="modes__container">
-
-        <div className="modes__header">
+    <section className="game-modes">
+      <div className="game-modes__container">
+        <div className="game-modes__header">
           <div>
-            <p className="label">
-              CHOOSE YOUR GAME
-            </p>
+            <p className="label">PLAY</p>
 
-            <h2 className="heading-lg">
-              How do you want to play?
-            </h2>
+            <h2>Choose your game</h2>
           </div>
 
-          <p className="modes__intro">
-            Four ways to put your music knowledge to the test.
+          <p className="game-modes__hint">
+            Pick a mode and see how well you really know your music.
           </p>
         </div>
 
-        <div className="modes__grid">
-          {modes.map((mode) => {
+        <div className="game-modes__grid">
+          {gameModes.map((mode) => {
             const Icon = mode.icon
 
             return (
               <button
                 key={mode.title}
                 type="button"
-                className="mode-card"
-                onClick={() =>
-                  navigate(mode.route)
-                }
+                className={`game-mode ${mode.className}`}
+                onClick={() => navigate(mode.path)}
               >
                 <div
-                  className="mode-card__artwork"
+                  className="game-mode__artwork"
                   style={{
                     backgroundImage: `url("${mode.artwork}")`,
                   }}
                   aria-hidden="true"
                 />
 
-                <div className="mode-card__overlay" />
+                <div
+                  className="game-mode__overlay"
+                  aria-hidden="true"
+                />
 
-                <div className="mode-card__top">
-                  <span className="mode-card__number">
+                <div className="game-mode__top">
+                  <span className="game-mode__number">
                     {mode.number}
                   </span>
 
-                  <div className="mode-card__icon">
+                  <span className="game-mode__icon">
                     <Icon
-                      size={20}
+                      size={19}
                       strokeWidth={1.8}
                     />
-                  </div>
+                  </span>
                 </div>
 
-                <div className="mode-card__content">
-                  <h3>
-                    {mode.title}
-                  </h3>
-
-                  <p>
-                    {mode.description}
-                  </p>
-                </div>
-
-                <div className="mode-card__action">
-                  <span>PLAY</span>
-
-                  <ArrowUpRight
-                    size={16}
-                  />
+                <div className="game-mode__info">
+                  <h3>{mode.title}</h3>
+                  <p>{mode.description}</p>
                 </div>
               </button>
             )
           })}
         </div>
-
       </div>
     </section>
   )
