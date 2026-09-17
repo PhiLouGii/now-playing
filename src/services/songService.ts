@@ -41,6 +41,26 @@ export async function searchSongs(
   return data.tracks
 }
 
+export async function discoverSongs(
+  limit = 20,
+): Promise<Song[]> {
+  const response =
+    await fetch(
+      `${API_URL}/music/discover?limit=${limit}`,
+    )
+
+  if (!response.ok) {
+    throw new Error(
+      'Failed to discover music',
+    )
+  }
+
+  const data =
+    (await response.json()) as MusicSearchResponse
+
+  return data.tracks
+}
+
 export async function getSongById(
   id: string,
 ): Promise<Song | undefined> {
