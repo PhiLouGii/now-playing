@@ -2,13 +2,10 @@ import type { MusicTrack } from './musicProvider.js'
 import { deezerMusicProvider } from './deezerMusicProvider.js'
 import { filterGameTracks } from './musicTrackFilter.js'
 
-type DeezerArtist = {
-  id: number
-  name?: string
-}
-
 function shuffle<T>(items: T[]): T[] {
-  return [...items].sort(() => Math.random() - 0.5)
+  return [...items].sort(
+    () => Math.random() - 0.5,
+  )
 }
 
 function deduplicateTracks(
@@ -35,32 +32,40 @@ function limitTracksPerArtist(
   tracks: MusicTrack[],
   maxPerArtist = 2,
 ): MusicTrack[] {
-  const artistCounts = new Map<string, number>()
+  const artistCounts =
+    new Map<string, number>()
 
-  return shuffle(tracks).filter((track) => {
-    const artist =
-      track.artist.toLowerCase()
+  return shuffle(tracks).filter(
+    (track) => {
+      const artist =
+        track.artist.toLowerCase()
 
-    const count =
-      artistCounts.get(artist) ?? 0
+      const count =
+        artistCounts.get(
+          artist,
+        ) ?? 0
 
-    if (count >= maxPerArtist) {
-      return false
-    }
+      if (
+        count >= maxPerArtist
+      ) {
+        return false
+      }
 
-    artistCounts.set(
-      artist,
-      count + 1,
-    )
+      artistCounts.set(
+        artist,
+        count + 1,
+      )
 
-    return true
-  })
+      return true
+    },
+  )
 }
 
 async function discoverFromGenres(
   target: number,
 ): Promise<MusicTrack[]> {
-  const candidates: MusicTrack[] = []
+  const candidates: MusicTrack[] =
+    []
 
   const genres =
     await deezerMusicProvider.getGenres()
@@ -73,7 +78,10 @@ async function discoverFromGenres(
     )
 
   const selectedGenres =
-    shuffle(usableGenres).slice(0, 8)
+    shuffle(usableGenres).slice(
+      0,
+      8,
+    )
 
   for (const genre of selectedGenres) {
     const artists =
@@ -83,7 +91,10 @@ async function discoverFromGenres(
       )
 
     const selectedArtists =
-      shuffle(artists).slice(0, 5)
+      shuffle(artists).slice(
+        0,
+        5,
+      )
 
     for (const artist of selectedArtists) {
       if (!artist.id) {
@@ -96,10 +107,14 @@ async function discoverFromGenres(
           10,
         )
 
-      candidates.push(...tracks)
+      candidates.push(
+        ...tracks,
+      )
 
       const unique =
-        deduplicateTracks(candidates)
+        deduplicateTracks(
+          candidates,
+        )
 
       const diverse =
         limitTracksPerArtist(
@@ -108,16 +123,23 @@ async function discoverFromGenres(
         )
 
       const usable =
-        filterGameTracks(diverse)
+        filterGameTracks(
+          diverse,
+        )
 
-      if (usable.length >= target) {
+      if (
+        usable.length >=
+        target
+      ) {
         return usable
       }
     }
   }
 
   const unique =
-    deduplicateTracks(candidates)
+    deduplicateTracks(
+      candidates,
+    )
 
   const diverse =
     limitTracksPerArtist(
@@ -125,13 +147,16 @@ async function discoverFromGenres(
       2,
     )
 
-  return filterGameTracks(diverse)
+  return filterGameTracks(
+    diverse,
+  )
 }
 
 export async function discoverTracks(
   limit = 20,
 ): Promise<MusicTrack[]> {
-  const candidates: MusicTrack[] = []
+  const candidates: MusicTrack[] =
+    []
 
   try {
     const chartTracks =
@@ -139,7 +164,9 @@ export async function discoverTracks(
         100,
       )
 
-    candidates.push(...chartTracks)
+    candidates.push(
+      ...chartTracks,
+    )
   } catch (error) {
     console.error(
       'Failed to load Deezer chart:',
@@ -150,10 +177,15 @@ export async function discoverTracks(
   try {
     const genreTracks =
       await discoverFromGenres(
-        Math.max(limit * 3, 50),
+        Math.max(
+          limit * 3,
+          50,
+        ),
       )
 
-    candidates.push(...genreTracks)
+    candidates.push(
+      ...genreTracks,
+    )
   } catch (error) {
     console.error(
       'Failed to discover tracks from genres:',
@@ -162,7 +194,9 @@ export async function discoverTracks(
   }
 
   const unique =
-    deduplicateTracks(candidates)
+    deduplicateTracks(
+      candidates,
+    )
 
   const diverse =
     limitTracksPerArtist(
@@ -171,9 +205,13 @@ export async function discoverTracks(
     )
 
   const usable =
-    filterGameTracks(diverse)
+    filterGameTracks(
+      diverse,
+    )
 
-  return shuffle(usable).slice(
+  return shuffle(
+    usable,
+  ).slice(
     0,
     limit,
   )
