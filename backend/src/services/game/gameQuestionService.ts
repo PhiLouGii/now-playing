@@ -60,36 +60,62 @@ async function getEligibleTracks(
   type: QuestionType,
   decade?: number,
 ): Promise<MusicTrack[]> {
-  const discoveredTracks =
-    await discoverTracks(20, decade)
+  const maxAttempts = 3
 
-  let eligibleTracks =
-    discoveredTracks.filter(
-      isPlayableMusicTrack,
+  for (
+    let attempt = 1;
+    attempt <= maxAttempts;
+    attempt++
+  ) {
+    const discoveredTracks =
+      await discoverTracks(
+        20,
+        decade,
+      )
+
+    let eligibleTracks =
+      discoveredTracks.filter(
+        isPlayableMusicTrack,
+      )
+
+    if (type !== 'guess-the-year') {
+      if (eligibleTracks.length > 0) {
+        return eligibleTracks
+      }
+    } else {
+      eligibleTracks =
+        await Promise.all(
+          eligibleTracks.map(
+            hydrateTrack,
+          ),
+        )
+
+      eligibleTracks =
+        await Promise.all(
+          eligibleTracks.map(
+            enrichReleaseYear,
+          ),
+        )
+
+      eligibleTracks =
+        eligibleTracks.filter(
+          (track) =>
+            track.releaseYear !== undefined,
+        )
+
+      if (eligibleTracks.length > 0) {
+        return eligibleTracks
+      }
+    }
+
+    console.log(
+      `No eligible tracks found for ${
+        decade ?? 'any era'
+      }. Retrying (${attempt}/${maxAttempts})...`,
     )
-
-  if (type !== 'guess-the-year') {
-    return eligibleTracks
   }
 
-  eligibleTracks =
-    await Promise.all(
-      eligibleTracks.map(
-        hydrateTrack,
-      ),
-    )
-
-  eligibleTracks =
-    await Promise.all(
-      eligibleTracks.map(
-        enrichReleaseYear,
-      ),
-    )
-
-  return eligibleTracks.filter(
-    (track) =>
-      track.releaseYear !== undefined,
-  )
+  return []
 }
 
 function pickRandomTrack(
