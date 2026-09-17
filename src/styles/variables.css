@@ -1,98 +1,85 @@
 :root {
   /* ========================================
-     COLORS
+     BRAND COLORS
      ======================================== */
 
-  --color-bg: #0d0d14;
-  --color-bg-secondary: #11111a;
-  --color-bg-tertiary: #171720;
-
-  --color-surface: #181824;
-  --color-surface-hover: #20202d;
-
-  --color-white: #f5f5f7;
-  --color-muted: #9494a5;
-  --color-subtle: #626274;
-
-  --color-purple: #8b5cf6;
-  --color-purple-light: #a78bfa;
-
-  --color-pink: #ec4899;
-  --color-cyan: #22d3ee;
-  --color-yellow: #facc15;
+  --color-lilac: #C8A2C8;
+  --color-rose: #D3A6A6;
+  --color-periwinkle: #B3A8D9;
+  --color-mauve: #C6A9D3;
+  --color-silver: #A9A8C8;
+  --color-lavender: #B3A7D1;
 
   /* ========================================
-     GRADIENTS
+     BACKGROUNDS
      ======================================== */
 
-  --gradient-primary: linear-gradient(
-    135deg,
-    var(--color-purple),
-    var(--color-pink)
-  );
+  --color-bg: #F6F1F5;
+  --color-bg-secondary: #F0EAF1;
+  --color-bg-tertiary: #E9E1EB;
 
-  --gradient-secondary: linear-gradient(
-    135deg,
-    var(--color-cyan),
-    var(--color-purple)
-  );
+  --color-surface: #FBF8FA;
+  --color-surface-alt: #F2ECF3;
+  --color-surface-hover: #EDE5EF;
 
-  --gradient-warm: linear-gradient(
-    135deg,
-    var(--color-pink),
-    var(--color-yellow)
-  );
+  /* ========================================
+     TEXT
+     ======================================== */
+
+  --color-text: #302C35;
+  --color-text-secondary: #514B56;
+  --color-muted: #746D78;
+  --color-subtle: #9A929F;
+
+  --color-white: #FFFFFF;
 
   /* ========================================
      BORDERS
      ======================================== */
 
-  --border-subtle: rgba(255, 255, 255, 0.07);
-  --border-medium: rgba(255, 255, 255, 0.12);
-  --border-bright: rgba(255, 255, 255, 0.2);
+  --border-subtle: #E4DCE6;
+  --border-medium: #D8CEDB;
+  --border-strong: #C8BCCB;
+
+  /* ========================================
+     GAME STATES
+     ======================================== */
+
+  --color-success: #A8C7B0;
+  --color-success-dark: #52745B;
+
+  --color-error: #D3A6A6;
+  --color-error-dark: #865C5C;
+
+  --color-warning: #D5C49A;
 
   /* ========================================
      RADIUS
      ======================================== */
 
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 18px;
-  --radius-xl: 24px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
   --radius-pill: 999px;
 
   /* ========================================
      SHADOWS
      ======================================== */
 
-  --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.2);
+  --shadow-sm:
+    0 2px 0 rgba(48, 44, 53, 0.08);
 
-  --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.3);
-
-  --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.4);
-
-  /* ========================================
-     GLOWS
-     ======================================== */
-
-  --glow-purple:
-    0 0 30px rgba(139, 92, 246, 0.25);
-
-  --glow-pink:
-    0 0 30px rgba(236, 72, 153, 0.25);
-
-  --glow-cyan:
-    0 0 30px rgba(34, 211, 238, 0.25);
-
-  --glow-yellow:
-    0 0 30px rgba(250, 204, 21, 0.2);
+  --shadow-md:
+    0 4px 0 rgba(48, 44, 53, 0.10);
 
   /* ========================================
      LAYOUT
      ======================================== */
 
-  --max-width: 1400px;
-  --navbar-height: 76px;
+  --max-width: 1280px;
+
+  --navbar-height: 68px;
 
   /* ========================================
      SPACING
@@ -103,9 +90,9 @@
   --space-md: 16px;
   --space-lg: 24px;
   --space-xl: 32px;
-  --space-2xl: 48px;
-  --space-3xl: 64px;
-  --space-4xl: 96px;
+  --space-2xl: 40px;
+  --space-3xl: 56px;
+  --space-4xl: 72px;
 
   /* ========================================
      TYPOGRAPHY
@@ -118,7 +105,7 @@
      TRANSITIONS
      ======================================== */
 
-  --transition-fast: 150ms ease;
-  --transition-normal: 250ms ease;
-  --transition-slow: 400ms ease;
+  --transition-fast: 120ms ease;
+  --transition-normal: 180ms ease;
+  --transition-slow: 280ms ease;
 }
