@@ -64,16 +64,12 @@ function getGameMode(
   switch (questionType) {
     case 'name-the-song':
       return 'name-that-song'
-
     case 'name-the-artist':
       return 'name-the-artist'
-
     case 'name-the-album':
       return 'name-the-album'
-
     case 'guess-the-year':
       return 'guess-the-year'
-
     default:
       return 'name-that-song'
   }
@@ -89,14 +85,11 @@ function Game() {
       } | null
     )?.roundConfig ?? defaultRound
 
-  /*
-   * --------------------------------------------------
-   * QUESTION STATE
-   * --------------------------------------------------
-   */
-
   const [questions, setQuestions] =
     useState<Question[]>([])
+
+  const usedTrackIds =
+    useRef<Set<string>>(new Set())
 
   const [isLoading, setIsLoading] =
     useState(true)
@@ -107,23 +100,11 @@ function Game() {
   const [currentQuestion, setCurrentQuestion] =
     useState(0)
 
-  /*
-   * --------------------------------------------------
-   * ANSWER STATE
-   * --------------------------------------------------
-   */
-
   const [selectedAnswer, setSelectedAnswer] =
     useState<string | null>(null)
 
   const [answerStatus, setAnswerStatus] =
     useState<AnswerStatus>('idle')
-
-  /*
-   * --------------------------------------------------
-   * SCORE STATE
-   * --------------------------------------------------
-   */
 
   const [score, setScore] =
     useState(0)
@@ -143,22 +124,10 @@ function Game() {
   const [multiplierEarned, setMultiplierEarned] =
     useState(1)
 
-  /*
-   * --------------------------------------------------
-   * RECOGNITION / RESULTS
-   * --------------------------------------------------
-   */
-
   const [
     recognitionResults,
     setRecognitionResults,
   ] = useState<RecognitionResult[]>([])
-
-  /*
-   * --------------------------------------------------
-   * LISTENING STATE
-   * --------------------------------------------------
-   */
 
   const [listeningStage, setListeningStage] =
     useState(0)
@@ -166,20 +135,8 @@ function Game() {
   const [timeRemaining, setTimeRemaining] =
     useState(LISTENING_STAGES[0])
 
-  /*
-   * --------------------------------------------------
-   * FULL PREVIEW STATE
-   * --------------------------------------------------
-   */
-
   const [previewComplete, setPreviewComplete] =
     useState(false)
-
-  /*
-   * --------------------------------------------------
-   * GAME STATE
-   * --------------------------------------------------
-   */
 
   const [isGameComplete, setIsGameComplete] =
     useState(false)
@@ -187,26 +144,16 @@ function Game() {
   const scoreSubmitted =
     useRef(false)
 
-  /*
-   * --------------------------------------------------
-   * AUDIO PLAYER REF
-   * --------------------------------------------------
-   */
-
   const audioPlayerRef =
     useRef<AudioPlayerHandle | null>(null)
-
-  /*
-   * --------------------------------------------------
-   * LOAD FIRST QUESTION
-   * --------------------------------------------------
-   */
 
   useEffect(() => {
     let isMounted = true
 
     async function loadFirstQuestion() {
       setIsLoading(true)
+
+      usedTrackIds.current.clear()
 
       try {
         const firstType =
@@ -217,9 +164,14 @@ function Game() {
             firstType,
             roundConfig.difficulty,
             roundConfig.decade,
+            [],
           )
 
         if (isMounted) {
+          usedTrackIds.current.add(
+            firstQuestion.song.id,
+          )
+
           setQuestions([firstQuestion])
           setIsLoading(false)
         }
@@ -241,12 +193,6 @@ function Game() {
       isMounted = false
     }
   }, [roundConfig])
-
-  /*
-   * --------------------------------------------------
-   * PRELOAD NEXT QUESTION
-   * --------------------------------------------------
-   */
 
   useEffect(() => {
     if (
@@ -275,6 +221,9 @@ function Game() {
             nextType,
             roundConfig.difficulty,
             roundConfig.decade,
+            Array.from(
+              usedTrackIds.current,
+            ),
           )
 
         if (isMounted) {
@@ -286,6 +235,10 @@ function Game() {
               ) {
                 return current
               }
+
+              usedTrackIds.current.add(
+                nextQuestion.song.id,
+              )
 
               return [
                 ...current,
@@ -311,16 +264,6 @@ function Game() {
     questions.length,
     roundConfig,
   ])
-
-  /*
-   * --------------------------------------------------
-   * SAVE SCORE
-   * --------------------------------------------------
-   *
-   * This hook must remain above all conditional
-   * returns so React always calls hooks in the
-   * same order.
-   */
 
   useEffect(() => {
     if (
@@ -392,12 +335,6 @@ function Game() {
     roundConfig.questionTypes,
   ])
 
-  /*
-   * --------------------------------------------------
-   * LOADING STATE
-   * --------------------------------------------------
-   */
-
   if (isLoading) {
     return (
       <div className="game-page">
@@ -415,12 +352,6 @@ function Game() {
       </div>
     )
   }
-
-  /*
-   * --------------------------------------------------
-   * NO QUESTIONS
-   * --------------------------------------------------
-   */
 
   if (questions.length === 0) {
     return (
@@ -445,12 +376,6 @@ function Game() {
     )
   }
 
-  /*
-   * --------------------------------------------------
-   * CURRENT QUESTION
-   * --------------------------------------------------
-   */
-
   const question =
     questions[currentQuestion]
 
@@ -460,12 +385,6 @@ function Game() {
   const maxListenDuration =
     LISTENING_STAGES[listeningStage]
 
-  /*
-   * --------------------------------------------------
-   * AUDIO TIMER
-   * --------------------------------------------------
-   */
-
   function handleTimeUpdate(
     time: number,
   ) {
@@ -474,32 +393,14 @@ function Game() {
     }
   }
 
-  /*
-   * --------------------------------------------------
-   * LISTENING STAGE COMPLETE
-   * --------------------------------------------------
-   */
-
   function handleStageComplete() {
     setTimeRemaining(0)
   }
-
-  /*
-   * --------------------------------------------------
-   * FULL PREVIEW COMPLETE
-   * --------------------------------------------------
-   */
 
   function handlePreviewComplete() {
     setPreviewComplete(true)
     setTimeRemaining(0)
   }
-
-  /*
-   * --------------------------------------------------
-   * RECORD RECOGNITION
-   * --------------------------------------------------
-   */
 
   function recordRecognition(
     result: RecognitionResult,
@@ -512,12 +413,6 @@ function Game() {
     )
   }
 
-  /*
-   * --------------------------------------------------
-   * ANSWER QUESTION
-   * --------------------------------------------------
-   */
-
   function handleAnswer(
     answer: string,
   ) {
@@ -527,11 +422,6 @@ function Game() {
 
     const isCorrect =
       answer === question.correctAnswer
-
-    /*
-     * Start the full preview directly from the
-     * user's answer click.
-     */
 
     audioPlayerRef.current?.playPreview()
 
@@ -544,12 +434,6 @@ function Game() {
     )
 
     setPreviewComplete(false)
-
-    /*
-     * ----------------------------------------------
-     * CORRECT
-     * ----------------------------------------------
-     */
 
     if (isCorrect) {
       const nextStreak =
@@ -600,29 +484,18 @@ function Game() {
       recordRecognition({
         questionNumber:
           currentQuestion + 1,
-
         title:
           question.song.title,
-
         artist:
           question.song.artist,
-
         listenDuration:
           maxListenDuration,
-
         points,
-
         correct: true,
       })
 
       return
     }
-
-    /*
-     * ----------------------------------------------
-     * INCORRECT
-     * ----------------------------------------------
-     */
 
     setStreak(0)
     setPointsEarned(0)
@@ -631,27 +504,16 @@ function Game() {
     recordRecognition({
       questionNumber:
         currentQuestion + 1,
-
       title:
         question.song.title,
-
       artist:
         question.song.artist,
-
       listenDuration:
         maxListenDuration,
-
       points: 0,
-
       correct: false,
     })
   }
-
-  /*
-   * --------------------------------------------------
-   * ADVANCE LISTENING STAGE
-   * --------------------------------------------------
-   */
 
   function handleAdvance() {
     if (isAnswered) {
@@ -675,21 +537,10 @@ function Game() {
     )
   }
 
-  /*
-   * --------------------------------------------------
-   * REVEAL ANSWER
-   * --------------------------------------------------
-   */
-
   function handleRevealAnswer() {
     if (isAnswered) {
       return
     }
-
-    /*
-     * Start the full preview directly from the
-     * user's Reveal Answer click.
-     */
 
     audioPlayerRef.current?.playPreview()
 
@@ -705,57 +556,30 @@ function Game() {
     recordRecognition({
       questionNumber:
         currentQuestion + 1,
-
       title:
         question.song.title,
-
       artist:
         question.song.artist,
-
       listenDuration:
         maxListenDuration,
-
       points: 0,
-
       correct: false,
     })
   }
 
-  /*
-   * --------------------------------------------------
-   * RESET QUESTION STATE
-   * --------------------------------------------------
-   */
-
   function resetQuestionState() {
     setSelectedAnswer(null)
-
     setAnswerStatus('idle')
-
     setListeningStage(0)
-
     setPointsEarned(0)
-
     setMultiplierEarned(1)
-
     setPreviewComplete(false)
-
     setTimeRemaining(
       LISTENING_STAGES[0],
     )
   }
 
-  /*
-   * --------------------------------------------------
-   * NEXT SONG
-   * --------------------------------------------------
-   */
-
   async function handleNextSong() {
-    /*
-     * Last question.
-     */
-
     if (
       currentQuestion >=
       roundConfig.questionCount - 1
@@ -767,22 +591,11 @@ function Game() {
     const nextIndex =
       currentQuestion + 1
 
-    /*
-     * The next question has already been
-     * preloaded.
-     */
-
     if (questions[nextIndex]) {
       setCurrentQuestion(nextIndex)
-
       resetQuestionState()
-
       return
     }
-
-    /*
-     * Otherwise generate it now.
-     */
 
     setIsLoadingNext(true)
 
@@ -798,7 +611,14 @@ function Game() {
           nextType,
           roundConfig.difficulty,
           roundConfig.decade,
+          Array.from(
+            usedTrackIds.current,
+          ),
         )
+
+      usedTrackIds.current.add(
+        nextQuestion.song.id,
+      )
 
       setQuestions(
         (current) => {
@@ -816,7 +636,6 @@ function Game() {
       )
 
       setCurrentQuestion(nextIndex)
-
       resetQuestionState()
     } catch (error) {
       console.error(
@@ -827,12 +646,6 @@ function Game() {
       setIsLoadingNext(false)
     }
   }
-
-  /*
-   * --------------------------------------------------
-   * RESULTS SCREEN
-   * --------------------------------------------------
-   */
 
   if (isGameComplete) {
     return (
@@ -854,16 +667,9 @@ function Game() {
     )
   }
 
-  /*
-   * --------------------------------------------------
-   * GAME UI
-   * --------------------------------------------------
-   */
-
   return (
     <div className="game-page">
       <div className="game-page__container">
-
         <GameHeader
           currentQuestion={
             currentQuestion + 1
@@ -884,9 +690,6 @@ function Game() {
         />
 
         <main className="game-content">
-
-          {/* CATEGORY */}
-
           <p className="game-content__category">
             {question.type ===
               'name-the-song' &&
@@ -904,8 +707,6 @@ function Game() {
               'guess-the-year' &&
               'GUESS THE YEAR'}
           </p>
-
-          {/* QUESTION */}
 
           <h1>
             {question.type ===
@@ -925,12 +726,7 @@ function Game() {
               'When was this song released?'}
           </h1>
 
-          {/* SONG */}
-
           <div className="game-question">
-
-            {/* ARTWORK */}
-
             <div
               className={`game-question__art ${
                 isAnswered
@@ -950,8 +746,6 @@ function Game() {
                 <span>?</span>
               )}
             </div>
-
-            {/* AUDIO PLAYER */}
 
             <AudioPlayer
               ref={audioPlayerRef}
@@ -978,11 +772,8 @@ function Game() {
               }
             />
 
-            {/* SONG DETAILS */}
-
             {isAnswered && (
               <div className="game-song-reveal">
-
                 <p className="game-song-reveal__title">
                   {question.song.title}
                 </p>
@@ -1006,13 +797,9 @@ function Game() {
                       }
                     </p>
                   )}
-
               </div>
             )}
-
           </div>
-
-          {/* ANSWERS */}
 
           <AnswerGrid
             answers={
@@ -1032,11 +819,8 @@ function Game() {
             }
           />
 
-          {/* BEFORE ANSWER */}
-
           {!isAnswered && (
             <div className="game-actions">
-
               <button
                 type="button"
                 className="game-advance"
@@ -1067,11 +851,8 @@ function Game() {
               >
                 REVEAL ANSWER
               </button>
-
             </div>
           )}
-
-          {/* ANSWER FEEDBACK */}
 
           {isAnswered && (
             <div
@@ -1085,7 +866,6 @@ function Game() {
                     : 'game-feedback--incorrect'
               }`}
             >
-
               <div className="game-feedback__label">
                 {answerStatus ===
                 'revealed'
@@ -1101,8 +881,6 @@ function Game() {
                   question.correctAnswer
                 }
               </div>
-
-              {/* CORRECT POINTS */}
 
               {answerStatus ===
                 'correct' && (
@@ -1123,36 +901,24 @@ function Game() {
                 </div>
               )}
 
-              {/* PREVIEW STATUS */}
-
               <div className="game-feedback__points">
                 {previewComplete
                   ? 'PREVIEW COMPLETE'
                   : 'PREVIEW CONTINUES'}
               </div>
-
             </div>
           )}
 
-          {/* GAME STATUS */}
-
           <div className="game-status">
-
             <div className="game-streak">
-              <span>
-                STREAK
-              </span>
-
+              <span>STREAK</span>
               <strong>
                 {streak}
               </strong>
             </div>
 
             <div className="game-listening-time">
-              <span>
-                LISTEN TIME
-              </span>
-
+              <span>LISTEN TIME</span>
               <strong>
                 {timeRemaining < 1
                   ? `${timeRemaining.toFixed(1)}s`
@@ -1161,14 +927,10 @@ function Game() {
                     )}s`}
               </strong>
             </div>
-
           </div>
-
-          {/* NEXT SONG */}
 
           {isAnswered && (
             <div className="game-next-area">
-
               {!previewComplete && (
                 <div className="game-next-status">
                   <span>
@@ -1194,10 +956,8 @@ function Game() {
                     ? 'SEE RESULTS'
                     : 'NEXT SONG →'}
               </button>
-
             </div>
           )}
-
         </main>
       </div>
     </div>

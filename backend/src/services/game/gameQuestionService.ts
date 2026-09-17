@@ -59,8 +59,12 @@ async function enrichReleaseYear(
 async function getEligibleTracks(
   type: QuestionType,
   decade?: number,
+  excludedTrackIds: string[] = [],
 ): Promise<MusicTrack[]> {
   const maxAttempts = 3
+
+  const excludedIds =
+    new Set(excludedTrackIds)
 
   for (
     let attempt = 1;
@@ -74,9 +78,12 @@ async function getEligibleTracks(
       )
 
     let eligibleTracks =
-      discoveredTracks.filter(
-        isPlayableMusicTrack,
-      )
+      discoveredTracks
+        .filter(isPlayableMusicTrack)
+        .filter(
+          (track) =>
+            !excludedIds.has(track.id),
+        )
 
     if (type !== 'guess-the-year') {
       if (eligibleTracks.length > 0) {
@@ -133,11 +140,13 @@ export async function generateGameQuestion(
   type: QuestionType,
   difficulty: QuestionDifficulty,
   decade?: number,
+  excludedTrackIds: string[] = [],
 ) {
   const eligibleTracks =
     await getEligibleTracks(
       type,
       decade,
+      excludedTrackIds,
     )
 
   if (eligibleTracks.length === 0) {
@@ -156,6 +165,6 @@ export async function generateGameQuestion(
     type,
     difficulty,
     decade,
+    excludedTrackIds,
   )
 }
-

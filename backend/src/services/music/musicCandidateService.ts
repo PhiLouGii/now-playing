@@ -63,6 +63,7 @@ export type MusicCandidate = {
 type CandidatePoolOptions = {
   requireReleaseYear?: boolean
   decade?: number
+  excludedTrackIds?: Set<string>
 }
 
 function normalize(value: string): string {
@@ -85,15 +86,32 @@ function isSameTrack(
   )
 }
 
+function isExcludedTrack(
+  track: MusicTrack,
+  excludedTrackIds: Set<string>,
+): boolean {
+  return excludedTrackIds.has(track.id)
+}
+
 function addCandidate(
   candidates: MusicCandidate[],
   candidate: MusicCandidate,
   correctTrack: MusicTrack,
+  excludedTrackIds: Set<string> = new Set(),
 ): void {
   if (
     isSameTrack(
       candidate.track,
       correctTrack,
+    )
+  ) {
+    return
+  }
+
+  if (
+    isExcludedTrack(
+      candidate.track,
+      excludedTrackIds,
     )
   ) {
     return
@@ -128,7 +146,7 @@ function filterCandidatesByDecade(
         undefined &&
       candidate.track.releaseYear >=
         decade &&
-      candidate.track.releaseYear <
+      candidate.track.releaseYear < 
         decadeEnd,
   )
 }
@@ -394,6 +412,19 @@ function filterCandidatesByRequirements(
       )
   }
 
+  if (
+    options.excludedTrackIds &&
+    options.excludedTrackIds.size > 0
+  ) {
+    filtered =
+      filtered.filter(
+        (candidate) =>
+          !options.excludedTrackIds!.has(
+            candidate.track.id,
+          ),
+      )
+  }
+
   return filtered
 }
 
@@ -403,6 +434,10 @@ export async function getCandidatePool(
 ): Promise<MusicCandidate[]> {
   const candidates: MusicCandidate[] =
     []
+
+  const excludedTrackIds =
+    options.excludedTrackIds ??
+    new Set<string>()
 
   const sameArtist =
     await getSameArtistCandidates(
@@ -415,6 +450,7 @@ export async function getCandidatePool(
       candidates,
       candidate,
       correctTrack,
+      excludedTrackIds,
     )
   }
 
@@ -429,6 +465,7 @@ export async function getCandidatePool(
       candidates,
       candidate,
       correctTrack,
+      excludedTrackIds,
     )
   }
 
@@ -443,6 +480,7 @@ export async function getCandidatePool(
       candidates,
       candidate,
       correctTrack,
+      excludedTrackIds,
     )
   }
 
@@ -461,6 +499,7 @@ export async function getCandidatePool(
         candidates,
         candidate,
         correctTrack,
+        excludedTrackIds,
       )
     }
   }

@@ -110,6 +110,7 @@ export async function generateQuestion(
   type: QuestionType = 'name-the-song',
   difficulty: QuestionDifficulty = 'medium',
   decade?: number,
+  excludedTrackIds: string[] = [],
 ): Promise<GeneratedQuestion> {
   const candidates =
     await getCandidatePool(
@@ -118,6 +119,8 @@ export async function generateQuestion(
         requireReleaseYear:
           type === 'guess-the-year',
         decade,
+        excludedTrackIds:
+          new Set(excludedTrackIds),
       },
     )
 

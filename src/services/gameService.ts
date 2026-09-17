@@ -13,9 +13,26 @@ export async function generateQuestion(
   type: Question['type'],
   difficulty: Question['difficulty'],
   decade?: number,
+  excludedTrackIds: string[] = [],
 ): Promise<Question> {
+  const params = new URLSearchParams()
+
+  params.set('type', type)
+  params.set('difficulty', difficulty)
+
+  if (decade !== undefined) {
+    params.set('decade', String(decade))
+  }
+
+  if (excludedTrackIds.length > 0) {
+    params.set(
+      'exclude',
+      excludedTrackIds.join(','),
+    )
+  }
+
   const response = await fetch(
-    `${API_URL}/game/question?type=${encodeURIComponent(type)}&difficulty=${encodeURIComponent(difficulty)}${decade !== undefined ? `&decade=${encodeURIComponent(decade)}` : ''}`,
+    `${API_URL}/game/question?${params.toString()}`,
   )
 
   if (!response.ok) {

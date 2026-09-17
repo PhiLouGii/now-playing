@@ -40,6 +40,14 @@ export async function getGameQuestion(
         ? Number(req.query.decade)
         : undefined
 
+    const excludedTrackIds =
+      typeof req.query.exclude === 'string'
+        ? req.query.exclude
+            .split(',')
+            .map((id) => id.trim())
+            .filter(Boolean)
+        : []
+
     if (!QUESTION_TYPES.includes(type)) {
       return res.status(400).json({
         error: 'Invalid question type',
@@ -68,6 +76,7 @@ export async function getGameQuestion(
         type,
         difficulty,
         decade,
+        excludedTrackIds,
       )
 
     return res.json({
