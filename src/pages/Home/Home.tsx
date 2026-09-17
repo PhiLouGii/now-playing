@@ -3,7 +3,7 @@ import { LogOut } from 'lucide-react'
 import Hero from '../../components/home/Hero'
 import DailyChallenge from '../../components/home/DailyChallenge'
 import GameModes from '../../components/home/GameModes'
-import FeaturedGenres from '../../components/home/FeaturedGenres'
+import PlayByCategory from '../../components/home/PlayByCategory'
 import { useAuth } from '../../context/AuthContext'
 
 function Home() {
@@ -26,7 +26,7 @@ function Home() {
       <Hero />
       <DailyChallenge />
       <GameModes />
-      <FeaturedGenres />
+      <PlayByCategory />
 
       {!loading && user && (
         <button
