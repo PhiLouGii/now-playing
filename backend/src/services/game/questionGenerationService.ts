@@ -113,16 +113,17 @@ export async function generateQuestion(
   excludedTrackIds: string[] = [],
 ): Promise<GeneratedQuestion> {
   const candidates =
-    await getCandidatePool(
-      correctTrack,
-      {
-        requireReleaseYear:
-          type === 'guess-the-year',
-        decade,
-        excludedTrackIds:
-          new Set(excludedTrackIds),
-      },
-    )
+  await getCandidatePool(
+    correctTrack,
+    {
+      requireReleaseYear:
+        type === 'guess-the-year',
+      decade,
+      questionType: type,
+      excludedTrackIds:
+        new Set(excludedTrackIds),
+    },
+  )
 
   const distractors =
     selectDistractors(

@@ -1,6 +1,9 @@
 import type { MusicTrack } from './musicProvider.js'
+
 import { deezerMusicProvider } from './deezerMusicProvider.js'
 import { filterGameTracks } from './musicTrackFilter.js'
+
+import { DISCOVERY_ARTISTS } from '../../data/discoveryArtists.js'
 
 import { artists1960s } from '../../data/eraArtists/1960s.js'
 import { artists1970s } from '../../data/eraArtists/1970s.js'
@@ -16,6 +19,14 @@ function shuffle<T>(items: T[]): T[] {
   )
 }
 
+function normalize(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[()[\]{}]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 function deduplicateTracks(
   tracks: MusicTrack[],
 ): MusicTrack[] {
@@ -23,67 +34,47 @@ function deduplicateTracks(
 
   return tracks.filter((track) => {
     const key =
-      track.isrc ??
-      `${track.artist}-${track.title}`.toLowerCase()
+      `${normalize(track.title)}::${normalize(track.artist)}`
 
     if (seen.has(key)) {
       return false
     }
 
     seen.add(key)
-
     return true
   })
 }
 
 function limitTracksPerArtist(
   tracks: MusicTrack[],
-  maxPerArtist = 2,
+  maxPerArtist: number,
 ): MusicTrack[] {
-  const artistCounts =
-    new Map<string, number>()
+  const counts = new Map<string, number>()
 
-  return shuffle(tracks).filter(
-    (track) => {
-      const artist =
-        track.artist.toLowerCase()
+  return tracks.filter((track) => {
+    const artist = normalize(track.artist)
+    const count = counts.get(artist) ?? 0
 
-      const count =
-        artistCounts.get(
-          artist,
-        ) ?? 0
+    if (count >= maxPerArtist) {
+      return false
+    }
 
-      if (
-        count >= maxPerArtist
-      ) {
-        return false
-      }
-
-      artistCounts.set(
-        artist,
-        count + 1,
-      )
-
-      return true
-    },
-  )
+    counts.set(artist, count + 1)
+    return true
+  })
 }
 
 function filterByDecade(
   tracks: MusicTrack[],
   decade: number,
 ): MusicTrack[] {
-  const decadeEnd =
-    decade + 10
+  const end = decade + 10
 
   return tracks.filter(
     (track) =>
-      track.releaseYear !==
-        undefined &&
-      track.releaseYear >=
-        decade &&
-      track.releaseYear <
-        decadeEnd,
+      track.releaseYear !== undefined &&
+      track.releaseYear >= decade &&
+      track.releaseYear < end,
   )
 }
 
@@ -93,25 +84,18 @@ function getArtistsForDecade(
   switch (decade) {
     case 1960:
       return artists1960s
-
     case 1970:
       return artists1970s
-
     case 1980:
       return artists1980s
-
     case 1990:
       return artists1990s
-
     case 2000:
       return artists2000s
-
     case 2010:
       return artists2010s
-
     case 2020:
       return artists2020s
-
     default:
       return []
   }
@@ -122,20 +106,17 @@ async function enrichReleaseYears(
 ): Promise<MusicTrack[]> {
   return Promise.all(
     tracks.map(async (track) => {
-      if (
-        track.releaseYear !==
-        undefined
-      ) {
+      if (track.releaseYear !== undefined) {
         return track
       }
 
       try {
-        const detailedTrack =
+        const detailed =
           await deezerMusicProvider.getTrackById(
             track.id,
           )
 
-        return detailedTrack ?? track
+        return detailed ?? track
       } catch {
         return track
       }
@@ -145,18 +126,26 @@ async function enrichReleaseYears(
 
 async function discoverFromArtists(
   artists: string[],
+  tracksPerArtist = 20,
 ): Promise<MusicTrack[]> {
   const results =
     await Promise.all(
       artists.map(async (artist) => {
         try {
-          return await deezerMusicProvider.searchTracks(
-            artist,
-            10,
+          const tracks =
+            await deezerMusicProvider.searchTracks(
+              artist,
+              tracksPerArtist,
+            )
+
+          return tracks.filter(
+            (track) =>
+              normalize(track.artist) ===
+              normalize(artist),
           )
         } catch (error) {
           console.error(
-            `Failed to search Deezer for artist ${artist}:`,
+            `Failed to discover tracks for ${artist}:`,
             error,
           )
 
@@ -165,7 +154,66 @@ async function discoverFromArtists(
       }),
     )
 
-  return results.flat()
+  const flattened = results.flat()
+
+  return deduplicateTracks(
+    filterGameTracks(flattened),
+  )
+}
+
+async function discoverFromBasicArtists(
+  limit: number,
+): Promise<MusicTrack[]> {
+  const artists = shuffle(
+    DISCOVERY_ARTISTS,
+  )
+
+  const candidates: MusicTrack[] = []
+
+  const batchSize = 15
+
+  for (
+    let index = 0;
+    index < artists.length;
+    index += batchSize
+  ) {
+    const batch = artists.slice(
+      index,
+      index + batchSize,
+    )
+
+    const discovered =
+      await discoverFromArtists(
+        batch,
+        20,
+      )
+
+    candidates.push(...discovered)
+
+    const usable =
+      limitTracksPerArtist(
+        deduplicateTracks(
+          filterGameTracks(candidates),
+        ),
+        2,
+      )
+
+    if (usable.length >= limit) {
+      return shuffle(usable).slice(
+        0,
+        limit,
+      )
+    }
+  }
+
+  return shuffle(
+    limitTracksPerArtist(
+      deduplicateTracks(
+        filterGameTracks(candidates),
+      ),
+      2,
+    ),
+  ).slice(0, limit)
 }
 
 async function discoverTracksForDecade(
@@ -173,33 +221,22 @@ async function discoverTracksForDecade(
   decade: number,
 ): Promise<MusicTrack[]> {
   const artists =
-    getArtistsForDecade(
-      decade,
-    )
-
-  if (artists.length === 0) {
-    return []
-  }
+    getArtistsForDecade(decade)
 
   const selectedArtists =
-    shuffle(artists)
-
-  const discovered =
-    await discoverFromArtists(
-      selectedArtists,
+    shuffle(artists).slice(
+      0,
+      Math.min(20, artists.length),
     )
 
-  const playable =
-    filterGameTracks(
-      deduplicateTracks(
-        discovered,
-      ),
+  const tracks =
+    await discoverFromArtists(
+      selectedArtists,
+      20,
     )
 
   const enriched =
-    await enrichReleaseYears(
-      playable,
-    )
+    await enrichReleaseYears(tracks)
 
   const decadeTracks =
     filterByDecade(
@@ -207,192 +244,24 @@ async function discoverTracksForDecade(
       decade,
     )
 
-  const limited =
-    limitTracksPerArtist(
-      decadeTracks,
-      2,
-    )
-
   return shuffle(
-    limited,
-  ).slice(
-    0,
-    limit,
-  )
-}
-
-async function discoverFromGenres(
-  target: number,
-): Promise<MusicTrack[]> {
-  const candidates: MusicTrack[] =
-    []
-
-  const genres =
-    await deezerMusicProvider.getGenres()
-
-  const usableGenres =
-    genres.filter(
-      (genre) =>
-        genre.id !== undefined &&
-        genre.id !== 0,
-    )
-
-  const selectedGenres =
-    shuffle(usableGenres).slice(
-      0,
-      Math.min(
-        15,
-        usableGenres.length,
-      ),
-    )
-
-  for (const genre of selectedGenres) {
-    try {
-      const artists =
-        await deezerMusicProvider.getGenreArtists(
-          genre.id,
-          25,
-        )
-
-      const selectedArtists =
-        shuffle(artists).slice(
-          0,
-          12,
-        )
-
-      for (const artist of selectedArtists) {
-        if (!artist.id) {
-          continue
-        }
-
-        try {
-          const tracks =
-            await deezerMusicProvider.getArtistTopTracks(
-              artist.id,
-              10,
-            )
-
-          candidates.push(
-            ...tracks,
-          )
-
-          const unique =
-            deduplicateTracks(
-              candidates,
-            )
-
-          const usable =
-            filterGameTracks(
-              unique,
-            )
-
-          if (
-            usable.length >=
-            target
-          ) {
-            return usable
-          }
-        } catch (error) {
-          console.error(
-            `Failed to load tracks for Deezer artist ${artist.id}:`,
-            error,
-          )
-        }
-      }
-    } catch (error) {
-      console.error(
-        `Failed to load Deezer genre ${genre.id}:`,
-        error,
-      )
-    }
-  }
-
-  return filterGameTracks(
-    deduplicateTracks(
-      candidates,
+    limitTracksPerArtist(
+      deduplicateTracks(decadeTracks),
+      2,
     ),
-  )
-}
-
-async function discoverLargePool(
-  target: number,
-): Promise<MusicTrack[]> {
-  const candidates: MusicTrack[] =
-    []
-
-  try {
-    const chartTracks =
-      await deezerMusicProvider.getChartTracks(
-        100,
-      )
-
-    candidates.push(
-      ...chartTracks,
-    )
-  } catch (error) {
-    console.error(
-      'Failed to load Deezer chart:',
-      error,
-    )
-  }
-
-  try {
-    const genreTracks =
-      await discoverFromGenres(
-        target,
-      )
-
-    candidates.push(
-      ...genreTracks,
-    )
-  } catch (error) {
-    console.error(
-      'Failed to discover tracks from genres:',
-      error,
-    )
-  }
-
-  return filterGameTracks(
-    deduplicateTracks(
-      candidates,
-    ),
-  )
+  ).slice(0, limit)
 }
 
 export async function discoverTracks(
   limit = 20,
   decade?: number,
 ): Promise<MusicTrack[]> {
-  if (
-    decade !== undefined
-  ) {
+  if (decade !== undefined) {
     return discoverTracksForDecade(
       limit,
       decade,
     )
   }
 
-  const targetPoolSize =
-    Math.max(
-      limit * 3,
-      50,
-    )
-
-  const discovered =
-    await discoverLargePool(
-      targetPoolSize,
-    )
-
-  const usable =
-    limitTracksPerArtist(
-      discovered,
-      2,
-    )
-
-  return shuffle(
-    usable,
-  ).slice(
-    0,
-    limit,
-  )
+  return discoverFromBasicArtists(limit)
 }

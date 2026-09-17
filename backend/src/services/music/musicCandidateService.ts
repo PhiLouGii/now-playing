@@ -4,6 +4,8 @@ import { deezerMusicProvider } from './deezerMusicProvider.js'
 import { lastFmMusicProvider } from './lastFmMusicProvider.js'
 import { filterGameTracks } from './musicTrackFilter.js'
 
+import { DISCOVERY_ARTISTS } from '../../data/discoveryArtists.js'
+
 import { artists1960s } from '../../data/eraArtists/1960s.js'
 import { artists1970s } from '../../data/eraArtists/1970s.js'
 import { artists1980s } from '../../data/eraArtists/1980s.js'
@@ -11,6 +13,8 @@ import { artists1990s } from '../../data/eraArtists/1990s.js'
 import { artists2000s } from '../../data/eraArtists/2000s.js'
 import { artists2010s } from '../../data/eraArtists/2010s.js'
 import { artists2020s } from '../../data/eraArtists/2020s.js'
+
+import type { QuestionType } from '../game/gameTypes.js'
 
 function shuffle<T>(items: T[]): T[] {
   return [...items].sort(
@@ -24,25 +28,18 @@ function getArtistsForDecade(
   switch (decade) {
     case 1960:
       return artists1960s
-
     case 1970:
       return artists1970s
-
     case 1980:
       return artists1980s
-
     case 1990:
       return artists1990s
-
     case 2000:
       return artists2000s
-
     case 2010:
       return artists2010s
-
     case 2020:
       return artists2020s
-
     default:
       return []
   }
@@ -53,6 +50,7 @@ export type CandidateSource =
   | 'same-album'
   | 'similar'
   | 'era'
+  | 'discovery'
 
 export type MusicCandidate = {
   track: MusicTrack
@@ -64,6 +62,7 @@ type CandidatePoolOptions = {
   requireReleaseYear?: boolean
   decade?: number
   excludedTrackIds?: Set<string>
+  questionType?: QuestionType
 }
 
 function normalize(value: string): string {
@@ -137,8 +136,7 @@ function filterCandidatesByDecade(
   candidates: MusicCandidate[],
   decade: number,
 ): MusicCandidate[] {
-  const decadeEnd =
-    decade + 10
+  const decadeEnd = decade + 10
 
   return candidates.filter(
     (candidate) =>
@@ -146,7 +144,7 @@ function filterCandidatesByDecade(
         undefined &&
       candidate.track.releaseYear >=
         decade &&
-      candidate.track.releaseYear < 
+      candidate.track.releaseYear <
         decadeEnd,
   )
 }
@@ -241,6 +239,7 @@ async function getSameAlbumCandidates(
 async function getSimilarCandidates(
   correctTrack: MusicTrack,
   limit = 10,
+  excludedTrackIds: Set<string> = new Set(),
 ): Promise<MusicCandidate[]> {
   const similarTracks =
     await lastFmMusicProvider.getSimilarTracks(
@@ -270,6 +269,7 @@ async function getSimilarCandidates(
         similarity: similar.similarity,
       },
       correctTrack,
+      excludedTrackIds,
     )
   }
 
@@ -312,6 +312,7 @@ async function getEraCandidates(
   decade: number,
   correctTrack: MusicTrack,
   limit = 30,
+  excludedTrackIds: Set<string> = new Set(),
 ): Promise<MusicCandidate[]> {
   const artists =
     getArtistsForDecade(decade)
@@ -323,10 +324,7 @@ async function getEraCandidates(
   const selectedArtists =
     shuffle(artists).slice(
       0,
-      Math.min(
-        15,
-        artists.length,
-      ),
+      Math.min(15, artists.length),
     )
 
   const results =
@@ -350,8 +348,7 @@ async function getEraCandidates(
       ),
     )
 
-  const candidates: MusicCandidate[] =
-    []
+  const candidates: MusicCandidate[] = []
 
   for (const tracks of results) {
     const usable =
@@ -365,6 +362,7 @@ async function getEraCandidates(
           source: 'era',
         },
         correctTrack,
+        excludedTrackIds,
       )
     }
   }
@@ -377,34 +375,175 @@ async function getEraCandidates(
   return filterCandidatesByDecade(
     hydrated,
     decade,
-  ).slice(
-    0,
-    limit,
+  ).slice(0, limit)
+}
+
+function getAnswerValue(
+  track: MusicTrack,
+  type: QuestionType,
+): string | null {
+  switch (type) {
+    case 'name-the-song':
+      return normalize(track.title)
+
+    case 'name-the-artist':
+      return normalize(track.artist)
+
+    case 'name-the-album':
+      return normalize(track.album)
+
+    case 'guess-the-year':
+      return track.releaseYear !== undefined
+        ? String(track.releaseYear)
+        : null
+
+    default:
+      return null
+  }
+}
+
+function hasEnoughAnswerVariety(
+  candidates: MusicCandidate[],
+  correctTrack: MusicTrack,
+  type: QuestionType,
+): boolean {
+  const values = new Set<string>()
+
+  const correctAnswer =
+    getAnswerValue(
+      correctTrack,
+      type,
+    )
+
+  for (const candidate of candidates) {
+    const value =
+      getAnswerValue(
+        candidate.track,
+        type,
+      )
+
+    if (
+      value === null ||
+      value === correctAnswer
+    ) {
+      continue
+    }
+
+    values.add(value)
+
+    if (values.size >= 3) {
+      return true
+    }
+  }
+
+  return false
+}
+
+async function getDiscoveryCandidates(
+  correctTrack: MusicTrack,
+  excludedTrackIds: Set<string>,
+  limit = 30,
+): Promise<MusicCandidate[]> {
+  const artists = shuffle(
+    DISCOVERY_ARTISTS.filter(
+      (artist) =>
+        normalize(artist) !==
+        normalize(correctTrack.artist),
+    ),
   )
+
+  const candidates: MusicCandidate[] = []
+
+  const batchSize = 10
+
+  for (
+    let index = 0;
+    index < artists.length;
+    index += batchSize
+  ) {
+    const batch = artists.slice(
+      index,
+      index + batchSize,
+    )
+
+    const results =
+      await Promise.all(
+        batch.map(async (artist) => {
+          try {
+            return await deezerMusicProvider.searchTracks(
+              artist,
+              10,
+            )
+          } catch (error) {
+            console.error(
+              `Failed to search Deezer for discovery artist ${artist}:`,
+              error,
+            )
+
+            return []
+          }
+        }),
+      )
+
+    for (
+      let resultIndex = 0;
+      resultIndex < results.length;
+      resultIndex++
+    ) {
+      const tracks =
+        filterGameTracks(
+          results[resultIndex],
+        )
+
+      const artist =
+        batch[resultIndex]
+
+      for (const track of tracks) {
+        if (
+          normalize(track.artist) !==
+          normalize(artist)
+        ) {
+          continue
+        }
+
+        addCandidate(
+          candidates,
+          {
+            track,
+            source: 'discovery',
+          },
+          correctTrack,
+          excludedTrackIds,
+        )
+      }
+    }
+
+    if (candidates.length >= limit) {
+      break
+    }
+  }
+
+  return candidates.slice(0, limit)
 }
 
 function filterCandidatesByRequirements(
   candidates: MusicCandidate[],
   options: CandidatePoolOptions,
 ): MusicCandidate[] {
-  let filtered =
-    candidates
+  let filtered = candidates
 
   if (
     options.requireReleaseYear ||
     options.decade !== undefined
   ) {
-    filtered =
-      filtered.filter(
-        (candidate) =>
-          candidate.track.releaseYear !==
-          undefined,
-      )
+    filtered = filtered.filter(
+      (candidate) =>
+        candidate.track.releaseYear !==
+        undefined,
+    )
   }
 
-  if (
-    options.decade !== undefined
-  ) {
+  if (options.decade !== undefined) {
     filtered =
       filterCandidatesByDecade(
         filtered,
@@ -432,12 +571,15 @@ export async function getCandidatePool(
   correctTrack: MusicTrack,
   options: CandidatePoolOptions = {},
 ): Promise<MusicCandidate[]> {
-  const candidates: MusicCandidate[] =
-    []
+  const candidates: MusicCandidate[] = []
 
   const excludedTrackIds =
     options.excludedTrackIds ??
     new Set<string>()
+
+  // ─────────────────────────────
+  // 1. Same artist
+  // ─────────────────────────────
 
   const sameArtist =
     await getSameArtistCandidates(
@@ -454,6 +596,10 @@ export async function getCandidatePool(
     )
   }
 
+  // ─────────────────────────────
+  // 2. Same album
+  // ─────────────────────────────
+
   const sameAlbum =
     await getSameAlbumCandidates(
       correctTrack,
@@ -469,10 +615,15 @@ export async function getCandidatePool(
     )
   }
 
+  // ─────────────────────────────
+  // 3. Last.fm similar
+  // ─────────────────────────────
+
   const similar =
     await getSimilarCandidates(
       correctTrack,
       10,
+      excludedTrackIds,
     )
 
   for (const candidate of similar) {
@@ -484,14 +635,17 @@ export async function getCandidatePool(
     )
   }
 
-  if (
-    options.decade !== undefined
-  ) {
+  // ─────────────────────────────
+  // 4. Decade candidates
+  // ─────────────────────────────
+
+  if (options.decade !== undefined) {
     const eraCandidates =
       await getEraCandidates(
         options.decade,
         correctTrack,
         30,
+        excludedTrackIds,
       )
 
     for (const candidate of eraCandidates) {
@@ -504,17 +658,51 @@ export async function getCandidatePool(
     }
   }
 
+  // ─────────────────────────────
+  // 5. Curated discovery fallback
+  // ─────────────────────────────
+
+  if (
+    options.questionType !== undefined &&
+    options.decade === undefined &&
+    !hasEnoughAnswerVariety(
+      candidates,
+      correctTrack,
+      options.questionType,
+    )
+  ) {
+    const discoveryCandidates =
+      await getDiscoveryCandidates(
+        correctTrack,
+        excludedTrackIds,
+        30,
+      )
+
+    for (const candidate of discoveryCandidates) {
+      addCandidate(
+        candidates,
+        candidate,
+        correctTrack,
+        excludedTrackIds,
+      )
+    }
+  }
+
+  // ─────────────────────────────
+  // 6. Hydrate year-dependent pools
+  // ─────────────────────────────
+
   if (
     options.requireReleaseYear ||
     options.decade !== undefined
   ) {
-    const hydratedCandidates =
+    const hydrated =
       await hydrateCandidates(
         candidates,
       )
 
     return filterCandidatesByRequirements(
-      hydratedCandidates,
+      hydrated,
       options,
     )
   }
