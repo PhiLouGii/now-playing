@@ -1,14 +1,19 @@
 .game-progress {
   width: 100%;
-  margin-top: 28px;
+
+  margin-top: 14px;
 }
 
 .game-progress__top {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
-  color: var(--color-subtle);
-  font-size: 9px;
+
+  margin-bottom: 6px;
+
+  color: var(--color-muted);
+
+  font-size: 8px;
   font-weight: 700;
   letter-spacing: 0.14em;
 }
@@ -16,14 +21,20 @@
 .game-progress__track {
   width: 100%;
   height: 3px;
+
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.06);
+
+  background: var(--color-bg-tertiary);
+
   border-radius: var(--radius-pill);
 }
 
 .game-progress__fill {
   height: 100%;
-  background: var(--gradient-primary);
+
+  background: var(--color-lilac);
+
   border-radius: inherit;
+
   transition: width var(--transition-normal);
 }

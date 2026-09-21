@@ -1,163 +1,587 @@
 .game-page {
-  min-height: calc(100vh - var(--navbar-height));
-  padding: 48px 40px 80px;
+  min-height: calc(100dvh - var(--navbar-height));
+  height: calc(100dvh - var(--navbar-height));
+
+  padding: 18px 32px 20px;
+
+  overflow: hidden;
+
+  color: var(--color-text);
+  background: var(--color-bg);
 }
 
 .game-page__container {
-  width: min(100%, 1100px);
+  width: min(100%, 1180px);
+  height: 100%;
   margin: 0 auto;
-}
 
-.game-content {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding-top: 56px;
-  text-align: center;
 }
 
+
+/* =========================================================
+   GAME CONTENT
+   ========================================================= */
+
+.game-content {
+  flex: 1;
+  min-height: 0;
+
+  display: grid;
+  grid-template-columns: minmax(360px, 0.9fr) minmax(460px, 1.1fr);
+  grid-template-rows: auto 1fr auto;
+
+  column-gap: 44px;
+  row-gap: 10px;
+
+  padding: 18px 12px 0;
+}
+
+
+/* =========================================================
+   QUESTION HEADER
+   ========================================================= */
+
 .game-content__category {
-  color: var(--color-purple-light);
+  grid-column: 1 / -1;
+
+  margin: 0;
+
+  color: var(--color-lilac);
+
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.18em;
+  line-height: 1;
 }
 
 .game-content h1 {
-  margin-top: 12px;
+  grid-column: 1 / -1;
+
+  margin: 6px 0 0;
+
+  color: var(--color-text);
+
   font-family: var(--font-display);
-  font-size: clamp(32px, 5vw, 48px);
-  font-weight: 600;
+  font-size: clamp(26px, 3vw, 38px);
+  font-weight: 700;
+  line-height: 1;
   letter-spacing: -0.04em;
 }
 
+
+/* =========================================================
+   LEFT SIDE — MUSIC PLAYER
+   ========================================================= */
+
 .game-question {
-  width: min(100%, 520px);
-  margin-top: 44px;
+  grid-column: 1;
+  grid-row: 3;
+
+  align-self: center;
+
+  width: 100%;
+  max-width: 470px;
+
+  margin: 0 auto;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  text-align: center;
 }
 
+
+/* Artwork */
+
 .game-question__art {
-  width: 280px;
+  width: min(100%, 285px);
   aspect-ratio: 1;
-  margin: 0 auto 24px;
-  border-radius: 18px;
-  background: var(--surface);
-  border: 1px solid var(--border);
+
+  margin: 0 auto 16px;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   overflow: hidden;
+
+  background:
+    radial-gradient(
+      circle at center,
+      var(--color-bg-tertiary) 0 22%,
+      var(--color-surface-alt) 23% 100%
+    );
+
+  border: 1px solid var(--border-medium);
+  border-radius: 14px;
+
+  color: var(--color-muted);
+
+  box-shadow: var(--shadow-sm);
+
+  transition:
+    border-color var(--transition-normal),
+    transform var(--transition-normal);
 }
 
 .game-question__art span {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 72px;
+  color: var(--color-muted);
+
+  font-family: var(--font-display);
+  font-size: 68px;
   font-weight: 700;
-  color: var(--muted);
+  line-height: 1;
 }
 
 .game-question__art img {
   width: 100%;
   height: 100%;
+
   object-fit: cover;
+
   display: block;
 }
 
 .game-question__art--revealed {
-  border-color: var(--purple);
+  border-color: var(--color-lilac);
 }
 
+
+/* Audio player */
+
+.game-question .audio-player {
+  width: 100%;
+  max-width: 430px;
+
+  margin: 0 auto;
+}
+
+
+/* =========================================================
+   SONG REVEAL
+   ========================================================= */
+
 .game-song-reveal {
+  width: 100%;
+
+  margin: 12px auto 0;
+
   text-align: center;
-  margin: 24px auto 0;
 }
 
 .game-song-reveal__title {
   margin: 0;
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 28px;
+
+  color: var(--color-text);
+
+  font-family: var(--font-display);
+  font-size: 22px;
   font-weight: 700;
-  color: var(--white);
+  line-height: 1.1;
 }
 
 .game-song-reveal__artist {
-  margin: 6px 0 0;
-  font-size: 17px;
-  font-weight: 600;
-  color: var(--purple-light);
+  margin: 4px 0 0;
+
+  color: var(--color-lilac);
+
+  font-size: 14px;
+  font-weight: 700;
 }
 
 .game-song-reveal__album {
-  margin: 5px 0 0;
-  font-size: 14px;
-  color: var(--muted);
+  margin: 3px 0 0;
+
+  color: var(--color-muted);
+
+  font-size: 11px;
 }
 
 .game-song-reveal__year {
-  margin: 10px 0 0;
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 16px;
+  margin: 5px 0 0;
+
+  color: var(--color-periwinkle);
+
+  font-family: var(--font-display);
+  font-size: 14px;
   font-weight: 700;
-  color: var(--cyan);
 }
 
-.game-question .audio-player {
-  margin: 28px auto 0;
+
+/* =========================================================
+   RIGHT SIDE — ANSWERS
+   ========================================================= */
+
+.game-content > .game-answer,
+.game-content > .game-answers {
+  grid-column: 2;
+}
+
+
+/*
+   AnswerGrid itself owns the actual answer grid.
+   Give it a compact layout area on desktop.
+*/
+
+.game-answers {
+  align-self: center;
+
+  width: 100%;
+
+  margin: 0 !important;
+}
+
+
+/*
+   Some versions of AnswerGrid use .game-answer directly.
+*/
+
+.game-answer {
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--border-medium);
+
+  font-family: var(--font-body);
 }
 
 .game-answer:hover {
+  color: var(--color-text);
   background: var(--color-surface-hover);
-  border-color: rgba(139, 92, 246, 0.4);
-  transform: translateY(-2px);
+  border-color: var(--color-lilac);
+
+  transform: translateY(-1px);
 }
 
-.game-next-area {
+
+/* =========================================================
+   ACTIONS
+   ========================================================= */
+
+.game-actions {
+  grid-column: 2;
+
+  align-self: end;
+
+  width: 100%;
+
+  margin: 8px 0 0;
+
   display: flex;
-  flex-direction: column;
   align-items: center;
-  margin-top: 24px;
+  justify-content: flex-start;
+
+  gap: 8px;
 }
 
-.game-next {
-  margin-top: 12px;
-  min-height: 48px;
-  padding: 0 28px;
-  color: var(--color-white);
-  background: var(--gradient-primary);
-  border: 0;
+.game-advance,
+.game-reveal {
+  min-height: 38px;
+
+  padding: 0 15px;
+
   border-radius: var(--radius-md);
-  font-size: 13px;
+
+  font-family: var(--font-body);
+  font-size: 9px;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  box-shadow: var(--glow-purple);
+  letter-spacing: 0.1em;
+
+  cursor: pointer;
+
   transition:
-    transform var(--transition-fast),
-    box-shadow var(--transition-normal);
+    color var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
 }
 
-.game-next:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 0 40px rgba(139, 92, 246, 0.4);
+
+/* Advance */
+
+.game-advance {
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+
+  border: 1px solid var(--border-medium);
 }
 
-.game-next:disabled {
-  cursor: default;
-  opacity: 0.5;
+.game-advance:hover:not(:disabled) {
+  color: var(--color-text);
+  background: var(--color-surface-hover);
+  border-color: var(--color-lilac);
+
+  transform: translateY(-1px);
 }
 
-.game-next-status {
-  margin-top: 24px;
+.game-advance:active:not(:disabled) {
+  transform: translateY(0);
+}
 
+.game-advance:disabled {
   color: var(--color-subtle);
+  background: var(--color-bg-secondary);
+
+  border-color: var(--border-subtle);
+
+  opacity: 0.55;
+  cursor: default;
+}
+
+
+/* Reveal */
+
+.game-reveal {
+  color: var(--color-error-dark);
+  background: #F6EDEE;
+
+  border: 1px solid #E2C9CC;
+}
+
+.game-reveal:hover {
+  color: var(--color-text);
+  background: #F1E2E4;
+  border-color: var(--color-error);
+
+  transform: translateY(-1px);
+}
+
+.game-reveal:active {
+  transform: translateY(0);
+}
+
+
+/* =========================================================
+   FEEDBACK
+   ========================================================= */
+
+.game-feedback {
+  grid-column: 2;
+
+  align-self: center;
+
+  width: 100%;
+
+  margin: 0;
+
+  padding: 13px 16px;
+
+  background: var(--color-surface);
+
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+
+  text-align: left;
+
+  animation: scale-in 180ms ease-out;
+}
+
+.game-feedback--correct {
+  background: #EEF5F0;
+  border-color: #C4D8C9;
+}
+
+.game-feedback--incorrect {
+  background: #F7EEEE;
+  border-color: #E0C7C7;
+}
+
+.game-feedback--timeout {
+  background: #F5F1E7;
+  border-color: #DED3B7;
+}
+
+.game-feedback__label {
+  margin: 0;
 
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.16em;
-
-  animation: pulse 1.5s ease-in-out infinite;
 }
 
-@keyframes pulse {
+.game-feedback--correct .game-feedback__label {
+  color: var(--color-success-dark);
+}
+
+.game-feedback--incorrect .game-feedback__label {
+  color: var(--color-error-dark);
+}
+
+.game-feedback--timeout .game-feedback__label {
+  color: #75663C;
+}
+
+.game-feedback__answer {
+  margin-top: 4px;
+
+  color: var(--color-text);
+
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.game-feedback__points {
+  margin-top: 5px;
+
+  color: var(--color-muted);
+
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.game-feedback__points span {
+  margin-left: 5px;
+
+  color: var(--color-lilac);
+}
+
+
+/* =========================================================
+   STATUS
+   ========================================================= */
+
+.game-status {
+  grid-column: 1 / -1;
+
+  width: 100%;
+
+  min-height: 25px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 2px;
+
+  color: var(--color-muted);
+}
+
+.game-streak,
+.game-listening-time {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  color: var(--color-muted);
+
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.game-streak strong,
+.game-listening-time strong {
+  color: var(--color-text);
+
+  font-family: var(--font-display);
+  font-size: 14px;
+}
+
+.game-result {
+  color: var(--color-success-dark);
+
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+
+/* =========================================================
+   NEXT SONG
+   ========================================================= */
+
+.game-next-area {
+  grid-column: 1 / -1;
+
+  min-height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 14px;
+
+  margin: 0;
+}
+
+.game-next-status {
+  margin: 0;
+
+  color: var(--color-muted);
+
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+
+  animation: game-pulse 1.5s ease-in-out infinite;
+}
+
+.game-next {
+  min-height: 40px;
+
+  padding: 0 20px;
+
+  color: var(--color-text);
+
+  background: var(--color-lilac);
+
+  border: 1px solid var(--color-lilac);
+  border-radius: var(--radius-md);
+
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+
+  box-shadow: var(--shadow-sm);
+
+  cursor: pointer;
+
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.game-next:hover:not(:disabled) {
+  background: var(--color-periwinkle);
+  border-color: var(--color-periwinkle);
+
+  transform: translateY(-1px);
+}
+
+.game-next:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.game-next:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+
+/* =========================================================
+   LOADING / EMPTY STATES
+   ========================================================= */
+
+.game-page .game-content > p:not(.game-content__category) {
+  color: var(--color-muted);
+}
+
+.game-page .game-content > h1 {
+  color: var(--color-text);
+}
+
+
+/* =========================================================
+   ANIMATION
+   ========================================================= */
+
+@keyframes game-pulse {
   0%,
   100% {
     opacity: 0.45;
@@ -168,235 +592,179 @@
   }
 }
 
-.game-status {
-  width: min(100%, 720px);
-  min-height: 28px;
-  margin-top: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
 
-.game-feedback {
-  width: min(100%, 720px);
-  margin-top: 24px;
-  padding: 18px 22px;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  text-align: left;
-  animation: scale-in 220ms ease-out;
-}
+/* =========================================================
+   DESKTOP — SHORT SCREENS
+   ========================================================= */
 
-.game-feedback--correct {
-  background: rgba(34, 211, 238, 0.06);
-  border-color: rgba(34, 211, 238, 0.25);
-}
-
-.game-feedback--incorrect {
-  background: rgba(236, 72, 153, 0.06);
-  border-color: rgba(236, 72, 153, 0.25);
-}
-
-.game-feedback--timeout {
-  background: rgba(250, 204, 21, 0.05);
-  border-color: rgba(250, 204, 21, 0.25);
-}
-
-.game-feedback__label {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-}
-
-.game-feedback--correct .game-feedback__label {
-  color: var(--color-cyan);
-}
-
-.game-feedback--incorrect .game-feedback__label {
-  color: var(--color-pink);
-}
-
-.game-feedback--timeout .game-feedback__label {
-  color: var(--color-yellow);
-}
-
-.game-feedback__answer {
-  margin-top: 6px;
-  color: var(--color-white);
-  font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 600;
-}
-
-.game-feedback__points {
-  margin-top: 8px;
-  color: var(--color-subtle);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-}
-
-.game-feedback__points span {
-  margin-left: 6px;
-  color: var(--color-yellow);
-}
-
-.game-streak {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--color-subtle);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-}
-
-.game-streak strong {
-  color: var(--color-yellow);
-  font-family: var(--font-display);
-  font-size: 16px;
-}
-
-.game-result {
-  color: var(--color-cyan);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-}
-
-/* =========================
-   GAME ACTIONS
-   ========================= */
-
-.game-actions {
-  width: min(100%, 720px);
-  margin-top: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-}
-
-/* Advance */
-
-.game-advance {
-  min-height: 44px;
-  padding: 0 20px;
-
-  color: var(--color-subtle);
-  background: var(--color-surface);
-
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-md);
-
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-
-  cursor: pointer;
-
-  transition:
-    color var(--transition-fast),
-    background var(--transition-fast),
-    border-color var(--transition-fast),
-    transform var(--transition-fast),
-    box-shadow var(--transition-normal);
-}
-
-.game-advance:hover:not(:disabled) {
-  color: var(--color-white);
-  background: var(--color-surface-hover);
-  border-color: rgba(139, 92, 246, 0.45);
-
-  transform: translateY(-2px);
-
-  box-shadow: 0 0 24px rgba(139, 92, 246, 0.12);
-}
-
-.game-advance:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.game-advance:disabled {
-  color: var(--muted);
-  background: transparent;
-  border-color: var(--border-subtle);
-
-  opacity: 0.45;
-  cursor: default;
-}
-
-
-/* Reveal Answer */
-
-.game-reveal {
-  min-height: 44px;
-  padding: 0 20px;
-
-  color: var(--color-pink);
-  background: rgba(236, 72, 153, 0.05);
-
-  border: 1px solid rgba(236, 72, 153, 0.2);
-  border-radius: var(--radius-md);
-
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-
-  cursor: pointer;
-
-  transition:
-    color var(--transition-fast),
-    background var(--transition-fast),
-    border-color var(--transition-fast),
-    transform var(--transition-fast),
-    box-shadow var(--transition-normal);
-}
-
-.game-reveal:hover {
-  color: var(--color-white);
-  background: rgba(236, 72, 153, 0.1);
-  border-color: rgba(236, 72, 153, 0.4);
-
-  transform: translateY(-2px);
-
-  box-shadow: 0 0 24px rgba(236, 72, 153, 0.12);
-}
-
-.game-reveal:active {
-  transform: translateY(0);
-}
-
-@media (max-width: 768px) {
+@media (max-height: 760px) and (min-width: 769px) {
   .game-page {
-    padding: 32px 20px 60px;
+    padding-top: 12px;
+    padding-bottom: 12px;
   }
 
   .game-content {
-    padding-top: 40px;
+    padding-top: 10px;
+    column-gap: 32px;
   }
 
-  .game-question {
-    margin-top: 32px;
+  .game-content h1 {
+    font-size: 28px;
   }
 
   .game-question__art {
-    width: 230px;
+    width: 225px;
+    margin-bottom: 10px;
   }
 
-  .game-answers {
-    grid-template-columns: 1fr;
-    margin-top: 32px;
+  .game-question .audio-player {
+    transform: scale(0.92);
+    transform-origin: center top;
+  }
+
+  .game-song-reveal {
+    margin-top: 7px;
+  }
+
+  .game-song-reveal__title {
+    font-size: 18px;
+  }
+
+  .game-song-reveal__artist {
+    font-size: 12px;
+  }
+
+  .game-feedback {
+    padding: 10px 13px;
+  }
+
+  .game-next-area {
+    min-height: 36px;
   }
 }
 
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .game-page {
+    height: auto;
+    min-height: calc(100vh - var(--navbar-height));
+
+    padding: 28px 24px 50px;
+
+    overflow: visible;
+  }
+
+  .game-page__container {
+    height: auto;
+  }
+
+  .game-content {
+    display: flex;
+    flex-direction: column;
+
+    padding-top: 34px;
+  }
+
+  .game-content h1 {
+    margin-top: 10px;
+  }
+
+  .game-question {
+    order: 1;
+
+    margin-top: 28px;
+  }
+
+  .game-answers {
+    order: 2;
+
+    margin-top: 24px !important;
+  }
+
+  .game-actions {
+    order: 3;
+
+    justify-content: center;
+
+    margin-top: 16px;
+  }
+
+  .game-feedback {
+    order: 4;
+
+    margin-top: 16px;
+  }
+
+  .game-status {
+    order: 5;
+
+    margin-top: 14px;
+  }
+
+  .game-next-area {
+    order: 6;
+
+    margin-top: 12px;
+  }
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
 @media (max-width: 600px) {
+  .game-page {
+    padding: 22px 16px 40px;
+  }
+
+  .game-content {
+    padding-top: 28px;
+  }
+
+  .game-content h1 {
+    font-size: 27px;
+  }
+
+  .game-question {
+    width: 100%;
+
+    margin-top: 24px;
+  }
+
+  .game-question__art {
+    width: 210px;
+  }
+
+  .game-question .audio-player {
+    width: 100%;
+  }
+
   .game-actions {
     flex-direction: column;
+
     width: 100%;
   }
 
   .game-actions button {
     width: 100%;
+  }
+
+  .game-next-area {
+    flex-direction: column;
+
+    width: 100%;
+  }
+
+  .game-next {
+    width: 100%;
+  }
+
+  .game-status {
+    margin-top: 16px;
   }
 }
