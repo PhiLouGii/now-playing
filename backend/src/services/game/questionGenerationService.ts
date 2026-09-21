@@ -5,7 +5,9 @@ import type {
   QuestionType,
 } from './gameTypes.js'
 
-import type { MusicTrack } from '../music/musicProvider.js'
+import type {
+  MusicTrack,
+} from '../music/musicProvider.js'
 
 import {
   getCandidatePool,
@@ -14,6 +16,10 @@ import {
 import {
   selectDistractors,
 } from '../music/distractorSelector.js'
+
+import {
+  getCategoryCandidatePool,
+} from '../category/categoryCandidateService.js'
 
 function createQuestionId(): string {
   return `question-${Date.now()}-${Math.random()
@@ -42,13 +48,18 @@ function getCorrectAnswer(
       return track.album
 
     case 'guess-the-year':
-      if (track.releaseYear === undefined) {
+      if (
+        track.releaseYear ===
+        undefined
+      ) {
         throw new Error(
           'Correct track does not have a release year',
         )
       }
 
-      return String(track.releaseYear)
+      return String(
+        track.releaseYear,
+      )
 
     default:
       throw new Error(
@@ -72,13 +83,18 @@ function getDistractorAnswer(
       return track.album
 
     case 'guess-the-year':
-      if (track.releaseYear === undefined) {
+      if (
+        track.releaseYear ===
+        undefined
+      ) {
         throw new Error(
           'Distractor does not have a release year',
         )
       }
 
-      return String(track.releaseYear)
+      return String(
+        track.releaseYear,
+      )
 
     default:
       throw new Error(
@@ -111,19 +127,30 @@ export async function generateQuestion(
   difficulty: QuestionDifficulty = 'medium',
   decade?: number,
   excludedTrackIds: string[] = [],
+  categoryId?: string,
 ): Promise<GeneratedQuestion> {
+  const excludedIds =
+    new Set(excludedTrackIds)
+
   const candidates =
-  await getCandidatePool(
-    correctTrack,
-    {
-      requireReleaseYear:
-        type === 'guess-the-year',
-      decade,
-      questionType: type,
-      excludedTrackIds:
-        new Set(excludedTrackIds),
-    },
-  )
+  categoryId
+    ? await getCategoryCandidatePool(
+        categoryId,
+        correctTrack,
+        type,
+        excludedIds,
+      )
+    : await getCandidatePool(
+        correctTrack,
+        {
+          requireReleaseYear:
+            type === 'guess-the-year',
+          decade,
+          questionType: type,
+          excludedTrackIds:
+            excludedIds,
+        },
+      )
 
   const distractors =
     selectDistractors(
@@ -133,7 +160,9 @@ export async function generateQuestion(
       3,
     )
 
-  if (distractors.length !== 3) {
+  if (
+    distractors.length !== 3
+  ) {
     throw new Error(
       `Could not generate exactly 3 distractors. Found ${distractors.length}.`,
     )

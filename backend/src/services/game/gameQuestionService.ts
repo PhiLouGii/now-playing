@@ -27,6 +27,10 @@ import {
   getReliableReleaseYear,
 } from '../music/releaseYearService.js'
 
+import {
+  getCategoryTracks,
+} from '../category/categoryMusicService.js'
+
 async function hydrateTrack(
   track: MusicTrack,
 ): Promise<MusicTrack> {
@@ -62,7 +66,6 @@ async function getEligibleTracks(
   excludedTrackIds: string[] = [],
 ): Promise<MusicTrack[]> {
   const maxAttempts = 3
-
   const excludedIds =
     new Set(excludedTrackIds)
 
@@ -79,14 +82,22 @@ async function getEligibleTracks(
 
     let eligibleTracks =
       discoveredTracks
-        .filter(isPlayableMusicTrack)
+        .filter(
+          isPlayableMusicTrack,
+        )
         .filter(
           (track) =>
-            !excludedIds.has(track.id),
+            !excludedIds.has(
+              track.id,
+            ),
         )
 
-    if (type !== 'guess-the-year') {
-      if (eligibleTracks.length > 0) {
+    if (
+      type !== 'guess-the-year'
+    ) {
+      if (
+        eligibleTracks.length > 0
+      ) {
         return eligibleTracks
       }
     } else {
@@ -107,10 +118,13 @@ async function getEligibleTracks(
       eligibleTracks =
         eligibleTracks.filter(
           (track) =>
-            track.releaseYear !== undefined,
+            track.releaseYear !==
+            undefined,
         )
 
-      if (eligibleTracks.length > 0) {
+      if (
+        eligibleTracks.length > 0
+      ) {
         return eligibleTracks
       }
     }
@@ -125,12 +139,65 @@ async function getEligibleTracks(
   return []
 }
 
+async function getEligibleCategoryTracks(
+  categoryId: string,
+  type: QuestionType,
+  excludedTrackIds: string[] = [],
+): Promise<MusicTrack[]> {
+  if (type !== 'name-the-song') {
+    throw new Error(
+      'Category games only support the "name-the-song" question type.',
+    )
+  }
+
+  const excludedIds =
+    new Set(excludedTrackIds)
+
+  const maxAttempts = 3
+
+  for (
+    let attempt = 1;
+    attempt <= maxAttempts;
+    attempt++
+  ) {
+    const tracks =
+      await getCategoryTracks(
+        categoryId,
+        {
+          questionType: 'name-the-song',
+          limit: 40,
+          excludedTrackIds:
+            excludedIds,
+        },
+      )
+
+    const playableTracks =
+      tracks.filter(
+        isPlayableMusicTrack,
+      )
+
+    if (
+      playableTracks.length > 0
+    ) {
+      return playableTracks
+    }
+
+    console.log(
+      `No playable tracks found for category "${categoryId}". Retrying (${attempt}/${maxAttempts})...`,
+    )
+  }
+
+  return []
+}
+
+
 function pickRandomTrack(
   tracks: MusicTrack[],
 ): MusicTrack {
   const randomIndex =
     Math.floor(
-      Math.random() * tracks.length,
+      Math.random() *
+        tracks.length,
     )
 
   return tracks[randomIndex]
@@ -141,17 +208,33 @@ export async function generateGameQuestion(
   difficulty: QuestionDifficulty,
   decade?: number,
   excludedTrackIds: string[] = [],
+  categoryId?: string,
 ) {
-  const eligibleTracks =
-    await getEligibleTracks(
-      type,
-      decade,
-      excludedTrackIds,
-    )
+  let eligibleTracks: MusicTrack[]
 
-  if (eligibleTracks.length === 0) {
+  if (categoryId) {
+    eligibleTracks =
+      await getEligibleCategoryTracks(
+        categoryId,
+        type,
+        excludedTrackIds,
+      )
+  } else {
+    eligibleTracks =
+      await getEligibleTracks(
+        type,
+        decade,
+        excludedTrackIds,
+      )
+  }
+
+  if (
+    eligibleTracks.length === 0
+  ) {
     throw new Error(
-      `Could not find an eligible track for question type: ${type}`,
+      categoryId
+        ? `Could not find an eligible track for category: ${categoryId}`
+        : `Could not find an eligible track for question type: ${type}`,
     )
   }
 
@@ -161,10 +244,11 @@ export async function generateGameQuestion(
     )
 
   return generateQuestion(
-    correctTrack,
-    type,
-    difficulty,
-    decade,
-    excludedTrackIds,
-  )
+  correctTrack,
+  type,
+  difficulty,
+  decade,
+  excludedTrackIds,
+  categoryId,
+)
 }

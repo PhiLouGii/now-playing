@@ -1,0 +1,275 @@
+/*
+ * Artists allowed for each category.
+ *
+ * These lists define the boundaries of each category.
+ * The actual songs are fetched dynamically from Deezer.
+ */
+
+export const CATEGORY_ARTISTS = {
+  // ─────────────────────────────
+  // ALL THINGS AFRICAN
+  // ─────────────────────────────
+
+  african: [
+    // Afrobeats
+    'Wizkid',
+    'Davido',
+    'Burna Boy',
+    'Tems',
+    'Rema',
+    'Ayra Starr',
+    'Fireboy DML',
+    'Omah Lay',
+    'CKay',
+    'Yemi Alade',
+    'Tiwa Savage',
+    'Mr Eazi',
+    'Patoranking',
+    'Tekno',
+    'Asake',
+    'Joeboy',
+    'Kizz Daniel',
+    'Seyi Vibez',
+
+    // East / Central Africa
+    'Diamond Platnumz',
+    'Harmonize',
+    'Sauti Sol',
+    'Bien',
+    'Fally Ipupa',
+
+    // South Africa
+    'Tyla',
+    'Sho Madjozi',
+    'Nasty C',
+    'Cassper Nyovest',
+    'AKA',
+    'Kabza De Small',
+    'DJ Maphorisa',
+    'Tyler ICU',
+    'Uncle Waffles',
+    'Focalistic',
+    'Young Stunna',
+    'Aymos',
+    'Major League DJz',
+    'Sha Sha',
+    'DJ Zinhle',
+    'Busiswa',
+  ],
+
+  // ─────────────────────────────
+  // K-POP
+  // ─────────────────────────────
+
+  kpop: [
+    'EXO',
+    'MONSTA X',
+    'GOT7',
+    'BTS',
+    'BLACKPINK',
+    'Stray Kids',
+    'TWICE',
+    'SEVENTEEN',
+    'Red Velvet',
+    'NewJeans',
+    'LE SSERAFIM',
+    'aespa',
+    'IVE',
+    'NCT',
+    'TXT',
+    'ENHYPEN',
+    'ITZY',
+    '(G)I-DLE',
+    'ATEEZ',
+    'SHINee',
+  ],
+
+  // ─────────────────────────────
+  // DISNEY & NICK THROWBACKS
+  // ─────────────────────────────
+  //
+  // This category is intentionally an artist pool.
+  // The category service can later expand this with
+  // soundtrack/title searches if needed.
+  //
+
+  'disney-nick': [
+    // Disney
+    'Miley Cyrus',
+    'Hannah Montana',
+    'Demi Lovato',
+    'Selena Gomez',
+    'Jonas Brothers',
+    'Hilary Duff',
+    'Raven-Symoné',
+    'Bridgit Mendler',
+    'Emily Osment',
+    'Ashley Tisdale',
+    'Vanessa Hudgens',
+    'Corbin Bleu',
+    'Dove Cameron',
+    'China Anne McClain',
+    'Ross Lynch',
+
+    // Disney Channel movies / related
+    'High School Musical',
+    'Camp Rock',
+    'The Cheetah Girls',
+
+    // Nickelodeon
+    'Miranda Cosgrove',
+    'Victoria Justice',
+    'Ariana Grande',
+    'Big Time Rush',
+    'Drake Bell',
+    'Josh Peck',
+    'Jennette McCurdy',
+    'Keke Palmer',
+    'Jamie Lynn Spears',
+  ],
+
+  // ─────────────────────────────
+  // GIRL GROUPS
+  // ─────────────────────────────
+
+  'girl-groups': [
+    // 90s / 2000s
+    'Spice Girls',
+    'Destiny’s Child',
+    'TLC',
+    'En Vogue',
+    'Pussycat Dolls',
+    'Sugababes',
+    'Girls Aloud',
+    'Atomic Kitten',
+
+    // 2010s
+    'Little Mix',
+    'Fifth Harmony',
+    'The Saturdays',
+
+    // K-Pop girl groups
+    'BLACKPINK',
+    'TWICE',
+    'Red Velvet',
+    'NewJeans',
+    'LE SSERAFIM',
+    'aespa',
+  ],
+
+  // ─────────────────────────────
+  // BOY BANDS
+  // ─────────────────────────────
+
+  'boy-bands': [
+    // 90s
+    'Backstreet Boys',
+    'NSYNC',
+    'Boyz II Men',
+    'Westlife',
+    '98 Degrees',
+
+    // 2000s
+    'Jonas Brothers',
+
+    // 2010s
+    'One Direction',
+    '5 Seconds of Summer',
+    'Why Don’t We',
+    'The Wanted',
+
+    // K-Pop / newer
+    'BTS',
+    'EXO',
+    'GOT7',
+    'Stray Kids',
+    'SEVENTEEN',
+    'NCT',
+    'TXT',
+    'ENHYPEN',
+  ],
+
+  // ─────────────────────────────
+  // INDIE & ALT
+  // ─────────────────────────────
+
+  'indie-alt': [
+    // Core category artists
+    'Yeah Yeah Yeahs',
+    'Tame Impala',
+    'MGMT',
+
+    // Indie rock
+    'The Strokes',
+    'Arctic Monkeys',
+    'The 1975',
+    'Glass Animals',
+    'The Killers',
+    'Foster the People',
+    'Franz Ferdinand',
+    'The White Stripes',
+    'Foals',
+    'Vampire Weekend',
+    'Two Door Cinema Club',
+    'The Wombats',
+
+    // Alternative
+    'Radiohead',
+    'Nirvana',
+    'The Smashing Pumpkins',
+    'Red Hot Chili Peppers',
+    'Oasis',
+    'Blur',
+    'The Cranberries',
+    'Weezer',
+    'R.E.M.',
+
+    // Indie / alternative pop
+    'Lorde',
+    'Lana Del Rey',
+    'Hozier',
+    'Phoebe Bridgers',
+    'Mitski',
+    'beabadoobee',
+    'Girl in Red',
+    'Dominic Fike',
+    'Cigarettes After Sex',
+    'Fontaines D.C.',
+    'Wet Leg',
+  ],
+
+  // ─────────────────────────────
+  // MICHAEL JACKSON
+  // ─────────────────────────────
+
+  'michael-jackson': [
+    'Michael Jackson',
+    'The Jackson 5',
+    'The Jacksons',
+  ],
+
+  // ─────────────────────────────
+  // BEYONCÉ
+  // ─────────────────────────────
+
+  beyonce: [
+    'Beyoncé',
+    'Destiny’s Child',
+  ],
+
+  // ─────────────────────────────
+  // QUEEN
+  // ─────────────────────────────
+
+  queen: [
+    'Queen',
+  ],
+
+  // ─────────────────────────────
+  // ARIANA GRANDE
+  // ─────────────────────────────
+
+  'ariana-grande': [
+    'Ariana Grande',
+  ],
+} as const

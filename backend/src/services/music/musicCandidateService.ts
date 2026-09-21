@@ -51,6 +51,7 @@ export type CandidateSource =
   | 'similar'
   | 'era'
   | 'discovery'
+  | 'category'
 
 export type MusicCandidate = {
   track: MusicTrack

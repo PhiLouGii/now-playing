@@ -329,6 +329,32 @@ class DeezerMusicProvider
     return data.data ?? []
   }
 
+async searchArtists(
+  query: string,
+  limit = 5,
+): Promise<DeezerArtist[]> {
+  const url = new URL(
+    'https://api.deezer.com/search/artist',
+  )
+
+  url.searchParams.set('q', query)
+  url.searchParams.set('limit', String(limit))
+
+  const response = await fetch(url)
+
+  if (!response.ok) {
+    throw new Error(
+      `Deezer artist search failed: ${response.status}`,
+    )
+  }
+
+  const data =
+    (await response.json()) as DeezerArtistResponse
+
+  return data.data ?? []
+}
+
+
   async getArtistTopTracks(
     artistId: number,
     limit = 10,
