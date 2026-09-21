@@ -1,3 +1,8 @@
+import {
+  Disc3,
+  Flame,
+  Trophy,
+} from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import { useAuth } from '../../context/AuthContext'
@@ -80,61 +85,58 @@ function Profile() {
     }
   }, [user, authLoading])
 
-  if (
-    authLoading ||
-    isLoading
-  ) {
+  if (authLoading || isLoading) {
     return (
-      <section className="placeholder-page">
-        <p className="label">
-          PROFILE
-        </p>
+      <main className="profile-page">
+        <div className="profile-page__container">
+          <p className="label">PROFILE</p>
 
-        <h1 className="display-lg">
-          Your music knowledge.
-        </h1>
+          <h1 className="display-lg">
+            Your music knowledge.
+          </h1>
 
-        <p className="body-lg">
-          Loading your stats...
-        </p>
-      </section>
+          <p className="body-lg">
+            Loading your stats...
+          </p>
+        </div>
+      </main>
     )
   }
 
   if (!user) {
     return (
-      <section className="placeholder-page">
-        <p className="label">
-          PROFILE
-        </p>
+      <main className="profile-page">
+        <div className="profile-page__container">
+          <p className="label">PROFILE</p>
 
-        <h1 className="display-lg">
-          Sign in to see your stats.
-        </h1>
+          <h1 className="display-lg">
+            Sign in to see your stats.
+          </h1>
 
-        <p className="body-lg">
-          Your games, scores, and personal
-          bests will appear here.
-        </p>
-      </section>
+          <p className="body-lg">
+            Your games, scores, and personal
+            bests will appear here.
+          </p>
+        </div>
+      </main>
     )
   }
 
   if (error) {
     return (
-      <section className="placeholder-page">
-        <p className="label">
-          PROFILE
-        </p>
+      <main className="profile-page">
+        <div className="profile-page__container">
+          <p className="label">PROFILE</p>
 
-        <h1 className="display-lg">
-          Something went wrong.
-        </h1>
+          <h1 className="display-lg">
+            Something went wrong.
+          </h1>
 
-        <p className="body-lg">
-          {error}
-        </p>
-      </section>
+          <p className="body-lg">
+            {error}
+          </p>
+        </div>
+      </main>
     )
   }
 
@@ -159,202 +161,295 @@ function Profile() {
     )
   }
 
+  const displayName =
+    profile?.displayName ||
+    profile?.username ||
+    user.email ||
+    'Player'
+
   return (
-    <section className="profile-page">
-      <div className="profile-header">
-        <p className="label">
-          PROFILE
-        </p>
+    <main className="profile-page">
+      <div className="profile-page__container">
 
-        <h1 className="display-lg">
-          {profile?.displayName ||
-            profile?.username ||
-            user.email}
-        </h1>
+        {/* Profile identity */}
 
-        {profile?.username && (
-          <p className="profile-username">
-            @{profile.username}
-          </p>
-        )}
-      </div>
+        <header className="profile-header">
+          <div className="profile-header__record">
+            <Disc3
+              size={34}
+              strokeWidth={1.4}
+            />
+          </div>
 
-      <div className="profile-stats">
-        <div className="profile-stat">
-          <span>Games Played</span>
+          <div className="profile-header__identity">
+            <p className="label">
+              PROFILE
+            </p>
 
-          <strong>
-            {stats.gamesPlayed}
-          </strong>
-        </div>
+            <h1 className="display-lg">
+              {displayName}
+            </h1>
 
-        <div className="profile-stat">
-          <span>Total Points</span>
+            {profile?.username && (
+              <p className="profile-username">
+                @{profile.username}
+              </p>
+            )}
+          </div>
 
-          <strong>
-            {stats.totalPoints}
-          </strong>
-        </div>
+          <div className="profile-header__tag">
+            <span>NOW PLAYING</span>
+            <strong>PLAYER PROFILE</strong>
+          </div>
+        </header>
 
-        <div className="profile-stat">
-          <span>Average Accuracy</span>
+        {/* Main stats */}
 
-          <strong>
-            {stats.averageAccuracy}%
-          </strong>
-        </div>
-
-        <div className="profile-stat">
-          <span>Best Streak</span>
-
-          <strong>
-            🔥 {stats.bestStreak}
-          </strong>
-        </div>
-      </div>
-
-      <div className="profile-section">
-        <p className="label">
-          PERSONAL BESTS
-        </p>
-
-        <div className="personal-bests">
-          <div className="personal-best">
-            <span>
-              Name That Song
-            </span>
+        <section className="profile-stats">
+          <div className="profile-stat">
+            <span>GAMES PLAYED</span>
 
             <strong>
-              {stats.personalBests
-                .nameThatSong ??
-                '—'}
+              {stats.gamesPlayed}
             </strong>
           </div>
 
-          <div className="personal-best">
-            <span>
-              Name the Artist
-            </span>
+          <div className="profile-stat">
+            <span>TOTAL POINTS</span>
 
             <strong>
-              {stats.personalBests
-                .nameTheArtist ??
-                '—'}
+              {stats.totalPoints.toLocaleString()}
             </strong>
           </div>
 
-          <div className="personal-best">
-            <span>
-              Name the Album
-            </span>
+          <div className="profile-stat">
+            <span>AVERAGE ACCURACY</span>
 
             <strong>
-              {stats.personalBests
-                .nameTheAlbum ??
-                '—'}
+              {stats.averageAccuracy}%
             </strong>
           </div>
 
-          <div className="personal-best">
-            <span>
-              Guess the Year
-            </span>
+          <div className="profile-stat">
+            <span>BEST STREAK</span>
 
-            <strong>
-              {stats.personalBests
-                .guessTheYear ??
-                '—'}
+            <strong className="profile-stat__streak">
+              <Flame
+                size={18}
+                strokeWidth={1.8}
+              />
+              {stats.bestStreak}
             </strong>
           </div>
+        </section>
 
-          <div className="personal-best">
-            <span>
-              Daily Challenge
-            </span>
+        <div className="profile-content">
 
-            <strong>
-              {stats.personalBests
-                .dailyChallenge ??
-                '—'}
-            </strong>
-          </div>
-        </div>
-      </div>
+          {/* Personal bests */}
 
-      <div className="profile-section">
-        <p className="label">
-          TOTAL CORRECT
-        </p>
+          <section className="profile-section profile-section--bests">
+            <div className="profile-section__header">
+              <div>
+                <p className="label">
+                  PERSONAL BESTS
+                </p>
 
-        <strong className="profile-large-stat">
-          {stats.totalCorrectAnswers}
-        </strong>
-      </div>
-
-      <div className="profile-section">
-        <p className="label">
-          RECENT GAMES
-        </p>
-
-        {scores.length === 0 ? (
-          <p className="body-lg">
-            You haven't played any games yet.
-          </p>
-        ) : (
-          <div className="score-history">
-            {scores.map((game) => (
-              <div
-                key={game.id}
-                className="score-history-entry"
-              >
-                <div className="score-history-main">
-                  <strong>
-                    {
-                      GAME_MODE_LABELS[
-                        game.gameMode
-                      ]
-                    }
-                  </strong>
-
-                  <span>
-                    {formatDate(
-                      game.completedAt,
-                    )}
-                  </span>
-                </div>
-
-                <div className="score-history-score">
-                  <strong>
-                    {game.score}
-                  </strong>
-
-                  <span>
-                    points
-                  </span>
-                </div>
-
-                <div className="score-history-stats">
-                  <span>
-                    {game.accuracy}%
-                    accuracy
-                  </span>
-
-                  <span>
-                    🔥 {game.bestStreak}
-                  </span>
-
-                  <span>
-                    {game.correctAnswers}/
-                    {game.questions}
-                    {' '}correct
-                  </span>
-                </div>
+                <h2>
+                  Your top scores.
+                </h2>
               </div>
-            ))}
-          </div>
-        )}
+
+              <Trophy
+                size={22}
+                strokeWidth={1.5}
+              />
+            </div>
+
+            <div className="personal-bests">
+              <div className="personal-best">
+                <span className="personal-best__number">
+                  01
+                </span>
+
+                <span className="personal-best__name">
+                  Name That Song
+                </span>
+
+                <strong>
+                  {stats.personalBests
+                    .nameThatSong ?? '—'}
+                </strong>
+              </div>
+
+              <div className="personal-best">
+                <span className="personal-best__number">
+                  02
+                </span>
+
+                <span className="personal-best__name">
+                  Name the Artist
+                </span>
+
+                <strong>
+                  {stats.personalBests
+                    .nameTheArtist ?? '—'}
+                </strong>
+              </div>
+
+              <div className="personal-best">
+                <span className="personal-best__number">
+                  03
+                </span>
+
+                <span className="personal-best__name">
+                  Name the Album
+                </span>
+
+                <strong>
+                  {stats.personalBests
+                    .nameTheAlbum ?? '—'}
+                </strong>
+              </div>
+
+              <div className="personal-best">
+                <span className="personal-best__number">
+                  04
+                </span>
+
+                <span className="personal-best__name">
+                  Guess the Year
+                </span>
+
+                <strong>
+                  {stats.personalBests
+                    .guessTheYear ?? '—'}
+                </strong>
+              </div>
+
+              <div className="personal-best">
+                <span className="personal-best__number">
+                  05
+                </span>
+
+                <span className="personal-best__name">
+                  Daily Challenge
+                </span>
+
+                <strong>
+                  {stats.personalBests
+                    .dailyChallenge ?? '—'}
+                </strong>
+              </div>
+            </div>
+
+            <div className="profile-correct">
+              <div>
+                <span>
+                  TOTAL CORRECT ANSWERS
+                </span>
+
+                <strong>
+                  {stats.totalCorrectAnswers.toLocaleString()}
+                </strong>
+              </div>
+
+              <Disc3
+                size={30}
+                strokeWidth={1.3}
+              />
+            </div>
+          </section>
+
+          {/* Recent games */}
+
+          <section className="profile-section profile-section--history">
+            <div className="profile-section__header">
+              <div>
+                <p className="label">
+                  RECENT GAMES
+                </p>
+
+                <h2>
+                  Your play history.
+                </h2>
+              </div>
+            </div>
+
+            {scores.length === 0 ? (
+              <div className="score-history__empty">
+                <Disc3 size={28} />
+
+                <p>
+                  You haven't played any games yet.
+                </p>
+              </div>
+            ) : (
+              <div className="score-history">
+                {scores.map((game) => (
+                  <div
+                    key={game.id}
+                    className="score-history-entry"
+                  >
+                    <div className="score-history__icon">
+                      <Disc3
+                        size={18}
+                        strokeWidth={1.5}
+                      />
+                    </div>
+
+                    <div className="score-history-main">
+                      <strong>
+                        {
+                          GAME_MODE_LABELS[
+                            game.gameMode
+                          ]
+                        }
+                      </strong>
+
+                      <span>
+                        {formatDate(
+                          game.completedAt,
+                        )}
+                      </span>
+                    </div>
+
+                    <div className="score-history-score">
+                      <strong>
+                        {game.score.toLocaleString()}
+                      </strong>
+
+                      <span>
+                        POINTS
+                      </span>
+                    </div>
+
+                    <div className="score-history-stats">
+                      <span>
+                        {game.accuracy}% accuracy
+                      </span>
+
+                      <span className="score-history-streak">
+                        <Flame
+                          size={13}
+                          strokeWidth={1.8}
+                        />
+                        {game.bestStreak}
+                      </span>
+
+                      <span>
+                        {game.correctAnswers}/
+                        {game.questions}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+        </div>
       </div>
-    </section>
+    </main>
   )
 }
 
