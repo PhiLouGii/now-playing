@@ -1,29 +1,12 @@
 import type { MusicTrack } from '../music/musicProvider.js'
-
-import {
-  deezerMusicProvider,
-} from '../music/deezerMusicProvider.js'
-
-import {
-  filterGameTracks,
-} from '../music/musicTrackFilter.js'
-
-import {
-  CATEGORY_ARTISTS,
-} from '../../data/categories/categoryArtists.js'
-
-import {
-  CATEGORY_CONFIG,
-} from '../../data/categories/categoryConfig.js'
-
-import type {
-  QuestionType,
-} from '../game/gameTypes.js'
+import { deezerMusicProvider } from '../music/deezerMusicProvider.js'
+import { filterGameTracks } from '../music/musicTrackFilter.js'
+import { CATEGORY_ARTISTS } from '../../data/categories/categoryArtists.js'
+import { CATEGORY_CONFIG } from '../../data/categories/categoryConfig.js'
+import type { QuestionType } from '../game/gameTypes.js'
 
 function shuffle<T>(items: T[]): T[] {
-  return [...items].sort(
-    () => Math.random() - 0.5,
-  )
+  return [...items].sort(() => Math.random() - 0.5)
 }
 
 function normalize(value: string): string {
@@ -34,25 +17,13 @@ function normalize(value: string): string {
     .trim()
 }
 
-function isSameArtist(
-  first: string,
-  second: string,
-): boolean {
-  return (
-    normalize(first) ===
-    normalize(second)
-  )
-}
-
 function isSameTrack(
   first: MusicTrack,
   second: MusicTrack,
 ): boolean {
   return (
-    normalize(first.title) ===
-      normalize(second.title) &&
-    normalize(first.artist) ===
-      normalize(second.artist)
+    normalize(first.title) === normalize(second.title) &&
+    normalize(first.artist) === normalize(second.artist)
   )
 }
 
@@ -67,12 +38,9 @@ function getArtistsForCategory(
   return artists ?? []
 }
 
-function isValidCategory(
-  categoryId: string,
-): boolean {
+function isValidCategory(categoryId: string): boolean {
   return CATEGORY_CONFIG.some(
-    (category) =>
-      category.id === categoryId,
+    category => category.id === categoryId,
   )
 }
 
@@ -81,13 +49,31 @@ async function searchArtistTracks(
   limit = 10,
 ): Promise<MusicTrack[]> {
   try {
+    const normalizedArtist = normalize(artist)
+
+    /*
+     * First find the correct Deezer artist profile.
+     *
+     * Deezer can return multiple artists with the same name,
+     * so prefer an exact name match.
+     */
     const artistResults =
       await deezerMusicProvider.searchArtists(
         artist,
-        5,
+        10,
       )
 
-    if (artistResults.length === 0) {
+    const exactMatches =
+      artistResults.filter(
+        result =>
+          normalize(result.name ?? '') ===
+          normalizedArtist,
+      )
+
+    const selectedArtist =
+      exactMatches[0] ?? artistResults[0]
+
+    if (!selectedArtist) {
       console.warn(
         `No Deezer artist found for "${artist}"`,
       )
@@ -95,43 +81,57 @@ async function searchArtistTracks(
       return []
     }
 
-    const normalizedArtist =
-      normalize(artist)
+    console.log(
+      `[CATEGORY DEBUG] "${artist}" selected Deezer artist:`,
+      {
+        id: selectedArtist.id,
+        name: selectedArtist.name,
+        albums: selectedArtist.nb_album,
+        fans: selectedArtist.nb_fan,
+        tracklist: selectedArtist.tracklist,
+      },
+    )
 
-    const exactMatch =
-      artistResults.find(
-        (result) =>
-          result.name &&
-          isSameArtist(
-            result.name,
-            artist,
-          ),
+    if (!selectedArtist.tracklist) {
+      console.warn(
+        `No tracklist URL for Deezer artist "${artist}"`,
       )
 
-    const selectedArtist =
-      exactMatch ??
-      artistResults[0]
-
-    if (!selectedArtist) {
       return []
     }
 
     const tracks =
-      await deezerMusicProvider.getArtistTopTracks(
-        selectedArtist.id,
-        limit,
+      await deezerMusicProvider.getArtistTracksByUrl(
+        selectedArtist.tracklist,
+        50,
       )
 
+    const matchingTracks =
+      tracks.filter(
+        track =>
+          normalize(track.artist) ===
+          normalizedArtist,
+      )
+
+    console.log(
+      `[CATEGORY DEBUG] "${artist}" tracklist:`,
+      {
+        returned: tracks.length,
+        matchingArtist: matchingTracks.length,
+        tracks: matchingTracks.map(track => ({
+          title: track.title,
+          artist: track.artist,
+          album: track.album,
+        })),
+      },
+    )
+
     return filterGameTracks(
-      tracks,
-    ).filter(
-      (track) =>
-        normalize(track.artist) ===
-        normalizedArtist,
+      matchingTracks,
     )
   } catch (error) {
-    console.error(
-      `Failed to fetch category tracks for "${artist}":`,
+    console.warn(
+      `Failed to load category artist "${artist}":`,
       error,
     )
 
@@ -139,69 +139,28 @@ async function searchArtistTracks(
   }
 }
 
+
 async function hydrateReleaseYears(
   tracks: MusicTrack[],
 ): Promise<MusicTrack[]> {
   return Promise.all(
-    tracks.map(async (track) => {
-      if (track.releaseYear !== undefined) {
+    tracks.map(async track => {
+      if (track.releaseYear) {
         return track
       }
 
       try {
-        const detailedTrack =
+        const hydrated =
           await deezerMusicProvider.getTrackById(
-            track.id,
+            track.providerId,
           )
 
-        return detailedTrack ?? track
+        return hydrated ?? track
       } catch {
         return track
       }
     }),
   )
-}
-
-function hasAnswerVariety(
-  tracks: MusicTrack[],
-  type: QuestionType,
-): boolean {
-  const values = new Set<string>()
-
-  for (const track of tracks) {
-    let value: string | undefined
-
-    switch (type) {
-      case 'name-the-song':
-        value = normalize(track.title)
-        break
-
-      case 'name-the-artist':
-        value = normalize(track.artist)
-        break
-
-      case 'name-the-album':
-        value = normalize(track.album)
-        break
-
-      case 'guess-the-year':
-        value =
-          track.releaseYear !== undefined
-            ? String(track.releaseYear)
-            : undefined
-        break
-    }
-
-    if (value) {
-      values.add(value)
-    }
-
-    if (values.size >= 4) {
-      return true
-    }
-  }
-
-  return false
 }
 
 export async function getCategoryTracks(
@@ -219,63 +178,58 @@ export async function getCategoryTracks(
   }
 
   const artists =
-    getArtistsForCategory(
-      categoryId,
-    )
+    getArtistsForCategory(categoryId)
 
-  if (artists.length === 0) {
+  if (!artists.length) {
     throw new Error(
-      `No artists configured for category: ${categoryId}`,
+      `Category "${categoryId}" has no configured artists.`,
     )
   }
 
-  const limit =
-    options.limit ?? 40
+  const limit = options.limit ?? 40
 
   const excludedTrackIds =
-    options.excludedTrackIds ??
-    new Set<string>()
+    options.excludedTrackIds ?? new Set<string>()
 
-  const selectedArtists =
-    shuffle([...artists]).slice(
-      0,
-      Math.min(
-        artists.length,
-        12,
-      ),
-    )
+  /*
+   * We don't need every configured artist on every request.
+   * Shuffle the pool so repeated games don't always start
+   * with the same artists.
+   */
+  const selectedArtists = shuffle([
+    ...artists,
+  ]).slice(
+    0,
+    Math.min(artists.length, 12),
+  )
+  console.log(
+  `[CATEGORY DEBUG] ${categoryId} selected artists:`,
+  selectedArtists,
+)
 
-  const results =
-    await Promise.all(
-      selectedArtists.map(
-        (artist) =>
-          searchArtistTracks(
-            artist,
-            10,
-          ),
-      ),
-    )
+  const artistResults = await Promise.all(
+    selectedArtists.map(artist =>
+      searchArtistTracks(artist, 10),
+    ),
+  )
+
+  artistResults.forEach((tracks, index) => {
+  console.log(
+    `[CATEGORY DEBUG] ${selectedArtists[index]} -> ${tracks.length} tracks`,
+  )
+})
 
   const tracks: MusicTrack[] = []
 
-  for (const artistTracks of results) {
+  for (const artistTracks of artistResults) {
     for (const track of artistTracks) {
-      if (
-        excludedTrackIds.has(
-          track.id,
-        )
-      ) {
+      if (excludedTrackIds.has(track.id)) {
         continue
       }
 
-      const duplicate =
-        tracks.some(
-          (existing) =>
-            isSameTrack(
-              existing,
-              track,
-            ),
-        )
+      const duplicate = tracks.some(existing =>
+        isSameTrack(existing, track),
+      )
 
       if (duplicate) {
         continue
@@ -285,40 +239,27 @@ export async function getCategoryTracks(
     }
   }
 
-  let filteredTracks =
-    shuffle(tracks)
+  let filteredTracks = shuffle(tracks)
 
   if (
-    options.questionType ===
-    'guess-the-year'
+    options.questionType === 'guess-the-year'
   ) {
     filteredTracks =
-      await hydrateReleaseYears(
-        filteredTracks,
-      )
+      await hydrateReleaseYears(filteredTracks)
 
-    filteredTracks =
-      filteredTracks.filter(
-        (track) =>
-          track.releaseYear !==
-          undefined,
-      )
+    filteredTracks = filteredTracks.filter(
+      track => track.releaseYear !== undefined,
+    )
   }
 
   if (
     options.questionType !== undefined &&
-    !hasAnswerVariety(
-      filteredTracks,
-      options.questionType,
-    )
+    filteredTracks.length < 4
   ) {
     console.warn(
-      `Category "${categoryId}" does not currently have enough answer variety for "${options.questionType}".`,
+      `Category "${categoryId}" does not currently have enough tracks for "${options.questionType}". Found ${filteredTracks.length}.`,
     )
   }
 
-  return filteredTracks.slice(
-    0,
-    limit,
-  )
+  return filteredTracks.slice(0, limit)
 }

@@ -1,11 +1,17 @@
 import type { Request, Response } from 'express'
+
 import {
   generateGameQuestion,
 } from '../services/game/gameQuestionService.js'
+
 import type {
   QuestionDifficulty,
   QuestionType,
 } from '../services/game/gameTypes.js'
+
+import {
+  CATEGORY_CONFIG,
+} from '../data/categories/categoryConfig.js'
 
 const QUESTION_TYPES: QuestionType[] = [
   'name-the-song',
@@ -40,6 +46,11 @@ export async function getGameQuestion(
         ? Number(req.query.decade)
         : undefined
 
+    const categoryId =
+      typeof req.query.category === 'string'
+        ? req.query.category
+        : undefined
+
     const excludedTrackIds =
       typeof req.query.exclude === 'string'
         ? req.query.exclude
@@ -71,12 +82,41 @@ export async function getGameQuestion(
       })
     }
 
+    if (categoryId !== undefined) {
+      const categoryExists =
+        CATEGORY_CONFIG.some(
+          (category) =>
+            category.id === categoryId,
+        )
+
+      if (!categoryExists) {
+        return res.status(400).json({
+          error: 'Invalid category',
+        })
+      }
+
+      if (type !== 'name-the-song') {
+        return res.status(400).json({
+          error:
+            'Category games only support the "name-the-song" question type.',
+        })
+      }
+
+      if (decade !== undefined) {
+        return res.status(400).json({
+          error:
+            'Category games cannot be combined with a decade.',
+        })
+      }
+    }
+
     const question =
       await generateGameQuestion(
         type,
         difficulty,
         decade,
         excludedTrackIds,
+        categoryId,
       )
 
     return res.json({

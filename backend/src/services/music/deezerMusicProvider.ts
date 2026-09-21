@@ -41,7 +41,11 @@ type DeezerGenreResponse = {
 type DeezerArtist = {
   id: number
   name?: string
+  tracklist?: string
+  nb_album?: number
+  nb_fan?: number
 }
+
 
 type DeezerArtistResponse = {
   data?: DeezerArtist[]
@@ -352,6 +356,38 @@ async searchArtists(
     (await response.json()) as DeezerArtistResponse
 
   return data.data ?? []
+}
+
+async getArtistTracksByUrl(
+  tracklistUrl: string,
+  limit = 50,
+): Promise<MusicTrack[]> {
+  const url = new URL(tracklistUrl)
+
+  url.searchParams.set(
+    'limit',
+    String(limit),
+  )
+
+  const response = await fetch(url)
+
+  if (!response.ok) {
+    throw new Error(
+      `Deezer artist tracklist request failed: ${response.status}`,
+    )
+  }
+
+  const data =
+    (await response.json()) as DeezerSearchResponse
+
+  const tracks = (data.data ?? [])
+    .map(transformTrack)
+    .filter(
+      (track): track is MusicTrack =>
+        track !== null,
+    )
+
+  return this.enrichTracks(tracks)
 }
 
 
