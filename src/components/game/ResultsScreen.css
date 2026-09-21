@@ -1,21 +1,14 @@
 .results-page {
   min-height: calc(100vh - var(--navbar-height));
 
-  padding: 72px 24px 80px;
+  padding: 80px 40px 120px;
 
-  display: flex;
-  justify-content: center;
-
-  background:
-    radial-gradient(
-      circle at 50% 0%,
-      rgba(139, 92, 246, 0.08),
-      transparent 34%
-    );
+  background: var(--color-bg);
 }
 
 .results-page__container {
-  width: min(100%, 820px);
+  width: min(100%, 900px);
+  margin: 0 auto;
 
   display: flex;
   flex-direction: column;
@@ -26,7 +19,7 @@
 @keyframes results-enter {
   from {
     opacity: 0;
-    transform: translateY(18px);
+    transform: translateY(14px);
   }
 
   to {
@@ -34,6 +27,7 @@
     transform: translateY(0);
   }
 }
+
 
 /* =========================================
    HEADER
@@ -50,126 +44,85 @@
 
   font-size: 9px;
   font-weight: 800;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.22em;
 }
 
 .results-performance {
-  margin-top: 16px;
+  margin-top: 18px;
 }
 
 .results-performance h1 {
-  margin: 0;
+  max-width: 820px;
+  margin: 0 auto;
 
   color: var(--color-white);
 
   font-family: var(--font-display);
-  font-size: clamp(42px, 7vw, 72px);
+  font-size: clamp(48px, 8vw, 86px);
   font-weight: 700;
-  line-height: 0.95;
-  letter-spacing: -0.055em;
-
-  text-shadow:
-    0 0 35px rgba(139, 92, 246, 0.12);
+  line-height: 0.88;
+  letter-spacing: -0.065em;
+  text-transform: uppercase;
 }
 
 .results-performance p {
-  margin: 16px 0 0;
+  max-width: 460px;
+  margin: 20px auto 0;
 
-  color: var(--color-subtle);
+  color: var(--color-muted);
 
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 1.6;
 }
+
 
 /* =========================================
    SCORE
    ========================================= */
 
 .results-score {
-  position: relative;
-
-  margin-top: 52px;
-  padding: 34px 24px 30px;
+  margin-top: 64px;
+  padding: 0 0 48px;
 
   display: flex;
   flex-direction: column;
   align-items: center;
 
-  background:
-    linear-gradient(
-      135deg,
-      rgba(139, 92, 246, 0.1),
-      rgba(34, 211, 238, 0.025) 55%,
-      rgba(236, 72, 153, 0.05)
-    ),
-    var(--color-surface);
-
-  border: 1px solid rgba(139, 92, 246, 0.22);
-  border-radius: var(--radius-lg);
-
-  box-shadow:
-    0 18px 60px rgba(0, 0, 0, 0.16),
-    0 0 45px rgba(139, 92, 246, 0.06);
-
-  overflow: hidden;
-}
-
-.results-score::before {
-  content: '';
-
-  position: absolute;
-  top: 0;
-  left: 15%;
-  right: 15%;
-
-  height: 1px;
-
-  background: var(--gradient-primary);
-
-  opacity: 0.7;
+  border-bottom: 1px solid var(--border-medium);
 }
 
 .results-score__label {
   color: var(--color-subtle);
 
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 800;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.22em;
 }
 
 .results-score__value {
   display: block;
 
-  margin-top: 7px;
+  margin-top: 10px;
 
   color: var(--color-white);
 
   font-family: var(--font-display);
-  font-size: clamp(68px, 12vw, 112px);
+  font-size: clamp(76px, 13vw, 128px);
   font-weight: 700;
-  line-height: 0.9;
-  letter-spacing: -0.065em;
-
-  background: linear-gradient(
-    135deg,
-    var(--color-white),
-    var(--color-purple-light)
-  );
-
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  line-height: 0.82;
+  letter-spacing: -0.075em;
 }
 
 .results-score__unit {
-  margin-top: 12px;
+  margin-top: 16px;
 
   color: var(--color-purple-light);
 
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 800;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.24em;
 }
+
 
 /* =========================================
    SECTION LABELS
@@ -178,76 +131,74 @@
 .results-section-label {
   display: block;
 
-  color: var(--color-subtle);
+  color: var(--color-purple-light);
 
   font-size: 8px;
   font-weight: 800;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.2em;
 }
+
 
 /* =========================================
    RECOGNITION SPEED
    ========================================= */
 
 .results-speed {
-  margin-top: 14px;
-  padding: 24px;
+  padding: 30px 0;
 
-  background: var(--color-surface);
+  background: transparent;
 
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-lg);
+  border: 0;
+  border-bottom: 1px solid var(--border-medium);
+  border-radius: 0;
 }
 
 .results-speed__header {
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: space-between;
 }
 
 .results-speed__header h2,
 .results-breakdown__header h2 {
-  margin: 7px 0 0;
+  margin: 8px 0 0;
 
   color: var(--color-white);
 
   font-family: var(--font-display);
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
-  letter-spacing: -0.025em;
+  line-height: 1;
+  letter-spacing: -0.03em;
 }
 
 .results-speed__icon {
-  width: 34px;
-  height: 34px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  font-size: 15px;
-
-  background: rgba(34, 211, 238, 0.07);
-
-  border: 1px solid rgba(34, 211, 238, 0.16);
-  border-radius: 50%;
+  display: none;
 }
 
 .results-speed__main {
-  margin-top: 24px;
+  margin-top: 28px;
 
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: center;
-  gap: 36px;
+  gap: 40px;
 }
 
 .results-speed__average,
 .results-speed__fastest {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 7px;
+
+  gap: 8px;
+}
+
+.results-speed__average {
+  align-items: flex-start;
+}
+
+.results-speed__fastest {
+  align-items: flex-end;
 }
 
 .results-speed__average span,
@@ -256,18 +207,16 @@
 
   font-size: 8px;
   font-weight: 800;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.17em;
 }
 
 .results-speed__average strong,
 .results-speed__fastest strong {
-  color: var(--color-white);
-
   font-family: var(--font-display);
-  font-size: 34px;
+  font-size: 38px;
   font-weight: 600;
   line-height: 1;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.045em;
 }
 
 .results-speed__average strong {
@@ -280,39 +229,37 @@
 
 .results-speed__line {
   width: 1px;
-  height: 42px;
+  height: 48px;
 
   background: var(--border-medium);
 }
+
 
 /* =========================================
    CORE STATS
    ========================================= */
 
 .results-stats {
-  margin-top: 14px;
-
   display: grid;
   grid-template-columns: repeat(4, 1fr);
 
-  background: var(--color-surface);
+  background: transparent;
 
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-lg);
-
-  overflow: hidden;
+  border: 0;
+  border-bottom: 1px solid var(--border-medium);
+  border-radius: 0;
 }
 
 .results-stat {
-  min-height: 92px;
-  padding: 18px 12px;
+  min-height: 110px;
+  padding: 22px 16px;
 
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
 
-  gap: 8px;
+  gap: 9px;
 }
 
 .results-stat + .results-stat {
@@ -324,17 +271,17 @@
 
   font-size: 8px;
   font-weight: 800;
-  letter-spacing: 0.14em;
-  text-align: center;
+  letter-spacing: 0.15em;
 }
 
 .results-stat strong {
   color: var(--color-white);
 
   font-family: var(--font-display);
-  font-size: 25px;
+  font-size: 28px;
   font-weight: 600;
   line-height: 1;
+  letter-spacing: -0.035em;
 }
 
 .results-stat strong small {
@@ -345,20 +292,21 @@
   font-weight: 600;
 }
 
+
 /* =========================================
-   BREAKDOWN
+   SONG BREAKDOWN
    ========================================= */
 
 .results-breakdown {
-  margin-top: 48px;
+  margin-top: 64px;
 }
 
 .results-breakdown__header {
+  margin-bottom: 18px;
+
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-
-  margin-bottom: 14px;
 }
 
 .results-breakdown__count {
@@ -366,25 +314,32 @@
 
   font-size: 8px;
   font-weight: 800;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.15em;
 }
 
 .results-breakdown__list {
   display: flex;
   flex-direction: column;
 
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--border-medium);
 }
 
+
+/* =========================================
+   TRACK ROW
+   ========================================= */
+
 .results-breakdown__item {
-  min-height: 76px;
-  padding: 14px 16px;
+  position: relative;
+
+  min-height: 82px;
+  padding: 16px 8px;
 
   display: grid;
-  grid-template-columns: 38px minmax(0, 1fr) auto;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
   align-items: center;
 
-  gap: 14px;
+  gap: 18px;
 
   border-bottom: 1px solid var(--border-subtle);
 
@@ -394,18 +349,19 @@
 }
 
 .results-breakdown__item:hover {
-  padding-left: 20px;
-  padding-right: 20px;
+  padding-left: 14px;
+  padding-right: 14px;
 
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--color-surface);
 }
 
 .results-breakdown__number {
   color: var(--color-subtle);
 
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: 17px;
   font-weight: 600;
+  line-height: 1;
 }
 
 .results-breakdown__song {
@@ -414,7 +370,7 @@
   display: flex;
   flex-direction: column;
 
-  gap: 4px;
+  gap: 5px;
 }
 
 .results-breakdown__song strong {
@@ -422,8 +378,9 @@
 
   color: var(--color-white);
 
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
+  line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -434,18 +391,24 @@
   color: var(--color-subtle);
 
   font-size: 10px;
+  line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+
+/* =========================================
+   TRACK RESULT
+   ========================================= */
+
 .results-breakdown__result {
-  min-width: 110px;
+  min-width: 120px;
 
   display: flex;
   flex-direction: column;
   align-items: flex-end;
 
-  gap: 4px;
+  gap: 5px;
 }
 
 .results-breakdown__time {
@@ -454,6 +417,7 @@
   font-family: var(--font-display);
   font-size: 15px;
   font-weight: 600;
+  line-height: 1;
 }
 
 .results-breakdown__points {
@@ -464,8 +428,21 @@
   letter-spacing: 0.1em;
 }
 
+.results-breakdown__miss {
+  color: var(--color-subtle);
+
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+}
+
+
+/* =========================================
+   TRACK STATES
+   ========================================= */
+
 .results-breakdown__item--correct {
-  border-left: 2px solid rgba(34, 211, 238, 0.4);
+  border-left: 2px solid rgba(34, 211, 238, 0.45);
 }
 
 .results-breakdown__item--incorrect {
@@ -482,20 +459,13 @@
   opacity: 0.5;
 }
 
-.results-breakdown__miss {
-  color: var(--color-subtle);
-
-  font-size: 8px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-}
 
 /* =========================================
    ACTIONS
    ========================================= */
 
 .results-actions {
-  margin-top: 44px;
+  margin-top: 56px;
 
   display: flex;
   align-items: center;
@@ -506,21 +476,21 @@
 
 .results-actions button {
   min-height: 48px;
-  padding: 0 28px;
+  padding: 0 30px;
 
   border-radius: var(--radius-md);
 
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 800;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
 
   cursor: pointer;
 
   transition:
     transform var(--transition-fast),
-    box-shadow var(--transition-normal),
     background var(--transition-fast),
-    border-color var(--transition-fast);
+    border-color var(--transition-fast),
+    box-shadow var(--transition-normal);
 }
 
 .results-actions__primary {
@@ -537,7 +507,7 @@
   transform: translateY(-2px);
 
   box-shadow:
-    0 0 40px rgba(139, 92, 246, 0.4);
+    0 0 32px rgba(139, 92, 246, 0.3);
 }
 
 .results-actions__primary:active {
@@ -555,39 +525,46 @@
 .results-actions__secondary:hover {
   transform: translateY(-2px);
 
-  background: var(--color-surface-hover);
+  background: var(--color-surface);
 
-  border-color: rgba(139, 92, 246, 0.4);
+  border-color: rgba(139, 92, 246, 0.45);
 }
+
+.results-actions__secondary:active {
+  transform: translateY(0);
+}
+
 
 /* =========================================
    MOBILE
    ========================================= */
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .results-page {
-    padding: 52px 16px 60px;
+    padding: 60px 20px 80px;
   }
 
   .results-performance h1 {
-    font-size: clamp(38px, 12vw, 56px);
+    font-size: clamp(44px, 12vw, 64px);
   }
 
   .results-performance p {
+    max-width: 380px;
+
     font-size: 12px;
   }
 
   .results-score {
-    margin-top: 40px;
-    padding: 30px 18px 27px;
+    margin-top: 52px;
+    padding-bottom: 38px;
   }
 
   .results-score__value {
-    font-size: clamp(64px, 20vw, 88px);
+    font-size: clamp(72px, 21vw, 100px);
   }
 
   .results-speed {
-    padding: 20px 18px;
+    padding: 26px 0;
   }
 
   .results-speed__main {
@@ -596,7 +573,7 @@
 
   .results-speed__average strong,
   .results-speed__fastest strong {
-    font-size: 28px;
+    font-size: 32px;
   }
 
   .results-stats {
@@ -604,7 +581,7 @@
   }
 
   .results-stat {
-    min-height: 86px;
+    min-height: 88px;
   }
 
   .results-stat:nth-child(3) {
@@ -617,24 +594,32 @@
   }
 
   .results-breakdown {
-    margin-top: 38px;
+    margin-top: 48px;
   }
 
   .results-breakdown__item {
-    grid-template-columns: 28px minmax(0, 1fr) auto;
+    grid-template-columns: 38px minmax(0, 1fr) auto;
 
-    padding: 14px 10px;
+    padding: 15px 6px;
 
-    gap: 9px;
+    gap: 10px;
   }
 
   .results-breakdown__item:hover {
-    padding-left: 12px;
-    padding-right: 12px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .results-breakdown__number {
+    font-size: 14px;
+  }
+
+  .results-breakdown__song strong {
+    font-size: 12px;
   }
 
   .results-breakdown__result {
-    min-width: 70px;
+    min-width: 76px;
   }
 
   .results-breakdown__time {
@@ -646,8 +631,140 @@
   }
 
   .results-breakdown__miss {
+    max-width: 76px;
+
     font-size: 7px;
+    line-height: 1.2;
     text-align: right;
+  }
+
+  .results-actions {
+    margin-top: 44px;
+  }
+}
+
+
+/* =========================================
+   SMALL MOBILE
+   ========================================= */
+
+@media (max-width: 480px) {
+  .results-page {
+    padding: 48px 16px 64px;
+  }
+
+  .results-page__eyebrow {
+    font-size: 8px;
+  }
+
+  .results-performance {
+    margin-top: 14px;
+  }
+
+  .results-performance h1 {
+    font-size: clamp(40px, 13vw, 56px);
+  }
+
+  .results-performance p {
+    margin-top: 16px;
+
+    font-size: 11px;
+  }
+
+  .results-score {
+    margin-top: 44px;
+    padding-bottom: 32px;
+  }
+
+  .results-score__value {
+    font-size: clamp(66px, 22vw, 88px);
+  }
+
+  .results-score__unit {
+    margin-top: 12px;
+  }
+
+  .results-speed__header h2,
+  .results-breakdown__header h2 {
+    font-size: 16px;
+  }
+
+  .results-speed__main {
+    gap: 18px;
+  }
+
+  .results-speed__average strong,
+  .results-speed__fastest strong {
+    font-size: 28px;
+  }
+
+  .results-speed__line {
+    height: 38px;
+  }
+
+  .results-stat {
+    min-height: 82px;
+    padding: 18px 12px;
+  }
+
+  .results-stat strong {
+    font-size: 24px;
+  }
+
+  .results-breakdown {
+    margin-top: 42px;
+  }
+
+  .results-breakdown__header {
+    align-items: flex-end;
+  }
+
+  .results-breakdown__item {
+    min-height: 72px;
+
+    grid-template-columns: 30px minmax(0, 1fr) auto;
+
+    padding: 13px 4px;
+
+    gap: 8px;
+  }
+
+  .results-breakdown__item:hover {
+    padding-left: 7px;
+    padding-right: 7px;
+  }
+
+  .results-breakdown__number {
+    font-size: 12px;
+  }
+
+  .results-breakdown__song {
+    gap: 3px;
+  }
+
+  .results-breakdown__song strong {
+    font-size: 11px;
+  }
+
+  .results-breakdown__song span {
+    font-size: 9px;
+  }
+
+  .results-breakdown__result {
+    min-width: 68px;
+  }
+
+  .results-breakdown__time {
+    font-size: 12px;
+  }
+
+  .results-breakdown__points {
+    font-size: 6px;
+  }
+
+  .results-breakdown__miss {
+    max-width: 68px;
+    font-size: 6px;
   }
 
   .results-actions {

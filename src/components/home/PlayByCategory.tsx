@@ -1,157 +1,265 @@
-import {
-  Disc3,
-  CassetteTape,
-  Headphones,
-  Music2,
-  Radio,
-  ArrowUpRight,
-} from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Dices } from 'lucide-react'
 
 import './PlayByCategory.css'
 
-const categories = [
+type Category = {
+  name: string
+  description: string
+  type: 'genre' | 'group' | 'artist' | 'themed'
+}
+
+const categories: Category[] = [
   {
-    name: 'Pop',
-    count: '01',
-    icon: Disc3,
-    type: 'genre',
-  },
-  {
-    name: 'Hip-Hop',
-    count: '02',
-    icon: Headphones,
-    type: 'genre',
-  },
-  {
-    name: 'R&B',
-    count: '03',
-    icon: CassetteTape,
-    type: 'genre',
-  },
-  {
-    name: 'Afrobeats',
-    count: '04',
-    icon: Radio,
-    type: 'genre',
-  },
-  {
-    name: 'Amapiano',
-    count: '05',
-    icon: Disc3,
-    type: 'genre',
-  },
-  {
-    name: 'Indie',
-    count: '06',
-    icon: CassetteTape,
-    type: 'genre',
-  },
-  {
-    name: 'Rock',
-    count: '07',
-    icon: Headphones,
-    type: 'genre',
-  },
-  {
-    name: 'Dancehall',
-    count: '08',
-    icon: Radio,
+    name: 'All Things African',
+    description: 'Afrobeats · Amapiano · Legends',
     type: 'genre',
   },
   {
     name: 'K-Pop',
-    count: '09',
-    icon: Music2,
+    description: 'EXO · MONSTA X · GOT7',
     type: 'genre',
   },
   {
-    name: 'House',
-    count: '10',
-    icon: Disc3,
+    name: 'Disney & Nick Throwbacks',
+    description: 'Hannah Montana · iCarly · A.N.T. Farm',
+    type: 'themed',
+  },
+  {
+    name: 'Girl Groups',
+    description: 'Spice Girls · Little Mix · Pussycat Dolls',
+    type: 'group',
+  },
+  {
+    name: 'Boy Bands',
+    description: 'One Direction · NSYNC · Why Don’t We',
+    type: 'group',
+  },
+  {
+    name: 'Indie & Alt',
+    description: 'Yeah Yeah Yeahs · Tame Impala · MGMT',
     type: 'genre',
+  },
+  {
+    name: 'Michael Jackson',
+    description: 'The Jackson 5 · The Jacksons · Solo',
+    type: 'artist',
+  },
+  {
+    name: 'Beyoncé',
+    description: 'Destiny’s Child · Solo · The Carters',
+    type: 'artist',
+  },
+  {
+    name: 'Queen',
+    description: 'Classic hits · Deep cuts · Live',
+    type: 'artist',
+  },
+  {
+    name: 'Ariana Grande',
+    description: 'Early hits · Pop era · Sweetener',
+    type: 'artist',
   },
 ]
 
 function PlayByCategory() {
-  function handleCategoryClick(category: string) {
-    console.log(`Play category: ${category}`)
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [selectedCategory, setSelectedCategory] =
+    useState<Category | null>(null)
+  const [isSpinning, setIsSpinning] = useState(false)
+
+  const spinTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (spinTimeoutRef.current) {
+        clearTimeout(spinTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  function handleSpin() {
+    if (isSpinning) return
+
+    setIsSpinning(true)
+
+    const finalIndex = Math.floor(
+      Math.random() * categories.length,
+    )
+
+    let currentIndex = activeIndex
+    let step = 0
+
+    const totalSteps = 18 + Math.floor(Math.random() * 8)
+
+    function advance() {
+      step += 1
+      currentIndex =
+        (currentIndex + 1) % categories.length
+
+      setActiveIndex(currentIndex)
+
+      if (step < totalSteps) {
+        const progress = step / totalSteps
+
+        // Fast in the beginning, slower near the end.
+        const delay =
+          progress < 0.65
+            ? 55
+            : progress < 0.85
+              ? 100
+              : 180
+
+        spinTimeoutRef.current = setTimeout(
+          advance,
+          delay,
+        )
+      } else {
+        setActiveIndex(finalIndex)
+
+        spinTimeoutRef.current = setTimeout(() => {
+          setIsSpinning(false)
+          setSelectedCategory(categories[finalIndex])
+        }, 350)
+      }
+    }
+
+    advance()
+  }
+
+  function handleCloseModal() {
+    setSelectedCategory(null)
+  }
+
+  function handlePlayCategory() {
+    if (!selectedCategory) return
+
+    console.log(
+      `Play category: ${selectedCategory.name}`,
+    )
 
     // Gameplay routing will be connected here.
   }
 
   return (
-    <section className="categories">
-      <div className="categories__container">
-        <div className="categories__header">
-          <div>
-            <p className="label">
-              PLAY BY CATEGORY
+    <>
+      <section className="categories">
+        <div className="categories__container">
+
+          <div className="categories__header">
+            <div>
+              <p className="label">
+                PLAY BY CATEGORY
+              </p>
+
+              <h2 className="heading-lg">
+                Let fate pick your sound.
+              </h2>
+            </div>
+
+            <span className="categories__count">
+              {String(activeIndex + 1).padStart(2, '0')}
+              {' / '}
+              {String(categories.length).padStart(2, '0')}
+            </span>
+          </div>
+
+          <div
+            className={`category-spinner ${
+              isSpinning
+                ? 'category-spinner--spinning'
+                : ''
+            }`}
+          >
+            <div className="category-spinner__window">
+              <span className="category-spinner__number">
+                {String(activeIndex + 1).padStart(2, '0')}
+              </span>
+
+              <span className="category-spinner__name">
+                {categories[activeIndex].name}
+              </span>
+
+              <span className="category-spinner__status">
+                {isSpinning
+                  ? 'SPINNING...'
+                  : 'READY'}
+              </span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="category-spin-button"
+            onClick={handleSpin}
+            disabled={isSpinning}
+          >
+            <Dices size={17} strokeWidth={1.8} />
+
+            <span>
+              {isSpinning
+                ? 'SPINNING'
+                : 'SPIN THE CATEGORIES'}
+            </span>
+          </button>
+
+        </div>
+      </section>
+
+      {selectedCategory && (
+        <div
+          className="category-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="category-modal-title"
+          onClick={handleCloseModal}
+        >
+          <div
+            className="category-modal__content"
+            onClick={(event) =>
+              event.stopPropagation()
+            }
+          >
+            <span className="category-modal__label">
+              CATEGORY SELECTED
+            </span>
+
+            <h2
+              id="category-modal-title"
+              className="category-modal__title"
+            >
+              {selectedCategory.name}
+            </h2>
+
+            <p className="category-modal__description">
+              {selectedCategory.description}
             </p>
 
-            <h2 className="heading-lg">
-              Pick your sound.
-            </h2>
-          </div>
+            <p className="category-modal__prompt">
+              Ready to test yourself?
+            </p>
 
-          <p className="categories__intro">
-            From pop hits to late-night house,
-            pick a sound and start guessing.
-          </p>
-        </div>
+            <div className="category-modal__actions">
+              <button
+                type="button"
+                className="category-modal__play"
+                onClick={handlePlayCategory}
+              >
+                PLAY CATEGORY
+              </button>
 
-        <div className="categories__collection">
-          <div className="categories__collection-label">
-            <span>MUSIC COLLECTION</span>
-            <span>10 CATEGORIES</span>
-          </div>
-
-          <div className="categories__list">
-            {categories.map((category) => {
-              const Icon = category.icon
-
-              return (
-                <button
-                  key={category.name}
-                  type="button"
-                  className="category-item"
-                  onClick={() =>
-                    handleCategoryClick(category.name)
-                  }
-                >
-                  <span className="category-item__number">
-                    {category.count}
-                  </span>
-
-                  <span className="category-item__record">
-                    <Icon
-                      size={22}
-                      strokeWidth={1.5}
-                    />
-                  </span>
-
-                  <span className="category-item__name">
-                    {category.name}
-                  </span>
-
-                  <ArrowUpRight
-                    className="category-item__arrow"
-                    size={17}
-                  />
-                </button>
-              )
-            })}
+              <button
+                type="button"
+                className="category-modal__cancel"
+                onClick={handleCloseModal}
+              >
+                CANCEL
+              </button>
+            </div>
           </div>
         </div>
-
-        <button
-          type="button"
-          className="categories__view-all"
-        >
-          <span>VIEW ALL CATEGORIES</span>
-          <ArrowUpRight size={16} />
-        </button>
-      </div>
-    </section>
+      )}
+    </>
   )
 }
 
