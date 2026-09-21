@@ -1,6 +1,7 @@
 .profile-page {
   min-height: calc(100vh - var(--navbar-height));
   padding: 40px 40px 64px;
+  color: var(--color-text);
 }
 
 .profile-page__container {
@@ -8,38 +9,47 @@
   margin: 0 auto;
 }
 
-/* Header */
+/* ========================================
+   HEADER
+   ======================================== */
 
 .profile-header {
   display: grid;
   grid-template-columns: 72px minmax(0, 1fr) auto;
   align-items: center;
   gap: 18px;
+
   margin-bottom: 28px;
   padding-bottom: 24px;
+
   border-bottom: 1px solid var(--border-subtle);
 }
 
 .profile-header__record {
   width: 72px;
   height: 72px;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   color: var(--color-lilac);
   background: var(--color-surface);
+
   border: 1px solid var(--border-medium);
   border-radius: 50%;
+
   box-shadow: var(--shadow-sm);
 }
 
 .profile-header__identity .label {
-  margin-bottom: 5px;
+  margin: 0 0 5px;
   color: var(--color-lilac);
 }
 
 .profile-header__identity h1 {
   margin: 0;
+  color: var(--color-text);
 }
 
 .profile-username {
@@ -53,10 +63,15 @@
   flex-direction: column;
   align-items: flex-end;
   gap: 4px;
+
   color: var(--color-subtle);
   font-size: 8px;
   font-weight: 700;
   letter-spacing: 0.13em;
+}
+
+.profile-header__tag span {
+  color: var(--color-subtle);
 }
 
 .profile-header__tag strong {
@@ -64,26 +79,34 @@
   font-size: 10px;
 }
 
-/* Main stats */
+/* ========================================
+   MAIN STATS
+   ======================================== */
 
 .profile-stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
+
   margin-bottom: 36px;
+
   background: var(--color-surface);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-lg);
+
   overflow: hidden;
   box-shadow: var(--shadow-sm);
 }
 
 .profile-stat {
   min-height: 96px;
+
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 7px;
+
   padding: 16px 20px;
+
   border-right: 1px solid var(--border-subtle);
 }
 
@@ -110,13 +133,17 @@
   display: flex;
   align-items: center;
   gap: 7px;
+
+  color: var(--color-text);
 }
 
 .profile-stat__streak svg {
   color: var(--color-rose);
 }
 
-/* Main content */
+/* ========================================
+   MAIN CONTENT
+   ======================================== */
 
 .profile-content {
   display: grid;
@@ -127,6 +154,7 @@
 
 .profile-section {
   min-width: 0;
+  color: var(--color-text);
 }
 
 .profile-section__header {
@@ -134,16 +162,19 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 20px;
+
   margin-bottom: 12px;
 }
 
 .profile-section__header .label {
-  margin-bottom: 5px;
+  margin: 0 0 5px;
   color: var(--color-muted);
 }
 
 .profile-section__header h2 {
   margin: 0;
+
+  color: var(--color-text);
   font-family: var(--font-display);
   font-size: 21px;
   line-height: 1.1;
@@ -154,10 +185,13 @@
   color: var(--color-lilac);
 }
 
-/* Personal bests */
+/* ========================================
+   PERSONAL BESTS
+   ======================================== */
 
 .personal-bests {
   overflow: hidden;
+
   background: var(--color-surface);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-lg);
@@ -168,8 +202,10 @@
   grid-template-columns: 34px minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
+
   min-height: 54px;
   padding: 8px 16px;
+
   border-bottom: 1px solid var(--border-subtle);
 }
 
@@ -199,16 +235,21 @@
   font-size: 14px;
 }
 
-/* Total correct */
+/* ========================================
+   TOTAL CORRECT
+   ======================================== */
 
 .profile-correct {
   display: flex;
   align-items: center;
   justify-content: space-between;
+
   min-height: 76px;
   margin-top: 12px;
   padding: 14px 18px;
+
   background: var(--color-bg-secondary);
+
   border: 1px solid var(--border-medium);
   border-left: 3px solid var(--color-periwinkle);
 }
@@ -227,6 +268,7 @@
 }
 
 .profile-correct strong {
+  color: var(--color-text);
   font-family: var(--font-display);
   font-size: 24px;
   line-height: 1;
@@ -236,13 +278,18 @@
   color: var(--color-periwinkle);
 }
 
-/* Recent games */
+/* ========================================
+   RECENT GAMES
+   ======================================== */
 
 .score-history {
   overflow: hidden;
+
   background: var(--color-surface);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-lg);
+
+  color: var(--color-text);
 }
 
 .score-history-entry {
@@ -250,10 +297,16 @@
   grid-template-columns: 36px minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 11px;
+
   min-height: 64px;
   padding: 8px 14px;
+
   border-bottom: 1px solid var(--border-subtle);
-  transition: background var(--transition-fast);
+
+  color: var(--color-text);
+
+  transition:
+    background var(--transition-fast);
 }
 
 .score-history-entry:last-child {
@@ -264,30 +317,48 @@
   background: var(--color-surface-hover);
 }
 
+/* Record icon */
+
 .score-history__icon {
   width: 32px;
   height: 32px;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   color: var(--color-lilac);
   background: var(--color-bg-secondary);
+
   border: 1px solid var(--border-subtle);
   border-radius: 50%;
 }
 
+.score-history__icon svg {
+  color: var(--color-lilac);
+}
+
+/* Game name + date */
+
 .score-history-main {
   min-width: 0;
+
   display: flex;
   flex-direction: column;
   gap: 3px;
+
+  color: var(--color-text);
 }
 
 .score-history-main strong {
   overflow: hidden;
+
+  color: var(--color-text);
+
   font-family: var(--font-display);
   font-size: 12px;
   font-weight: 600;
+
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -297,16 +368,23 @@
   font-size: 9px;
 }
 
+/* Score */
+
 .score-history-score {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 2px;
+
+  color: var(--color-text);
 }
 
 .score-history-score strong {
+  color: var(--color-text);
+
   font-family: var(--font-display);
   font-size: 14px;
+  font-weight: 700;
 }
 
 .score-history-score span {
@@ -316,38 +394,55 @@
   letter-spacing: 0.1em;
 }
 
+/* Accuracy / streak / answers */
+
 .score-history-stats {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 3px;
+
   color: var(--color-muted);
+
   font-size: 9px;
   white-space: nowrap;
+}
+
+.score-history-stats span {
+  color: var(--color-muted);
 }
 
 .score-history-streak {
   display: inline-flex;
   align-items: center;
   gap: 3px;
+
+  color: var(--color-text-secondary);
 }
 
 .score-history-streak svg {
   color: var(--color-rose);
 }
 
+/* Empty state */
+
 .score-history__empty {
   min-height: 180px;
+
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 8px;
+
   padding: 24px;
+
   color: var(--color-muted);
   background: var(--color-surface);
+
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-lg);
+
   text-align: center;
 }
 
@@ -357,10 +452,13 @@
 
 .score-history__empty p {
   margin: 0;
+  color: var(--color-muted);
   font-size: 12px;
 }
 
-/* Tablet */
+/* ========================================
+   TABLET
+   ======================================== */
 
 @media (max-width: 900px) {
   .profile-page {
@@ -376,7 +474,9 @@
   }
 }
 
-/* Mobile */
+/* ========================================
+   MOBILE
+   ======================================== */
 
 @media (max-width: 640px) {
   .profile-page {
@@ -386,6 +486,7 @@
   .profile-header {
     grid-template-columns: 52px minmax(0, 1fr);
     gap: 12px;
+
     padding-bottom: 20px;
   }
 
@@ -436,13 +537,19 @@
 
   .score-history-stats {
     grid-column: 2 / -1;
+
     flex-direction: row;
     align-items: center;
     justify-content: flex-start;
     gap: 10px;
+
     padding-bottom: 3px;
   }
 }
+
+/* ========================================
+   SMALL MOBILE
+   ======================================== */
 
 @media (max-width: 400px) {
   .profile-stats {
@@ -451,6 +558,7 @@
 
   .profile-stat {
     min-height: 70px;
+
     border-right: 0;
     border-bottom: 1px solid var(--border-subtle);
   }

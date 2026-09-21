@@ -1,5 +1,12 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import {
+  Disc3,
+  Headphones,
+  Music2,
+  Sparkles,
+  Star,
+} from 'lucide-react'
 
 import type {
   QuestionDifficulty,
@@ -138,192 +145,279 @@ function BuildGame() {
   }
 
   return (
-    <div className="build-game-page">
+    <main className="build-game-page">
       <div className="build-game-page__container">
+
         <header className="build-game-page__header">
-          <p className="label">
-            CUSTOM GAME
-          </p>
+          <div className="build-game-page__header-copy">
+            <p className="label">
+              CUSTOM GAME
+            </p>
 
-          <h1 className="display-lg">
-            Build Your Game.
-          </h1>
+            <h1 className="display-lg">
+              Build Your Game.
+            </h1>
 
-          <p>
-            Make the round exactly how you
-            want it.
-          </p>
+            <p>
+              Pick your rules, mix it up,
+              and make the round yours.
+            </p>
+          </div>
+
+          <div
+            className="build-game-page__header-doodle"
+            aria-hidden="true"
+          >
+            <Disc3 size={54} strokeWidth={1.2} />
+          </div>
         </header>
 
-        <section className="build-game">
-          <div className="build-game__section">
-            <div className="build-game__section-header">
-              <p className="label">
+        <section className="build-map">
+
+          {/* Doodles */}
+          <div
+            className="build-doodle build-doodle--star"
+            aria-hidden="true"
+          >
+            <Star size={20} />
+          </div>
+
+          <div
+            className="build-doodle build-doodle--sparkle"
+            aria-hidden="true"
+          >
+            <Sparkles size={22} />
+          </div>
+
+          <div
+            className="build-doodle build-doodle--note"
+            aria-hidden="true"
+          >
+            ♪
+          </div>
+
+          <div
+            className="build-doodle build-doodle--small-note"
+            aria-hidden="true"
+          >
+            ♫
+          </div>
+
+          {/* Hand-drawn connecting lines */}
+          <svg
+            className="build-map__connections"
+            viewBox="0 0 1000 760"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M 380 330 C 300 270, 270 220, 250 155"
+            />
+
+            <path
+              d="M 620 330 C 700 270, 730 220, 750 155"
+            />
+
+            <path
+              d="M 380 430 C 300 485, 275 540, 250 610"
+            />
+
+            <path
+              d="M 620 430 C 700 485, 725 540, 750 610"
+            />
+          </svg>
+
+          {/* Question type */}
+          <div className="build-node build-node--question">
+            <div className="build-node__heading">
+              <span className="build-node__number">
                 01
-              </p>
+              </span>
 
-              <h2>
-                What do you want to guess?
-              </h2>
+              <Music2 size={17} />
             </div>
 
-            <div className="build-game__options">
-              {questionTypes.map(
-                (option) => (
-                  <button
-                    key={option.type}
-                    type="button"
-                    className={
-                      questionType ===
-                      option.type
-                        ? 'is-selected'
-                        : ''
-                    }
-                    onClick={() =>
-                      setQuestionType(
-                        option.type,
-                      )
-                    }
-                  >
-                    {option.label}
-                  </button>
-                ),
-              )}
+            <h2>
+              What do you
+              <span>want to guess?</span>
+            </h2>
+
+            <div className="build-node__options">
+              {questionTypes.map((option) => (
+                <button
+                  key={option.type}
+                  type="button"
+                  className={
+                    questionType === option.type
+                      ? 'is-selected'
+                      : ''
+                  }
+                  onClick={() =>
+                    setQuestionType(
+                      option.type,
+                    )
+                  }
+                >
+                  {option.label}
+                </button>
+              ))}
             </div>
           </div>
 
-          <div className="build-game__section">
-            <div className="build-game__section-header">
-              <p className="label">
+          {/* Era */}
+          <div className="build-node build-node--era">
+            <div className="build-node__heading">
+              <span className="build-node__number">
                 02
-              </p>
+              </span>
 
-              <h2>
-                What era?
-              </h2>
+              <Disc3 size={17} />
             </div>
 
-            <div className="build-game__options build-game__options--eras">
-              {eras.map(
-                (era) => {
-                  const isSelected =
-                    decade ===
-                    era.decade
+            <h2>
+              Pick an
+              <span>era.</span>
+            </h2>
 
-                  return (
-                    <button
-                      key={era.label}
-                      type="button"
-                      className={
-                        isSelected
-                          ? 'is-selected'
-                          : ''
-                      }
-                      onClick={() =>
-                        setDecade(
-                          era.decade,
-                        )
-                      }
-                    >
-                      {era.label}
-                    </button>
-                  )
-                },
-              )}
+            <div className="build-node__options build-node__options--era">
+              {eras.map((era) => {
+                const isSelected =
+                  decade === era.decade
+
+                return (
+                  <button
+                    key={era.label}
+                    type="button"
+                    className={
+                      isSelected
+                        ? 'is-selected'
+                        : ''
+                    }
+                    onClick={() =>
+                      setDecade(
+                        era.decade,
+                      )
+                    }
+                  >
+                    {era.label}
+                  </button>
+                )
+              })}
             </div>
           </div>
 
-          <div className="build-game__section">
-            <div className="build-game__section-header">
-              <p className="label">
+          {/* Centre */}
+          <div className="build-center">
+            <div className="build-center__record">
+              <Disc3
+                size={48}
+                strokeWidth={1.2}
+              />
+            </div>
+
+            <p className="label">
+              YOUR MIX
+            </p>
+
+            <h2>
+              Build Your
+              <span>Game</span>
+            </h2>
+
+            <p className="build-center__hint">
+              Choose your settings
+            </p>
+          </div>
+
+          {/* Difficulty */}
+          <div className="build-node build-node--difficulty">
+            <div className="build-node__heading">
+              <span className="build-node__number">
                 03
-              </p>
+              </span>
 
-              <h2>
-                Difficulty
-              </h2>
+              <Sparkles size={17} />
             </div>
 
-            <div className="build-game__options">
-              {difficulties.map(
-                (option) => (
-                  <button
-                    key={option}
-                    type="button"
-                    className={
-                      difficulty ===
-                      option
-                        ? 'is-selected'
-                        : ''
-                    }
-                    onClick={() =>
-                      setDifficulty(
-                        option,
-                      )
-                    }
-                  >
-                    {option
-                      .charAt(0)
-                      .toUpperCase() +
-                      option.slice(1)}
-                  </button>
-                ),
-              )}
+            <h2>
+              How hard
+              <span>should it be?</span>
+            </h2>
+
+            <div className="build-node__options">
+              {difficulties.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  className={
+                    difficulty === option
+                      ? 'is-selected'
+                      : ''
+                  }
+                  onClick={() =>
+                    setDifficulty(option)
+                  }
+                >
+                  {option
+                    .charAt(0)
+                    .toUpperCase() +
+                    option.slice(1)}
+                </button>
+              ))}
             </div>
           </div>
 
-          <div className="build-game__section">
-            <div className="build-game__section-header">
-              <p className="label">
+          {/* Length */}
+          <div className="build-node build-node--length">
+            <div className="build-node__heading">
+              <span className="build-node__number">
                 04
-              </p>
+              </span>
 
-              <h2>
-                How long?
-              </h2>
+              <Headphones size={17} />
             </div>
 
-            <div className="build-game__options">
-              {questionCounts.map(
-                (count) => (
-                  <button
-                    key={count}
-                    type="button"
-                    className={
-                      questionCount ===
-                      count
-                        ? 'is-selected'
-                        : ''
-                    }
-                    onClick={() =>
-                      setQuestionCount(
-                        count,
-                      )
-                    }
-                  >
-                    {count}{' '}
-                    {count === 1
-                      ? 'Song'
-                      : 'Songs'}
-                  </button>
-                ),
-              )}
+            <h2>
+              How long
+              <span>is the game?</span>
+            </h2>
+
+            <div className="build-node__options">
+              {questionCounts.map((count) => (
+                <button
+                  key={count}
+                  type="button"
+                  className={
+                    questionCount === count
+                      ? 'is-selected'
+                      : ''
+                  }
+                  onClick={() =>
+                    setQuestionCount(count)
+                  }
+                >
+                  {count} Songs
+                </button>
+              ))}
             </div>
           </div>
 
-          <div className="build-game__start">
+          {/* Start */}
+          <div className="build-start">
             <button
               type="button"
-              onClick={
-                handleStartGame
-              }
+              onClick={handleStartGame}
             >
-              Start Game
+              <span>Start My Game</span>
+              <span className="build-start__arrow">
+                →
+              </span>
             </button>
           </div>
+
         </section>
       </div>
-    </div>
+    </main>
   )
 }
 

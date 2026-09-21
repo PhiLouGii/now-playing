@@ -1,30 +1,594 @@
 .build-game-page {
-  padding: 4rem 1.5rem;
+  min-height: calc(100vh - var(--navbar-height));
+  padding: 30px 32px 50px;
+
+  color: var(--color-text);
+  background: var(--color-bg);
 }
 
 .build-game-page__container {
-  max-width: 1000px;
+  width: min(100%, 1180px);
   margin: 0 auto;
 }
 
+/* ========================================
+   HEADER
+   ======================================== */
+
 .build-game-page__header {
-  margin-bottom: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 10px;
+}
+
+.build-game-page__header-copy .label {
+  margin: 0 0 5px;
+  color: var(--color-lilac);
 }
 
 .build-game-page__header h1 {
-  margin: 0.5rem 0 1rem;
+  margin: 0;
+
+  color: var(--color-text);
+
+  font-family: var(--font-display);
+  font-size: clamp(30px, 4vw, 42px);
+  line-height: 1;
+  letter-spacing: -0.04em;
 }
 
-.build-game__options {
+.build-game-page__header p:last-child {
+  margin: 8px 0 0;
+
+  color: var(--color-muted);
+  font-size: 13px;
+}
+
+.build-game-page__header-doodle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 64px;
+  height: 64px;
+
+  color: var(--color-lilac);
+
+  transform: rotate(-10deg);
+}
+
+/* ========================================
+   MIND MAP
+   ======================================== */
+
+.build-map {
+  position: relative;
+
+  width: 100%;
+  min-height: 710px;
+}
+
+/* ========================================
+   CONNECTIONS
+   ======================================== */
+
+.build-map__connections {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  overflow: visible;
+
+  pointer-events: none;
+}
+
+.build-map__connections path {
+  fill: none;
+
+  stroke: var(--color-silver);
+
+  stroke-width: 2.2;
+  stroke-linecap: round;
+
+  stroke-dasharray: 7 8;
+}
+
+/* ========================================
+   CENTRAL NODE
+   ======================================== */
+
+.build-center {
+  position: absolute;
+  top: 245px;
+  left: 50%;
+
+  width: 250px;
+  min-height: 190px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+
+  text-align: center;
+
+  background: var(--color-surface);
+
+  border: 2px solid var(--color-lilac);
+  border-radius: 46% 54% 52% 48% / 52% 46% 54% 48%;
+
+  box-shadow: var(--shadow-md);
+
+  transform: translateX(-50%) rotate(-1deg);
+
+  z-index: 3;
+}
+
+.build-center__record {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 58px;
+  height: 58px;
+  margin-bottom: 7px;
+
+  color: var(--color-lilac);
+
+  background: var(--color-bg-secondary);
+
+  border: 1px solid var(--border-medium);
+  border-radius: 50%;
+}
+
+.build-center .label {
+  margin: 0 0 3px;
+  color: var(--color-muted);
+}
+
+.build-center h2 {
+  margin: 0;
+
+  color: var(--color-text);
+
+  font-family: var(--font-display);
+  font-size: 24px;
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+}
+
+.build-center h2 span {
+  display: block;
+  color: var(--color-lilac);
+}
+
+.build-center__hint {
+  margin: 8px 0 0;
+
+  color: var(--color-muted);
+
+  font-size: 10px;
+}
+
+/* ========================================
+   MIND MAP NODES
+   ======================================== */
+
+.build-node {
+  position: absolute;
+
+  width: 315px;
+  min-height: 210px;
+
+  padding: 19px 21px;
+
+  background: var(--color-surface);
+
+  border: 1px solid var(--border-medium);
+
+  box-shadow: var(--shadow-sm);
+
+  z-index: 2;
+}
+
+.build-node--question {
+  top: 15px;
+  left: 5px;
+
+  border-radius: 48% 52% 46% 54% / 53% 45% 55% 47%;
+
+  transform: rotate(-2deg);
+
+  background: #F8F1F8;
+}
+
+.build-node--era {
+  top: 15px;
+  right: 5px;
+
+  border-radius: 52% 48% 55% 45% / 46% 54% 44% 56%;
+
+  transform: rotate(2deg);
+
+  background: #F3F0F8;
+}
+
+.build-node--difficulty {
+  bottom: 55px;
+  left: 5px;
+
+  min-height: 195px;
+
+  border-radius: 46% 54% 50% 50% / 55% 45% 52% 48%;
+
+  transform: rotate(1.5deg);
+
+  background: #F7EEEE;
+}
+
+.build-node--length {
+  right: 5px;
+  bottom: 55px;
+
+  min-height: 195px;
+
+  border-radius: 54% 46% 48% 52% / 45% 55% 50% 50%;
+
+  transform: rotate(-1.5deg);
+
+  background: #F2F0F7;
+}
+
+/* ========================================
+   NODE CONTENT
+   ======================================== */
+
+.build-node__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 5px;
+
+  color: var(--color-lilac);
+}
+
+.build-node__number {
+  color: var(--color-subtle);
+
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.build-node h2 {
+  margin: 0 0 13px;
+
+  color: var(--color-text);
+
+  font-family: var(--font-display);
+  font-size: 19px;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+}
+
+.build-node h2 span {
+  color: var(--color-lilac);
+}
+
+/* ========================================
+   NODE OPTIONS
+   ======================================== */
+
+.build-node__options {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
-  margin-top: 1.5rem;
+  gap: 7px;
 }
 
-.build-game__options button {
-  padding: 1rem 1.25rem;
-  border: 2px solid #111;
-  background: transparent;
+.build-node__options button {
+  min-height: 31px;
+
+  padding: 5px 10px;
+
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+
+  border: 1px solid var(--border-medium);
+  border-radius: 11px;
+
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 600;
+
   cursor: pointer;
+
+  transition:
+    transform var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.build-node__options button:hover {
+  color: var(--color-text);
+  background: var(--color-surface-hover);
+  border-color: var(--color-lilac);
+
+  transform: translateY(-1px);
+}
+
+.build-node__options button.is-selected {
+  color: var(--color-text);
+  background: var(--color-lilac);
+  border-color: var(--color-lilac);
+
+  box-shadow: var(--shadow-sm);
+}
+
+/* Era gets smaller options */
+
+.build-node__options--era {
+  gap: 6px;
+}
+
+.build-node__options--era button {
+  min-width: 46px;
+  padding-inline: 8px;
+}
+
+/* ========================================
+   START BUTTON
+   ======================================== */
+
+.build-start {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+
+  transform: translateX(-50%);
+
+  z-index: 4;
+}
+
+.build-start button {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+
+  min-height: 48px;
+  padding: 0 8px 0 20px;
+
+  color: var(--color-text);
+
+  background: var(--color-lilac);
+
+  border: 1px solid var(--color-lilac);
+  border-radius: 15px;
+
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+
+  box-shadow: var(--shadow-md);
+
+  cursor: pointer;
+
+  transition:
+    transform var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.build-start button:hover {
+  background: var(--color-periwinkle);
+  transform: translateY(-2px);
+}
+
+.build-start button:active {
+  transform: translateY(0);
+}
+
+.build-start__arrow {
+  width: 31px;
+  height: 31px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: var(--color-surface);
+
+  border-radius: 9px;
+
+  font-size: 17px;
+}
+
+/* ========================================
+   DOODLES
+   ======================================== */
+
+.build-doodle {
+  position: absolute;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  pointer-events: none;
+
+  z-index: 1;
+}
+
+.build-doodle--star {
+  top: 215px;
+  left: 38%;
+
+  color: var(--color-rose);
+
+  transform: rotate(-12deg);
+}
+
+.build-doodle--sparkle {
+  top: 225px;
+  right: 37%;
+
+  color: var(--color-periwinkle);
+
+  transform: rotate(10deg);
+}
+
+.build-doodle--note {
+  bottom: 245px;
+  left: 43%;
+
+  color: var(--color-lilac);
+
+  font-family: Georgia, serif;
+  font-size: 27px;
+
+  transform: rotate(-8deg);
+}
+
+.build-doodle--small-note {
+  top: 390px;
+  right: 40%;
+
+  color: var(--color-rose);
+
+  font-family: Georgia, serif;
+  font-size: 19px;
+
+  transform: rotate(12deg);
+}
+
+/* ========================================
+   TABLET
+   ======================================== */
+
+@media (max-width: 900px) {
+  .build-game-page {
+    padding: 30px 24px 48px;
+  }
+
+  .build-map {
+    min-height: auto;
+
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+
+    padding: 15px 0 80px;
+  }
+
+  .build-map__connections,
+  .build-center {
+    display: none;
+  }
+
+  .build-node {
+    position: relative;
+    inset: auto;
+
+    width: auto;
+    min-height: 210px;
+
+    transform: none;
+  }
+
+  .build-start {
+    position: absolute;
+    bottom: 0;
+  }
+
+  .build-doodle--star {
+    top: 50%;
+    left: 48%;
+  }
+
+  .build-doodle--sparkle {
+    top: 45%;
+    right: 47%;
+  }
+
+  .build-doodle--note,
+  .build-doodle--small-note {
+    display: none;
+  }
+}
+
+/* ========================================
+   MOBILE
+   ======================================== */
+
+@media (max-width: 600px) {
+  .build-game-page {
+    padding: 24px 16px 40px;
+  }
+
+  .build-game-page__header {
+    margin-bottom: 6px;
+  }
+
+  .build-game-page__header-doodle {
+    width: 46px;
+    height: 46px;
+  }
+
+  .build-game-page__header-doodle svg {
+    width: 40px;
+    height: 40px;
+  }
+
+  .build-game-page__header h1 {
+    font-size: 30px;
+  }
+
+  .build-game-page__header p:last-child {
+    max-width: 280px;
+    font-size: 12px;
+  }
+
+  .build-map {
+    grid-template-columns: 1fr;
+    gap: 15px;
+
+    padding-bottom: 76px;
+  }
+
+  .build-node {
+    min-height: 0;
+    padding: 20px;
+
+    border-radius: 25px;
+
+    transform: none;
+  }
+
+  .build-node h2 {
+    font-size: 20px;
+  }
+
+  .build-node__options button {
+    min-height: 34px;
+  }
+
+  .build-start {
+    width: 100%;
+  }
+
+  .build-start button {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .build-doodle {
+    display: none;
+  }
 }

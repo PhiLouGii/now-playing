@@ -292,4 +292,5 @@ export const DISCOVERY_ARTISTS = [
   'Boygenius',
   'Fontaines D.C.',
   'Wet Leg',
+  'Rosalia',
 ]
