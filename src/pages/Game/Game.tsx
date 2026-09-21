@@ -64,12 +64,16 @@ function getGameMode(
   switch (questionType) {
     case 'name-the-song':
       return 'name-that-song'
+
     case 'name-the-artist':
       return 'name-the-artist'
+
     case 'name-the-album':
       return 'name-the-album'
+
     case 'guess-the-year':
       return 'guess-the-year'
+
     default:
       return 'name-that-song'
   }
@@ -339,7 +343,7 @@ function Game() {
     return (
       <div className="game-page">
         <div className="game-page__container">
-          <main className="game-content">
+          <main className="game-content game-content--loading">
             <p className="game-content__category">
               {roundConfig.name.toUpperCase()}
             </p>
@@ -357,7 +361,7 @@ function Game() {
     return (
       <div className="game-page">
         <div className="game-page__container">
-          <main className="game-content">
+          <main className="game-content game-content--loading">
             <p className="game-content__category">
               {roundConfig.name.toUpperCase()}
             </p>
@@ -373,6 +377,26 @@ function Game() {
           </main>
         </div>
       </div>
+    )
+  }
+
+  if (isGameComplete) {
+    return (
+      <ResultsScreen
+        score={score}
+        totalQuestions={
+          roundConfig.questionCount
+        }
+        correctAnswers={
+          correctAnswers
+        }
+        bestStreak={
+          bestStreak
+        }
+        recognitionResults={
+          recognitionResults
+        }
+      />
     )
   }
 
@@ -647,26 +671,6 @@ function Game() {
     }
   }
 
-  if (isGameComplete) {
-    return (
-      <ResultsScreen
-        score={score}
-        totalQuestions={
-          roundConfig.questionCount
-        }
-        correctAnswers={
-          correctAnswers
-        }
-        bestStreak={
-          bestStreak
-        }
-        recognitionResults={
-          recognitionResults
-        }
-      />
-    )
-  }
-
   return (
     <div className="game-page">
       <div className="game-page__container">
@@ -690,228 +694,235 @@ function Game() {
         />
 
         <main className="game-content">
-          <p className="game-content__category">
-            {question.type ===
-              'name-the-song' &&
-              'NAME THAT SONG'}
+          <div className="game-content__heading">
+            <p className="game-content__category">
+              {question.type ===
+                'name-the-song' &&
+                'NAME THAT SONG'}
 
-            {question.type ===
-              'name-the-artist' &&
-              'NAME THAT ARTIST'}
+              {question.type ===
+                'name-the-artist' &&
+                'NAME THAT ARTIST'}
 
-            {question.type ===
-              'name-the-album' &&
-              'NAME THAT ALBUM'}
+              {question.type ===
+                'name-the-album' &&
+                'NAME THAT ALBUM'}
 
-            {question.type ===
-              'guess-the-year' &&
-              'GUESS THE YEAR'}
-          </p>
+              {question.type ===
+                'guess-the-year' &&
+                'GUESS THE YEAR'}
+            </p>
 
-          <h1>
-            {question.type ===
-              'name-the-song' &&
-              'What song is this?'}
+            <h1>
+              {question.type ===
+                'name-the-song' &&
+                'What song is this?'}
 
-            {question.type ===
-              'name-the-artist' &&
-              'Who performs this song?'}
+              {question.type ===
+                'name-the-artist' &&
+                'Who performs this song?'}
 
-            {question.type ===
-              'name-the-album' &&
-              'Which album is this from?'}
+              {question.type ===
+                'name-the-album' &&
+                'Which album is this from?'}
 
-            {question.type ===
-              'guess-the-year' &&
-              'When was this song released?'}
-          </h1>
-
-          <div className="game-question">
-            <div
-              className={`game-question__art ${
-                isAnswered
-                  ? 'game-question__art--revealed'
-                  : ''
-              }`}
-            >
-              {isAnswered &&
-              question.song.artworkUrl ? (
-                <img
-                  src={
-                    question.song.artworkUrl
-                  }
-                  alt={`${question.song.album} album artwork`}
-                />
-              ) : (
-                <span>?</span>
-              )}
-            </div>
-
-            <AudioPlayer
-              ref={audioPlayerRef}
-              key={question.id}
-              audioUrl={
-                question.song.audioUrl ?? ''
-              }
-              maxListenDuration={
-                maxListenDuration
-              }
-              onTimeUpdate={
-                handleTimeUpdate
-              }
-              onStageComplete={
-                handleStageComplete
-              }
-              onPreviewComplete={
-                handlePreviewComplete
-              }
-              disabled={false}
-              playFullSong={
-                answerStatus ===
-                'revealed'
-              }
-            />
-
-            {isAnswered && (
-              <div className="game-song-reveal">
-                <p className="game-song-reveal__title">
-                  {question.song.title}
-                </p>
-
-                <p className="game-song-reveal__artist">
-                  {question.song.artist}
-                </p>
-
-                <p className="game-song-reveal__album">
-                  {question.song.album}
-                </p>
-
-                {question.type ===
-                  'guess-the-year' &&
-                  question.song.releaseYear !==
-                    undefined && (
-                    <p className="game-song-reveal__year">
-                      {
-                        question.song
-                          .releaseYear
-                      }
-                    </p>
-                  )}
-              </div>
-            )}
+              {question.type ===
+                'guess-the-year' &&
+                'When was this song released?'}
+            </h1>
           </div>
 
-          <AnswerGrid
-            answers={
-              question.answers
-            }
-            selectedAnswer={
-              selectedAnswer
-            }
-            correctAnswer={
-              question.correctAnswer
-            }
-            isAnswered={
-              isAnswered
-            }
-            onSelect={
-              handleAnswer
-            }
-          />
-
-          {!isAnswered && (
-            <div className="game-actions">
-              <button
-                type="button"
-                className="game-advance"
-                onClick={
-                  handleAdvance
-                }
-                disabled={
-                  listeningStage >=
-                  LISTENING_STAGES.length - 1
-                }
+          <div className="game-board">
+            <section className="game-question">
+              <div
+                className={`game-question__art ${
+                  isAnswered
+                    ? 'game-question__art--revealed'
+                    : ''
+                }`}
               >
-                {listeningStage <
-                LISTENING_STAGES.length - 1
-                  ? `ADVANCE → ${
-                      LISTENING_STAGES[
-                        listeningStage + 1
-                      ]
-                    }s`
-                  : 'MAX LISTEN TIME'}
-              </button>
-
-              <button
-                type="button"
-                className="game-reveal"
-                onClick={
-                  handleRevealAnswer
-                }
-              >
-                REVEAL ANSWER
-              </button>
-            </div>
-          )}
-
-          {isAnswered && (
-            <div
-              className={`game-feedback ${
-                answerStatus ===
-                'revealed'
-                  ? 'game-feedback--timeout'
-                  : answerStatus ===
-                      'correct'
-                    ? 'game-feedback--correct'
-                    : 'game-feedback--incorrect'
-              }`}
-            >
-              <div className="game-feedback__label">
-                {answerStatus ===
-                'revealed'
-                  ? 'ANSWER REVEALED'
-                  : answerStatus ===
-                      'correct'
-                    ? 'CORRECT'
-                    : 'INCORRECT'}
+                {isAnswered &&
+                question.song.artworkUrl ? (
+                  <img
+                    src={
+                      question.song.artworkUrl
+                    }
+                    alt={`${question.song.album} album artwork`}
+                  />
+                ) : (
+                  <span>?</span>
+                )}
               </div>
 
-              <div className="game-feedback__answer">
-                {
+              <AudioPlayer
+                ref={audioPlayerRef}
+                key={question.id}
+                audioUrl={
+                  question.song.audioUrl ?? ''
+                }
+                maxListenDuration={
+                  maxListenDuration
+                }
+                onTimeUpdate={
+                  handleTimeUpdate
+                }
+                onStageComplete={
+                  handleStageComplete
+                }
+                onPreviewComplete={
+                  handlePreviewComplete
+                }
+                disabled={false}
+                playFullSong={
+                  answerStatus ===
+                  'revealed'
+                }
+              />
+
+              {isAnswered && (
+                <div className="game-song-reveal">
+                  <p className="game-song-reveal__title">
+                    {question.song.title}
+                  </p>
+
+                  <p className="game-song-reveal__artist">
+                    {question.song.artist}
+                  </p>
+
+                  <p className="game-song-reveal__album">
+                    {question.song.album}
+                  </p>
+
+                  {question.type ===
+                    'guess-the-year' &&
+                    question.song.releaseYear !==
+                      undefined && (
+                      <p className="game-song-reveal__year">
+                        {
+                          question.song
+                            .releaseYear
+                        }
+                      </p>
+                    )}
+                </div>
+              )}
+            </section>
+
+            <section className="game-play-panel">
+              <AnswerGrid
+                answers={
+                  question.answers
+                }
+                selectedAnswer={
+                  selectedAnswer
+                }
+                correctAnswer={
                   question.correctAnswer
                 }
-              </div>
+                isAnswered={
+                  isAnswered
+                }
+                onSelect={
+                  handleAnswer
+                }
+              />
 
-              {answerStatus ===
-                'correct' && (
-                <div className="game-feedback__points">
-                  +
-                  {pointsEarned.toLocaleString()}{' '}
-                  POINTS
+              {!isAnswered && (
+                <div className="game-actions">
+                  <button
+                    type="button"
+                    className="game-advance"
+                    onClick={
+                      handleAdvance
+                    }
+                    disabled={
+                      listeningStage >=
+                      LISTENING_STAGES.length - 1
+                    }
+                  >
+                    {listeningStage <
+                    LISTENING_STAGES.length - 1
+                      ? `ADVANCE → ${
+                          LISTENING_STAGES[
+                            listeningStage + 1
+                          ]
+                        }s`
+                      : 'MAX LISTEN TIME'}
+                  </button>
 
-                  {multiplierEarned >
-                    1 && (
-                    <span>
-                      {' '}×
-                      {
-                        multiplierEarned
-                      }
-                    </span>
-                  )}
+                  <button
+                    type="button"
+                    className="game-reveal"
+                    onClick={
+                      handleRevealAnswer
+                    }
+                  >
+                    REVEAL ANSWER
+                  </button>
                 </div>
               )}
 
-              <div className="game-feedback__points">
-                {previewComplete
-                  ? 'PREVIEW COMPLETE'
-                  : 'PREVIEW CONTINUES'}
-              </div>
-            </div>
-          )}
+              {isAnswered && (
+                <div
+                  className={`game-feedback ${
+                    answerStatus ===
+                    'revealed'
+                      ? 'game-feedback--timeout'
+                      : answerStatus ===
+                          'correct'
+                        ? 'game-feedback--correct'
+                        : 'game-feedback--incorrect'
+                  }`}
+                >
+                  <div className="game-feedback__label">
+                    {answerStatus ===
+                    'revealed'
+                      ? 'ANSWER REVEALED'
+                      : answerStatus ===
+                          'correct'
+                        ? 'CORRECT'
+                        : 'INCORRECT'}
+                  </div>
+
+                  <div className="game-feedback__answer">
+                    {
+                      question.correctAnswer
+                    }
+                  </div>
+
+                  {answerStatus ===
+                    'correct' && (
+                    <div className="game-feedback__points">
+                      +
+                      {pointsEarned.toLocaleString()}{' '}
+                      POINTS
+
+                      {multiplierEarned >
+                        1 && (
+                        <span>
+                          {' '}×
+                          {
+                            multiplierEarned
+                          }
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="game-feedback__points">
+                    {previewComplete
+                      ? 'PREVIEW COMPLETE'
+                      : 'PREVIEW CONTINUES'}
+                  </div>
+                </div>
+              )}
+            </section>
+          </div>
 
           <div className="game-status">
             <div className="game-streak">
               <span>STREAK</span>
+
               <strong>
                 {streak}
               </strong>
@@ -919,6 +930,7 @@ function Game() {
 
             <div className="game-listening-time">
               <span>LISTEN TIME</span>
+
               <strong>
                 {timeRemaining < 1
                   ? `${timeRemaining.toFixed(1)}s`
