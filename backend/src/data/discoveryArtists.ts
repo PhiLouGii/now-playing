@@ -26,6 +26,8 @@ export const DISCOVERY_ARTISTS = [
   'Dusty Springfield',
   'The Temptations',
   'The Jackson 5',
+  'The Byrds',
+  'Barbra Streisand',
 
   // ─────────────────────────────
   // 1970s
@@ -56,6 +58,11 @@ export const DISCOVERY_ARTISTS = [
   'Pulp',
   'The Clash',
   'Blondie',
+  'Led Zeppelin',
+  'Pink Floyd',
+  'Deep Purple',
+  'Black Sabbath',
+  'Kiss',
 
   // ─────────────────────────────
   // 1980s
@@ -90,6 +97,16 @@ export const DISCOVERY_ARTISTS = [
   'Pat Benatar',
   'Journey',
   'Hall & Oates',
+  'INXS',
+  'R.E.M.',
+  'Dire Straits',
+  'Tears for Fears',
+  'Janet Jackson',
+  'Billy Idol',
+  'Culture Club',
+  'Wham!',
+  'The Bangles',
+  'Simple Minds',
 
   // ─────────────────────────────
   // 1990s
@@ -128,6 +145,18 @@ export const DISCOVERY_ARTISTS = [
   'Weezer',
   'The Smashing Pumpkins',
   'Fugees',
+  'Nine Inch Nails',
+  'Christina Aguilera',
+  'Jennifer Lopez',
+  'En Vogue',
+  'Ace of Base',
+  'DMX',
+  'Ice Cube',
+  'Jay-Z',
+  'Boyz II Men',
+  'Mary J. Blige',
+  'Toni Braxton',
+  'Brandy',
 
   // ─────────────────────────────
   // 2000s
@@ -136,6 +165,9 @@ export const DISCOVERY_ARTISTS = [
   'Rihanna',
   'Justin Timberlake',
   'Justin Bieber',
+  'Lil Wayne',
+  'Eminem',
+  'Drake',
   'Lady Gaga',
   'Kanye West',
   'Jay-Z',
@@ -172,6 +204,21 @@ export const DISCOVERY_ARTISTS = [
   'John Mayer',
   'Bruno Mars',
   'Florence + The Machine',
+  'Ciara',
+  'Chris Brown',
+  'Ne-Yo',
+  'T-Pain',
+  'Missy Elliott',
+  'Ja Rule',
+  'Ludacris',
+  'Outkast',
+  'Green Day',
+  'Shakira',
+  'Jennifer Lopez',
+  'Britney Spears',
+  'Kelly Rowland',
+  'Akon',
+  
 
   // ─────────────────────────────
   // 2010s
@@ -180,6 +227,9 @@ export const DISCOVERY_ARTISTS = [
   'Adele',
   'Ed Sheeran',
   'Drake',
+  'Lil Wayne',
+  'Kanye West',
+  'Jay-Z',
   'Nicki Minaj',
   'Kendrick Lamar',
   'J. Cole',
@@ -219,6 +269,29 @@ export const DISCOVERY_ARTISTS = [
   'Lil Uzi Vert',
   'Tyler, The Creator',
   'Doja Cat',
+  'Ke$ha',
+  'Carly Rae Jepsen',
+  'Meghan Trainor',
+  'Charlie Puth',
+  'A$AP Rocky',
+  'Future',
+  'Chief Keef',
+  'Big Sean',
+  'Calvin Harris',
+  'David Guetta',
+  'Avicii',
+  'Zedd',
+  'Major Lazer',
+  'Mumford & Sons',
+  'Foster the People',
+  'Of Monsters and Men',
+  'Alt-J',
+  'CHVRCHES',
+  'Jessie J',
+  'Iggy Azalea',
+  'Nick Jonas',
+  '5 Seconds of Summer',
+  'Zayn',
 
   // ─────────────────────────────
   // Afrobeats / African
@@ -239,6 +312,7 @@ export const DISCOVERY_ARTISTS = [
   'Tekno',
   'Asake',
   'Joeboy',
+  'Tyla',
   'Kizz Daniel',
   'Seyi Vibez',
   'Fally Ipupa',
@@ -258,6 +332,9 @@ export const DISCOVERY_ARTISTS = [
   'Young Stunna',
   'Aymos',
   'Major League DJz',
+  'Sha Sha',
+  'DJ Zinhle',
+  'Busiswa',
 
   // ─────────────────────────────
   // 2020s
@@ -272,6 +349,7 @@ export const DISCOVERY_ARTISTS = [
   'Latto',
   'SZA',
   'Doja Cat',
+  'Cardi B',
   'Central Cee',
   'Jack Harlow',
   '21 Savage',
@@ -284,6 +362,7 @@ export const DISCOVERY_ARTISTS = [
   'Conan Gray',
   'Noah Kahan',
   'Benson Boone',
+  'Girl in Red',
   'Stephen Sanchez',
   'Dominic Fike',
   'beabadoobee',
@@ -293,4 +372,19 @@ export const DISCOVERY_ARTISTS = [
   'Fontaines D.C.',
   'Wet Leg',
   'Rosalia',
+  'Bad Bunny',
+  'BLACKPINK',
+  'BTS',
+  'Stray Kids',
+  'Billie Eilish',
+  'Doechii',
+  'Flo Milli',
+  'Glo Rilla',
+  'Roddy Ricch',
+  'Giveon',
+  'Brent Faiyaz',
+  'Victoria Monet',
+  'Chloe x Halle',
+  'Phoebe Bridgers',
+  'Steve Lacy',
 ]

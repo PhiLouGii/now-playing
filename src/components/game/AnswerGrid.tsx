@@ -21,14 +21,16 @@ function AnswerGrid({
       {answers.map((answer, index) => {
         const isSelected = selectedAnswer === answer
         const isCorrect = answer === correctAnswer
-        const isWrongSelection =
-          isSelected && answer !== correctAnswer
+        const isIncorrect =
+          isAnswered &&
+          isSelected &&
+          !isCorrect
 
         let stateClass = ''
 
         if (isAnswered && isCorrect) {
           stateClass = 'game-answer--correct'
-        } else if (isAnswered && isWrongSelection) {
+        } else if (isIncorrect) {
           stateClass = 'game-answer--incorrect'
         } else if (isSelected) {
           stateClass = 'game-answer--selected'
@@ -36,7 +38,7 @@ function AnswerGrid({
 
         return (
           <button
-            key={answer}
+            key={`${answer}-${index}`}
             type="button"
             className={`game-answer ${stateClass}`}
             onClick={() => onSelect(answer)}
@@ -53,14 +55,16 @@ function AnswerGrid({
             {isAnswered && isCorrect && (
               <Check
                 className="game-answer__icon"
-                size={18}
+                size={17}
+                strokeWidth={2.5}
               />
             )}
 
-            {isAnswered && isWrongSelection && (
+            {isIncorrect && (
               <X
                 className="game-answer__icon"
-                size={18}
+                size={17}
+                strokeWidth={2.5}
               />
             )}
           </button>

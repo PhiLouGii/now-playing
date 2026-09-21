@@ -1,15 +1,18 @@
+import './GameProgress.css'
+
 type GameProgressProps = {
   current: number
   total: number
 }
 
-import './GameProgress.css'
-
 function GameProgress({
   current,
   total,
 }: GameProgressProps) {
-  const percentage = (current / total) * 100
+  const percentage =
+    total > 0
+      ? Math.min((current / total) * 100, 100)
+      : 0
 
   return (
     <div className="game-progress">

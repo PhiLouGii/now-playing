@@ -1,9 +1,7 @@
 .game-page {
   min-height: calc(100dvh - var(--navbar-height));
   height: calc(100dvh - var(--navbar-height));
-
-  padding: 18px 32px 20px;
-
+  padding: 16px 32px;
   overflow: hidden;
 
   color: var(--color-text);
@@ -17,31 +15,42 @@
 
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
+/* --------------------------------
+   HEADER
+-------------------------------- */
 
-/* =========================================================
-   GAME CONTENT
-   ========================================================= */
+.game-header {
+  flex-shrink: 0;
+}
+
+.game-progress {
+  flex-shrink: 0;
+}
+
+/* --------------------------------
+   MAIN GAME AREA
+-------------------------------- */
 
 .game-content {
   flex: 1;
   min-height: 0;
 
   display: grid;
-  grid-template-columns: minmax(360px, 0.9fr) minmax(460px, 1.1fr);
+  grid-template-columns: minmax(340px, 0.9fr) minmax(440px, 1.1fr);
   grid-template-rows: auto 1fr auto;
 
   column-gap: 44px;
-  row-gap: 10px;
+  row-gap: 8px;
 
-  padding: 18px 12px 0;
+  padding: 14px 8px 0;
 }
 
-
-/* =========================================================
-   QUESTION HEADER
-   ========================================================= */
+/* --------------------------------
+   QUESTION HEADING
+-------------------------------- */
 
 .game-content__category {
   grid-column: 1 / -1;
@@ -49,7 +58,6 @@
   margin: 0;
 
   color: var(--color-lilac);
-
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.18em;
@@ -59,48 +67,45 @@
 .game-content h1 {
   grid-column: 1 / -1;
 
-  margin: 6px 0 0;
+  margin: 5px 0 0;
 
   color: var(--color-text);
-
   font-family: var(--font-display);
-  font-size: clamp(26px, 3vw, 38px);
+  font-size: clamp(25px, 2.7vw, 36px);
   font-weight: 700;
   line-height: 1;
   letter-spacing: -0.04em;
 }
 
-
-/* =========================================================
-   LEFT SIDE — MUSIC PLAYER
-   ========================================================= */
+/* --------------------------------
+   QUESTION / MUSIC SIDE
+-------------------------------- */
 
 .game-question {
   grid-column: 1;
   grid-row: 3;
 
-  align-self: center;
-
   width: 100%;
-  max-width: 470px;
+  max-width: 440px;
+  min-height: 0;
 
   margin: 0 auto;
 
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
 
   text-align: center;
 }
 
-
-/* Artwork */
+/* Album artwork */
 
 .game-question__art {
-  width: min(100%, 285px);
+  width: min(100%, 245px);
   aspect-ratio: 1;
 
-  margin: 0 auto 16px;
+  margin: 0 auto 12px;
 
   display: flex;
   align-items: center;
@@ -121,17 +126,13 @@
   color: var(--color-muted);
 
   box-shadow: var(--shadow-sm);
-
-  transition:
-    border-color var(--transition-normal),
-    transform var(--transition-normal);
 }
 
 .game-question__art span {
   color: var(--color-muted);
 
   font-family: var(--font-display);
-  font-size: 68px;
+  font-size: 60px;
   font-weight: 700;
   line-height: 1;
 }
@@ -140,34 +141,30 @@
   width: 100%;
   height: 100%;
 
-  object-fit: cover;
-
   display: block;
+
+  object-fit: cover;
 }
 
 .game-question__art--revealed {
   border-color: var(--color-lilac);
 }
 
-
 /* Audio player */
 
 .game-question .audio-player {
   width: 100%;
-  max-width: 430px;
+  max-width: 420px;
 
   margin: 0 auto;
 }
 
-
-/* =========================================================
-   SONG REVEAL
-   ========================================================= */
+/* Revealed song information */
 
 .game-song-reveal {
   width: 100%;
 
-  margin: 12px auto 0;
+  margin: 9px auto 0;
 
   text-align: center;
 }
@@ -178,109 +175,225 @@
   color: var(--color-text);
 
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
   line-height: 1.1;
 }
 
 .game-song-reveal__artist {
-  margin: 4px 0 0;
+  margin: 3px 0 0;
 
   color: var(--color-lilac);
 
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
 }
 
 .game-song-reveal__album {
-  margin: 3px 0 0;
+  margin: 2px 0 0;
 
   color: var(--color-muted);
 
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .game-song-reveal__year {
-  margin: 5px 0 0;
+  margin: 4px 0 0;
 
   color: var(--color-periwinkle);
 
   font-family: var(--font-display);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
 }
 
+/* --------------------------------
+   ANSWER SIDE
+-------------------------------- */
 
-/* =========================================================
-   RIGHT SIDE — ANSWERS
-   ========================================================= */
-
-.game-content > .game-answer,
-.game-content > .game-answers {
+.game-content > .game-answers,
+.game-content > .game-answer {
   grid-column: 2;
 }
 
-
 /*
-   AnswerGrid itself owns the actual answer grid.
-   Give it a compact layout area on desktop.
+  The answer grid gets a defined area instead
+  of relying on automatic grid placement.
 */
 
 .game-answers {
-  align-self: center;
-
-  width: 100%;
+  width: 100% !important;
+  max-width: 620px;
 
   margin: 0 !important;
+
+  align-self: center;
+
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
 }
 
-
-/*
-   Some versions of AnswerGrid use .game-answer directly.
-*/
+/* Answer buttons */
 
 .game-answer {
+  min-height: 54px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 0 14px;
+
   color: var(--color-text);
+
   background: var(--color-surface);
+
   border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+
+  text-align: left;
 
   font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
 }
 
-.game-answer:hover {
+.game-answer:not(:disabled):hover {
   color: var(--color-text);
+
   background: var(--color-surface-hover);
+
   border-color: var(--color-lilac);
 
   transform: translateY(-1px);
 }
 
+.game-answer__letter {
+  width: 27px;
+  height: 27px;
 
-/* =========================================================
-   ACTIONS
-   ========================================================= */
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: var(--color-text-secondary);
+
+  background: var(--color-bg-secondary);
+
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.game-answer__text {
+  flex: 1;
+
+  color: inherit;
+
+  line-height: 1.25;
+}
+
+.game-answer__icon {
+  flex-shrink: 0;
+}
+
+/* Selected */
+
+.game-answer--selected {
+  color: var(--color-text);
+
+  border-color: var(--color-lilac);
+
+  background: #f2eaf3;
+}
+
+/* Correct */
+
+.game-answer--correct {
+  color: var(--color-text);
+
+  border-color: #b9d0be;
+
+  background: #eef5f0;
+}
+
+.game-answer--correct .game-answer__letter {
+  color: var(--color-success-dark);
+
+  background: #e2eee5;
+
+  border-color: #c4d8c9;
+}
+
+.game-answer--correct .game-answer__icon {
+  color: var(--color-success-dark);
+}
+
+/* Incorrect */
+
+.game-answer--incorrect {
+  color: var(--color-text);
+
+  border-color: #dfc5c5;
+
+  background: #f7eeee;
+}
+
+.game-answer--incorrect .game-answer__letter {
+  color: var(--color-error-dark);
+
+  background: #f1e2e2;
+
+  border-color: #e0c7c7;
+}
+
+.game-answer--incorrect .game-answer__icon {
+  color: var(--color-error-dark);
+}
+
+.game-answer:disabled {
+  cursor: default;
+}
+
+/* --------------------------------
+   ACTION BUTTONS
+-------------------------------- */
 
 .game-actions {
   grid-column: 2;
 
+  width: 100%;
+  max-width: 620px;
+
   align-self: end;
 
-  width: 100%;
-
-  margin: 8px 0 0;
+  margin: 7px 0 0;
 
   display: flex;
   align-items: center;
-  justify-content: flex-start;
 
   gap: 8px;
 }
 
 .game-advance,
 .game-reveal {
-  min-height: 38px;
+  min-height: 36px;
 
-  padding: 0 15px;
+  padding: 0 14px;
 
   border-radius: var(--radius-md);
 
@@ -298,11 +411,9 @@
     transform var(--transition-fast);
 }
 
-
-/* Advance */
-
 .game-advance {
   color: var(--color-text-secondary);
+
   background: var(--color-surface);
 
   border: 1px solid var(--border-medium);
@@ -310,63 +421,59 @@
 
 .game-advance:hover:not(:disabled) {
   color: var(--color-text);
+
   background: var(--color-surface-hover);
+
   border-color: var(--color-lilac);
 
   transform: translateY(-1px);
 }
 
-.game-advance:active:not(:disabled) {
-  transform: translateY(0);
-}
-
 .game-advance:disabled {
   color: var(--color-subtle);
+
   background: var(--color-bg-secondary);
 
   border-color: var(--border-subtle);
 
   opacity: 0.55;
+
   cursor: default;
 }
 
-
-/* Reveal */
-
 .game-reveal {
   color: var(--color-error-dark);
-  background: #F6EDEE;
 
-  border: 1px solid #E2C9CC;
+  background: #f6edee;
+
+  border: 1px solid #e2c9cc;
 }
 
 .game-reveal:hover {
   color: var(--color-text);
-  background: #F1E2E4;
+
+  background: #f1e2e4;
+
   border-color: var(--color-error);
 
   transform: translateY(-1px);
 }
 
-.game-reveal:active {
-  transform: translateY(0);
-}
-
-
-/* =========================================================
+/* --------------------------------
    FEEDBACK
-   ========================================================= */
+-------------------------------- */
 
 .game-feedback {
   grid-column: 2;
 
-  align-self: center;
-
   width: 100%;
+  max-width: 620px;
 
-  margin: 0;
+  align-self: end;
 
-  padding: 13px 16px;
+  margin: 7px 0 0;
+
+  padding: 10px 14px;
 
   background: var(--color-surface);
 
@@ -379,24 +486,24 @@
 }
 
 .game-feedback--correct {
-  background: #EEF5F0;
-  border-color: #C4D8C9;
+  background: #eef5f0;
+  border-color: #c4d8c9;
 }
 
 .game-feedback--incorrect {
-  background: #F7EEEE;
-  border-color: #E0C7C7;
+  background: #f7eeee;
+  border-color: #e0c7c7;
 }
 
 .game-feedback--timeout {
-  background: #F5F1E7;
-  border-color: #DED3B7;
+  background: #f5f1e7;
+  border-color: #ded3b7;
 }
 
 .game-feedback__label {
   margin: 0;
 
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 700;
   letter-spacing: 0.16em;
 }
@@ -410,25 +517,25 @@
 }
 
 .game-feedback--timeout .game-feedback__label {
-  color: #75663C;
+  color: #75663c;
 }
 
 .game-feedback__answer {
-  margin-top: 4px;
+  margin-top: 3px;
 
   color: var(--color-text);
 
   font-family: var(--font-display);
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 700;
 }
 
 .game-feedback__points {
-  margin-top: 5px;
+  margin-top: 4px;
 
   color: var(--color-muted);
 
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 700;
   letter-spacing: 0.1em;
 }
@@ -439,17 +546,15 @@
   color: var(--color-lilac);
 }
 
-
-/* =========================================================
+/* --------------------------------
    STATUS
-   ========================================================= */
+-------------------------------- */
 
 .game-status {
   grid-column: 1 / -1;
 
   width: 100%;
-
-  min-height: 25px;
+  min-height: 24px;
 
   display: flex;
   align-items: center;
@@ -464,11 +569,12 @@
 .game-listening-time {
   display: flex;
   align-items: center;
+
   gap: 7px;
 
   color: var(--color-muted);
 
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 700;
   letter-spacing: 0.12em;
 }
@@ -478,21 +584,20 @@
   color: var(--color-text);
 
   font-family: var(--font-display);
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .game-result {
   color: var(--color-success-dark);
 
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 700;
   letter-spacing: 0.12em;
 }
 
-
-/* =========================================================
+/* --------------------------------
    NEXT SONG
-   ========================================================= */
+-------------------------------- */
 
 .game-next-area {
   grid-column: 1 / -1;
@@ -503,7 +608,7 @@
   align-items: center;
   justify-content: center;
 
-  gap: 14px;
+  gap: 12px;
 
   margin: 0;
 }
@@ -521,9 +626,9 @@
 }
 
 .game-next {
-  min-height: 40px;
+  min-height: 38px;
 
-  padding: 0 20px;
+  padding: 0 19px;
 
   color: var(--color-text);
 
@@ -533,7 +638,7 @@
   border-radius: var(--radius-md);
 
   font-family: var(--font-body);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.08em;
 
@@ -554,32 +659,14 @@
   transform: translateY(-1px);
 }
 
-.game-next:active:not(:disabled) {
-  transform: translateY(0);
-}
-
 .game-next:disabled {
   opacity: 0.55;
   cursor: default;
 }
 
-
-/* =========================================================
-   LOADING / EMPTY STATES
-   ========================================================= */
-
-.game-page .game-content > p:not(.game-content__category) {
-  color: var(--color-muted);
-}
-
-.game-page .game-content > h1 {
-  color: var(--color-text);
-}
-
-
-/* =========================================================
+/* --------------------------------
    ANIMATION
-   ========================================================= */
+-------------------------------- */
 
 @keyframes game-pulse {
   0%,
@@ -592,68 +679,87 @@
   }
 }
 
+/* --------------------------------
+   SHORT DESKTOP SCREENS
+-------------------------------- */
 
-/* =========================================================
-   DESKTOP — SHORT SCREENS
-   ========================================================= */
-
-@media (max-height: 760px) and (min-width: 769px) {
+@media (max-height: 760px) and (min-width: 901px) {
   .game-page {
-    padding-top: 12px;
-    padding-bottom: 12px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  .game-progress {
+    margin-top: 9px;
   }
 
   .game-content {
-    padding-top: 10px;
-    column-gap: 32px;
+    padding-top: 9px;
+    column-gap: 30px;
   }
 
   .game-content h1 {
-    font-size: 28px;
+    font-size: 27px;
   }
 
   .game-question__art {
-    width: 225px;
-    margin-bottom: 10px;
+    width: 205px;
+    margin-bottom: 8px;
   }
 
   .game-question .audio-player {
-    transform: scale(0.92);
+    transform: scale(0.9);
     transform-origin: center top;
   }
 
   .game-song-reveal {
-    margin-top: 7px;
+    margin-top: 4px;
   }
 
   .game-song-reveal__title {
-    font-size: 18px;
+    font-size: 17px;
   }
 
   .game-song-reveal__artist {
-    font-size: 12px;
+    font-size: 11px;
+  }
+
+  .game-song-reveal__album,
+  .game-song-reveal__year {
+    font-size: 9px;
+  }
+
+  .game-answer {
+    min-height: 48px;
+  }
+
+  .game-actions {
+    margin-top: 5px;
   }
 
   .game-feedback {
-    padding: 10px 13px;
+    padding: 8px 11px;
   }
 
   .game-next-area {
     min-height: 36px;
   }
+
+  .game-next {
+    min-height: 34px;
+  }
 }
 
-
-/* =========================================================
-   TABLET
-   ========================================================= */
+/* --------------------------------
+   TABLET / MOBILE
+-------------------------------- */
 
 @media (max-width: 900px) {
   .game-page {
     height: auto;
     min-height: calc(100vh - var(--navbar-height));
 
-    padding: 28px 24px 50px;
+    padding: 26px 24px 50px;
 
     overflow: visible;
   }
@@ -666,82 +772,84 @@
     display: flex;
     flex-direction: column;
 
-    padding-top: 34px;
+    padding-top: 30px;
   }
 
   .game-content h1 {
-    margin-top: 10px;
+    margin-top: 9px;
   }
 
   .game-question {
     order: 1;
 
-    margin-top: 28px;
+    margin-top: 24px;
   }
 
   .game-answers {
     order: 2;
 
-    margin-top: 24px !important;
+    margin-top: 22px !important;
   }
 
   .game-actions {
     order: 3;
 
+    max-width: none;
+
     justify-content: center;
 
-    margin-top: 16px;
+    margin-top: 14px;
   }
 
   .game-feedback {
     order: 4;
 
-    margin-top: 16px;
+    max-width: none;
+
+    margin-top: 14px;
   }
 
   .game-status {
     order: 5;
 
-    margin-top: 14px;
+    margin-top: 13px;
   }
 
   .game-next-area {
     order: 6;
 
-    margin-top: 12px;
+    margin-top: 10px;
   }
 }
 
-
-/* =========================================================
-   MOBILE
-   ========================================================= */
-
 @media (max-width: 600px) {
   .game-page {
-    padding: 22px 16px 40px;
+    padding: 20px 16px 40px;
   }
 
   .game-content {
-    padding-top: 28px;
+    padding-top: 25px;
   }
 
   .game-content h1 {
-    font-size: 27px;
+    font-size: 26px;
   }
 
   .game-question {
     width: 100%;
-
-    margin-top: 24px;
+    margin-top: 22px;
   }
 
   .game-question__art {
-    width: 210px;
+    width: 205px;
   }
 
   .game-question .audio-player {
     width: 100%;
+  }
+
+  .game-answers {
+    grid-template-columns: 1fr;
   }
 
   .game-actions {
@@ -765,6 +873,6 @@
   }
 
   .game-status {
-    margin-top: 16px;
+    margin-top: 14px;
   }
 }
