@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { Dices } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 import './PlayByCategory.css'
 
 type Category = {
+  id: string
   name: string
   description: string
   type: 'genre' | 'group' | 'artist' | 'themed'
@@ -11,51 +13,61 @@ type Category = {
 
 const categories: Category[] = [
   {
+    id: 'african',
     name: 'All Things African',
     description: 'Afrobeats · Amapiano · Legends',
     type: 'genre',
   },
   {
+    id: 'kpop',
     name: 'K-Pop',
     description: 'EXO · MONSTA X · GOT7',
     type: 'genre',
   },
   {
+    id: 'disney-nick',
     name: 'Disney & Nick Throwbacks',
     description: 'Hannah Montana · iCarly · A.N.T. Farm',
     type: 'themed',
   },
   {
+    id: 'girl-groups',
     name: 'Girl Groups',
     description: 'Spice Girls · Little Mix · Pussycat Dolls',
     type: 'group',
   },
   {
+    id: 'boy-bands',
     name: 'Boy Bands',
     description: 'One Direction · NSYNC · Why Don’t We',
     type: 'group',
   },
   {
+    id: 'indie-alt',
     name: 'Indie & Alt',
     description: 'Yeah Yeah Yeahs · Tame Impala · MGMT',
     type: 'genre',
   },
   {
+    id: 'michael-jackson',
     name: 'Michael Jackson',
     description: 'The Jackson 5 · The Jacksons · Solo',
     type: 'artist',
   },
   {
+    id: 'beyonce',
     name: 'Beyoncé',
     description: 'Destiny’s Child · Solo · The Carters',
     type: 'artist',
   },
   {
+    id: 'queen',
     name: 'Queen',
     description: 'Classic hits · Deep cuts · Live',
     type: 'artist',
   },
   {
+    id: 'ariana-grande',
     name: 'Ariana Grande',
     description: 'Early hits · Pop era · Sweetener',
     type: 'artist',
@@ -63,17 +75,28 @@ const categories: Category[] = [
 ]
 
 function PlayByCategory() {
-  const [activeIndex, setActiveIndex] = useState(0)
+  const navigate = useNavigate()
+
+  const [activeIndex, setActiveIndex] =
+    useState(0)
+
   const [selectedCategory, setSelectedCategory] =
     useState<Category | null>(null)
-  const [isSpinning, setIsSpinning] = useState(false)
 
-  const spinTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [isSpinning, setIsSpinning] =
+    useState(false)
+
+  const spinTimeoutRef =
+    useRef<ReturnType<typeof setTimeout> | null>(
+      null,
+    )
 
   useEffect(() => {
     return () => {
       if (spinTimeoutRef.current) {
-        clearTimeout(spinTimeoutRef.current)
+        clearTimeout(
+          spinTimeoutRef.current,
+        )
       }
     }
   }, [])
@@ -90,19 +113,22 @@ function PlayByCategory() {
     let currentIndex = activeIndex
     let step = 0
 
-    const totalSteps = 18 + Math.floor(Math.random() * 8)
+    const totalSteps =
+      18 + Math.floor(Math.random() * 8)
 
     function advance() {
       step += 1
+
       currentIndex =
-        (currentIndex + 1) % categories.length
+        (currentIndex + 1) %
+        categories.length
 
       setActiveIndex(currentIndex)
 
       if (step < totalSteps) {
-        const progress = step / totalSteps
+        const progress =
+          step / totalSteps
 
-        // Fast in the beginning, slower near the end.
         const delay =
           progress < 0.65
             ? 55
@@ -110,17 +136,21 @@ function PlayByCategory() {
               ? 100
               : 180
 
-        spinTimeoutRef.current = setTimeout(
-          advance,
-          delay,
-        )
+        spinTimeoutRef.current =
+          setTimeout(
+            advance,
+            delay,
+          )
       } else {
         setActiveIndex(finalIndex)
 
-        spinTimeoutRef.current = setTimeout(() => {
-          setIsSpinning(false)
-          setSelectedCategory(categories[finalIndex])
-        }, 350)
+        spinTimeoutRef.current =
+          setTimeout(() => {
+            setIsSpinning(false)
+            setSelectedCategory(
+              categories[finalIndex],
+            )
+          }, 350)
       }
     }
 
@@ -134,18 +164,17 @@ function PlayByCategory() {
   function handlePlayCategory() {
     if (!selectedCategory) return
 
-    console.log(
-      `Play category: ${selectedCategory.name}`,
+    navigate(
+      `/game?category=${encodeURIComponent(
+        selectedCategory.id,
+      )}`,
     )
-
-    // Gameplay routing will be connected here.
   }
 
   return (
     <>
       <section className="categories">
         <div className="categories__container">
-
           <div className="categories__header">
             <div>
               <p className="label">
@@ -158,9 +187,13 @@ function PlayByCategory() {
             </div>
 
             <span className="categories__count">
-              {String(activeIndex + 1).padStart(2, '0')}
+              {String(
+                activeIndex + 1,
+              ).padStart(2, '0')}
               {' / '}
-              {String(categories.length).padStart(2, '0')}
+              {String(
+                categories.length,
+              ).padStart(2, '0')}
             </span>
           </div>
 
@@ -173,11 +206,17 @@ function PlayByCategory() {
           >
             <div className="category-spinner__window">
               <span className="category-spinner__number">
-                {String(activeIndex + 1).padStart(2, '0')}
+                {String(
+                  activeIndex + 1,
+                ).padStart(2, '0')}
               </span>
 
               <span className="category-spinner__name">
-                {categories[activeIndex].name}
+                {
+                  categories[
+                    activeIndex
+                  ].name
+                }
               </span>
 
               <span className="category-spinner__status">
@@ -194,7 +233,10 @@ function PlayByCategory() {
             onClick={handleSpin}
             disabled={isSpinning}
           >
-            <Dices size={17} strokeWidth={1.8} />
+            <Dices
+              size={17}
+              strokeWidth={1.8}
+            />
 
             <span>
               {isSpinning
@@ -202,7 +244,6 @@ function PlayByCategory() {
                 : 'SPIN THE CATEGORIES'}
             </span>
           </button>
-
         </div>
       </section>
 
@@ -243,7 +284,9 @@ function PlayByCategory() {
               <button
                 type="button"
                 className="category-modal__play"
-                onClick={handlePlayCategory}
+                onClick={
+                  handlePlayCategory
+                }
               >
                 PLAY CATEGORY
               </button>
@@ -251,7 +294,9 @@ function PlayByCategory() {
               <button
                 type="button"
                 className="category-modal__cancel"
-                onClick={handleCloseModal}
+                onClick={
+                  handleCloseModal
+                }
               >
                 CANCEL
               </button>

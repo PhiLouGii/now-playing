@@ -14,6 +14,7 @@ export async function generateQuestion(
   difficulty: Question['difficulty'],
   decade?: number,
   excludedTrackIds: string[] = [],
+  categoryId?: string,
 ): Promise<Question> {
   const params = new URLSearchParams()
 
@@ -22,6 +23,10 @@ export async function generateQuestion(
 
   if (decade !== undefined) {
     params.set('decade', String(decade))
+  }
+
+  if (categoryId) {
+    params.set('category', categoryId)
   }
 
   if (excludedTrackIds.length > 0) {

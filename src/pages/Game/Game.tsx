@@ -3,7 +3,10 @@ import {
   useRef,
   useState,
 } from 'react'
-import { useLocation } from 'react-router-dom'
+import {
+  useLocation,
+  useSearchParams,
+} from 'react-router-dom'
 
 import AudioPlayer from '../../components/game/AudioPlayer'
 import type { AudioPlayerHandle } from '../../components/game/AudioPlayer'
@@ -81,6 +84,10 @@ function getGameMode(
 
 function Game() {
   const location = useLocation()
+const [searchParams] = useSearchParams()
+
+const categoryId =
+  searchParams.get('category') ?? undefined
 
   const roundConfig =
     (
@@ -164,12 +171,13 @@ function Game() {
           roundConfig.questionTypes[0]
 
         const firstQuestion =
-          await generateQuestion(
-            firstType,
-            roundConfig.difficulty,
-            roundConfig.decade,
-            [],
-          )
+  await generateQuestion(
+    firstType,
+    roundConfig.difficulty,
+    roundConfig.decade,
+    [],
+    categoryId,
+  )
 
         if (isMounted) {
           usedTrackIds.current.add(
@@ -221,14 +229,15 @@ function Game() {
           ]
 
         const nextQuestion =
-          await generateQuestion(
-            nextType,
-            roundConfig.difficulty,
-            roundConfig.decade,
-            Array.from(
-              usedTrackIds.current,
-            ),
-          )
+  await generateQuestion(
+    nextType,
+    roundConfig.difficulty,
+    roundConfig.decade,
+    Array.from(
+      usedTrackIds.current,
+    ),
+    categoryId,
+  )
 
         if (isMounted) {
           setQuestions(
@@ -631,14 +640,15 @@ function Game() {
         ]
 
       const nextQuestion =
-        await generateQuestion(
-          nextType,
-          roundConfig.difficulty,
-          roundConfig.decade,
-          Array.from(
-            usedTrackIds.current,
-          ),
-        )
+  await generateQuestion(
+    nextType,
+    roundConfig.difficulty,
+    roundConfig.decade,
+    Array.from(
+      usedTrackIds.current,
+    ),
+    categoryId,
+  )
 
       usedTrackIds.current.add(
         nextQuestion.song.id,
@@ -711,6 +721,12 @@ function Game() {
               {question.type ===
                 'guess-the-year' &&
                 'GUESS THE YEAR'}
+
+              {categoryId
+    ? categoryId
+        .replace(/-/g, ' ')
+        .toUpperCase()
+    : roundConfig.name.toUpperCase()}
             </p>
 
             <h1>
