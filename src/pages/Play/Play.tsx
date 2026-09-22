@@ -1,62 +1,247 @@
+import { ArrowRight, CalendarDays, Disc3 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { rounds } from '../../data/rounds'
-import FeaturedGame from '../../components/play/FeaturedGame'
-import QuickModes from '../../components/play/QuickModes'
 import './Play.css'
 
+const FEATURED_ARTISTS = [
+'Rihanna',
+'Madonna',
+'The Beatles',
+'Billie Eillish',
+'The Weeknd',
+'Burna Boy',
+'Bruno Mars',
+'Elton John',
+]
+
+const ERAS = [
+{ label: '60s', decade: 1960 },
+{ label: '70s', decade: 1970 },
+{ label: '80s', decade: 1980 },
+{ label: '90s', decade: 1990 },
+{ label: '00s', decade: 2000 },
+{ label: '10s', decade: 2010 },
+{ label: '20s', decade: 2020 },
+]
+
 function Play() {
-  const navigate = useNavigate()
+const navigate = useNavigate()
 
-  function handleSelectRound(
-    roundId: string,
-  ) {
-    const roundConfig = rounds.find(
-      (round) => round.id === roundId,
-    )
+function handleArtistSelect(artist: string) {
+navigate('/artist-game', {
+state: {
+artist,
+},
+})
+}
 
-    if (!roundConfig) {
-      return
-    }
+function handleEraSelect(decade: number) {
+navigate('/game', {
+state: {
+roundConfig: {
+id: `decade-${decade}`,
+name: `${decade}s`,
+questionCount: 10,
+questionTypes: ['name-the-song'],
+difficulty: 'medium',
+decade,
+},
+},
+})
+}
 
-    navigate('/game', {
-      state: {
-        roundConfig,
-      },
-    })
-  }
+function handlePixelCover() {
+navigate('/album-game', {
+state: {
+mode: 'pixel-cover',
+},
+})
+}
 
-  return (
-    <div className="play-page">
-      <div className="play-page__container">
-        <header className="play-page__header">
-          <p className="label">
-            PLAY
-          </p>
+function handleDailyChallenge() {
+navigate('/daily-challenge')
+}
 
-          <h1 className="display-lg">
-            Choose your challenge.
-          </h1>
+return ( <div className="play-page"> <div className="play-page__container"> <header className="play-page__header"> <p className="label">PLAY</p>
 
-          <p className="play-page__intro">
-            Test your music knowledge across
-            songs, artists, albums, and more.
-          </p>
-        </header>
+```
+      <h1 className="display-lg">
+        Choose your music.
+      </h1>
 
-        <FeaturedGame
-          onSelectRound={
-            handleSelectRound
+      <p className="play-page__intro">
+        Pick an artist, travel through a decade,
+        or try something a little different.
+      </p>
+    </header>
+
+    <main className="play-page__content">
+      <section className="play-section play-section--featured">
+        <div className="play-section__heading">
+          <div>
+            <p className="play-section__eyebrow">
+              FEATURED
+            </p>
+
+            <h2>Today&apos;s Challenge</h2>
+          </div>
+
+          <CalendarDays
+            size={22}
+            strokeWidth={1.8}
+          />
+        </div>
+
+        <button
+          type="button"
+          className="daily-card"
+          onClick={handleDailyChallenge}
+        >
+          <div className="daily-card__content">
+            <span className="daily-card__label">
+              DAILY CHALLENGE
+            </span>
+
+            <h3>
+              One challenge.
+              <br />
+              One score.
+            </h3>
+
+            <p>
+              Ten songs. One chance to see
+              how well you know today&apos;s music.
+            </p>
+          </div>
+
+          <span className="daily-card__action">
+            Play today
+            <ArrowRight size={17} />
+          </span>
+        </button>
+      </section>
+
+      <section className="play-section">
+        <div className="play-section__heading">
+          <div>
+            <p className="play-section__eyebrow">
+              PLAY BY ARTIST
+            </p>
+
+            <h2>Pick an artist.</h2>
+
+            <p>
+              Name their songs and see how well
+              you know their music.
+            </p>
+          </div>
+        </div>
+
+        <div className="artist-grid">
+          {FEATURED_ARTISTS.map((artist) => (
+            <button
+              key={artist}
+              type="button"
+              className="artist-card"
+              onClick={() =>
+                handleArtistSelect(artist)
+              }
+            >
+              <span className="artist-card__name">
+                {artist}
+              </span>
+
+              <ArrowRight
+                size={16}
+                className="artist-card__arrow"
+              />
+            </button>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          className="section-link"
+          onClick={() =>
+            navigate('/artist-game')
           }
-        />
+        >
+          View all artists
+          <ArrowRight size={16} />
+        </button>
+      </section>
 
-        <QuickModes
-          onSelectRound={
-            handleSelectRound
-          }
-        />
-      </div>
-    </div>
-  )
+      <section className="play-section">
+        <div className="play-section__heading">
+          <div>
+            <p className="play-section__eyebrow">
+              PLAY BY ERA
+            </p>
+
+            <h2>Pick a decade.</h2>
+
+            <p>
+              Go back through the music that
+              defined each era.
+            </p>
+          </div>
+        </div>
+
+        <div className="era-grid">
+          {ERAS.map((era) => (
+            <button
+              key={era.decade}
+              type="button"
+              className="era-card"
+              onClick={() =>
+                handleEraSelect(era.decade)
+              }
+            >
+              <span>{era.label}</span>
+
+              <ArrowRight
+                size={15}
+                className="era-card__arrow"
+              />
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="play-section play-section--pixel">
+        <div className="pixel-card">
+          <div className="pixel-card__icon">
+            <Disc3 size={24} strokeWidth={1.7} />
+          </div>
+
+          <div className="pixel-card__content">
+            <p className="play-section__eyebrow">
+              MORE WAYS TO PLAY
+            </p>
+
+            <h2>Pixel Cover</h2>
+
+            <p>
+              How little of an album cover do you
+              need to recognize it?
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="pixel-card__button"
+            onClick={handlePixelCover}
+          >
+            Play
+            <ArrowRight size={16} />
+          </button>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+
+)
 }
 
 export default Play

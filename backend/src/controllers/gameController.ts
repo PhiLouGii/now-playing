@@ -1,136 +1,174 @@
 import type { Request, Response } from 'express'
 
 import {
-  generateGameQuestion,
+generateGameQuestion,
 } from '../services/game/gameQuestionService.js'
 
 import type {
-  QuestionDifficulty,
-  QuestionType,
+QuestionDifficulty,
+QuestionType,
 } from '../services/game/gameTypes.js'
 
 import {
-  CATEGORY_CONFIG,
+CATEGORY_CONFIG,
 } from '../data/categories/categoryConfig.js'
 
 const QUESTION_TYPES: QuestionType[] = [
-  'name-the-song',
-  'name-the-artist',
-  'name-the-album',
-  'guess-the-year',
+'name-the-song',
+'name-the-artist',
+'name-the-album',
+'guess-the-year',
 ]
 
 const DIFFICULTIES: QuestionDifficulty[] = [
-  'easy',
-  'medium',
-  'hard',
+'easy',
+'medium',
+'hard',
 ]
 
 export async function getGameQuestion(
-  req: Request,
-  res: Response,
+req: Request,
+res: Response,
 ) {
-  try {
-    const type =
-      typeof req.query.type === 'string'
-        ? req.query.type as QuestionType
-        : 'name-the-song'
+try {
+const type =
+typeof req.query.type === 'string'
+? req.query.type as QuestionType
+: 'name-the-song'
 
-    const difficulty =
-      typeof req.query.difficulty === 'string'
-        ? req.query.difficulty as QuestionDifficulty
-        : 'medium'
 
-    const decade =
-      typeof req.query.decade === 'string'
-        ? Number(req.query.decade)
-        : undefined
+const difficulty =
+  typeof req.query.difficulty === 'string'
+    ? req.query.difficulty as QuestionDifficulty
+    : 'medium'
 
-    const categoryId =
-      typeof req.query.category === 'string'
-        ? req.query.category
-        : undefined
+const decade =
+  typeof req.query.decade === 'string'
+    ? Number(req.query.decade)
+    : undefined
 
-    const excludedTrackIds =
-      typeof req.query.exclude === 'string'
-        ? req.query.exclude
-            .split(',')
-            .map((id) => id.trim())
-            .filter(Boolean)
-        : []
+const categoryId =
+  typeof req.query.category === 'string'
+    ? req.query.category
+    : undefined
 
-    if (!QUESTION_TYPES.includes(type)) {
-      return res.status(400).json({
-        error: 'Invalid question type',
-      })
-    }
+const artist =
+  typeof req.query.artist === 'string'
+    ? req.query.artist.trim()
+    : undefined
 
-    if (!DIFFICULTIES.includes(difficulty)) {
-      return res.status(400).json({
-        error: 'Invalid difficulty',
-      })
-    }
+const excludedTrackIds =
+  typeof req.query.exclude === 'string'
+    ? req.query.exclude
+        .split(',')
+        .map((id) => id.trim())
+        .filter(Boolean)
+    : []
 
-    if (
-      decade !== undefined &&
-      (!Number.isInteger(decade) ||
-        decade < 1900 ||
-        decade > 2100)
-    ) {
-      return res.status(400).json({
-        error: 'Invalid decade',
-      })
-    }
+if (!QUESTION_TYPES.includes(type)) {
+  return res.status(400).json({
+    error: 'Invalid question type',
+  })
+}
 
-    if (categoryId !== undefined) {
-      const categoryExists =
-        CATEGORY_CONFIG.some(
-          (category) =>
-            category.id === categoryId,
-        )
+if (!DIFFICULTIES.includes(difficulty)) {
+  return res.status(400).json({
+    error: 'Invalid difficulty',
+  })
+}
 
-      if (!categoryExists) {
-        return res.status(400).json({
-          error: 'Invalid category',
-        })
-      }
+if (
+  decade !== undefined &&
+  (!Number.isInteger(decade) ||
+    decade < 1900 ||
+    decade > 2100)
+) {
+  return res.status(400).json({
+    error: 'Invalid decade',
+  })
+}
 
-      if (type !== 'name-the-song') {
-        return res.status(400).json({
-          error:
-            'Category games only support the "name-the-song" question type.',
-        })
-      }
+if (
+  artist !== undefined &&
+  artist.length === 0
+) {
+  return res.status(400).json({
+    error: 'Invalid artist',
+  })
+}
 
-      if (decade !== undefined) {
-        return res.status(400).json({
-          error:
-            'Category games cannot be combined with a decade.',
-        })
-      }
-    }
-
-    const question =
-      await generateGameQuestion(
-        type,
-        difficulty,
-        decade,
-        excludedTrackIds,
-        categoryId,
-      )
-
-    return res.json({
-      question,
-    })
-  } catch (error) {
-    console.error(
-      'Failed to generate game question:',
-      error,
+if (categoryId !== undefined) {
+  const categoryExists =
+    CATEGORY_CONFIG.some(
+      (category) =>
+        category.id === categoryId,
     )
 
-    return res.status(500).json({
-      error:
-        'Failed to generate game question',
+  if (!categoryExists) {
+    return res.status(400).json({
+      error: 'Invalid category',
     })
   }
+
+  if (type !== 'name-the-song') {
+    return res.status(400).json({
+      error:
+        'Category games only support the "name-the-song" question type.',
+    })
+  }
+
+  if (decade !== undefined) {
+    return res.status(400).json({
+      error:
+        'Category games cannot be combined with a decade.',
+    })
+  }
+
+  if (artist !== undefined) {
+    return res.status(400).json({
+      error:
+        'Category games cannot be combined with an artist.',
+    })
+  }
+}
+
+if (
+  artist !== undefined &&
+  decade !== undefined
+) {
+  return res.status(400).json({
+    error:
+      'Artist games cannot be combined with a decade.',
+  })
+}
+
+const question =
+  await generateGameQuestion(
+    type,
+    difficulty,
+    decade,
+    excludedTrackIds,
+    categoryId,
+    artist,
+  )
+
+return res.json({
+  question,
+})
+
+
+} catch (error) {
+console.error(
+'Failed to generate game question:',
+error,
+)
+
+
+return res.status(500).json({
+  error:
+    'Failed to generate game question',
+})
+
+
+}
 }
