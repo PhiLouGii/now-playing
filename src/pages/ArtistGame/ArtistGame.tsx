@@ -3,6 +3,7 @@ import {
   useRef,
   useState,
 } from 'react'
+
 import {
   ArrowRight,
   Check,
@@ -366,7 +367,6 @@ function ArtistGame() {
 
             setIsPlaying(false)
             setAnswerStatus('timeout')
-
             setStreak(0)
 
             setRecognitionResults(
@@ -386,8 +386,7 @@ function ArtistGame() {
                     question.song.album,
 
                   artworkUrl:
-                    question.song
-                      .artworkUrl ?? '',
+                    question.song.artworkUrl ?? '',
 
                   recognitionTime:
                     ROUND_LENGTH,
@@ -503,7 +502,6 @@ function ArtistGame() {
     )
 
     setIsPlaying(false)
-
     setStreak(nextStreak)
 
     if (isCorrect) {
@@ -715,7 +713,9 @@ function ArtistGame() {
     <div className="artist-game">
       <div className="artist-game__container">
 
-        {/* HEADER */}
+        {/* =================================================
+            HEADER
+        ================================================= */}
 
         <header className="artist-game__header">
           <div>
@@ -729,7 +729,9 @@ function ArtistGame() {
           </div>
 
           <div className="artist-game__round">
-            <span>ROUND</span>
+            <span>
+              ROUND
+            </span>
 
             <strong>
               {currentQuestion + 1}
@@ -740,248 +742,300 @@ function ArtistGame() {
           </div>
         </header>
 
-        {/* QUESTION */}
+        {/* =================================================
+            GAME BOARD
+        ================================================= */}
 
-        <section className="artist-game__question">
-          <p className="artist-game__prompt">
-            WHO IS THIS?
-          </p>
+        <main className="artist-game__board">
 
-          <h2>
-            Who performs this song?
-          </h2>
-        </section>
+          {/* =================================================
+              LEFT: QUESTION / AUDIO / REVEAL
+          ================================================= */}
 
-        {/* AUDIO */}
+          <section className="artist-game__question">
 
-        <section className="artist-game__audio">
+            {!isRevealed ? (
+              <>
+                <p className="artist-game__prompt">
+                  WHO IS THIS?
+                </p>
 
-          <audio
-            ref={audioRef}
-            key={question.id}
-            src={question.song.audioUrl}
-            preload="auto"
-            onEnded={
-              handleAudioEnded
-            }
-          />
+                <h2>
+                  Who performs this song?
+                </h2>
+              </>
+            ) : (
+              <>
+                {question.song.artworkUrl ? (
+                  <img
+                    src={
+                      question.song.artworkUrl
+                    }
+                    alt={`${question.song.album} album cover`}
+                    className="artist-game__artwork"
+                  />
+                ) : (
+                  <div className="artist-game__artwork-placeholder">
+                    <span>♪</span>
+                  </div>
+                )}
 
-          <div className="artist-game__audio-top">
-            <span>
-              10 SECOND SNIPPET
-            </span>
+                <p className="artist-game__prompt">
+                  SONG REVEALED
+                </p>
 
-            <strong
-              className={
-                timeRemaining <= 3 &&
-                !isRevealed
-                  ? 'artist-game__timer artist-game__timer--urgent'
-                  : 'artist-game__timer'
-              }
-            >
-              {timeRemaining.toFixed(1)}s
-            </strong>
-          </div>
+                <h2>
+                  {question.song.title}
+                </h2>
+              </>
+            )}
 
-          <div className="artist-game__player">
+            {/* AUDIO */}
 
-            <button
-              type="button"
-              className="artist-game__play"
-              onClick={
-                handlePlayPause
-              }
-              disabled={isRevealed}
-              aria-label={
-                isPlaying
-                  ? 'Pause song'
-                  : 'Play song'
-              }
-            >
-              {isPlaying ? (
-                <Pause
-                  size={28}
-                  strokeWidth={2}
-                />
-              ) : (
-                <Play
-                  size={28}
-                  strokeWidth={2}
-                />
-              )}
-            </button>
+            <section className="artist-game__audio">
 
-            <div className="artist-game__wave">
-              {Array.from({
-                length: 32,
-              }).map((_, index) => (
-                <span
-                  key={index}
+              <audio
+                ref={audioRef}
+                key={question.id}
+                src={question.song.audioUrl}
+                preload="auto"
+                onEnded={
+                  handleAudioEnded
+                }
+              />
+
+              <div className="artist-game__audio-top">
+                <span>
+                  10 SECOND SNIPPET
+                </span>
+
+                <strong
                   className={
-                    isPlaying
-                      ? 'artist-game__wave-bar artist-game__wave-bar--playing'
-                      : 'artist-game__wave-bar'
+                    timeRemaining <= 3 &&
+                    !isRevealed
+                      ? 'artist-game__timer artist-game__timer--urgent'
+                      : 'artist-game__timer'
                   }
+                >
+                  {timeRemaining.toFixed(1)}s
+                </strong>
+              </div>
+
+              <div className="artist-game__player">
+
+                <button
+                  type="button"
+                  className="artist-game__play"
+                  onClick={
+                    handlePlayPause
+                  }
+                  disabled={isRevealed}
+                  aria-label={
+                    isPlaying
+                      ? 'Pause song'
+                      : 'Play song'
+                  }
+                >
+                  {isPlaying ? (
+                    <Pause
+                      size={21}
+                      strokeWidth={2}
+                    />
+                  ) : (
+                    <Play
+                      size={21}
+                      strokeWidth={2}
+                    />
+                  )}
+                </button>
+
+                <div className="artist-game__wave">
+                  {Array.from({
+                    length: 32,
+                  }).map((_, index) => (
+                    <span
+                      key={index}
+                      className={
+                        isPlaying
+                          ? 'artist-game__wave-bar artist-game__wave-bar--playing'
+                          : 'artist-game__wave-bar'
+                      }
+                      style={{
+                        height: `${
+                          20 +
+                          ((index * 17) %
+                            45)
+                        }%`,
+                      }}
+                    />
+                  ))}
+                </div>
+
+              </div>
+
+              <div className="artist-game__progress">
+                <div
+                  className="artist-game__progress-fill"
                   style={{
-                    height: `${
-                      20 +
-                      ((index * 17) %
-                        45)
-                    }%`,
+                    width: `${progress}%`,
                   }}
                 />
-              ))}
-            </div>
-          </div>
-
-          <div className="artist-game__progress">
-            <div
-              className="artist-game__progress-fill"
-              style={{
-                width: `${progress}%`,
-              }}
-            />
-          </div>
-
-          <p className="artist-game__hint">
-            {isRevealed
-              ? 'The answer has been revealed.'
-              : 'Pick an artist as soon as you know it.'}
-          </p>
-        </section>
-
-        {/* ANSWERS */}
-
-        {!isRevealed && (
-          <section className="artist-game__answers">
-
-            <div className="artist-game__answers-header">
-              <span>
-                CHOOSE ONE
-              </span>
-
-              <span>
-                4 OPTIONS
-              </span>
-            </div>
-
-            <div className="artist-game__answer-grid">
-              {question.answers.map(
-                (answer, index) => (
-                  <button
-                    key={answer}
-                    type="button"
-                    className="artist-game__answer"
-                    onClick={() =>
-                      handleAnswer(
-                        answer,
-                      )
-                    }
-                  >
-                    <span className="artist-game__answer-number">
-                      {String(
-                        index + 1,
-                      ).padStart(2, '0')}
-                    </span>
-
-                    <span>
-                      {answer}
-                    </span>
-                  </button>
-                ),
-              )}
-            </div>
-          </section>
-        )}
-
-        {/* REVEAL */}
-
-        {isRevealed && (
-          <section className="artist-game__reveal">
-
-            <div
-              className={
-                isCorrect
-                  ? 'artist-game__result artist-game__result--correct'
-                  : 'artist-game__result artist-game__result--incorrect'
-              }
-            >
-              <span>
-                {answerStatus ===
-                'timeout'
-                  ? "TIME'S UP"
-                  : isCorrect
-                    ? 'CORRECT'
-                    : 'NOT QUITE'}
-              </span>
-
-              <strong>
-                {answerStatus ===
-                'timeout'
-                  ? `The artist was ${question.correctAnswer}.`
-                  : isCorrect
-                    ? 'You got it.'
-                    : `The artist was ${question.correctAnswer}.`}
-              </strong>
-            </div>
-
-            <div className="artist-game__song-card">
-
-              {question.song.artworkUrl && (
-                <img
-                  src={
-                    question.song.artworkUrl
-                  }
-                  alt={`${question.song.album} album cover`}
-                  className="artist-game__artwork"
-                />
-              )}
-
-              <div className="artist-game__song-info">
-                <p className="artist-game__song-label">
-                  YOU WERE LISTENING TO
-                </p>
-
-                <h3>
-                  {question.song.title}
-                </h3>
-
-                <p className="artist-game__artist">
-                  {question.song.artist}
-                </p>
-
-                <p className="artist-game__album">
-                  {question.song.album}
-                </p>
               </div>
-            </div>
 
-            <button
-              type="button"
-              className="artist-game__next"
-              onClick={
-                handleNextSong
-              }
-              disabled={isLoadingNext}
-            >
-              <span>
-                {isLoadingNext
-                  ? 'LOADING...'
-                  : currentQuestion >=
-                      TOTAL_QUESTIONS - 1
-                    ? 'SEE RESULTS'
-                    : 'NEXT SONG'}
-              </span>
+              <p className="artist-game__hint">
+                {isRevealed
+                  ? 'The answer has been revealed.'
+                  : 'Pick an artist as soon as you know it.'}
+              </p>
 
-              {!isLoadingNext && (
-                <ArrowRight
-                  size={20}
-                />
-              )}
-            </button>
+            </section>
 
           </section>
-        )}
+
+          {/* =================================================
+              RIGHT: ANSWERS / RESULT
+          ================================================= */}
+
+          <section className="artist-game__play-panel">
+
+            {!isRevealed ? (
+              <section className="artist-game__answers">
+
+                <div className="artist-game__answers-header">
+                  <span>
+                    CHOOSE ONE
+                  </span>
+
+                  <span>
+                    4 OPTIONS
+                  </span>
+                </div>
+
+                <div className="artist-game__answer-grid">
+                  {question.answers.map(
+                    (answer, index) => (
+                      <button
+                        key={answer}
+                        type="button"
+                        className="artist-game__answer"
+                        onClick={() =>
+                          handleAnswer(
+                            answer,
+                          )
+                        }
+                      >
+                        <span className="artist-game__answer-number">
+                          {String(
+                            index + 1,
+                          ).padStart(2, '0')}
+                        </span>
+
+                        <span>
+                          {answer}
+                        </span>
+                      </button>
+                    ),
+                  )}
+                </div>
+
+              </section>
+            ) : (
+              <section className="artist-game__reveal">
+
+                <div
+                  className={
+                    isCorrect
+                      ? 'artist-game__result artist-game__result--correct'
+                      : 'artist-game__result artist-game__result--incorrect'
+                  }
+                >
+                  <span>
+                    {answerStatus ===
+                    'timeout'
+                      ? "TIME'S UP"
+                      : isCorrect
+                        ? 'CORRECT'
+                        : 'NOT QUITE'}
+                  </span>
+
+                  <strong>
+                    {answerStatus ===
+                    'timeout'
+                      ? `The artist was ${question.correctAnswer}.`
+                      : isCorrect
+                        ? 'You got it.'
+                        : `The artist was ${question.correctAnswer}.`}
+                  </strong>
+                </div>
+
+                <div className="artist-game__song-card">
+
+                  {question.song.artworkUrl ? (
+                    <img
+                      src={
+                        question.song.artworkUrl
+                      }
+                      alt={`${question.song.album} album cover`}
+                      className="artist-game__artwork"
+                    />
+                  ) : (
+                    <div className="artist-game__artwork-placeholder">
+                      <span>♪</span>
+                    </div>
+                  )}
+
+                  <div className="artist-game__song-info">
+
+                    <p className="artist-game__song-label">
+                      YOU WERE LISTENING TO
+                    </p>
+
+                    <h3>
+                      {question.song.title}
+                    </h3>
+
+                    <p className="artist-game__artist">
+                      {question.song.artist}
+                    </p>
+
+                    <p className="artist-game__album">
+                      {question.song.album}
+                    </p>
+
+                  </div>
+
+                </div>
+
+                <button
+                  type="button"
+                  className="artist-game__next"
+                  onClick={
+                    handleNextSong
+                  }
+                  disabled={isLoadingNext}
+                >
+                  <span>
+                    {isLoadingNext
+                      ? 'LOADING...'
+                      : currentQuestion >=
+                          TOTAL_QUESTIONS - 1
+                        ? 'SEE RESULTS'
+                        : 'NEXT SONG'}
+                  </span>
+
+                  {!isLoadingNext && (
+                    <ArrowRight
+                      size={17}
+                    />
+                  )}
+                </button>
+
+              </section>
+            )}
+
+          </section>
+
+        </main>
 
       </div>
     </div>
@@ -1064,7 +1118,9 @@ function ArtistResultsScreen({
   return (
     <div className="artist-results">
 
-      {/* CONFETTI */}
+      {/* =================================================
+          CONFETTI
+      ================================================= */}
 
       <div
         className="artist-results__confetti"
@@ -1095,13 +1151,15 @@ function ArtistResultsScreen({
 
       <div className="artist-results__container">
 
-        {/* HEADER */}
+        {/* =================================================
+            HEADER
+        ================================================= */}
 
         <header className="artist-results__header">
 
           <div className="artist-results__trophy">
             <Trophy
-              size={28}
+              size={23}
               strokeWidth={1.8}
             />
           </div>
@@ -1121,7 +1179,9 @@ function ArtistResultsScreen({
 
         </header>
 
-        {/* SCORE */}
+        {/* =================================================
+            SCORE
+        ================================================= */}
 
         <section className="artist-results__hero">
 
@@ -1147,7 +1207,9 @@ function ArtistResultsScreen({
 
         </section>
 
-        {/* HERO STATS */}
+        {/* =================================================
+            RECOGNITION STATS
+        ================================================= */}
 
         <section className="artist-results__hero">
 
@@ -1176,7 +1238,9 @@ function ArtistResultsScreen({
 
         </section>
 
-        {/* SPEED */}
+        {/* =================================================
+            SPEED
+        ================================================= */}
 
         <section className="artist-results__speed">
 
@@ -1193,16 +1257,21 @@ function ArtistResultsScreen({
           <div className="artist-results__speed-grid">
 
             <div className="artist-results__speed-stat">
+
               <span>
                 AVERAGE
               </span>
 
               <strong>
-                {averageTime.toFixed(1)}s
+                {averageTime > 0
+                  ? `${averageTime.toFixed(1)}s`
+                  : '—'}
               </strong>
+
             </div>
 
             <div className="artist-results__speed-stat artist-results__speed-stat--fastest">
+
               <span>
                 FASTEST
               </span>
@@ -1218,17 +1287,21 @@ function ArtistResultsScreen({
                   {fastestResult.artist}
                 </small>
               )}
+
             </div>
 
           </div>
 
         </section>
 
-        {/* BREAKDOWN */}
+        {/* =================================================
+            BREAKDOWN
+        ================================================= */}
 
         <section className="artist-results__breakdown">
 
           <div className="artist-results__section-heading">
+
             <p>
               ROUND RECAP
             </p>
@@ -1236,6 +1309,7 @@ function ArtistResultsScreen({
             <h2>
               Your artists
             </h2>
+
           </div>
 
           <div className="artist-results__list">
@@ -1258,6 +1332,7 @@ function ArtistResultsScreen({
                   </div>
 
                   <div className="artist-results__artwork-wrapper">
+
                     {result.artworkUrl ? (
                       <img
                         src={
@@ -1271,6 +1346,7 @@ function ArtistResultsScreen({
                         ?
                       </div>
                     )}
+
                   </div>
 
                   <div className="artist-results__song-info">
@@ -1297,7 +1373,7 @@ function ArtistResultsScreen({
                         </span>
 
                         <Check
-                          size={18}
+                          size={16}
                           strokeWidth={2.5}
                         />
                       </>
@@ -1308,7 +1384,7 @@ function ArtistResultsScreen({
                         </span>
 
                         <X
-                          size={18}
+                          size={16}
                           strokeWidth={2.5}
                         />
                       </>
@@ -1324,18 +1400,21 @@ function ArtistResultsScreen({
 
         </section>
 
-        {/* FASTEST RECOGNITION */}
+        {/* =================================================
+            FASTEST RECOGNITION
+        ================================================= */}
 
         {fastestResult && (
           <section className="artist-results__fastest">
 
             <div className="artist-results__fastest-icon">
               <Trophy
-                size={20}
+                size={17}
               />
             </div>
 
             <div>
+
               <span>
                 FASTEST RECOGNITION
               </span>
@@ -1351,12 +1430,15 @@ function ArtistResultsScreen({
                 )}
                 seconds.
               </p>
+
             </div>
 
           </section>
         )}
 
-        {/* ACTIONS */}
+        {/* =================================================
+            ACTIONS
+        ================================================= */}
 
         <div className="artist-results__actions">
 
@@ -1368,7 +1450,7 @@ function ArtistResultsScreen({
             }
           >
             <RotateCcw
-              size={18}
+              size={16}
             />
 
             <span>

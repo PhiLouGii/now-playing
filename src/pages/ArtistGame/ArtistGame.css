@@ -1,155 +1,263 @@
 .artist-game {
-  min-height: calc(100vh - 72px);
-  padding: 48px 24px 72px;
-  background:
-    radial-gradient(
-      circle at 50% 0%,
-      rgba(128, 90, 213, 0.1),
-      transparent 40%
-    ),
-    var(--color-background);
+  min-height: calc(100dvh - var(--navbar-height));
+  height: calc(100dvh - var(--navbar-height));
+  padding: 14px 32px;
+  overflow: hidden;
+
+  color: var(--color-text);
+  background: var(--color-bg);
 }
 
 .artist-game__container {
-  width: min(920px, 100%);
+  width: min(100%, 1180px);
+  height: 100%;
   margin: 0 auto;
+
+  display: flex;
+  flex-direction: column;
 }
 
-.artist-game__loading {
-  min-height: 60vh;
+/* =========================================================
+   LOADING / ERROR
+========================================================= */
+
+.artist-game__loading,
+.artist-game__error {
+  flex: 1;
+  min-height: 0;
+
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
+
+  text-align: center;
 }
 
-.artist-game__loading h1 {
+.artist-game__loading h1,
+.artist-game__error h1 {
   margin: 0;
-  font-size: clamp(2rem, 5vw, 4rem);
-  line-height: 1;
-  letter-spacing: -0.04em;
+
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.045em;
 }
 
-.artist-game__loading p:last-child {
-  margin-top: 14px;
+.artist-game__loading p,
+.artist-game__error p {
+  margin: 10px 0 0;
   color: var(--color-text-muted);
 }
 
-/* =========================
+/* =========================================================
    HEADER
-========================= */
+========================================================= */
 
 .artist-game__header {
+  flex-shrink: 0;
+
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  gap: 32px;
-  margin-bottom: 56px;
-}
+  gap: 24px;
 
-.artist-game__eyebrow,
-.artist-game__prompt,
-.artist-game__answers-header,
-.artist-game__song-label {
-  margin: 0;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  margin-bottom: 14px;
 }
 
 .artist-game__eyebrow {
+  margin: 0 0 5px;
+
   color: var(--color-purple-light);
-  margin-bottom: 10px;
+
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
 }
 
 .artist-game__title {
   margin: 0;
-  font-size: clamp(2.3rem, 6vw, 4.5rem);
+
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
   line-height: 0.95;
   letter-spacing: -0.045em;
 }
 
 .artist-game__round {
+  flex-shrink: 0;
+
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  flex-shrink: 0;
 }
 
 .artist-game__round span {
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 0.15em;
   color: var(--color-text-muted);
+
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .artist-game__round strong {
-  font-size: 2rem;
+  font-size: 1.45rem;
   line-height: 1;
 }
 
 .artist-game__round small {
   color: var(--color-text-muted);
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-size: 0.7rem;
 }
 
-/* =========================
-   QUESTION
-========================= */
+/* =========================================================
+   GAME BOARD
+========================================================= */
+
+.artist-game__board {
+  flex: 1;
+  min-height: 0;
+
+  display: grid;
+  grid-template-columns:
+    minmax(330px, 0.9fr)
+    minmax(440px, 1.1fr);
+
+  gap: 42px;
+  align-items: center;
+}
+
+/* =========================================================
+   LEFT / QUESTION
+========================================================= */
 
 .artist-game__question {
-  margin-bottom: 28px;
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
 }
 
 .artist-game__prompt {
+  margin: 0 0 7px;
+
   color: var(--color-cyan);
-  margin-bottom: 8px;
+
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
 }
 
 .artist-game__question h2 {
   margin: 0;
-  font-size: clamp(1.2rem, 3vw, 1.6rem);
-  font-weight: 500;
+
   color: var(--color-text-secondary);
+
+  font-size: 0.9rem;
+  font-weight: 500;
 }
 
-/* =========================
-   AUDIO
-========================= */
+/* =========================================================
+   ARTWORK / PLACEHOLDER
+========================================================= */
 
-.artist-game__audio {
-  padding: 24px;
+.artist-game__artwork-placeholder {
+  width: min(245px, 42vh);
+  aspect-ratio: 1;
+
+  display: grid;
+  place-items: center;
+
+  margin-bottom: 14px;
+
   border: 1px solid var(--border-medium);
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
+
   background:
-    linear-gradient(
-      135deg,
-      rgba(128, 90, 213, 0.08),
-      rgba(0, 220, 255, 0.025)
+    radial-gradient(
+      circle at 50% 35%,
+      rgba(128, 90, 213, 0.14),
+      transparent 65%
     ),
     var(--color-surface);
-  box-shadow: var(--glow-purple);
-  margin-bottom: 32px;
+
+  color: var(--color-text-muted);
+
+  box-shadow: var(--shadow-sm);
+}
+
+.artist-game__artwork-placeholder span {
+  font-size: clamp(3rem, 8vw, 5rem);
+  font-weight: 800;
+  line-height: 1;
+  opacity: 0.35;
+}
+
+/*
+   If the JSX uses the actual artwork before reveal,
+   this keeps it visually consistent with the main game.
+*/
+
+.artist-game__artwork {
+  width: min(245px, 42vh);
+  aspect-ratio: 1;
+
+  display: block;
+
+  margin-bottom: 14px;
+
+  object-fit: cover;
+
+  border-radius: var(--radius-lg);
+
+  border: 1px solid var(--border-medium);
+
+  background: var(--color-surface);
+
+  box-shadow: var(--shadow-sm);
+}
+
+/* =========================================================
+   AUDIO
+========================================================= */
+
+.artist-game__audio {
+  width: min(100%, 520px);
+
+  padding: 12px 14px;
+
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+
+  background: var(--color-surface);
 }
 
 .artist-game__audio-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 18px;
+
+  margin-bottom: 7px;
 }
 
 .artist-game__audio-top span {
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
   color: var(--color-text-muted);
+
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
 }
 
 .artist-game__timer {
-  font-size: 1.25rem;
+  color: var(--color-text);
+
+  font-size: 0.8rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
@@ -158,32 +266,44 @@
   color: var(--color-cyan);
 }
 
+/* =========================================================
+   PLAYER
+========================================================= */
+
 .artist-game__player {
   display: flex;
   align-items: center;
-  gap: 24px;
-  min-height: 92px;
+  gap: 12px;
+
+  min-height: 48px;
 }
 
 .artist-game__play {
-  width: 64px;
-  height: 64px;
+  width: 42px;
+  height: 42px;
+
   flex-shrink: 0;
+
   display: grid;
   place-items: center;
+
   border: 0;
   border-radius: 50%;
+
   background: var(--gradient-primary);
   color: white;
+
   cursor: pointer;
+
   box-shadow: var(--glow-purple);
+
   transition:
     transform 160ms ease,
     box-shadow 160ms ease;
 }
 
 .artist-game__play:hover:not(:disabled) {
-  transform: scale(1.06);
+  transform: scale(1.05);
 }
 
 .artist-game__play:active:not(:disabled) {
@@ -191,32 +311,43 @@
 }
 
 .artist-game__play:disabled {
-  opacity: 0.65;
+  opacity: 0.6;
   cursor: default;
 }
 
+/* =========================================================
+   WAVEFORM
+========================================================= */
+
 .artist-game__wave {
-  height: 64px;
+  height: 42px;
+
   flex: 1;
+
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
 }
 
 .artist-game__wave-bar {
   flex: 1;
-  max-width: 8px;
-  height: 35%;
-  min-height: 8px;
+
+  max-width: 7px;
+  min-height: 5px;
+  height: 28px;
+
   border-radius: 999px;
+
   background: var(--border-medium);
+
   transition:
-    background 200ms ease,
-    height 200ms ease;
+    background 180ms ease,
+    height 180ms ease;
 }
 
 .artist-game__wave-bar--playing {
   background: var(--color-purple-light);
+
   animation: artist-wave 700ms ease-in-out infinite alternate;
 }
 
@@ -234,83 +365,131 @@
   }
 
   to {
-    transform: scaleY(1.25);
+    transform: scaleY(1.2);
   }
 }
 
+/* =========================================================
+   PROGRESS
+========================================================= */
+
 .artist-game__progress {
-  height: 5px;
+  height: 3px;
+
   overflow: hidden;
-  margin-top: 8px;
+
+  margin-top: 6px;
+
   border-radius: 999px;
+
   background: var(--border-medium);
 }
 
 .artist-game__progress-fill {
   height: 100%;
+
   border-radius: inherit;
+
   background: var(--gradient-primary);
+
   transition: width 100ms linear;
 }
 
 .artist-game__hint {
-  margin: 14px 0 0;
-  font-size: 0.78rem;
+  margin: 7px 0 0;
+
   color: var(--color-text-muted);
+
+  font-size: 0.62rem;
 }
 
-/* =========================
+/* =========================================================
+   RIGHT / PLAY PANEL
+========================================================= */
+
+.artist-game__play-panel {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* =========================================================
    ANSWERS
-========================= */
+========================================================= */
 
 .artist-game__answers {
-  margin-top: 40px;
+  width: 100%;
 }
 
 .artist-game__answers-header {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+
+  margin-bottom: 8px;
+}
+
+.artist-game__answers-header,
+.artist-game__song-label {
   color: var(--color-text-muted);
-  margin-bottom: 14px;
+
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .artist-game__answer-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  gap: 9px;
 }
 
 .artist-game__answer {
-  min-height: 72px;
+  min-height: 56px;
+
   display: flex;
   align-items: center;
-  gap: 18px;
-  padding: 16px 20px;
+
+  gap: 11px;
+
+  padding: 9px 12px;
+
   border: 1px solid var(--border-medium);
-  border-radius: 14px;
+  border-radius: var(--radius-md);
+
   background: var(--color-surface);
   color: var(--color-text);
+
   font: inherit;
-  font-size: 1rem;
+  font-size: 0.78rem;
   font-weight: 650;
+
   text-align: left;
+
   cursor: pointer;
+
   transition:
-    border-color 160ms ease,
-    transform 160ms ease,
-    background 160ms ease;
+    border-color 140ms ease,
+    background 140ms ease,
+    transform 140ms ease;
 }
 
 .artist-game__answer:hover {
   border-color: var(--color-purple-light);
+
   background:
     linear-gradient(
       135deg,
-      rgba(128, 90, 213, 0.1),
+      rgba(128, 90, 213, 0.08),
       transparent
     ),
     var(--color-surface);
-  transform: translateY(-2px);
+
+  transform: translateY(-1px);
 }
 
 .artist-game__answer:active {
@@ -318,72 +497,109 @@
 }
 
 .artist-game__answer-number {
+  width: 26px;
+  height: 26px;
+
+  flex-shrink: 0;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 7px;
+
+  background: var(--color-bg);
+
   color: var(--color-text-muted);
-  font-size: 0.7rem;
-  letter-spacing: 0.1em;
+
+  font-size: 0.62rem;
+  font-weight: 800;
 }
 
-/* =========================
-   REVEAL
-========================= */
+/* =========================================================
+   RESULT / FEEDBACK
+========================================================= */
 
 .artist-game__reveal {
-  margin-top: 40px;
+  width: 100%;
 }
 
 .artist-game__result {
-  padding: 18px 22px;
-  margin-bottom: 18px;
+  padding: 10px 13px;
+
+  margin-bottom: 9px;
+
   border: 1px solid var(--border-medium);
-  border-radius: 14px;
+  border-radius: var(--radius-md);
+
   background: var(--color-surface);
 }
 
 .artist-game__result span {
   display: block;
-  margin-bottom: 5px;
-  font-size: 0.68rem;
+
+  margin-bottom: 3px;
+
+  font-size: 0.58rem;
   font-weight: 800;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
 }
 
 .artist-game__result strong {
-  font-size: 1.05rem;
+  font-size: 0.82rem;
 }
 
 .artist-game__result--correct {
   border-color: rgba(100, 220, 170, 0.4);
+
+  background:
+    rgba(100, 220, 170, 0.07),
+    var(--color-surface);
 }
 
 .artist-game__result--correct span {
-  color: #72d8a5;
+  color: #52c98c;
 }
 
 .artist-game__result--incorrect {
   border-color: rgba(255, 120, 140, 0.35);
+
+  background:
+    rgba(255, 120, 140, 0.06),
+    var(--color-surface);
 }
 
 .artist-game__result--incorrect span {
-  color: #ff788c;
+  color: #e9677d;
 }
+
+/* =========================================================
+   SONG REVEAL
+========================================================= */
 
 .artist-game__song-card {
   display: flex;
   align-items: center;
-  gap: 24px;
-  padding: 20px;
+
+  gap: 14px;
+
+  padding: 12px;
+
   border: 1px solid var(--border-medium);
-  border-radius: 20px;
+  border-radius: var(--radius-md);
+
   background: var(--color-surface);
 }
 
-.artist-game__artwork {
-  width: 150px;
-  height: 150px;
+.artist-game__song-card .artist-game__artwork {
+  width: 100px;
+  height: 100px;
+
   flex-shrink: 0;
-  object-fit: cover;
-  border-radius: 12px;
-  background: var(--border-medium);
+
+  margin: 0;
+
+  border-radius: 8px;
 }
 
 .artist-game__song-info {
@@ -391,113 +607,143 @@
 }
 
 .artist-game__song-label {
-  color: var(--color-text-muted);
-  margin-bottom: 10px;
+  margin-bottom: 5px;
 }
 
 .artist-game__song-info h3 {
+  overflow: hidden;
+
   margin: 0;
-  font-size: clamp(1.8rem, 4vw, 2.8rem);
+
+  font-size: clamp(1.25rem, 3vw, 2rem);
   line-height: 1;
+
   letter-spacing: -0.035em;
+
+  text-overflow: ellipsis;
 }
 
 .artist-game__artist {
-  margin: 10px 0 0;
+  margin: 6px 0 0;
+
   color: var(--color-purple-light);
-  font-size: 1.1rem;
+
+  font-size: 0.82rem;
   font-weight: 700;
 }
 
 .artist-game__album {
-  margin: 5px 0 0;
+  margin: 3px 0 0;
+
   color: var(--color-text-muted);
-  font-size: 0.9rem;
+
+  font-size: 0.7rem;
 }
+
+/* =========================================================
+   NEXT BUTTON
+========================================================= */
 
 .artist-game__next {
   width: 100%;
-  min-height: 58px;
+  min-height: 42px;
+
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 12px;
-  margin-top: 16px;
+
+  gap: 8px;
+
+  margin-top: 9px;
+
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
+
   background: var(--gradient-primary);
   color: white;
+
   font: inherit;
-  font-size: 0.78rem;
+  font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.13em;
+  text-transform: uppercase;
+
   cursor: pointer;
+
   box-shadow: var(--glow-purple);
+
   transition:
-    transform 160ms ease,
-    box-shadow 160ms ease;
+    transform 140ms ease,
+    box-shadow 140ms ease;
 }
 
 .artist-game__next:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 .artist-game__next:active {
   transform: translateY(0);
 }
 
-/* ==================================================
-   ARTIST RESULTS
-================================================== */
+/* =========================================================
+   RESULTS SCREEN
+========================================================= */
 
 .artist-results {
   position: relative;
-  min-height: calc(100vh - 72px);
-  overflow: hidden;
-  padding: 64px 24px 80px;
-  background:
-    radial-gradient(
-      circle at 50% 0%,
-      rgba(128, 90, 213, 0.16),
-      transparent 42%
-    ),
-    var(--color-background);
+
+  min-height: calc(100dvh - var(--navbar-height));
+
+  padding: 30px 32px 42px;
+
+  overflow-y: auto;
+
+  color: var(--color-text);
+
+  background: var(--color-bg);
 }
 
 .artist-results__container {
   position: relative;
   z-index: 2;
-  width: min(920px, 100%);
+
+  width: min(100%, 1180px);
+
   margin: 0 auto;
 }
 
-/* ==================================================
+/* =========================================================
    CONFETTI
-================================================== */
+========================================================= */
 
 .artist-results__confetti {
-  position: absolute;
+  position: fixed;
+
   inset: 0;
+
   z-index: 1;
+
   pointer-events: none;
+
   overflow: hidden;
 }
 
 .artist-results__confetti-piece {
   position: absolute;
+
   top: -20px;
-  width: 8px;
-  height: 16px;
+
+  width: 6px;
+  height: 12px;
+
   border-radius: 2px;
+
   background: var(--color-purple-light);
+
   opacity: 0;
+
   animation-name: artist-confetti;
-  animation-timing-function: cubic-bezier(
-    0.2,
-    0.8,
-    0.3,
-    1
-  );
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.3, 1);
   animation-fill-mode: forwards;
 }
 
@@ -529,80 +775,89 @@
   }
 }
 
-/* ==================================================
-   HEADER
-================================================== */
+/* =========================================================
+   RESULTS HEADER
+========================================================= */
 
 .artist-results__header {
   text-align: center;
-  margin-bottom: 44px;
+
+  margin-bottom: 24px;
 }
 
 .artist-results__trophy {
-  width: 64px;
-  height: 64px;
+  width: 46px;
+  height: 46px;
+
   display: grid;
   place-items: center;
-  margin: 0 auto 22px;
+
+  margin: 0 auto 12px;
+
   border: 1px solid var(--border-medium);
   border-radius: 50%;
+
   color: var(--color-cyan);
-  background:
-    radial-gradient(
-      circle,
-      rgba(0, 220, 255, 0.12),
-      transparent 70%
-    ),
-    var(--color-surface);
+
+  background: var(--color-surface);
+
   box-shadow: var(--glow-purple);
 }
 
 .artist-results__eyebrow {
-  margin: 0 0 10px;
+  margin: 0 0 6px;
+
   color: var(--color-purple-light);
-  font-size: 0.7rem;
+
+  font-size: 0.62rem;
   font-weight: 800;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
 }
 
 .artist-results__header h1 {
   margin: 0;
-  font-size: clamp(2.5rem, 7vw, 5rem);
+
+  color: var(--color-text);
+
+  font-size: clamp(2rem, 5vw, 3.5rem);
   line-height: 0.95;
+
   letter-spacing: -0.05em;
 }
 
 .artist-results__header p:last-child {
   max-width: 500px;
-  margin: 16px auto 0;
+
+  margin: 8px auto 0;
+
   color: var(--color-text-muted);
-  font-size: 1rem;
+
+  font-size: 0.82rem;
 }
 
-/* ==================================================
-   HERO
-================================================== */
+/* =========================================================
+   RESULTS HERO
+========================================================= */
 
 .artist-results__hero {
   display: grid;
+
   grid-template-columns: 1.5fr 1fr;
+
   overflow: hidden;
-  margin-bottom: 18px;
+
+  margin-bottom: 14px;
+
   border: 1px solid var(--border-medium);
-  border-radius: 22px;
-  background:
-    linear-gradient(
-      135deg,
-      rgba(128, 90, 213, 0.12),
-      rgba(0, 220, 255, 0.035)
-    ),
-    var(--color-surface);
-  box-shadow: var(--glow-purple);
+  border-radius: var(--radius-lg);
+
+  background: var(--color-surface);
 }
 
 .artist-results__hero-main,
 .artist-results__accuracy {
-  padding: 32px;
+  padding: 22px;
 }
 
 .artist-results__hero-main {
@@ -613,25 +868,33 @@
 .artist-results__accuracy span,
 .artist-results__speed-stat span {
   display: block;
-  margin-bottom: 8px;
+
+  margin-bottom: 5px;
+
   color: var(--color-text-muted);
-  font-size: 0.68rem;
+
+  font-size: 0.58rem;
   font-weight: 800;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
 }
 
 .artist-results__hero-main strong {
   display: block;
-  font-size: clamp(4rem, 10vw, 7rem);
+
+  color: var(--color-text);
+
+  font-size: clamp(3rem, 7vw, 5rem);
   line-height: 0.85;
+
   letter-spacing: -0.06em;
 }
 
 .artist-results__hero-main small {
   color: var(--color-text-muted);
+
   font-size: 0.3em;
   font-weight: 500;
-  letter-spacing: -0.02em;
 }
 
 .artist-results__accuracy {
@@ -641,168 +904,221 @@
 }
 
 .artist-results__accuracy strong {
-  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  color: var(--color-text);
+
+  font-size: clamp(2rem, 5vw, 3.5rem);
   line-height: 1;
+
   letter-spacing: -0.05em;
 }
 
-/* ==================================================
+/* =========================================================
    SECTION HEADINGS
-================================================== */
+========================================================= */
 
 .artist-results__section-heading {
-  margin-bottom: 16px;
+  margin-bottom: 9px;
 }
 
 .artist-results__section-heading p {
-  margin: 0 0 7px;
+  margin: 0 0 4px;
+
   color: var(--color-cyan);
-  font-size: 0.68rem;
+
+  font-size: 0.58rem;
   font-weight: 800;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .artist-results__section-heading h2 {
   margin: 0;
-  font-size: 1.6rem;
+
+  color: var(--color-text);
+
+  font-size: 1.15rem;
+
   letter-spacing: -0.025em;
 }
 
-/* ==================================================
+/* =========================================================
    SPEED
-================================================== */
+========================================================= */
 
 .artist-results__speed {
-  margin-top: 44px;
+  margin-top: 22px;
 }
 
 .artist-results__speed-grid {
   display: grid;
+
   grid-template-columns: repeat(2, 1fr);
-  gap: 14px;
+
+  gap: 9px;
 }
 
 .artist-results__speed-stat {
-  padding: 24px;
+  padding: 15px;
+
   border: 1px solid var(--border-medium);
-  border-radius: 18px;
+  border-radius: var(--radius-md);
+
   background: var(--color-surface);
 }
 
 .artist-results__speed-stat strong {
   display: block;
-  font-size: clamp(2rem, 5vw, 3rem);
+
+  color: var(--color-text);
+
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
   line-height: 1;
+
   letter-spacing: -0.04em;
 }
 
 .artist-results__speed-stat small {
   display: block;
-  margin-top: 9px;
+
+  margin-top: 5px;
+
+  overflow: hidden;
+
   color: var(--color-purple-light);
-  font-size: 0.85rem;
+
+  font-size: 0.7rem;
   font-weight: 700;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .artist-results__speed-stat--fastest {
   background:
     linear-gradient(
       135deg,
-      rgba(0, 220, 255, 0.06),
-      rgba(128, 90, 213, 0.07)
+      rgba(0, 220, 255, 0.05),
+      rgba(128, 90, 213, 0.06)
     ),
     var(--color-surface);
 }
 
-/* ==================================================
+/* =========================================================
    BREAKDOWN
-================================================== */
+========================================================= */
 
 .artist-results__breakdown {
-  margin-top: 44px;
+  margin-top: 22px;
 }
 
 .artist-results__list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .artist-results__item {
   display: grid;
-  grid-template-columns: 36px 56px minmax(0, 1fr) auto;
+
+  grid-template-columns:
+    30px
+    46px
+    minmax(0, 1fr)
+    auto;
+
   align-items: center;
-  gap: 14px;
-  min-height: 76px;
-  padding: 10px 14px;
+
+  gap: 10px;
+
+  min-height: 62px;
+
+  padding: 7px 10px;
+
   border: 1px solid var(--border-medium);
-  border-radius: 14px;
+  border-radius: var(--radius-md);
+
   background: var(--color-surface);
+
   transition:
-    transform 160ms ease,
-    border-color 160ms ease;
+    transform 140ms ease,
+    border-color 140ms ease;
 }
 
 .artist-results__item:hover {
-  transform: translateX(3px);
+  transform: translateX(2px);
 }
 
 .artist-results__item--correct {
-  border-color: rgba(100, 220, 170, 0.22);
+  border-color: rgba(100, 220, 170, 0.25);
 }
 
 .artist-results__item--missed {
-  opacity: 0.78;
+  opacity: 0.82;
 }
 
 .artist-results__number {
   color: var(--color-text-muted);
-  font-size: 0.68rem;
+
+  font-size: 0.6rem;
   font-weight: 800;
   letter-spacing: 0.08em;
 }
 
 .artist-results__artwork-wrapper {
-  width: 56px;
-  height: 56px;
+  width: 46px;
+  height: 46px;
 }
 
 .artist-results__artwork {
   width: 100%;
   height: 100%;
+
   display: block;
+
   object-fit: cover;
-  border-radius: 8px;
+
+  border-radius: 7px;
 }
 
 .artist-results__artwork--empty {
   display: grid;
   place-items: center;
+
   border: 1px solid var(--border-medium);
+
   color: var(--color-text-muted);
-  font-size: 1.2rem;
+
+  font-size: 1rem;
   font-weight: 700;
 }
 
 .artist-results__song-info {
   min-width: 0;
+
   display: flex;
   flex-direction: column;
-  gap: 4px;
+
+  gap: 2px;
 }
 
 .artist-results__song-info strong {
   overflow: hidden;
+
   color: var(--color-text);
-  font-size: 0.98rem;
+
+  font-size: 0.78rem;
+
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .artist-results__song-info span {
   overflow: hidden;
+
   color: var(--color-text-muted);
-  font-size: 0.8rem;
+
+  font-size: 0.66rem;
+
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -810,128 +1126,158 @@
 .artist-results__result-meta {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 5px;
 }
 
-.artist-results__item--correct
-.artist-results__result-meta {
-  color: #72d8a5;
+.artist-results__item--correct .artist-results__result-meta {
+  color: #52c98c;
 }
 
-.artist-results__item--missed
-.artist-results__result-meta {
-  color: #ff788c;
+.artist-results__item--missed .artist-results__result-meta {
+  color: #e9677d;
 }
 
 .artist-results__time {
-  font-size: 0.8rem;
+  font-size: 0.68rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
 
 .artist-results__missed-label {
-  font-size: 0.62rem;
+  font-size: 0.55rem;
   font-weight: 800;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
 }
 
-/* ==================================================
+/* =========================================================
    FASTEST
-================================================== */
+========================================================= */
 
 .artist-results__fastest {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-top: 24px;
-  padding: 18px 20px;
+
+  gap: 11px;
+
+  margin-top: 10px;
+
+  padding: 12px 14px;
+
   border: 1px solid var(--border-medium);
-  border-radius: 16px;
+  border-radius: var(--radius-md);
+
   background:
     linear-gradient(
       135deg,
-      rgba(128, 90, 213, 0.1),
-      rgba(0, 220, 255, 0.035)
+      rgba(128, 90, 213, 0.08),
+      rgba(0, 220, 255, 0.025)
     ),
     var(--color-surface);
 }
 
 .artist-results__fastest-icon {
-  width: 42px;
-  height: 42px;
+  width: 34px;
+  height: 34px;
+
   flex-shrink: 0;
+
   display: grid;
   place-items: center;
-  border-radius: 10px;
-  background: rgba(128, 90, 213, 0.14);
+
+  border-radius: 8px;
+
+  background: rgba(128, 90, 213, 0.12);
+
   color: var(--color-cyan);
 }
 
 .artist-results__fastest span {
   display: block;
-  margin-bottom: 4px;
+
+  margin-bottom: 2px;
+
   color: var(--color-text-muted);
-  font-size: 0.62rem;
+
+  font-size: 0.55rem;
   font-weight: 800;
-  letter-spacing: 0.13em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .artist-results__fastest strong {
   display: block;
-  font-size: 1rem;
-}
 
-.artist-results__fastest p {
-  margin: 3px 0 0;
-  color: var(--color-text-muted);
+  color: var(--color-text);
+
   font-size: 0.78rem;
 }
 
-/* ==================================================
-   ACTIONS
-================================================== */
+.artist-results__fastest p {
+  margin: 2px 0 0;
+
+  color: var(--color-text-muted);
+
+  font-size: 0.64rem;
+}
+
+/* =========================================================
+   RESULTS ACTIONS
+========================================================= */
 
 .artist-results__actions {
   display: grid;
+
   grid-template-columns: 1.5fr 1fr;
-  gap: 12px;
-  margin-top: 36px;
+
+  gap: 9px;
+
+  margin-top: 18px;
 }
 
 .artist-results__play-again,
 .artist-results__back {
-  min-height: 58px;
+  min-height: 42px;
+
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 10px;
-  border-radius: 12px;
+
+  gap: 8px;
+
+  border-radius: var(--radius-md);
+
   font: inherit;
-  font-size: 0.75rem;
+  font-size: 0.64rem;
   font-weight: 800;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+
   cursor: pointer;
+
   transition:
-    transform 160ms ease,
-    box-shadow 160ms ease;
+    transform 140ms ease,
+    box-shadow 140ms ease;
 }
 
 .artist-results__play-again {
   border: 0;
+
   background: var(--gradient-primary);
   color: white;
+
   box-shadow: var(--glow-purple);
 }
 
 .artist-results__back {
   border: 1px solid var(--border-medium);
+
   background: var(--color-surface);
   color: var(--color-text);
 }
 
 .artist-results__play-again:hover,
 .artist-results__back:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 .artist-results__play-again:active,
@@ -939,17 +1285,113 @@
   transform: translateY(0);
 }
 
-/* ==================================================
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 900px) {
+  .artist-game {
+    height: auto;
+    min-height: calc(100dvh - var(--navbar-height));
+
+    overflow: auto;
+
+    padding: 20px 24px 32px;
+  }
+
+  .artist-game__board {
+    grid-template-columns: 1fr;
+
+    gap: 22px;
+
+    align-items: start;
+  }
+
+  .artist-game__question {
+    justify-content: flex-start;
+  }
+
+  .artist-game__play-panel {
+    width: min(100%, 680px);
+
+    margin: 0 auto;
+  }
+
+  .artist-game__artwork-placeholder,
+  .artist-game__artwork {
+    width: min(220px, 48vw);
+  }
+}
+
+/* =========================================================
    MOBILE
-================================================== */
+========================================================= */
 
 @media (max-width: 650px) {
+  .artist-game {
+    padding: 16px 16px 28px;
+  }
+
+  .artist-game__header {
+    align-items: flex-start;
+
+    margin-bottom: 18px;
+  }
+
+  .artist-game__title {
+    font-size: 1.9rem;
+  }
+
+  .artist-game__round strong {
+    font-size: 1.25rem;
+  }
+
+  .artist-game__board {
+    gap: 18px;
+  }
+
+  .artist-game__artwork-placeholder,
+  .artist-game__artwork {
+    width: min(190px, 55vw);
+
+    border-radius: var(--radius-md);
+  }
+
+  .artist-game__audio {
+    width: 100%;
+
+    padding: 10px 11px;
+  }
+
+  .artist-game__answer-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .artist-game__answer {
+    min-height: 52px;
+  }
+
+  .artist-game__song-card {
+    align-items: flex-start;
+  }
+
+  .artist-game__song-card .artist-game__artwork {
+    width: 82px;
+    height: 82px;
+  }
+
   .artist-results {
-    padding: 42px 16px 60px;
+    min-height: calc(100dvh - var(--navbar-height));
+
+    padding: 22px 16px 32px;
   }
 
   .artist-results__header {
-    margin-bottom: 32px;
+    margin-bottom: 20px;
+  }
+
+  .artist-results__header h1 {
+    font-size: 2.25rem;
   }
 
   .artist-results__hero {
@@ -963,7 +1405,15 @@
 
   .artist-results__hero-main,
   .artist-results__accuracy {
-    padding: 24px;
+    padding: 18px;
+  }
+
+  .artist-results__hero-main strong {
+    font-size: 3.5rem;
+  }
+
+  .artist-results__accuracy strong {
+    font-size: 2.5rem;
   }
 
   .artist-results__speed-grid {
@@ -971,22 +1421,32 @@
   }
 
   .artist-results__speed-stat {
-    padding: 20px;
+    padding: 12px;
   }
 
   .artist-results__item {
-    grid-template-columns: 28px 48px minmax(0, 1fr) auto;
-    gap: 10px;
-    padding: 9px 10px;
+    grid-template-columns:
+      24px
+      42px
+      minmax(0, 1fr)
+      auto;
+
+    gap: 8px;
+
+    padding: 7px 8px;
   }
 
   .artist-results__artwork-wrapper {
-    width: 48px;
-    height: 48px;
+    width: 42px;
+    height: 42px;
   }
 
   .artist-results__result-meta {
-    gap: 5px;
+    gap: 3px;
+  }
+
+  .artist-results__missed-label {
+    display: none;
   }
 
   .artist-results__actions {
@@ -994,114 +1454,68 @@
   }
 }
 
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
 @media (max-width: 420px) {
-  .artist-results__speed-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .artist-results__item {
-    grid-template-columns: 24px 44px minmax(0, 1fr) auto;
-  }
-
-  .artist-results__artwork-wrapper {
-    width: 44px;
-    height: 44px;
-  }
-
-  .artist-results__song-info strong {
-    font-size: 0.88rem;
-  }
-
-  .artist-results__song-info span {
-    font-size: 0.72rem;
-  }
-
-  .artist-results__time {
-    font-size: 0.72rem;
-  }
-
-  .artist-results__missed-label {
-    display: none;
-  }
-}
-
-/* =========================
-   MOBILE
-========================= */
-
-@media (max-width: 650px) {
-  .artist-game {
-    padding: 32px 16px 56px;
-  }
-
   .artist-game__header {
-    margin-bottom: 40px;
+    gap: 12px;
   }
 
   .artist-game__title {
-    font-size: 2.35rem;
+    font-size: 1.7rem;
   }
 
   .artist-game__round strong {
-    font-size: 1.5rem;
+    font-size: 1.1rem;
   }
 
-  .artist-game__audio {
-    padding: 18px;
-  }
-
-  .artist-game__player {
-    gap: 16px;
-  }
-
-  .artist-game__play {
-    width: 56px;
-    height: 56px;
-  }
-
-  .artist-game__wave {
-    gap: 3px;
-  }
-
-  .artist-game__answer-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .artist-game__answer {
-    min-height: 64px;
-  }
-
-  .artist-game__song-card {
-    align-items: flex-start;
-    gap: 16px;
-  }
-
+  .artist-game__artwork-placeholder,
   .artist-game__artwork {
-    width: 110px;
-    height: 110px;
-  }
-
-  .artist-game__song-info h3 {
-    font-size: 1.5rem;
-  }
-}
-
-@media (max-width: 420px) {
-  .artist-game__header {
-    align-items: flex-start;
-  }
-
-  .artist-game__round {
-    margin-top: 4px;
+    width: 165px;
   }
 
   .artist-game__song-card {
     flex-direction: column;
   }
 
-  .artist-game__artwork {
+  .artist-game__song-card .artist-game__artwork {
     width: 100%;
     height: auto;
     aspect-ratio: 1;
+  }
+
+  .artist-game__song-info h3 {
+    font-size: 1.35rem;
+  }
+
+  .artist-results__speed-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .artist-results__item {
+    grid-template-columns:
+      22px
+      40px
+      minmax(0, 1fr)
+      auto;
+  }
+
+  .artist-results__artwork-wrapper {
+    width: 40px;
+    height: 40px;
+  }
+
+  .artist-results__song-info strong {
+    font-size: 0.74rem;
+  }
+
+  .artist-results__song-info span {
+    font-size: 0.62rem;
+  }
+
+  .artist-results__time {
+    font-size: 0.62rem;
   }
 }
