@@ -2,7 +2,10 @@ import type { MusicTrack } from '../music/musicProvider.js'
 import { deezerMusicProvider } from '../music/deezerMusicProvider.js'
 import { filterGameTracks } from '../music/musicTrackFilter.js'
 import { CATEGORY_ARTISTS } from '../../data/categories/categoryArtists.js'
-import { CATEGORY_FRANCHISES } from '../../data/categories/categoryFranchises.js'
+import {
+  CATEGORY_FRANCHISES,
+  type CategoryFranchise,
+} from '../../data/categories/categoryFranchises.js'
 import { CATEGORY_CONFIG } from '../../data/categories/categoryConfig.js'
 import type { QuestionType } from '../game/gameTypes.js'
 
@@ -12,17 +15,16 @@ type GetCategoryTracksOptions = {
   excludedTrackIds?: Set<string>
 }
 
-// ─────────────────────────────
-// HELPERS
-// ─────────────────────────────
-
 function shuffle<T>(items: T[]): T[] {
   const copy = [...items]
 
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
+  for (let index = copy.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1))
 
-    ;[copy[i], copy[j]] = [copy[j], copy[i]]
+    ;[copy[index], copy[randomIndex]] = [
+      copy[randomIndex],
+      copy[index],
+    ]
   }
 
   return copy
@@ -32,49 +34,37 @@ function normalize(value: string): string {
   return value
     .toLowerCase()
     .replace(/[()[\]{}]/g, ' ')
+    .replace(/[:'"’“”]/g, '')
     .replace(/\s+/g, ' ')
     .trim()
 }
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
+function sleep(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, milliseconds)
+  })
 }
 
 function isValidCategory(categoryId: string): boolean {
   return CATEGORY_CONFIG.some((category) => category.id === categoryId)
 }
 
-// ─────────────────────────────
-// CATEGORY DATA
-// ─────────────────────────────
-
 function getArtistsForCategory(categoryId: string): string[] {
-  if (!(categoryId in CATEGORY_ARTISTS)) {
-    return []
-  }
+  const artists =
+    CATEGORY_ARTISTS[categoryId as keyof typeof CATEGORY_ARTISTS]
 
-  return [
-    ...CATEGORY_ARTISTS[
-      categoryId as keyof typeof CATEGORY_ARTISTS
-    ],
-  ]
+  return artists ? [...artists] : []
 }
 
-function getFranchisesForCategory(categoryId: string): string[] {
-  if (!(categoryId in CATEGORY_FRANCHISES)) {
-    return []
-  }
-
-  return [
-    ...CATEGORY_FRANCHISES[
-      categoryId as keyof typeof CATEGORY_FRANCHISES
-    ],
-  ]
+function getFranchisesForCategory(
+  categoryId: string,
+): CategoryFranchise[] {
+  return CATEGORY_FRANCHISES[categoryId] ?? []
 }
 
-// ─────────────────────────────
-// ARTIST SEARCH
-// ─────────────────────────────
+function buildTrackKey(track: MusicTrack): string {
+  return `${normalize(track.title)}::${normalize(track.artist)}`
+}
 
 async function searchArtistTracks(
   artist: string,
@@ -82,34 +72,20 @@ async function searchArtistTracks(
 ): Promise<MusicTrack[]> {
   const normalizedArtist = normalize(artist)
 
-  for (let attempt = 1; attempt <= 2; attempt++) {
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
     try {
-      console.log(
-        `[CATEGORY DEBUG] Searching Deezer tracks for "${artist}" (attempt ${attempt})`,
+      const tracks = await deezerMusicProvider.searchTracks(
+        artist,
+        50,
       )
-
-      const tracks = await deezerMusicProvider.searchTracks(artist, 50)
 
       const matchingTracks = tracks.filter(
         (track) => normalize(track.artist) === normalizedArtist,
       )
 
-      const filteredTracks = filterGameTracks(
-        matchingTracks,
-      ).slice(0, limit)
-
-      console.log(
-        `[CATEGORY DEBUG] "${artist}" track search:`,
-        {
-          returned: tracks.length,
-          matchingArtist: matchingTracks.length,
-          playableTracks: filteredTracks.length,
-          tracks: filteredTracks.map((track) => ({
-            title: track.title,
-            artist: track.artist,
-            album: track.album,
-          })),
-        },
+      const filteredTracks = filterGameTracks(matchingTracks).slice(
+        0,
+        limit,
       )
 
       if (filteredTracks.length > 0) {
@@ -117,69 +93,38 @@ async function searchArtistTracks(
       }
 
       if (attempt === 1) {
-        console.warn(
-          `[CATEGORY DEBUG] "${artist}" returned no usable tracks. Retrying in 400ms...`,
-        )
-
         await sleep(400)
       }
-    } catch (error) {
-      console.warn(
-        `[CATEGORY DEBUG] Deezer search failed for "${artist}" (attempt ${attempt}):`,
-        error,
-      )
-
+    } catch {
       if (attempt === 1) {
-        console.warn(
-          `[CATEGORY DEBUG] Retrying "${artist}" in 400ms...`,
-        )
-
         await sleep(400)
       }
     }
   }
 
-  console.warn(
-    `[CATEGORY DEBUG] "${artist}" failed after 2 attempts.`,
-  )
-
   return []
 }
 
-// ─────────────────────────────
-// FRANCHISE SEARCH
-// ─────────────────────────────
-
-async function searchFranchiseTracks(
-  franchise: string,
+async function searchAlbumTracks(
+  albumName: string,
   limit = 10,
 ): Promise<MusicTrack[]> {
-  for (let attempt = 1; attempt <= 2; attempt++) {
-    try {
-      console.log(
-        `[CATEGORY DEBUG] Searching Deezer for franchise "${franchise}" (attempt ${attempt})`,
-      )
+  const normalizedAlbum = normalize(albumName)
 
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    try {
       const tracks = await deezerMusicProvider.searchTracks(
-        `"${franchise}"`,
+        albumName,
         50,
       )
 
-      const filteredTracks = filterGameTracks(
-        tracks,
-      ).slice(0, limit)
+      const matchingTracks = tracks.filter(
+        (track) => normalize(track.album) === normalizedAlbum,
+      )
 
-      console.log(
-        `[CATEGORY DEBUG] "${franchise}" franchise search:`,
-        {
-          returned: tracks.length,
-          playableTracks: filteredTracks.length,
-          tracks: filteredTracks.map((track) => ({
-            title: track.title,
-            artist: track.artist,
-            album: track.album,
-          })),
-        },
+      const filteredTracks = filterGameTracks(matchingTracks).slice(
+        0,
+        limit,
       )
 
       if (filteredTracks.length > 0) {
@@ -187,38 +132,17 @@ async function searchFranchiseTracks(
       }
 
       if (attempt === 1) {
-        console.warn(
-          `[CATEGORY DEBUG] "${franchise}" returned no usable tracks. Retrying in 400ms...`,
-        )
-
         await sleep(400)
       }
-    } catch (error) {
-      console.warn(
-        `[CATEGORY DEBUG] Deezer franchise search failed for "${franchise}" (attempt ${attempt}):`,
-        error,
-      )
-
+    } catch {
       if (attempt === 1) {
-        console.warn(
-          `[CATEGORY DEBUG] Retrying "${franchise}" in 400ms...`,
-        )
-
         await sleep(400)
       }
     }
   }
 
-  console.warn(
-    `[CATEGORY DEBUG] "${franchise}" failed after 2 attempts.`,
-  )
-
   return []
 }
-
-// ─────────────────────────────
-// ARTIST-BASED CATEGORY POOL
-// ─────────────────────────────
 
 async function getArtistCategoryTracks(
   categoryId: string,
@@ -229,29 +153,21 @@ async function getArtistCategoryTracks(
 
   if (artists.length === 0) {
     throw new Error(
-      `Category "${categoryId}" does not have any configured artists.`,
+      `No artists configured for category "${categoryId}".`,
     )
   }
 
   const selectedArtists = shuffle(artists).slice(0, 16)
-
-  console.log(
-    `[CATEGORY DEBUG] ${categoryId} selected artists:`,
-    selectedArtists,
-  )
 
   const trackGroups: MusicTrack[][] = []
 
   for (const artist of selectedArtists) {
     const tracks = await searchArtistTracks(artist, 10)
 
-    console.log(
-      `[CATEGORY DEBUG] ${artist} -> ${tracks.length} tracks`,
-    )
+    if (tracks.length > 0) {
+      trackGroups.push(tracks)
+    }
 
-    trackGroups.push(tracks)
-
-    // Keep requests sequential and give Deezer some breathing room.
     await sleep(150)
   }
 
@@ -261,10 +177,6 @@ async function getArtistCategoryTracks(
     excludedTrackIds,
   )
 }
-
-// ─────────────────────────────
-// FRANCHISE-BASED CATEGORY POOL
-// ─────────────────────────────
 
 async function getFranchiseCategoryTracks(
   categoryId: string,
@@ -275,30 +187,42 @@ async function getFranchiseCategoryTracks(
 
   if (franchises.length === 0) {
     throw new Error(
-      `Category "${categoryId}" does not have any configured franchises.`,
+      `No franchises configured for category "${categoryId}".`,
     )
   }
 
-  const selectedFranchises = shuffle(franchises).slice(0, 12)
-
-  console.log(
-    `[CATEGORY DEBUG] ${categoryId} selected franchises:`,
-    selectedFranchises,
-  )
+  const selectedFranchises = shuffle(franchises).slice(0, 8)
 
   const trackGroups: MusicTrack[][] = []
 
   for (const franchise of selectedFranchises) {
-    const tracks = await searchFranchiseTracks(franchise, 10)
-
     console.log(
-      `[CATEGORY DEBUG] ${franchise} -> ${tracks.length} tracks`,
+      `[Category] ${franchise.name} — searching approved albums`,
     )
 
-    trackGroups.push(tracks)
+    const franchiseTracks: MusicTrack[] = []
 
-    // Keep requests sequential and give Deezer some breathing room.
-    await sleep(150)
+    for (const album of franchise.albums) {
+      const tracks = await searchAlbumTracks(album, 10)
+
+      if (tracks.length > 0) {
+        console.log(
+          `[Category] ${franchise.name} — "${album}" → ${tracks.length} tracks`,
+        )
+
+        franchiseTracks.push(...tracks)
+      } else {
+        console.log(
+          `[Category] ${franchise.name} — "${album}" → 0 tracks`,
+        )
+      }
+
+      await sleep(150)
+    }
+
+    if (franchiseTracks.length > 0) {
+      trackGroups.push(franchiseTracks)
+    }
   }
 
   return buildUniqueTrackPool(
@@ -307,10 +231,6 @@ async function getFranchiseCategoryTracks(
     excludedTrackIds,
   )
 }
-
-// ─────────────────────────────
-// UNIQUE TRACK POOL
-// ─────────────────────────────
 
 function buildUniqueTrackPool(
   trackGroups: MusicTrack[][],
@@ -326,7 +246,7 @@ function buildUniqueTrackPool(
         continue
       }
 
-      const key = `${normalize(track.title)}::${normalize(track.artist)}`
+      const key = buildTrackKey(track)
 
       if (seen.has(key)) {
         continue
@@ -337,27 +257,8 @@ function buildUniqueTrackPool(
     }
   }
 
-  const result = shuffle(uniqueTracks).slice(0, limit)
-
-  console.log(
-    `[CATEGORY DEBUG] Final category pool:`,
-    {
-      requested: limit,
-      tracksFound: trackGroups.reduce(
-        (total, group) => total + group.length,
-        0,
-      ),
-      unique: uniqueTracks.length,
-      returned: result.length,
-    },
-  )
-
-  return result
+  return shuffle(uniqueTracks).slice(0, limit)
 }
-
-// ─────────────────────────────
-// PUBLIC API
-// ─────────────────────────────
 
 export async function getCategoryTracks(
   categoryId: string,
@@ -370,12 +271,12 @@ export async function getCategoryTracks(
   } = options
 
   if (!isValidCategory(categoryId)) {
-    throw new Error(`Unknown category: ${categoryId}`)
+    throw new Error(`Unknown category "${categoryId}".`)
   }
 
   if (questionType !== 'name-the-song') {
     throw new Error(
-      `Category "${categoryId}" does not currently support "${questionType}".`,
+      'Category games only support the "name-the-song" question type.',
     )
   }
 
@@ -394,10 +295,9 @@ export async function getCategoryTracks(
 
   if (tracks.length < 4) {
     console.warn(
-      `Category "${categoryId}" does not currently have enough tracks for "${questionType}". Found ${tracks.length}.`,
+      `[Category] "${categoryId}" only produced ${tracks.length} usable tracks.`,
     )
   }
 
   return tracks
 }
-
