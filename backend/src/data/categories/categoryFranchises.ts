@@ -65,5 +65,13 @@ export const CATEGORY_FRANCHISES: Record<string, CategoryFranchise[]> = {
         'Follow Me (Zoey 101)',
       ],
     },
+{
+  name: 'Phineas and Ferb',
+  albums: [
+    'Phineas and Ferb',
+    'Phineas and Ferb: Across the 1st and 2nd Dimensions',
+  ],
+},
+
   ],
 }
