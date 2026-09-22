@@ -31,6 +31,31 @@ import {
 getCategoryTracks,
 } from '../category/categoryMusicService.js'
 
+function normalizeArtistName(
+value: string,
+): string {
+return value
+.normalize('NFD')
+.replace(
+/[\u0300-\u036f]/g,
+'',
+)
+.toLowerCase()
+.replace(
+/[()[]{}'’"`]/g,
+' ',
+)
+.replace(
+/[^a-z0-9]+/g,
+' ',
+)
+.replace(
+/\s+/g,
+' ',
+)
+.trim()
+}
+
 async function hydrateTrack(
 track: MusicTrack,
 ): Promise<MusicTrack> {
@@ -63,16 +88,6 @@ releaseYear,
 }
 }
 
-function normalize(
-value: string,
-): string {
-return value
-.toLowerCase()
-.replace(/[()[]{}]/g, ' ')
-.replace(/\s+/g, ' ')
-.trim()
-}
-
 async function getEligibleTracks(
 type: QuestionType,
 decade?: number,
@@ -101,7 +116,7 @@ let eligibleTracks =
       isPlayableMusicTrack,
     )
     .filter(
-      (track) =>
+      track =>
         !excludedIds.has(
           track.id,
         ),
@@ -132,7 +147,7 @@ if (
 
   eligibleTracks =
     eligibleTracks.filter(
-      (track) =>
+      track =>
         track.releaseYear !==
         undefined,
     )
@@ -156,102 +171,14 @@ console.log(
 return []
 }
 
-async function getEligibleArtistTracks(
-artist: string,
-type: QuestionType,
-excludedTrackIds: string[] = [],
-): Promise<MusicTrack[]> {
-const excludedIds =
-new Set(excludedTrackIds)
-
-const normalizedArtist =
-normalize(artist)
-
-const maxAttempts = 3
-
-for (
-let attempt = 1;
-attempt <= maxAttempts;
-attempt++
-) {
-try {
-const tracks =
-await deezerMusicProvider.searchTracks(
-artist,
-40,
-)
-
-
-  let eligibleTracks =
-    tracks
-      .filter(
-        isPlayableMusicTrack,
-      )
-      .filter(
-        (track) =>
-          normalize(track.artist) ===
-          normalizedArtist,
-      )
-      .filter(
-        (track) =>
-          !excludedIds.has(
-            track.id,
-          ),
-      )
-
-  if (
-    type === 'guess-the-year'
-  ) {
-    eligibleTracks =
-      await Promise.all(
-        eligibleTracks.map(
-          hydrateTrack,
-        ),
-      )
-
-    eligibleTracks =
-      await Promise.all(
-        eligibleTracks.map(
-          enrichReleaseYear,
-        ),
-      )
-
-    eligibleTracks =
-      eligibleTracks.filter(
-        (track) =>
-          track.releaseYear !==
-          undefined,
-      )
-  }
-
-  if (
-    eligibleTracks.length > 0
-  ) {
-    return eligibleTracks
-  }
-} catch (error) {
-  console.error(
-    `Failed to search Deezer for artist "${artist}":`,
-    error,
-  )
-}
-
-console.log(
-  `No eligible tracks found for artist "${artist}". Retrying (${attempt}/${maxAttempts})...`,
-)
-
-
-}
-
-return []
-}
-
 async function getEligibleCategoryTracks(
 categoryId: string,
 type: QuestionType,
 excludedTrackIds: string[] = [],
 ): Promise<MusicTrack[]> {
-if (type !== 'name-the-song') {
+if (
+type !== 'name-the-song'
+) {
 throw new Error(
 'Category games only support the "name-the-song" question type.',
 )
@@ -271,7 +198,8 @@ const tracks =
 await getCategoryTracks(
 categoryId,
 {
-questionType: 'name-the-song',
+questionType:
+'name-the-song',
 limit: 40,
 excludedTrackIds:
 excludedIds,
@@ -300,6 +228,244 @@ console.log(
 return []
 }
 
+/*
+
+* PLAY BY ARTIST
+*
+* The selected artist is a SOURCE FILTER.
+*
+* Example:
+*
+* ```
+  artist = "Rihanna"
+  ```
+* ```
+  type   = "name-the-song"
+  ```
+*
+* This means:
+*
+* ```
+  Find Rihanna songs
+  ```
+* ```
+  -> choose one
+  ```
+* ```
+  -> ask the player to identify the song
+  ```
+*
+* It does NOT mean:
+*
+* ```
+  Find Rihanna songs
+  ```
+* ```
+  -> ask the player to identify Rihanna
+  ```
+
+*/
+async function getEligibleArtistTracks(
+artist: string,
+type: QuestionType,
+excludedTrackIds: string[] = [],
+): Promise<MusicTrack[]> {
+if (
+type !== 'name-the-song'
+) {
+throw new Error(
+'Play by Artist only supports the "name-the-song" question type.',
+)
+}
+
+const normalizedArtist =
+normalizeArtistName(
+artist,
+)
+
+const excludedIds =
+new Set(excludedTrackIds)
+
+try {
+const artists =
+await deezerMusicProvider.searchArtists(
+artist,
+10,
+)
+
+
+if (
+  artists.length === 0
+) {
+  throw new Error(
+    `Deezer returned no artist results for "${artist}".`,
+  )
+}
+
+/*
+ * Deezer can return multiple records
+ * with the same artist name.
+ *
+ * Choose the main artist record by
+ * fan count, then album count.
+ */
+const exactArtists =
+  artists.filter(
+    candidate =>
+      normalizeArtistName(
+        candidate.name ?? '',
+      ) === normalizedArtist,
+  )
+
+if (
+  exactArtists.length === 0
+) {
+  throw new Error(
+    `Could not find an exact Deezer artist match for "${artist}".`,
+  )
+}
+
+const selectedArtist =
+  [...exactArtists].sort(
+    (a, b) => {
+      const fanDifference =
+        (b.nb_fan ?? 0) -
+        (a.nb_fan ?? 0)
+
+      if (
+        fanDifference !== 0
+      ) {
+        return fanDifference
+      }
+
+      return (
+        (b.nb_album ?? 0) -
+        (a.nb_album ?? 0)
+      )
+    },
+  )[0]
+
+console.log(
+  `Selected Deezer artist "${selectedArtist.name}" (ID ${selectedArtist.id}) for "${artist}". Fans: ${selectedArtist.nb_fan ?? 0}, albums: ${selectedArtist.nb_album ?? 0}`,
+)
+
+/*
+ * Start with the artist's top tracks.
+ */
+let tracks =
+  await deezerMusicProvider.getArtistTopTracks(
+    selectedArtist.id,
+    50,
+  )
+
+/*
+ * If we don't have enough usable songs,
+ * expand into the artist's tracklist.
+ */
+const playableTopTracks =
+  tracks.filter(
+    isPlayableMusicTrack,
+  )
+
+if (
+  playableTopTracks.length < 10 &&
+  selectedArtist.tracklist
+) {
+  try {
+    const tracklistTracks =
+      await deezerMusicProvider.getArtistTracksByUrl(
+        selectedArtist.tracklist,
+        100,
+      )
+
+    tracks = [
+      ...tracks,
+      ...tracklistTracks,
+    ]
+  } catch (error) {
+    console.warn(
+      `Could not fetch full tracklist for "${artist}".`,
+      error,
+    )
+  }
+}
+
+/*
+ * Keep only actual songs by the selected artist.
+ *
+ * This prevents:
+ *
+ * Rihanna feat. someone
+ * cover artists
+ * unrelated Deezer results
+ * remixes/live/etc.
+ */
+const eligibleTracks =
+  tracks
+    .filter(
+      isPlayableMusicTrack,
+    )
+    .filter(
+      track =>
+        normalizeArtistName(
+          track.artist,
+        ) === normalizedArtist,
+    )
+    .filter(
+      track =>
+        !excludedIds.has(
+          track.id,
+        ),
+    )
+
+/*
+ * Remove duplicate songs.
+ */
+const seen =
+  new Set<string>()
+
+const uniqueTracks =
+  eligibleTracks.filter(
+    track => {
+      const key =
+        `${normalizeArtistName(
+          track.title,
+        )}::${normalizeArtistName(
+          track.artist,
+        )}`
+
+      if (
+        seen.has(key)
+      ) {
+        return false
+      }
+
+      seen.add(key)
+
+      return true
+    },
+  )
+
+console.log(
+  `Found ${uniqueTracks.length} playable tracks for artist "${artist}".`,
+)
+
+return uniqueTracks
+
+
+} catch (error) {
+console.error(
+`Failed to fetch tracks for artist "${artist}":`,
+error,
+)
+
+
+return []
+
+
+}
+}
+
 function pickRandomTrack(
 tracks: MusicTrack[],
 ): MusicTrack {
@@ -322,28 +488,61 @@ artist?: string,
 ) {
 let eligibleTracks: MusicTrack[]
 
-if (categoryId) {
-eligibleTracks =
-await getEligibleCategoryTracks(
-categoryId,
-type,
-excludedTrackIds,
-)
-} else if (artist) {
+/*
+
+* CATEGORY FILTER
+  */
+  if (categoryId) {
+  eligibleTracks =
+  await getEligibleCategoryTracks(
+  categoryId,
+  type,
+  excludedTrackIds,
+  )
+  }
+
+/*
+
+* ARTIST FILTER
+*
+* This is specifically for:
+*
+* ```
+  Play -> Artist -> Rihanna
+  ```
+*
+* The question type remains:
+*
+* ```
+  name-the-song
+  ```
+
+*/
+else if (artist) {
 eligibleTracks =
 await getEligibleArtistTracks(
 artist,
 type,
 excludedTrackIds,
 )
-} else {
-eligibleTracks =
-await getEligibleTracks(
-type,
-decade,
-excludedTrackIds,
-)
 }
+
+/*
+
+* NORMAL GAME
+*
+* This preserves the existing behaviour
+* of Guess the Artist, Guess the Album,
+* Guess the Year, etc.
+  */
+  else {
+  eligibleTracks =
+  await getEligibleTracks(
+  type,
+  decade,
+  excludedTrackIds,
+  )
+  }
 
 if (
 eligibleTracks.length === 0
@@ -365,20 +564,35 @@ throw new Error(
   `Could not find an eligible track for question type: ${type}`,
 )
 
-
 }
 
-const correctTrack =
-pickRandomTrack(
-eligibleTracks,
-)
+/*
 
-return generateQuestion(
-correctTrack,
-type,
-difficulty,
-decade,
-excludedTrackIds,
-categoryId,
-)
-}
+* Pick the actual song that the player
+* will have to identify.
+  */
+  const correctTrack =
+  pickRandomTrack(
+  eligibleTracks,
+  )
+
+/*
+
+* generateQuestion() handles the actual
+* question and answer generation.
+*
+* Because type = "name-the-song":
+*
+* correctAnswer = song title
+*
+* distractors = other song titles
+  */
+  return generateQuestion(
+  correctTrack,
+  type,
+  difficulty,
+  decade,
+  excludedTrackIds,
+  categoryId,
+  )
+  }

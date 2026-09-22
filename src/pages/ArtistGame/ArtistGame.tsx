@@ -1,1190 +1,1478 @@
 import {
-useEffect,
-useRef,
-useState,
+  useEffect,
+  useRef,
+  useState,
 } from 'react'
+
 import {
-ArrowRight,
-Check,
-Pause,
-Play,
-RotateCcw,
-Trophy,
-X,
-Volume2,
+  ArrowRight,
+  Check,
+  Pause,
+  Play,
+  RotateCcw,
+  Trophy,
+  X,
 } from 'lucide-react'
-import {
-useLocation,
-useNavigate,
-} from 'react-router-dom'
+
+import { useNavigate } from 'react-router-dom'
+
+import { generateQuestion } from '../../services/gameService'
+import { submitScore } from '../../services/scoreService'
 
 import {
-generateQuestion,
-} from '../../services/gameService'
-
-import {
-submitScore,
-} from '../../services/scoreService'
-
-import {
-calculateFinalPoints,
+  calculateFinalPoints,
 } from '../../lib/gameScoring'
 
-import type {
-Question,
-} from '../../types/game'
+import type { Question } from '../../types/game'
 
 import './ArtistGame.css'
 
 const ROUND_LENGTH = 10
-const QUESTION_TIME = 10
+const TOTAL_QUESTIONS = 10
 
 type AnswerStatus =
-| 'idle'
-| 'correct'
-| 'incorrect'
-| 'timeout'
-
-type ArtistGameLocationState = {
-artist?: string
-}
+  | 'idle'
+  | 'correct'
+  | 'incorrect'
+  | 'timeout'
 
 type ArtistRecognitionResult = {
-questionNumber: number
-title: string
-artist: string
-album: string
-artworkUrl: string
-recognitionTime: number
-correct: boolean
-points: number
+  questionNumber: number
+  title: string
+  artist: string
+  album: string
+  artworkUrl: string
+  recognitionTime: number
+  correct: boolean
+  points: number
 }
 
 function ArtistGame() {
-const navigate = useNavigate()
-const location = useLocation()
+  const navigate = useNavigate()
 
-const selectedArtist =
-(
-location.state as
-| ArtistGameLocationState
-| null
-| undefined
-)?.artist
+  /*
+   * --------------------------------------------------
+   * QUESTION STATE
+   * --------------------------------------------------
+   */
 
-const audioRef =
-useRef<HTMLAudioElement | null>(null)
+  const [questions, setQuestions] =
+    useState<Question[]>([])
 
-const [questions, setQuestions] =
-useState<Question[]>([])
+  const [currentQuestion, setCurrentQuestion] =
+    useState(0)
 
-const [currentQuestion, setCurrentQuestion] =
-useState(0)
+  const [isLoading, setIsLoading] =
+    useState(true)
 
-const [loading, setLoading] =
-useState(true)
+  const [isLoadingNext, setIsLoadingNext] =
+    useState(false)
 
-const [loadingNext, setLoadingNext] =
-useState(false)
+  /*
+   * --------------------------------------------------
+   * ANSWER STATE
+   * --------------------------------------------------
+   */
 
-const [selectedAnswer, setSelectedAnswer] =
-useState<string | null>(null)
+  const [, setSelectedAnswer] =
+    useState<string | null>(null)
 
-const [answerStatus, setAnswerStatus] =
-useState<AnswerStatus>('idle')
+  const [answerStatus, setAnswerStatus] =
+    useState<AnswerStatus>('idle')
 
-const [timeRemaining, setTimeRemaining] =
-useState(QUESTION_TIME)
+  /*
+   * --------------------------------------------------
+   * TIMER STATE
+   * --------------------------------------------------
+   */
 
-const [isPlaying, setIsPlaying] =
-useState(false)
+  const [timeRemaining, setTimeRemaining] =
+    useState(ROUND_LENGTH)
 
-const [score, setScore] =
-useState(0)
+  const [isPlaying, setIsPlaying] =
+    useState(false)
 
-const [streak, setStreak] =
-useState(0)
+  /*
+   * --------------------------------------------------
+   * SCORE STATE
+   * --------------------------------------------------
+   */
 
-const [bestStreak, setBestStreak] =
-useState(0)
+  const [score, setScore] =
+    useState(0)
 
-const [
-recognitionResults,
-setRecognitionResults,
-] = useState<ArtistRecognitionResult[]>([])
+  const [streak, setStreak] =
+    useState(0)
 
-const [isGameComplete, setIsGameComplete] =
-useState(false)
+  const [bestStreak, setBestStreak] =
+    useState(0)
 
-const scoreSubmitted =
-useRef(false)
+  /*
+   * --------------------------------------------------
+   * RESULTS STATE
+   * --------------------------------------------------
+   */
 
-const questionStartedAt =
-useRef<number>(Date.now())
+  const [recognitionResults, setRecognitionResults] =
+    useState<ArtistRecognitionResult[]>([])
 
-const currentQuestionRef =
-useRef(0)
+  const [isGameComplete, setIsGameComplete] =
+    useState(false)
 
-const questionsRef =
-useRef<Question[]>([])
+  /*
+   * --------------------------------------------------
+   * SCORE SUBMISSION
+   * --------------------------------------------------
+   */
 
-const recognitionResultsRef =
-useRef<ArtistRecognitionResult[]>([])
+  const scoreSubmitted =
+    useRef(false)
 
-const streakRef =
-useRef(0)
+  /*
+   * --------------------------------------------------
+   * AUDIO
+   * --------------------------------------------------
+   */
 
-const scoreRef =
-useRef(0)
+  const audioRef =
+    useRef<HTMLAudioElement | null>(null)
 
-const isGameCompleteRef =
-useRef(false)
+  /*
+   * --------------------------------------------------
+   * LOAD FIRST QUESTION
+   * --------------------------------------------------
+   */
 
-const loadQuestion = async (
-excludedIds: string[],
-) => {
-return generateQuestion(
-'name-the-artist',
-'medium',
-undefined,
-excludedIds,
-undefined,
-selectedArtist,
-)
-}
+  useEffect(() => {
+    let isMounted = true
 
-const preloadQuestions = async (
-firstQuestion: Question,
-) => {
-const generated: Question[] = [
-firstQuestion,
-]
+    async function loadFirstQuestion() {
+      setIsLoading(true)
 
+      try {
+        const firstQuestion =
+          await generateQuestion(
+            'name-the-artist',
+            'medium',
+          )
 
-const excludedIds = [
-  firstQuestion.song.id,
-]
+        if (!isMounted) {
+          return
+        }
 
-while (
-  generated.length <
-  ROUND_LENGTH
-) {
-  try {
-    const nextQuestion =
-      await loadQuestion(
-        excludedIds,
-      )
+        setQuestions([firstQuestion])
+        setIsLoading(false)
+      } catch (error) {
+        console.error(
+          'Failed to generate artist question:',
+          error,
+        )
+
+        if (isMounted) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    loadFirstQuestion()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  /*
+   * --------------------------------------------------
+   * PRELOAD NEXT QUESTION
+   * --------------------------------------------------
+   */
+
+  useEffect(() => {
+    if (
+      questions.length === 0 ||
+      questions.length >= TOTAL_QUESTIONS
+    ) {
+      return
+    }
+
+    const nextIndex = questions.length
+
+    let isMounted = true
+
+    async function preloadNextQuestion() {
+      try {
+        const nextQuestion =
+          await generateQuestion(
+            'name-the-artist',
+            'medium',
+          )
+
+        if (!isMounted) {
+          return
+        }
+
+        setQuestions((current) => {
+          if (current.length > nextIndex) {
+            return current
+          }
+
+          return [
+            ...current,
+            nextQuestion,
+          ]
+        })
+      } catch (error) {
+        console.error(
+          'Failed to preload artist question:',
+          error,
+        )
+      }
+    }
+
+    preloadNextQuestion()
+
+    return () => {
+      isMounted = false
+    }
+  }, [questions.length])
+
+  /*
+   * --------------------------------------------------
+   * SAVE SCORE WHEN GAME IS COMPLETE
+   * --------------------------------------------------
+   */
+
+  useEffect(() => {
+    if (
+      !isGameComplete ||
+      scoreSubmitted.current
+    ) {
+      return
+    }
 
     if (
-      generated.some(
-        (question) =>
-          question.song.id ===
-          nextQuestion.song.id,
-      )
+      recognitionResults.length <
+      TOTAL_QUESTIONS
     ) {
-      continue
-    }
-
-    generated.push(
-      nextQuestion,
-    )
-
-    excludedIds.push(
-      nextQuestion.song.id,
-    )
-  } catch {
-    break
-  }
-}
-
-return generated
-
-
-}
-
-useEffect(() => {
-let cancelled = false
-
-
-async function startGame() {
-  try {
-    setLoading(true)
-
-    const firstQuestion =
-      await loadQuestion([])
-
-    if (cancelled) {
       return
     }
 
-    const generatedQuestions =
-      await preloadQuestions(
-        firstQuestion,
+    scoreSubmitted.current = true
+
+    const correctAnswers =
+      recognitionResults.filter(
+        (result) => result.correct,
+      ).length
+
+    const accuracy =
+      TOTAL_QUESTIONS > 0
+        ? (correctAnswers /
+            TOTAL_QUESTIONS) *
+          100
+        : 0
+
+    const totalListeningTime =
+      recognitionResults.reduce(
+        (total, result) =>
+          total + result.recognitionTime,
+        0,
       )
 
-    if (cancelled) {
+    async function saveScore() {
+      try {
+        await submitScore({
+          gameMode: 'name-the-artist',
+          score,
+          accuracy,
+          bestStreak,
+          questions: TOTAL_QUESTIONS,
+          correctAnswers,
+          totalListeningTime,
+        })
+
+        console.log(
+          'ARTIST GAME SCORE SAVED:',
+          {
+            score,
+            accuracy,
+            bestStreak,
+            questions: TOTAL_QUESTIONS,
+            correctAnswers,
+            totalListeningTime,
+          },
+        )
+      } catch (error) {
+        console.error(
+          'FAILED TO SAVE ARTIST GAME SCORE:',
+          error,
+        )
+      }
+    }
+
+    saveScore()
+  }, [
+    isGameComplete,
+    recognitionResults,
+    score,
+    bestStreak,
+  ])
+
+  /*
+   * --------------------------------------------------
+   * CURRENT QUESTION
+   * --------------------------------------------------
+   */
+
+  const question =
+    questions[currentQuestion]
+
+  /*
+   * --------------------------------------------------
+   * RESET QUESTION
+   * --------------------------------------------------
+   */
+
+  useEffect(() => {
+    setTimeRemaining(ROUND_LENGTH)
+    setSelectedAnswer(null)
+    setAnswerStatus('idle')
+    setIsPlaying(false)
+
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.currentTime = 0
+    }
+  }, [currentQuestion])
+
+  /*
+   * --------------------------------------------------
+   * 10 SECOND COUNTDOWN
+   * --------------------------------------------------
+   */
+
+  useEffect(() => {
+    if (
+      !isPlaying ||
+      answerStatus !== 'idle' ||
+      !question
+    ) {
       return
     }
 
-    setQuestions(
-      generatedQuestions,
-    )
+    const timer =
+      window.setInterval(() => {
+        setTimeRemaining((current) => {
+          if (current <= 0.1) {
+            window.clearInterval(timer)
 
-    questionsRef.current =
-      generatedQuestions
+            setIsPlaying(false)
+            setAnswerStatus('timeout')
+            setStreak(0)
 
-    setCurrentQuestion(0)
-    currentQuestionRef.current = 0
+            setRecognitionResults(
+              (currentResults) => [
+                ...currentResults,
+                {
+                  questionNumber:
+                    currentQuestion + 1,
 
-    questionStartedAt.current =
-      Date.now()
+                  title:
+                    question.song.title,
 
-    setTimeRemaining(
-      QUESTION_TIME,
-    )
+                  artist:
+                    question.song.artist,
 
-    setLoading(false)
-  } catch (error) {
-    console.error(
-      'Failed to start artist game:',
-      error,
-    )
+                  album:
+                    question.song.album,
 
-    if (!cancelled) {
-      setLoading(false)
+                  artworkUrl:
+                    question.song.artworkUrl ?? '',
+
+                  recognitionTime:
+                    ROUND_LENGTH,
+
+                  correct: false,
+
+                  points: 0,
+                },
+              ],
+            )
+
+            if (audioRef.current) {
+              audioRef.current.pause()
+            }
+
+            return 0
+          }
+
+          return Math.max(
+            0,
+            current - 0.1,
+          )
+        })
+      }, 100)
+
+    return () => {
+      window.clearInterval(timer)
+    }
+  }, [
+    isPlaying,
+    answerStatus,
+    currentQuestion,
+    question,
+  ])
+
+  /*
+   * --------------------------------------------------
+   * PLAY / PAUSE
+   * --------------------------------------------------
+   */
+
+  async function handlePlayPause() {
+    if (
+      !audioRef.current ||
+      answerStatus !== 'idle'
+    ) {
+      return
+    }
+
+    if (isPlaying) {
+      audioRef.current.pause()
+      setIsPlaying(false)
+      return
+    }
+
+    try {
+      await audioRef.current.play()
+      setIsPlaying(true)
+    } catch (error) {
+      console.error(
+        'Could not play audio:',
+        error,
+      )
     }
   }
-}
 
-void startGame()
+  /*
+   * --------------------------------------------------
+   * ANSWER
+   * --------------------------------------------------
+   */
 
-return () => {
-  cancelled = true
-}
+  function handleAnswer(
+    answer: string,
+  ) {
+    if (
+      answerStatus !== 'idle' ||
+      !question
+    ) {
+      return
+    }
 
+    const isCorrect =
+      answer === question.correctAnswer
 
-}, [selectedArtist])
+    const recognitionTime = Math.min(
+      ROUND_LENGTH,
+      Math.max(
+        0,
+        ROUND_LENGTH - timeRemaining,
+      ),
+    )
 
-const question =
-questions[currentQuestion]
+    const nextStreak =
+      isCorrect
+        ? streak + 1
+        : 0
 
-useEffect(() => {
-if (!question) {
-return
-}
+    const earnedPoints =
+      isCorrect
+        ? calculateFinalPoints(
+            recognitionTime,
+            nextStreak,
+          )
+        : 0
 
+    setSelectedAnswer(answer)
 
-setSelectedAnswer(null)
-setAnswerStatus('idle')
-setTimeRemaining(
-  QUESTION_TIME,
-)
-setIsPlaying(false)
+    setAnswerStatus(
+      isCorrect
+        ? 'correct'
+        : 'incorrect',
+    )
 
-questionStartedAt.current =
-  Date.now()
+    setIsPlaying(false)
+    setStreak(nextStreak)
 
-if (audioRef.current) {
-  audioRef.current.pause()
-  audioRef.current.currentTime = 0
-}
+    if (isCorrect) {
+      setBestStreak(
+        (currentBest) =>
+          Math.max(
+            currentBest,
+            nextStreak,
+          ),
+      )
+    }
 
+    setScore(
+      (currentScore) =>
+        currentScore + earnedPoints,
+    )
 
-}, [question])
+    if (audioRef.current) {
+      audioRef.current.pause()
+    }
 
-useEffect(() => {
-if (
-!question ||
-answerStatus !== 'idle' ||
-loading ||
-isGameComplete
-) {
-return
-}
+    setRecognitionResults(
+      (currentResults) => [
+        ...currentResults,
+        {
+          questionNumber:
+            currentQuestion + 1,
 
+          title:
+            question.song.title,
 
-const timer = window.setInterval(() => {
-  setTimeRemaining(
-    (previous) => {
-      if (previous <= 0.1) {
-        window.clearInterval(timer)
-        handleTimeUp()
-        return 0
+          artist:
+            question.song.artist,
+
+          album:
+            question.song.album,
+
+          artworkUrl:
+            question.song.artworkUrl ?? '',
+
+          recognitionTime,
+          correct: isCorrect,
+          points: earnedPoints,
+        },
+      ],
+    )
+  }
+
+  /*
+   * --------------------------------------------------
+   * AUDIO ENDED
+   * --------------------------------------------------
+   */
+
+  function handleAudioEnded() {
+    setIsPlaying(false)
+  }
+
+  /*
+   * --------------------------------------------------
+   * NEXT SONG
+   * --------------------------------------------------
+   */
+
+  async function handleNextSong() {
+    if (
+      currentQuestion >=
+      TOTAL_QUESTIONS - 1
+    ) {
+      if (audioRef.current) {
+        audioRef.current.pause()
       }
 
-      return Number(
-        (
-          previous - 0.1
-        ).toFixed(1),
+      setIsGameComplete(true)
+      return
+    }
+
+    const nextIndex =
+      currentQuestion + 1
+
+    if (questions[nextIndex]) {
+      setCurrentQuestion(nextIndex)
+      return
+    }
+
+    setIsLoadingNext(true)
+
+    try {
+      const nextQuestion =
+        await generateQuestion(
+          'name-the-artist',
+          'medium',
+        )
+
+      setQuestions((current) => {
+        if (current[nextIndex]) {
+          return current
+        }
+
+        return [
+          ...current,
+          nextQuestion,
+        ]
+      })
+
+      setCurrentQuestion(nextIndex)
+    } catch (error) {
+      console.error(
+        'Failed to generate next artist question:',
+        error,
       )
-    },
-  )
-}, 100)
-
-return () => {
-  window.clearInterval(timer)
-}
-
-
-}, [
-question,
-answerStatus,
-loading,
-isGameComplete,
-])
-
-const pauseAudio = () => {
-if (!audioRef.current) {
-return
-}
-
-
-audioRef.current.pause()
-setIsPlaying(false)
-
-}
-
-const calculateRecognitionTime =
-() => {
-const elapsed =
-(
-Date.now() -
-questionStartedAt.current
-) / 1000
-
-
-  return Math.min(
-    QUESTION_TIME,
-    Math.max(
-      0.1,
-      Number(
-        elapsed.toFixed(1),
-      ),
-    ),
-  )
-}
-
-
-const handleTimeUp = () => {
-if (
-answerStatus !== 'idle' ||
-!question
-) {
-return
-}
-
-
-pauseAudio()
-
-const recognitionTime =
-  QUESTION_TIME
-
-const nextStreak = 0
-
-setSelectedAnswer(null)
-setAnswerStatus('timeout')
-setStreak(nextStreak)
-
-streakRef.current =
-  nextStreak
-
-const result: ArtistRecognitionResult =
-  {
-    questionNumber:
-      currentQuestion + 1,
-    title:
-      question.song.title,
-    artist:
-      question.song.artist,
-    album:
-      question.song.album,
-    artworkUrl:
-      question.song.artworkUrl,
-    recognitionTime,
-    correct: false,
-    points: 0,
+    } finally {
+      setIsLoadingNext(false)
+    }
   }
 
-const updatedResults = [
-  ...recognitionResultsRef.current,
-  result,
-]
+  /*
+   * --------------------------------------------------
+   * LOADING
+   * --------------------------------------------------
+   */
 
-recognitionResultsRef.current =
-  updatedResults
+  if (isLoading) {
+    return (
+      <div className="artist-game">
+        <div className="artist-game__container">
+          <main className="artist-game__loading">
+            <p className="artist-game__eyebrow">
+              QUICK MODE
+            </p>
 
-setRecognitionResults(
-  updatedResults,
-)
+            <h1>
+              GETTING YOUR SONG READY
+            </h1>
 
-
-}
-
-const handleAnswer = (
-answer: string,
-) => {
-if (
-answerStatus !== 'idle' ||
-!question
-) {
-return
-}
-
-
-pauseAudio()
-
-const recognitionTime =
-  calculateRecognitionTime()
-
-const correct =
-  answer ===
-  question.correctAnswer
-
-const nextStreak = correct
-  ? streakRef.current + 1
-  : 0
-
-const points = correct
-  ? calculateFinalPoints(
-      recognitionTime,
-      nextStreak,
+            <p>
+              Finding something you might
+              recognize...
+            </p>
+          </main>
+        </div>
+      </div>
     )
-  : 0
-
-const nextScore =
-  scoreRef.current + points
-
-const nextBestStreak =
-  Math.max(
-    bestStreak,
-    nextStreak,
-  )
-
-setSelectedAnswer(answer)
-setAnswerStatus(
-  correct
-    ? 'correct'
-    : 'incorrect',
-)
-
-setScore(nextScore)
-scoreRef.current =
-  nextScore
-
-setStreak(nextStreak)
-streakRef.current =
-  nextStreak
-
-setBestStreak(
-  nextBestStreak,
-)
-
-const result: ArtistRecognitionResult =
-  {
-    questionNumber:
-      currentQuestion + 1,
-    title:
-      question.song.title,
-    artist:
-      question.song.artist,
-    album:
-      question.song.album,
-    artworkUrl:
-      question.song.artworkUrl,
-    recognitionTime,
-    correct,
-    points,
   }
 
-const updatedResults = [
-  ...recognitionResultsRef.current,
-  result,
-]
+  /*
+   * --------------------------------------------------
+   * NO QUESTION
+   * --------------------------------------------------
+   */
 
-recognitionResultsRef.current =
-  updatedResults
+  if (!question && !isGameComplete) {
+    return (
+      <div className="artist-game">
+        <div className="artist-game__container">
+          <main className="artist-game__loading">
+            <p className="artist-game__eyebrow">
+              GUESS THE ARTIST
+            </p>
 
-setRecognitionResults(
-  updatedResults,
-)
+            <h1>
+              NO SONG AVAILABLE
+            </h1>
 
-
-}
-
-const finishGame = () => {
-if (
-isGameCompleteRef.current
-) {
-return
-}
-
-
-isGameCompleteRef.current =
-  true
-
-setIsGameComplete(true)
-
-pauseAudio()
-
-if (
-  scoreSubmitted.current
-) {
-  return
-}
-
-scoreSubmitted.current =
-  true
-
-const results =
-  recognitionResultsRef.current
-
-const correctAnswers =
-  results.filter(
-    (result) =>
-      result.correct,
-  ).length
-
-const totalListeningTime =
-  results.reduce(
-    (total, result) =>
-      total +
-      result.recognitionTime,
-    0,
-  )
-
-const accuracy =
-  results.length > 0
-    ? Math.round(
-        (
-          correctAnswers /
-          results.length
-        ) *
-          100,
-      )
-    : 0
-
-void submitScore({
-  gameMode:
-    'name-the-artist',
-  score:
-    scoreRef.current,
-  accuracy,
-  bestStreak,
-  questions:
-    ROUND_LENGTH,
-  correctAnswers,
-  totalListeningTime,
-}).catch((error) => {
-  console.error(
-    'Failed to submit artist game score:',
-    error,
-  )
-})
-
-
-}
-
-const handleNext = async () => {
-if (
-loadingNext ||
-!question
-) {
-return
-}
-
-
-if (
-  currentQuestion >=
-  ROUND_LENGTH - 1
-) {
-  finishGame()
-  return
-}
-
-const nextIndex =
-  currentQuestion + 1
-
-if (
-  !questions[nextIndex]
-) {
-  setLoadingNext(true)
-
-  try {
-    const excludedIds =
-      questions.map(
-        (item) =>
-          item.song.id,
-      )
-
-    const nextQuestion =
-      await loadQuestion(
-        excludedIds,
-      )
-
-    const updatedQuestions = [
-      ...questions,
-      nextQuestion,
-    ]
-
-    setQuestions(
-      updatedQuestions,
+            <p>
+              We couldn't generate a song
+              right now.
+            </p>
+          </main>
+        </div>
+      </div>
     )
-
-    questionsRef.current =
-      updatedQuestions
-  } catch (error) {
-    console.error(
-      'Failed to load next artist question:',
-      error,
-    )
-
-    setLoadingNext(false)
-    return
   }
 
-  setLoadingNext(false)
-}
+  /*
+   * --------------------------------------------------
+   * RESULTS
+   * --------------------------------------------------
+   */
 
-setCurrentQuestion(
-  nextIndex,
-)
+  if (isGameComplete) {
+    return (
+      <ArtistResultsScreen
+        results={recognitionResults}
+        score={score}
+        bestStreak={bestStreak}
+        onPlayAgain={() =>
+          window.location.reload()
+        }
+        onBackToPlay={() =>
+          navigate('/play')
+        }
+      />
+    )
+  }
 
-currentQuestionRef.current =
-  nextIndex
+  const progress =
+    ((ROUND_LENGTH - timeRemaining) /
+      ROUND_LENGTH) *
+    100
 
+  const isRevealed =
+    answerStatus !== 'idle'
 
-}
+  const isCorrect =
+    answerStatus === 'correct'
 
-const togglePlayback = async () => {
-if (!audioRef.current) {
-return
-}
+  return (
+    <div className="artist-game">
+      <div className="artist-game__container">
 
+        {/* =================================================
+            HEADER
+        ================================================= */}
 
-if (isPlaying) {
-  pauseAudio()
-  return
-}
+        <header className="artist-game__header">
+          <div>
+            <p className="artist-game__eyebrow">
+              QUICK MODE
+            </p>
 
-try {
-  await audioRef.current.play()
-  setIsPlaying(true)
-} catch (error) {
-  console.error(
-    'Failed to play audio:',
-    error,
-  )
-}
+            <h1 className="artist-game__title">
+              Guess the Artist
+            </h1>
+          </div>
 
+          <div className="artist-game__round">
+            <span>
+              ROUND
+            </span>
 
-}
+            <strong>
+              {currentQuestion + 1}
+              <small>
+                /{TOTAL_QUESTIONS}
+              </small>
+            </strong>
+          </div>
+        </header>
 
-const handleAudioEnded = () => {
-setIsPlaying(false)
-}
+        {/* =================================================
+            GAME BOARD
+        ================================================= */}
 
-const handlePlayAgain = () => {
-window.location.reload()
-}
+        <main className="artist-game__board">
 
-const handleBack = () => {
-navigate('/play')
-}
+          {/* =================================================
+              LEFT: QUESTION / AUDIO / REVEAL
+          ================================================= */}
 
-if (loading) {
-return ( <div className="artist-game"> <div className="artist-game__loading"> <div className="artist-game__loading-spinner" /> <p>Loading game...</p> </div> </div>
-)
-}
+          <section className="artist-game__question">
 
-if (
-isGameComplete ||
-currentQuestion >=
-ROUND_LENGTH
-) {
-const correctAnswers =
-recognitionResults.filter(
-(result) =>
-result.correct,
-).length
+            {!isRevealed ? (
+              <>
+                <p className="artist-game__prompt">
+                  WHO IS THIS?
+                </p>
 
-
-const accuracy =
-  recognitionResults.length >
-  0
-    ? Math.round(
-        (
-          correctAnswers /
-          recognitionResults.length
-        ) *
-          100,
-      )
-    : 0
-
-const fastestRecognition =
-  recognitionResults.length >
-  0
-    ? Math.min(
-        ...recognitionResults.map(
-          (result) =>
-            result.recognitionTime,
-        ),
-      )
-    : 0
-
-return (
-  <div className="artist-game">
-    <div className="artist-game__results">
-      <div className="artist-game__results-icon">
-        <Trophy size={32} />
-      </div>
-
-      <span className="artist-game__eyebrow">
-        ROUND COMPLETE
-      </span>
-
-      <h1>
-        {selectedArtist
-          ? selectedArtist
-          : 'Guess the Artist'}
-      </h1>
-
-      <div className="artist-game__score">
-        {score}
-      </div>
-
-      <span className="artist-game__score-label">
-        POINTS
-      </span>
-
-      <div className="artist-game__stats">
-        <div className="artist-game__stat">
-          <strong>
-            {correctAnswers}
-          </strong>
-          <span>
-            Artists recognized
-          </span>
-        </div>
-
-        <div className="artist-game__stat">
-          <strong>
-            {accuracy}%
-          </strong>
-          <span>
-            Accuracy
-          </span>
-        </div>
-
-        <div className="artist-game__stat">
-          <strong>
-            {bestStreak}
-          </strong>
-          <span>
-            Best streak
-          </span>
-        </div>
-
-        <div className="artist-game__stat">
-          <strong>
-            {fastestRecognition.toFixed(
-              1,
-            )}
-            s
-          </strong>
-          <span>
-            Fastest recognition
-          </span>
-        </div>
-      </div>
-
-      <div className="artist-game__breakdown">
-        <div className="artist-game__breakdown-header">
-          <span>ROUND BREAKDOWN</span>
-          <span>
-            {recognitionResults.length}/
-            {ROUND_LENGTH}
-          </span>
-        </div>
-
-        {recognitionResults.map(
-          (result) => (
-            <div
-              className={`artist-game__result-row ${
-                result.correct
-                  ? 'artist-game__result-row--correct'
-                  : 'artist-game__result-row--incorrect'
-              }`}
-              key={`${result.questionNumber}-${result.title}`}
-            >
-              <div className="artist-game__result-number">
-                {result.questionNumber}
-              </div>
-
-              <div className="artist-game__result-info">
-                <strong>
-                  {result.artist}
-                </strong>
-                <span>
-                  {result.title}
-                </span>
-              </div>
-
-              <span className="artist-game__result-time">
-                {result.recognitionTime.toFixed(
-                  1,
+                <h2>
+                  Who performs this song?
+                </h2>
+              </>
+            ) : (
+              <>
+                {question.song.artworkUrl ? (
+                  <img
+                    src={
+                      question.song.artworkUrl
+                    }
+                    alt={`${question.song.album} album cover`}
+                    className="artist-game__artwork"
+                  />
+                ) : (
+                  <div className="artist-game__artwork-placeholder">
+                    <span>♪</span>
+                  </div>
                 )}
-                s
-              </span>
 
-              <span className="artist-game__result-points">
-                {result.correct
-                  ? `+${result.points}`
-                  : '0'}
-              </span>
+                <p className="artist-game__prompt">
+                  SONG REVEALED
+                </p>
 
-              {result.correct ? (
-                <Check
-                  size={18}
+                <h2>
+                  {question.song.title}
+                </h2>
+              </>
+            )}
+
+            {/* AUDIO */}
+
+            <section className="artist-game__audio">
+
+              <audio
+                ref={audioRef}
+                key={question.id}
+                src={question.song.audioUrl}
+                preload="auto"
+                onEnded={
+                  handleAudioEnded
+                }
+              />
+
+              <div className="artist-game__audio-top">
+                <span>
+                  10 SECOND SNIPPET
+                </span>
+
+                <strong
+                  className={
+                    timeRemaining <= 3 &&
+                    !isRevealed
+                      ? 'artist-game__timer artist-game__timer--urgent'
+                      : 'artist-game__timer'
+                  }
+                >
+                  {timeRemaining.toFixed(1)}s
+                </strong>
+              </div>
+
+              <div className="artist-game__player">
+
+                <button
+                  type="button"
+                  className="artist-game__play"
+                  onClick={
+                    handlePlayPause
+                  }
+                  disabled={isRevealed}
+                  aria-label={
+                    isPlaying
+                      ? 'Pause song'
+                      : 'Play song'
+                  }
+                >
+                  {isPlaying ? (
+                    <Pause
+                      size={21}
+                      strokeWidth={2}
+                    />
+                  ) : (
+                    <Play
+                      size={21}
+                      strokeWidth={2}
+                    />
+                  )}
+                </button>
+
+                <div className="artist-game__wave">
+                  {Array.from({
+                    length: 32,
+                  }).map((_, index) => (
+                    <span
+                      key={index}
+                      className={
+                        isPlaying
+                          ? 'artist-game__wave-bar artist-game__wave-bar--playing'
+                          : 'artist-game__wave-bar'
+                      }
+                      style={{
+                        height: `${
+                          20 +
+                          ((index * 17) %
+                            45)
+                        }%`,
+                      }}
+                    />
+                  ))}
+                </div>
+
+              </div>
+
+              <div className="artist-game__progress">
+                <div
+                  className="artist-game__progress-fill"
+                  style={{
+                    width: `${progress}%`,
+                  }}
                 />
-              ) : (
-                <X
-                  size={18}
-                />
-              )}
-            </div>
+              </div>
+
+              <p className="artist-game__hint">
+                {isRevealed
+                  ? 'The answer has been revealed.'
+                  : 'Pick an artist as soon as you know it.'}
+              </p>
+
+            </section>
+
+          </section>
+
+          {/* =================================================
+              RIGHT: ANSWERS / RESULT
+          ================================================= */}
+
+          <section className="artist-game__play-panel">
+
+            {!isRevealed ? (
+              <section className="artist-game__answers">
+
+                <div className="artist-game__answers-header">
+                  <span>
+                    CHOOSE ONE
+                  </span>
+
+                  <span>
+                    4 OPTIONS
+                  </span>
+                </div>
+
+                <div className="artist-game__answer-grid">
+                  {question.answers.map(
+                    (answer, index) => (
+                      <button
+                        key={answer}
+                        type="button"
+                        className="artist-game__answer"
+                        onClick={() =>
+                          handleAnswer(
+                            answer,
+                          )
+                        }
+                      >
+                        <span className="artist-game__answer-number">
+                          {String(
+                            index + 1,
+                          ).padStart(2, '0')}
+                        </span>
+
+                        <span>
+                          {answer}
+                        </span>
+                      </button>
+                    ),
+                  )}
+                </div>
+
+              </section>
+            ) : (
+              <section className="artist-game__reveal">
+
+                <div
+                  className={
+                    isCorrect
+                      ? 'artist-game__result artist-game__result--correct'
+                      : 'artist-game__result artist-game__result--incorrect'
+                  }
+                >
+                  <span>
+                    {answerStatus ===
+                    'timeout'
+                      ? "TIME'S UP"
+                      : isCorrect
+                        ? 'CORRECT'
+                        : 'NOT QUITE'}
+                  </span>
+
+                  <strong>
+                    {answerStatus ===
+                    'timeout'
+                      ? `The artist was ${question.correctAnswer}.`
+                      : isCorrect
+                        ? 'You got it.'
+                        : `The artist was ${question.correctAnswer}.`}
+                  </strong>
+                </div>
+
+                <div className="artist-game__song-card">
+
+                  {question.song.artworkUrl ? (
+                    <img
+                      src={
+                        question.song.artworkUrl
+                      }
+                      alt={`${question.song.album} album cover`}
+                      className="artist-game__artwork"
+                    />
+                  ) : (
+                    <div className="artist-game__artwork-placeholder">
+                      <span>♪</span>
+                    </div>
+                  )}
+
+                  <div className="artist-game__song-info">
+
+                    <p className="artist-game__song-label">
+                      YOU WERE LISTENING TO
+                    </p>
+
+                    <h3>
+                      {question.song.title}
+                    </h3>
+
+                    <p className="artist-game__artist">
+                      {question.song.artist}
+                    </p>
+
+                    <p className="artist-game__album">
+                      {question.song.album}
+                    </p>
+
+                  </div>
+
+                </div>
+
+                <button
+                  type="button"
+                  className="artist-game__next"
+                  onClick={
+                    handleNextSong
+                  }
+                  disabled={isLoadingNext}
+                >
+                  <span>
+                    {isLoadingNext
+                      ? 'LOADING...'
+                      : currentQuestion >=
+                          TOTAL_QUESTIONS - 1
+                        ? 'SEE RESULTS'
+                        : 'NEXT SONG'}
+                  </span>
+
+                  {!isLoadingNext && (
+                    <ArrowRight
+                      size={17}
+                    />
+                  )}
+                </button>
+
+              </section>
+            )}
+
+          </section>
+
+        </main>
+
+      </div>
+    </div>
+  )
+}
+
+/*
+ * ==================================================
+ * ARTIST RESULTS SCREEN
+ * ==================================================
+ */
+
+type ArtistResultsScreenProps = {
+  results: ArtistRecognitionResult[]
+  score: number
+  bestStreak: number
+  onPlayAgain: () => void
+  onBackToPlay: () => void
+}
+
+function ArtistResultsScreen({
+  results,
+  score,
+  bestStreak,
+  onPlayAgain,
+  onBackToPlay,
+}: ArtistResultsScreenProps) {
+  const correctResults =
+    results.filter(
+      (result) => result.correct,
+    )
+
+  const recognizedCount =
+    correctResults.length
+
+  const accuracy =
+    results.length > 0
+      ? Math.round(
+          (recognizedCount /
+            results.length) *
+            100,
+        )
+      : 0
+
+  const recognitionTimes =
+    correctResults.map(
+      (result) =>
+        result.recognitionTime,
+    )
+
+  const averageTime =
+    recognitionTimes.length > 0
+      ? recognitionTimes.reduce(
+          (total, time) =>
+            total + time,
+          0,
+        ) /
+        recognitionTimes.length
+      : 0
+
+  const fastestTime =
+    recognitionTimes.length > 0
+      ? Math.min(
+          ...recognitionTimes,
+        )
+      : 0
+
+  const fastestResult =
+    correctResults.find(
+      (result) =>
+        result.recognitionTime ===
+        fastestTime,
+    )
+
+  const confettiPieces =
+    Array.from({
+      length: 36,
+    })
+
+  return (
+    <div className="artist-results">
+
+      {/* =================================================
+          CONFETTI
+      ================================================= */}
+
+      <div
+        className="artist-results__confetti"
+        aria-hidden="true"
+      >
+        {confettiPieces.map(
+          (_, index) => (
+            <span
+              key={index}
+              className="artist-results__confetti-piece"
+              style={{
+                left: `${(index * 29) % 100}%`,
+                animationDelay: `${
+                  (index % 12) * 0.08
+                }s`,
+                animationDuration: `${
+                  2.4 +
+                  (index % 5) * 0.35
+                }s`,
+                transform: `rotate(${
+                  index * 37
+                }deg)`,
+              }}
+            />
           ),
         )}
       </div>
 
-      <div className="artist-game__results-actions">
-        <button
-          className="artist-game__play"
-          onClick={
-            handlePlayAgain
-          }
-        >
-          <RotateCcw
-            size={18}
-          />
-          PLAY AGAIN
-        </button>
+      <div className="artist-results__container">
 
-        <button
-          className="artist-game__next"
-          onClick={handleBack}
-        >
-          BACK TO PLAY
-          <ArrowRight
-            size={18}
-          />
-        </button>
-      </div>
-    </div>
-  </div>
-)
+        {/* =================================================
+            HEADER
+        ================================================= */}
 
+        <header className="artist-results__header">
 
-}
-
-if (!question) {
-return null
-}
-
-const progress =
-((QUESTION_TIME -
-timeRemaining) /
-QUESTION_TIME) *
-100
-
-const answered =
-answerStatus !== 'idle'
-
-return ( <div className="artist-game"> <div className="artist-game__container"> <header className="artist-game__header"> <div> <span className="artist-game__eyebrow">
-QUICK MODE </span>
-
-```
-        <h1>
-          {selectedArtist
-            ? `Guess ${selectedArtist}`
-            : 'Guess the Artist'}
-        </h1>
-      </div>
-
-      <div className="artist-game__round">
-        <span>ROUND</span>
-        <strong>
-          {currentQuestion + 1}
-          <small>
-            /{ROUND_LENGTH}
-          </small>
-        </strong>
-      </div>
-    </header>
-
-    <main className="artist-game__board">
-      <section className="artist-game__question">
-        <div className="artist-game__question-heading">
-          <span className="artist-game__eyebrow">
-            {answered
-              ? 'SONG REVEALED'
-              : 'WHO IS THIS?'}
-          </span>
-
-          <h2>
-            {answered
-              ? question.song.title
-              : 'Who performs this song?'}
-          </h2>
-        </div>
-
-        {answered && (
-          <div className="artist-game__artwork">
-            {question.song
-              .artworkUrl ? (
-              <img
-                src={
-                  question.song
-                    .artworkUrl
-                }
-                alt={`${question.song.title} artwork`}
-              />
-            ) : (
-              <div className="artist-game__artwork-placeholder">
-                <Volume2 />
-              </div>
-            )}
+          <div className="artist-results__trophy">
+            <Trophy
+              size={23}
+              strokeWidth={1.8}
+            />
           </div>
-        )}
 
-        <div className="artist-game__audio-card">
-          <audio
-            ref={audioRef}
-            src={
-              question.song
-                .audioUrl
-            }
-            onEnded={
-              handleAudioEnded
-            }
-          />
+          <p className="artist-results__eyebrow">
+            ROUND COMPLETE
+          </p>
 
-          <button
-            className="artist-game__play-button"
-            onClick={
-              togglePlayback
-            }
-            aria-label={
-              isPlaying
-                ? 'Pause'
-                : 'Play'
-            }
-          >
-            {isPlaying ? (
-              <Pause size={22} />
-            ) : (
-              <Play size={22} />
-            )}
-          </button>
+          <h1>
+            You know your music.
+          </h1>
 
-          <div className="artist-game__audio-content">
-            <div className="artist-game__waveform">
-              {Array.from(
-                { length: 32 },
-                (_, index) => (
-                  <span
-                    key={index}
-                    style={{
-                      height: `${
-                        20 +
-                        ((index * 17) %
-                          45)
-                      }%`,
-                    }}
-                  />
-                ),
+          <p>
+            Let's see how quickly you
+            recognized the artists.
+          </p>
+
+        </header>
+
+        {/* =================================================
+            SCORE
+        ================================================= */}
+
+        <section className="artist-results__hero">
+
+          <div className="artist-results__hero-main">
+            <span>
+              FINAL SCORE
+            </span>
+
+            <strong>
+              {score}
+            </strong>
+          </div>
+
+          <div className="artist-results__accuracy">
+            <span>
+              BEST STREAK
+            </span>
+
+            <strong>
+              {bestStreak}
+            </strong>
+          </div>
+
+        </section>
+
+        {/* =================================================
+            RECOGNITION STATS
+        ================================================= */}
+
+        <section className="artist-results__hero">
+
+          <div className="artist-results__hero-main">
+            <span>
+              ARTISTS RECOGNIZED
+            </span>
+
+            <strong>
+              {recognizedCount}
+              <small>
+                /{results.length}
+              </small>
+            </strong>
+          </div>
+
+          <div className="artist-results__accuracy">
+            <span>
+              ACCURACY
+            </span>
+
+            <strong>
+              {accuracy}%
+            </strong>
+          </div>
+
+        </section>
+
+        {/* =================================================
+            SPEED
+        ================================================= */}
+
+        <section className="artist-results__speed">
+
+          <div className="artist-results__section-heading">
+            <p>
+              RECOGNITION SPEED
+            </p>
+
+            <h2>
+              How fast did you know?
+            </h2>
+          </div>
+
+          <div className="artist-results__speed-grid">
+
+            <div className="artist-results__speed-stat">
+
+              <span>
+                AVERAGE
+              </span>
+
+              <strong>
+                {averageTime > 0
+                  ? `${averageTime.toFixed(1)}s`
+                  : '—'}
+              </strong>
+
+            </div>
+
+            <div className="artist-results__speed-stat artist-results__speed-stat--fastest">
+
+              <span>
+                FASTEST
+              </span>
+
+              <strong>
+                {fastestTime > 0
+                  ? `${fastestTime.toFixed(1)}s`
+                  : '—'}
+              </strong>
+
+              {fastestResult && (
+                <small>
+                  {fastestResult.artist}
+                </small>
               )}
+
             </div>
 
-            <div className="artist-game__progress">
-              <span
-                style={{
-                  width: `${progress}%`,
-                }}
-              />
-            </div>
           </div>
 
-          <span className="artist-game__timer">
-            {timeRemaining.toFixed(
-              1,
-            )}
-            s
-          </span>
-        </div>
+        </section>
 
-        <p className="artist-game__hint">
-          Listen closely. You only get
-          {` ${QUESTION_TIME}`} seconds.
-        </p>
-      </section>
+        {/* =================================================
+            BREAKDOWN
+        ================================================= */}
 
-      <section className="artist-game__answers">
-        <div className="artist-game__answers-header">
-          <span className="artist-game__eyebrow">
-            YOUR ANSWER
-          </span>
+        <section className="artist-results__breakdown">
 
-          <span>
-            {streak > 0
-              ? `${streak} STREAK`
-              : 'NO STREAK'}
-          </span>
-        </div>
+          <div className="artist-results__section-heading">
 
-        <div className="artist-game__answer-grid">
-          {question.answers.map(
-            (answer) => {
-              const isSelected =
-                selectedAnswer ===
-                answer
+            <p>
+              ROUND RECAP
+            </p>
 
-              const isCorrect =
-                answer ===
-                question.correctAnswer
+            <h2>
+              Your artists
+            </h2>
 
-              let className =
-                'artist-game__answer'
+          </div>
 
-              if (
-                answered &&
-                isCorrect
-              ) {
-                className +=
-                  ' artist-game__answer--correct'
-              }
+          <div className="artist-results__list">
 
-              if (
-                answered &&
-                isSelected &&
-                !isCorrect
-              ) {
-                className +=
-                  ' artist-game__answer--incorrect'
-              }
-
-              return (
-                <button
-                  key={answer}
+            {results.map(
+              (result) => (
+                <div
+                  key={`${result.questionNumber}-${result.title}`}
                   className={
-                    className
-                  }
-                  onClick={() =>
-                    handleAnswer(
-                      answer,
-                    )
-                  }
-                  disabled={
-                    answered
+                    result.correct
+                      ? 'artist-results__item artist-results__item--correct'
+                      : 'artist-results__item artist-results__item--missed'
                   }
                 >
-                  <span>
-                    {answer}
-                  </span>
 
-                  {answered &&
-                    isCorrect && (
-                      <Check
-                        size={20}
+                  <div className="artist-results__number">
+                    {String(
+                      result.questionNumber,
+                    ).padStart(2, '0')}
+                  </div>
+
+                  <div className="artist-results__artwork-wrapper">
+
+                    {result.artworkUrl ? (
+                      <img
+                        src={
+                          result.artworkUrl
+                        }
+                        alt=""
+                        className="artist-results__artwork"
                       />
+                    ) : (
+                      <div className="artist-results__artwork artist-results__artwork--empty">
+                        ?
+                      </div>
                     )}
 
-                  {answered &&
-                    isSelected &&
-                    !isCorrect && (
-                      <X
-                        size={20}
-                      />
+                  </div>
+
+                  <div className="artist-results__song-info">
+
+                    <strong>
+                      {result.artist}
+                    </strong>
+
+                    <span>
+                      {result.title}
+                    </span>
+
+                  </div>
+
+                  <div className="artist-results__result-meta">
+
+                    {result.correct ? (
+                      <>
+                        <span className="artist-results__time">
+                          +{result.points} ·{' '}
+                          {result.recognitionTime.toFixed(
+                            1,
+                          )}s
+                        </span>
+
+                        <Check
+                          size={16}
+                          strokeWidth={2.5}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <span className="artist-results__missed-label">
+                          MISSED
+                        </span>
+
+                        <X
+                          size={16}
+                          strokeWidth={2.5}
+                        />
+                      </>
                     )}
-                </button>
-              )
-            },
-          )}
-        </div>
 
-        {answered && (
-          <div
-            className={`artist-game__feedback artist-game__feedback--${answerStatus}`}
-          >
-            <div>
-              {answerStatus ===
-              'correct' ? (
-                <Check
-                  size={20}
-                />
-              ) : (
-                <X size={20} />
-              )}
+                  </div>
 
-              <div>
-                <strong>
-                  {answerStatus ===
-                  'correct'
-                    ? 'Correct!'
-                    : answerStatus ===
-                        'timeout'
-                      ? "Time's up!"
-                      : 'Not quite!'}
-                </strong>
+                </div>
+              ),
+            )}
 
-                <span>
-                  {question.song.artist}
-                </span>
-              </div>
+          </div>
+
+        </section>
+
+        {/* =================================================
+            FASTEST RECOGNITION
+        ================================================= */}
+
+        {fastestResult && (
+          <section className="artist-results__fastest">
+
+            <div className="artist-results__fastest-icon">
+              <Trophy
+                size={17}
+              />
             </div>
 
-            {answerStatus ===
-              'correct' && (
+            <div>
+
+              <span>
+                FASTEST RECOGNITION
+              </span>
+
               <strong>
-                +
-                {
-                  recognitionResults[
-                    recognitionResults.length -
-                      1
-                  ]?.points
-                }
+                {fastestResult.artist}
               </strong>
-            )}
-          </div>
+
+              <p>
+                Recognized in{' '}
+                {fastestResult.recognitionTime.toFixed(
+                  1,
+                )}
+                seconds.
+              </p>
+
+            </div>
+
+          </section>
         )}
 
-        {answered && (
+        {/* =================================================
+            ACTIONS
+        ================================================= */}
+
+        <div className="artist-results__actions">
+
           <button
-            className="artist-game__next"
+            type="button"
+            className="artist-results__play-again"
             onClick={
-              handleNext
-            }
-            disabled={
-              loadingNext
+              onPlayAgain
             }
           >
-            {loadingNext
-              ? 'LOADING...'
-              : currentQuestion >=
-                  ROUND_LENGTH - 1
-                ? 'SEE RESULTS'
-                : 'NEXT SONG'}
-            <ArrowRight
-              size={18}
+            <RotateCcw
+              size={16}
             />
+
+            <span>
+              PLAY AGAIN
+            </span>
           </button>
-        )}
-      </section>
-    </main>
-  </div>
-</div>
 
+          <button
+            type="button"
+            className="artist-results__back"
+            onClick={
+              onBackToPlay
+            }
+          >
+            BACK TO PLAY
+          </button>
 
-)
+        </div>
+
+      </div>
+    </div>
+  )
 }
 
 export default ArtistGame

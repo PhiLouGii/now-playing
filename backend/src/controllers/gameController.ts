@@ -1,4 +1,7 @@
-import type { Request, Response } from 'express'
+import type {
+Request,
+Response,
+} from 'express'
 
 import {
 generateGameQuestion,
@@ -9,18 +12,16 @@ QuestionDifficulty,
 QuestionType,
 } from '../services/game/gameTypes.js'
 
-import {
-CATEGORY_CONFIG,
-} from '../data/categories/categoryConfig.js'
-
-const QUESTION_TYPES: QuestionType[] = [
+const VALID_QUESTION_TYPES:
+QuestionType[] = [
 'name-the-song',
 'name-the-artist',
 'name-the-album',
 'guess-the-year',
 ]
 
-const DIFFICULTIES: QuestionDifficulty[] = [
+const VALID_DIFFICULTIES:
+QuestionDifficulty[] = [
 'easy',
 'medium',
 'hard',
@@ -33,13 +34,14 @@ res: Response,
 try {
 const type =
 typeof req.query.type === 'string'
-? req.query.type as QuestionType
+? req.query.type
 : 'name-the-song'
 
 
 const difficulty =
-  typeof req.query.difficulty === 'string'
-    ? req.query.difficulty as QuestionDifficulty
+  typeof req.query.difficulty ===
+  'string'
+    ? req.query.difficulty
     : 'medium'
 
 const decade =
@@ -48,104 +50,144 @@ const decade =
     : undefined
 
 const categoryId =
-  typeof req.query.category === 'string'
-    ? req.query.category
+  typeof req.query.category ===
+  'string'
+    ? req.query.category.trim()
     : undefined
 
 const artist =
-  typeof req.query.artist === 'string'
+  typeof req.query.artist ===
+  'string'
     ? req.query.artist.trim()
     : undefined
 
-const excludedTrackIds =
-  typeof req.query.exclude === 'string'
+const excludeParam =
+  typeof req.query.exclude ===
+  'string'
     ? req.query.exclude
+    : ''
+
+const excludedTrackIds =
+  excludeParam
+    ? excludeParam
         .split(',')
-        .map((id) => id.trim())
+        .map(id => id.trim())
         .filter(Boolean)
     : []
 
-if (!QUESTION_TYPES.includes(type)) {
+if (
+  !VALID_QUESTION_TYPES.includes(
+    type as QuestionType,
+  )
+) {
   return res.status(400).json({
-    error: 'Invalid question type',
+    error:
+      `Invalid question type: ${type}`,
   })
 }
 
-if (!DIFFICULTIES.includes(difficulty)) {
+if (
+  !VALID_DIFFICULTIES.includes(
+    difficulty as QuestionDifficulty,
+  )
+) {
   return res.status(400).json({
-    error: 'Invalid difficulty',
+    error:
+      `Invalid difficulty: ${difficulty}`,
   })
 }
 
 if (
   decade !== undefined &&
-  (!Number.isInteger(decade) ||
+  (
+    Number.isNaN(decade) ||
     decade < 1900 ||
-    decade > 2100)
+    decade > 2100 ||
+    decade % 10 !== 0
+  )
 ) {
   return res.status(400).json({
-    error: 'Invalid decade',
+    error:
+      'Invalid decade.',
   })
 }
 
 if (
-  artist !== undefined &&
-  artist.length === 0
+  categoryId === ''
 ) {
   return res.status(400).json({
-    error: 'Invalid artist',
+    error:
+      'Category cannot be empty.',
   })
 }
 
-if (categoryId !== undefined) {
-  const categoryExists =
-    CATEGORY_CONFIG.some(
-      (category) =>
-        category.id === categoryId,
-    )
-
-  if (!categoryExists) {
-    return res.status(400).json({
-      error: 'Invalid category',
-    })
-  }
-
-  if (type !== 'name-the-song') {
-    return res.status(400).json({
-      error:
-        'Category games only support the "name-the-song" question type.',
-    })
-  }
-
-  if (decade !== undefined) {
-    return res.status(400).json({
-      error:
-        'Category games cannot be combined with a decade.',
-    })
-  }
-
-  if (artist !== undefined) {
-    return res.status(400).json({
-      error:
-        'Category games cannot be combined with an artist.',
-    })
-  }
+if (
+  artist === ''
+) {
+  return res.status(400).json({
+    error:
+      'Artist cannot be empty.',
+  })
 }
 
+/*
+ * A category and artist are two different
+ * filters. We don't allow both at once.
+ */
 if (
-  artist !== undefined &&
+  categoryId &&
+  artist
+) {
+  return res.status(400).json({
+    error:
+      'Category and artist cannot be used together.',
+  })
+}
+
+/*
+ * Artist-filtered gameplay is a SONG game.
+ *
+ * This is the important distinction:
+ *
+ *     artist=Rihanna
+ *     type=name-the-song
+ *
+ * is valid.
+ *
+ *     artist=Rihanna
+ *     type=name-the-artist
+ *
+ * is rejected because that would make
+ * the selected artist meaningless.
+ */
+if (
+  artist &&
+  type !== 'name-the-song'
+) {
+  return res.status(400).json({
+    error:
+      'Play by Artist uses the name-the-song question type.',
+  })
+}
+
+/*
+ * Decade is not needed for artist-filtered
+ * gameplay.
+ */
+if (
+  artist &&
   decade !== undefined
 ) {
   return res.status(400).json({
     error:
-      'Artist games cannot be combined with a decade.',
+      'Artist and decade cannot be used together.',
   })
 }
 
 const question =
   await generateGameQuestion(
-    type,
-    difficulty,
+    type as QuestionType,
+    difficulty as QuestionDifficulty,
     decade,
     excludedTrackIds,
     categoryId,
@@ -166,7 +208,9 @@ error,
 
 return res.status(500).json({
   error:
-    'Failed to generate game question',
+    error instanceof Error
+      ? error.message
+      : 'Failed to generate game question.',
 })
 
 
