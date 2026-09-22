@@ -18,11 +18,13 @@ const EXCLUDED_PATTERNS = [
   'cover',
   'tribute',
   'demo',
+  'commentary',
+  'deluxe',
+  'reissue',
+  'anniversary',
 ]
 
-function normalizeText(
-  value: string,
-): string {
+function normalizeText(value: string): string {
   return value
     .toLowerCase()
     .replace(/[()[\]{}]/g, ' ')
@@ -30,21 +32,15 @@ function normalizeText(
     .trim()
 }
 
-function containsExcludedPattern(
-  value: string,
-): boolean {
-  const normalized =
-    normalizeText(value)
+function containsExcludedPattern(value: string): boolean {
+  const normalized = normalizeText(value)
 
-  return EXCLUDED_PATTERNS.some(
-    (pattern) =>
-      normalized.includes(pattern),
+  return EXCLUDED_PATTERNS.some(pattern =>
+    normalized.includes(pattern),
   )
 }
 
-export function isValidMusicTrack(
-  track: MusicTrack,
-): boolean {
+export function isValidMusicTrack(track: MusicTrack): boolean {
   return Boolean(
     track.title &&
       track.artist &&
@@ -52,26 +48,20 @@ export function isValidMusicTrack(
   )
 }
 
-export function isPlayableMusicTrack(
-  track: MusicTrack,
-): boolean {
+export function isPlayableMusicTrack(track: MusicTrack): boolean {
   return Boolean(
     isValidMusicTrack(track) &&
       track.previewUrl &&
-      !containsExcludedPattern(
-        track.title,
-      ),
+      !containsExcludedPattern(track.title) &&
+      !containsExcludedPattern(track.album),
   )
 }
 
-export function isValidGameCandidate(
-  track: MusicTrack,
-): boolean {
+export function isValidGameCandidate(track: MusicTrack): boolean {
   return Boolean(
     isValidMusicTrack(track) &&
-      !containsExcludedPattern(
-        track.title,
-      ),
+      !containsExcludedPattern(track.title) &&
+      !containsExcludedPattern(track.album),
   )
 }
 
@@ -80,15 +70,14 @@ export function filterGameTracks(
 ): MusicTrack[] {
   const seen = new Set<string>()
 
-  return tracks.filter((track) => {
-    if (
-      !isValidGameCandidate(track)
-    ) {
+  return tracks.filter(track => {
+    if (!isValidGameCandidate(track)) {
       return false
     }
 
     const key =
-      `${normalizeText(track.title)}::${normalizeText(track.artist)}`
+      `${normalizeText(track.title)}::` +
+      `${normalizeText(track.artist)}`
 
     if (seen.has(key)) {
       return false
