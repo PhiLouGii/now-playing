@@ -90,39 +90,31 @@ export const CATEGORY_ARTISTS = {
   //
 
   'disney-nick': [
-    // Disney
-    'Miley Cyrus',
-    'Hannah Montana',
-    'Demi Lovato',
-    'Selena Gomez',
-    'Jonas Brothers',
-    'Hilary Duff',
-    'Raven-Symoné',
-    'Bridgit Mendler',
-    'Emily Osment',
-    'Ashley Tisdale',
-    'Vanessa Hudgens',
-    'Corbin Bleu',
-    'Dove Cameron',
-    'China Anne McClain',
-    'Ross Lynch',
+  // Disney Channel
+  'Hannah Montana',
+  'High School Musical',
+  'Camp Rock',
+  'The Cheetah Girls',
+  'Teen Beach Movie',
+  'Lemonade Mouth',
+  'Wizards of Waverly Place',
+  'That’s So Raven',
+  'Shake It Up',
+  'Sonny with a Chance',
+  'Austin & Ally',
+  'Liv and Maddie',
+  'Phineas and Ferb',
 
-    // Disney Channel movies / related
-    'High School Musical',
-    'Camp Rock',
-    'The Cheetah Girls',
-
-    // Nickelodeon
-    'Miranda Cosgrove',
-    'Victoria Justice',
-    'Ariana Grande',
-    'Big Time Rush',
-    'Drake Bell',
-    'Josh Peck',
-    'Jennette McCurdy',
-    'Keke Palmer',
-    'Jamie Lynn Spears',
-  ],
+  // Nickelodeon
+  'iCarly',
+  'Victorious',
+  'Big Time Rush',
+  'Zoey 101',
+  'Drake & Josh',
+  'The Naked Brothers Band',
+  'Rags',
+  'Spectacular!',
+],
 
   // ─────────────────────────────
   // GIRL GROUPS
