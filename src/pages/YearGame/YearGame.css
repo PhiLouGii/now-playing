@@ -1,96 +1,176 @@
 .year-game {
-  min-height: calc(100vh - 72px);
-  padding: 48px 24px 80px;
-  background:
-    radial-gradient(
-      circle at 50% 0%,
-      rgba(124, 58, 237, 0.12),
-      transparent 38%
-    ),
-    var(--color-background);
+  min-height: calc(100dvh - var(--navbar-height));
+  height: calc(100dvh - var(--navbar-height));
+  padding: 14px 32px;
+  overflow: hidden;
+
+  color: var(--color-text);
+  background: var(--color-bg);
 }
 
 .year-game__container {
-  width: min(920px, 100%);
+  width: min(1180px, 100%);
+  height: 100%;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
 }
+
+/* =========================================
+   HEADER
+========================================= */
 
 .year-game__header {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 24px;
-  margin-bottom: 36px;
+  margin-bottom: 18px;
 }
 
 .year-game__eyebrow {
-  margin: 0 0 8px;
-  color: var(--color-cyan);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.16em;
+  margin: 0 0 5px;
+
+  color: var(--color-lilac);
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.15em;
 }
 
 .year-game__title {
   margin: 0;
-  font-size: clamp(2rem, 5vw, 3.5rem);
-  line-height: 0.95;
-  letter-spacing: -0.04em;
+
+  font-size: clamp(1.65rem, 3vw, 2.45rem);
+  line-height: 0.98;
+  letter-spacing: -0.045em;
 }
 
 .year-game__progress {
   display: flex;
   align-items: baseline;
-  gap: 5px;
+  gap: 4px;
   flex-shrink: 0;
-  font-weight: 800;
 }
 
 .year-game__progress span:first-child {
-  color: var(--color-cyan);
-  font-size: 2rem;
+  color: var(--color-lilac);
+  font-size: 1.55rem;
+  font-weight: 900;
+  line-height: 1;
 }
 
 .year-game__progress span:last-child {
-  color: var(--text-muted);
-  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+  font-weight: 800;
 }
 
-.year-game__player-card {
-  position: relative;
+/* =========================================
+   MAIN BOARD
+========================================= */
+
+.year-game__board {
+  flex: 1;
+  min-height: 0;
+
+  display: grid;
+  grid-template-columns:
+    minmax(330px, 0.9fr)
+    minmax(440px, 1.1fr);
+
+  align-items: center;
+  gap: 42px;
+}
+
+/* =========================================
+   QUESTION / AUDIO
+========================================= */
+
+.year-game__question {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+}
+
+.year-game__artwork {
+  width: min(245px, 42vh);
+  aspect-ratio: 1;
+  margin-bottom: 16px;
+
   overflow: hidden;
-  padding: 34px;
-  border: 1px solid var(--border-medium);
-  border-radius: 28px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+
   background:
     linear-gradient(
       145deg,
-      rgba(124, 58, 237, 0.13),
-      rgba(20, 20, 30, 0.96)
+      rgba(155, 130, 255, 0.13),
+      var(--color-surface)
     );
-  box-shadow:
-    0 25px 70px rgba(0, 0, 0, 0.25),
-    0 0 50px rgba(124, 58, 237, 0.08);
+
+  box-shadow: var(--shadow-md);
 }
 
-.year-game__timer {
+.year-game__artwork-placeholder {
+  width: 100%;
+  height: 100%;
+
+  display: grid;
+  place-items: center;
+
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(155, 130, 255, 0.14),
+      transparent 55%
+    ),
+    var(--color-surface);
+}
+
+.year-game__artwork-placeholder span {
+  width: 58px;
+  height: 58px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+
+  color: var(--color-lilac);
+  background: var(--color-bg);
+
+  font-size: 1.7rem;
+  font-weight: 800;
+}
+
+.year-game__audio {
+  width: min(100%, 430px);
+}
+
+.year-game__audio-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 32px;
+
+  margin-bottom: 8px;
 }
 
-.year-game__timer span {
-  color: var(--text-muted);
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
+.year-game__audio-top span {
+  color: var(--color-text-muted);
+  font-size: 0.6rem;
+  font-weight: 900;
+  letter-spacing: 0.13em;
 }
 
-.year-game__timer strong {
-  font-size: 2.3rem;
+.year-game__audio-top strong {
+  font-size: 1rem;
   line-height: 1;
-  letter-spacing: -0.04em;
 }
 
 .year-game__timer--urgent {
@@ -100,7 +180,7 @@
 
 @keyframes year-timer-pulse {
   50% {
-    transform: scale(1.06);
+    transform: scale(1.08);
     opacity: 0.7;
   }
 }
@@ -109,17 +189,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-  height: 100px;
-  margin-bottom: 28px;
+  gap: 4px;
+
+  height: 70px;
+  margin-bottom: 8px;
 }
 
 .year-game__wave-bar {
-  width: 5px;
+  width: 4px;
   height: 20%;
+
   border-radius: 999px;
-  background: var(--color-purple-light);
-  opacity: 0.35;
+
+  background: var(--color-lilac);
+  opacity: 0.3;
 }
 
 .year-game__wave-bar:nth-child(2n) {
@@ -161,63 +244,102 @@
   }
 }
 
+/* =========================================
+   PLAY BUTTON
+========================================= */
+
 .year-game__play {
+  width: 42px;
+  height: 42px;
+  margin: 0 auto 10px;
+
   display: grid;
   place-items: center;
-  width: 76px;
-  height: 76px;
-  margin: 0 auto 28px;
+
   border: 0;
   border-radius: 50%;
-  color: white;
-  background: var(--gradient-primary);
-  box-shadow:
-    0 0 0 8px rgba(124, 58, 237, 0.08),
-    0 0 35px var(--glow-purple);
+
+  color: var(--color-text);
+  background: var(--color-lilac);
+
+  box-shadow: var(--shadow-sm);
+
   cursor: pointer;
+
   transition:
-    transform 180ms ease,
-    box-shadow 180ms ease;
+    transform 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
 }
 
 .year-game__play:hover:not(:disabled) {
-  transform: scale(1.07);
-  box-shadow:
-    0 0 0 10px rgba(124, 58, 237, 0.1),
-    0 0 45px var(--glow-purple);
+  transform: scale(1.05);
+  background: var(--color-periwinkle);
+  box-shadow: var(--shadow-md);
+}
+
+.year-game__play:active:not(:disabled) {
+  transform: scale(0.96);
 }
 
 .year-game__play:disabled {
+  opacity: 0.55;
   cursor: default;
-  opacity: 0.7;
 }
+
+.year-game__play svg {
+  color: var(--color-text);
+  stroke: currentColor;
+}
+
+/* =========================================
+   AUDIO PROGRESS
+========================================= */
 
 .year-game__player-bottom {
   display: flex;
   align-items: center;
-  gap: 12px;
-  color: var(--text-muted);
-  font-size: 0.7rem;
-  font-weight: 700;
+  gap: 8px;
+
+  color: var(--color-text-muted);
+  font-size: 0.62rem;
+  font-weight: 800;
 }
 
 .year-game__progress-track {
   flex: 1;
-  height: 5px;
+  height: 4px;
+
   overflow: hidden;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
+
+  background: var(--color-border);
 }
 
 .year-game__progress-fill {
   height: 100%;
   border-radius: inherit;
+
   background: var(--gradient-primary);
+
   transition: width 100ms linear;
 }
 
+/* =========================================
+   PLAY PANEL
+========================================= */
+
+.year-game__play-panel {
+  min-width: 0;
+  width: 100%;
+}
+
+/* =========================================
+   ANSWERS
+========================================= */
+
 .year-game__answers {
-  margin-top: 34px;
+  width: 100%;
 }
 
 .year-game__answers-header {
@@ -225,225 +347,340 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 20px;
-  margin-bottom: 14px;
+
+  margin-bottom: 9px;
 }
 
 .year-game__answers-header p {
-  margin: 0 0 5px;
-  color: var(--text-primary);
-  font-size: 0.68rem;
+  margin: 0 0 3px;
+
+  color: var(--color-text);
+  font-size: 0.62rem;
   font-weight: 900;
   letter-spacing: 0.13em;
 }
 
 .year-game__answers-header div > span {
-  color: var(--text-muted);
-  font-size: 0.66rem;
+  color: var(--color-text-muted);
+  font-size: 0.6rem;
   font-weight: 700;
 }
 
 .year-game__answers-header > span {
-  color: var(--text-muted);
-  font-size: 0.68rem;
+  color: var(--color-text-muted);
+  font-size: 0.6rem;
   font-weight: 800;
   letter-spacing: 0.13em;
 }
 
 .year-game__answer-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
 }
 
 .year-game__answer {
+  min-height: 56px;
+  padding: 8px 11px;
+
   display: flex;
   align-items: center;
-  gap: 18px;
-  min-height: 86px;
-  padding: 18px 20px;
-  border: 1px solid var(--border-medium);
-  border-radius: 16px;
-  color: var(--text-primary);
+  gap: 10px;
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+
+  color: var(--color-text);
   background: var(--color-surface);
+
   text-align: left;
+
   cursor: pointer;
+
   transition:
-    transform 180ms ease,
-    border-color 180ms ease,
-    background 180ms ease;
+    transform 140ms ease,
+    border-color 140ms ease,
+    background 140ms ease,
+    box-shadow 140ms ease;
 }
 
 .year-game__answer:hover {
-  transform: translateY(-2px);
-  border-color: var(--color-purple-light);
+  transform: translateY(-1px);
+
+  border-color: var(--color-lilac);
+
   background:
     linear-gradient(
       135deg,
-      rgba(124, 58, 237, 0.12),
+      rgba(155, 130, 255, 0.11),
       var(--color-surface)
     );
+
+  box-shadow: var(--shadow-sm);
+}
+
+.year-game__answer:active {
+  transform: translateY(0);
 }
 
 .year-game__answer-number {
-  color: var(--color-cyan);
-  font-size: 0.7rem;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 8px;
+
+  color: var(--color-text-muted);
+  background: var(--color-bg);
+
+  font-size: 0.57rem;
   font-weight: 900;
 }
 
 .year-game__answer-year {
   flex: 1;
-  font-size: 1.45rem;
-  letter-spacing: -0.03em;
+
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
 }
 
 .year-game__answer-arrow {
-  color: var(--text-muted);
-  transition: transform 180ms ease;
+  flex-shrink: 0;
+
+  color: var(--color-text-muted);
+
+  transition:
+    transform 140ms ease,
+    color 140ms ease;
 }
 
 .year-game__answer:hover
   .year-game__answer-arrow {
-  transform: translateX(4px);
-  color: var(--color-cyan);
+  transform: translateX(3px);
+  color: var(--color-lilac);
 }
 
+/* =========================================
+   REVEAL
+========================================= */
+
 .year-game__reveal {
+  width: 100%;
+}
+
+.year-game__reveal-heading {
   display: flex;
   align-items: center;
-  gap: 24px;
-  margin-top: 34px;
-  padding: 22px;
-  border: 1px solid var(--border-medium);
-  border-radius: 22px;
+  justify-content: space-between;
+  gap: 12px;
+
+  margin-bottom: 9px;
+}
+
+.year-game__reveal-status,
+.year-game__reveal-label {
+  font-size: 0.6rem;
+  font-weight: 900;
+  letter-spacing: 0.13em;
+}
+
+.year-game__reveal-label {
+  color: var(--color-text-muted);
+}
+
+.year-game__reveal-status--correct {
+  color: #52c98c;
+}
+
+.year-game__reveal-status--wrong {
+  color: #e9677d;
+}
+
+.year-game__reveal-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  min-height: 118px;
+  padding: 12px;
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+
   background: var(--color-surface);
+
+  box-shadow: var(--shadow-sm);
 }
 
 .year-game__reveal-art {
-  width: 112px;
-  height: 112px;
+  width: 94px;
+  height: 94px;
   flex-shrink: 0;
+
   overflow: hidden;
-  border-radius: 12px;
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+
+  background: var(--color-bg);
 }
 
 .year-game__reveal-art img {
   width: 100%;
   height: 100%;
+
+  display: block;
+
   object-fit: cover;
 }
 
 .year-game__reveal-art-placeholder {
-  display: grid;
-  place-items: center;
   width: 100%;
   height: 100%;
-  font-size: 2rem;
-  background: var(--color-background);
+
+  display: grid;
+  place-items: center;
+
+  color: var(--color-text-muted);
+  background: var(--color-bg);
+
+  font-size: 1.5rem;
 }
 
 .year-game__reveal-content {
+  min-width: 0;
   flex: 1;
-}
-
-.year-game__reveal-label {
-  margin: 0 0 5px;
-  color: var(--color-cyan);
-  font-size: 0.68rem;
-  font-weight: 900;
-  letter-spacing: 0.14em;
 }
 
 .year-game__correct-year {
   display: block;
-  margin-bottom: 3px;
-  font-size: clamp(2rem, 5vw, 3rem);
-  line-height: 1;
+
+  margin-bottom: 4px;
+
+  color: var(--color-text);
+
+  font-size: clamp(2rem, 4vw, 2.7rem);
+  line-height: 0.95;
   letter-spacing: -0.05em;
 }
 
 .year-game__reveal-content h2 {
   margin: 0;
-  font-size: 1.15rem;
+
+  overflow: hidden;
+
+  font-size: 0.95rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.year-game__reveal-content p:last-child {
-  margin: 5px 0 0;
-  color: var(--text-muted);
-  font-size: 0.85rem;
+.year-game__reveal-content p {
+  margin: 4px 0 0;
+
+  overflow: hidden;
+
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.year-game__result {
-  display: grid;
-  place-items: center;
-  width: 50px;
-  height: 50px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  font-size: 1.5rem;
-  font-weight: 900;
-}
-
-.year-game__result--correct {
-  color: white;
-  background: var(--gradient-primary);
-  box-shadow: 0 0 25px var(--glow-purple);
-}
-
-.year-game__result--wrong {
-  color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.06);
-}
+/* =========================================
+   NEXT
+========================================= */
 
 .year-game__next {
+  width: 100%;
+  min-height: 42px;
+  margin-top: 9px;
+  padding: 8px 14px;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  width: 100%;
-  margin-top: 18px;
-  padding: 18px 24px;
-  border: 0;
-  border-radius: 14px;
-  color: white;
-  background: var(--gradient-primary);
-  font-size: 0.78rem;
+  gap: 8px;
+
+  border: 1px solid var(--color-lilac);
+  border-radius: var(--radius-md);
+
+  color: var(--color-text);
+  background: var(--color-lilac);
+
+  font: inherit;
+  font-size: 0.64rem;
   font-weight: 900;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.13em;
+
   cursor: pointer;
+
+  box-shadow: var(--shadow-sm);
+
   transition:
-    transform 180ms ease,
-    box-shadow 180ms ease;
+    transform 140ms ease,
+    background 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease;
 }
 
 .year-game__next:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px var(--glow-purple);
+  transform: translateY(-1px);
+
+  background: var(--color-periwinkle);
+  border-color: var(--color-periwinkle);
+
+  box-shadow: var(--shadow-md);
 }
+
+.year-game__next:active {
+  transform: translateY(0);
+}
+
+.year-game__next svg {
+  color: var(--color-text);
+  stroke: currentColor;
+}
+
+/* =========================================
+   LOADING / ERROR
+========================================= */
 
 .year-game__loading,
 .year-game__error-state {
+  flex: 1;
+  min-height: 0;
+
   display: grid;
   place-items: center;
-  min-height: 420px;
-  padding: 40px;
-  border: 1px solid var(--border-medium);
-  border-radius: 28px;
+
+  padding: 30px;
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+
   background: var(--color-surface);
+
   text-align: center;
 }
 
 .year-game__loading p {
-  margin: 18px 0 0;
-  color: var(--text-muted);
+  margin: 12px 0 0;
+
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
 }
 
 .year-game__loading-spinner {
-  width: 38px;
-  height: 38px;
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top-color: var(--color-cyan);
+  width: 32px;
+  height: 32px;
+
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-lilac);
   border-radius: 50%;
+
   animation: year-spin 0.8s linear infinite;
 }
 
@@ -454,133 +691,195 @@
 }
 
 .year-game__error-state p {
-  max-width: 420px;
-  margin: 0 0 20px;
-  color: var(--text-muted);
+  max-width: 400px;
+  margin: 0 0 16px;
+
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
 }
 
 .year-game__retry {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 13px 18px;
-  border: 1px solid var(--border-medium);
-  border-radius: 10px;
-  color: var(--text-primary);
+  justify-content: center;
+  gap: 7px;
+
+  min-height: 38px;
+  padding: 8px 14px;
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+
+  color: var(--color-text);
   background: var(--color-surface);
-  font-weight: 800;
+
+  font: inherit;
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+
   cursor: pointer;
+
+  transition:
+    border-color 140ms ease,
+    background 140ms ease;
 }
 
-/* ================================
+.year-game__retry:hover {
+  border-color: var(--color-lilac);
+  background: var(--color-bg);
+}
+
+/* =========================================
    RESULTS
-================================ */
+========================================= */
 
 .year-results {
   position: relative;
-  min-height: calc(100vh - 72px);
+
+  min-height: calc(100dvh - var(--navbar-height));
+
   overflow: hidden;
-  padding: 70px 24px 90px;
+
+  padding: 42px 24px 60px;
+
+  color: var(--color-text);
+
   background:
     radial-gradient(
       circle at 50% 0%,
-      rgba(124, 58, 237, 0.15),
-      transparent 40%
+      rgba(155, 130, 255, 0.13),
+      transparent 38%
     ),
-    var(--color-background);
+    var(--color-bg);
 }
 
 .year-results__container {
   position: relative;
   z-index: 2;
+
   width: min(920px, 100%);
   margin: 0 auto;
 }
 
 .year-results__header {
-  margin-bottom: 44px;
+  margin-bottom: 28px;
+
   text-align: center;
 }
 
 .year-results__trophy {
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 14px;
+
   display: grid;
   place-items: center;
-  width: 64px;
-  height: 64px;
-  margin: 0 auto 20px;
-  border: 1px solid var(--border-medium);
-  border-radius: 20px;
-  color: var(--color-cyan);
+
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+
+  color: var(--color-lilac);
   background: var(--color-surface);
-  box-shadow: 0 0 30px rgba(34, 211, 238, 0.1);
+
+  box-shadow: var(--shadow-sm);
 }
 
 .year-results__eyebrow {
-  margin: 0 0 10px;
-  color: var(--color-cyan);
-  font-size: 0.72rem;
+  margin: 0 0 7px;
+
+  color: var(--color-lilac);
+  font-size: 0.62rem;
   font-weight: 900;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.15em;
 }
 
 .year-results__header h1 {
   margin: 0;
-  font-size: clamp(2.4rem, 7vw, 5rem);
+
+  font-size: clamp(2rem, 5vw, 3.6rem);
   line-height: 0.95;
   letter-spacing: -0.05em;
 }
 
 .year-results__header p:last-child {
-  margin: 16px 0 0;
-  color: var(--text-muted);
+  margin: 11px 0 0;
+
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
 }
 
 .year-results__header strong {
-  color: var(--text-primary);
+  color: var(--color-text);
 }
+
+/* =========================================
+   SCORE
+========================================= */
 
 .year-results__score {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1px;
+
   overflow: hidden;
-  margin-bottom: 18px;
-  border: 1px solid var(--border-medium);
-  border-radius: 22px;
-  background: var(--border-medium);
+
+  margin-bottom: 10px;
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+
+  background: var(--color-border);
 }
 
 .year-results__score > div {
-  padding: 30px;
-  background: var(--color-surface);
+  padding: 20px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(155, 130, 255, 0.07),
+      var(--color-surface)
+    );
 }
 
 .year-results__score span,
 .year-results__speed-grid span {
   display: block;
-  margin-bottom: 8px;
-  color: var(--text-muted);
-  font-size: 0.66rem;
+
+  margin-bottom: 6px;
+
+  color: var(--color-text-muted);
+
+  font-size: 0.58rem;
   font-weight: 900;
   letter-spacing: 0.13em;
 }
 
 .year-results__score strong {
-  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  line-height: 1;
+
   letter-spacing: -0.05em;
 }
 
 .year-results__score small {
-  color: var(--text-muted);
+  color: var(--color-text-muted);
   font-size: 0.45em;
 }
 
+/* =========================================
+   SPEED / BREAKDOWN
+========================================= */
+
 .year-results__speed,
 .year-results__breakdown {
-  margin-top: 18px;
-  padding: 28px;
-  border: 1px solid var(--border-medium);
-  border-radius: 22px;
+  margin-top: 10px;
+  padding: 20px;
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+
   background: var(--color-surface);
 }
 
@@ -589,36 +888,42 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 20px;
-  margin-bottom: 22px;
+
+  margin-bottom: 14px;
 }
 
 .year-results__section-heading p,
 .year-results__section-heading span {
   margin: 0;
-  font-size: 0.68rem;
+
+  font-size: 0.6rem;
   font-weight: 900;
   letter-spacing: 0.13em;
 }
 
 .year-results__section-heading span {
-  color: var(--text-muted);
+  color: var(--color-text-muted);
 }
 
 .year-results__speed-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  gap: 8px;
 }
 
 .year-results__speed-grid > div {
-  padding: 20px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.035);
+  padding: 14px;
+
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+
+  background: rgba(255, 255, 255, 0.025);
 }
 
 .year-results__speed-grid strong {
   display: block;
-  font-size: 1.5rem;
+
+  font-size: 1.15rem;
   line-height: 1.1;
 }
 
@@ -626,118 +931,164 @@
   color: var(--color-cyan);
 }
 
+/* =========================================
+   BREAKDOWN LIST
+========================================= */
+
 .year-results__list {
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
 .year-results__item {
   display: flex;
   align-items: center;
-  gap: 14px;
-  min-height: 70px;
-  padding: 8px 12px 8px 8px;
-  border-radius: 13px;
+  gap: 10px;
+
+  min-height: 62px;
+  padding: 6px 9px 6px 6px;
+
+  border: 1px solid transparent;
+  border-radius: 10px;
+
   background: rgba(255, 255, 255, 0.025);
 }
 
+.year-results__item--correct {
+  border-left: 2px solid #52c98c;
+}
+
+.year-results__item--missed {
+  border-left: 2px solid rgba(233, 103, 125, 0.55);
+}
+
 .year-results__number {
-  width: 25px;
-  color: var(--text-muted);
-  font-size: 0.68rem;
+  width: 23px;
+
+  flex-shrink: 0;
+
+  color: var(--color-text-muted);
+
+  font-size: 0.58rem;
   font-weight: 800;
+
   text-align: center;
 }
 
 .year-results__art {
-  width: 52px;
-  height: 52px;
+  width: 44px;
+  height: 44px;
+
   flex-shrink: 0;
+
   overflow: hidden;
-  border-radius: 8px;
-  background: var(--color-background);
+  border-radius: 7px;
+
+  background: var(--color-bg);
 }
 
 .year-results__art img {
   width: 100%;
   height: 100%;
+
+  display: block;
+
   object-fit: cover;
 }
 
 .year-results__art span {
+  width: 100%;
+  height: 100%;
+
   display: grid;
   place-items: center;
-  height: 100%;
-  color: var(--text-muted);
+
+  color: var(--color-text-muted);
 }
 
 .year-results__info {
-  flex: 1;
   min-width: 0;
+  flex: 1;
 }
 
 .year-results__info strong,
 .year-results__info span {
   display: block;
+
   overflow: hidden;
+
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .year-results__info strong {
-  font-size: 0.9rem;
+  color: var(--color-text);
+  font-size: 0.78rem;
 }
 
 .year-results__info span {
-  margin-top: 4px;
-  color: var(--text-muted);
-  font-size: 0.75rem;
+  margin-top: 3px;
+
+  color: var(--color-text-muted);
+  font-size: 0.64rem;
 }
 
 .year-results__year {
-  min-width: 75px;
+  min-width: 72px;
+
   text-align: right;
 }
 
 .year-results__year strong {
   display: block;
-  font-size: 1rem;
+
+  color: var(--color-text);
+  font-size: 0.85rem;
 }
 
 .year-results__time,
 .year-results__missed {
   display: block;
+
   margin-top: 3px;
-  font-size: 0.68rem;
+
+  font-size: 0.57rem;
   font-weight: 900;
 }
 
 .year-results__time {
-  color: var(--color-cyan);
+  color: #52c98c;
 }
 
 .year-results__missed {
-  color: var(--text-muted);
+  color: #e9677d;
 }
+
+/* =========================================
+   FASTEST
+========================================= */
 
 .year-results__fastest {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-top: 18px;
-  padding: 22px 24px;
-  border: 1px solid rgba(124, 58, 237, 0.35);
-  border-radius: 18px;
+  gap: 13px;
+
+  margin-top: 10px;
+  padding: 16px 18px;
+
+  border: 1px solid rgba(155, 130, 255, 0.3);
+  border-radius: var(--radius-md);
+
   background:
     linear-gradient(
       135deg,
-      rgba(124, 58, 237, 0.12),
-      rgba(34, 211, 238, 0.04)
+      rgba(155, 130, 255, 0.1),
+      rgba(34, 211, 238, 0.035)
     );
 }
 
 .year-results__fastest > span {
-  font-size: 1.8rem;
+  font-size: 1.45rem;
 }
 
 .year-results__fastest p,
@@ -747,58 +1098,99 @@
 }
 
 .year-results__fastest p {
-  margin: 0 0 4px;
+  margin: 0 0 3px;
+
   color: var(--color-cyan);
-  font-size: 0.62rem;
+
+  font-size: 0.57rem;
   font-weight: 900;
   letter-spacing: 0.13em;
 }
 
 .year-results__fastest strong {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
 }
 
 .year-results__fastest small {
   margin-top: 3px;
-  color: var(--text-muted);
+
+  color: var(--color-text-muted);
+  font-size: 0.65rem;
 }
+
+/* =========================================
+   ACTIONS
+========================================= */
 
 .year-results__actions {
   display: flex;
-  gap: 12px;
-  margin-top: 26px;
+  gap: 9px;
+
+  margin-top: 14px;
 }
 
 .year-results__primary,
 .year-results__secondary {
   flex: 1;
-  min-height: 52px;
-  border-radius: 13px;
-  font-size: 0.72rem;
+
+  min-height: 42px;
+
+  border-radius: var(--radius-md);
+
+  font: inherit;
+  font-size: 0.62rem;
   font-weight: 900;
   letter-spacing: 0.1em;
+
   cursor: pointer;
+
+  transition:
+    transform 140ms ease,
+    background 140ms ease,
+    border-color 140ms ease;
 }
 
 .year-results__primary {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 9px;
-  border: 0;
-  color: white;
-  background: var(--gradient-primary);
+  gap: 7px;
+
+  border: 1px solid var(--color-lilac);
+
+  color: var(--color-text);
+  background: var(--color-lilac);
+}
+
+.year-results__primary:hover {
+  transform: translateY(-1px);
+
+  background: var(--color-periwinkle);
+  border-color: var(--color-periwinkle);
 }
 
 .year-results__secondary {
-  border: 1px solid var(--border-medium);
-  color: var(--text-primary);
+  border: 1px solid var(--color-border);
+
+  color: var(--color-text);
   background: var(--color-surface);
 }
+
+.year-results__secondary:hover {
+  border-color: var(--color-lilac);
+  background: var(--color-bg);
+}
+
+/* =========================================
+   CONFETTI
+========================================= */
 
 .year-results__confetti {
   position: absolute;
   inset: 0;
+
+  overflow: hidden;
+
   pointer-events: none;
 }
 
@@ -808,11 +1200,16 @@
   left: calc(
     var(--i, 1) * 3%
   );
-  width: 7px;
-  height: 13px;
+
+  width: 6px;
+  height: 11px;
+
   border-radius: 2px;
+
   background: var(--color-cyan);
-  animation: year-confetti 3.2s linear infinite;
+
+  animation:
+    year-confetti 3.2s linear infinite;
 }
 
 .year-results__confetti-piece:nth-child(3n) {
@@ -820,7 +1217,7 @@
 }
 
 .year-results__confetti-piece:nth-child(4n) {
-  background: white;
+  background: var(--color-text);
 }
 
 .year-results__confetti-piece:nth-child(2n) {
@@ -852,18 +1249,61 @@
   }
 }
 
-@media (max-width: 700px) {
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 900px) {
   .year-game {
-    padding: 32px 16px 60px;
+    height: auto;
+    min-height: calc(100dvh - var(--navbar-height));
+    overflow: visible;
+  }
+
+  .year-game__board {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .year-game__question {
+    max-width: 620px;
+    margin: 0 auto;
+  }
+
+  .year-game__artwork {
+    width: min(230px, 50vw);
+  }
+
+  .year-game__play-panel {
+    max-width: 620px;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .year-game {
+    padding: 12px 16px 30px;
   }
 
   .year-game__header {
     align-items: flex-start;
+    margin-bottom: 16px;
   }
 
-  .year-game__player-card {
-    padding: 24px 18px;
-    border-radius: 22px;
+  .year-game__title {
+    font-size: 1.65rem;
+  }
+
+  .year-game__progress span:first-child {
+    font-size: 1.35rem;
+  }
+
+  .year-game__board {
+    gap: 20px;
+  }
+
+  .year-game__artwork {
+    width: min(210px, 58vw);
   }
 
   .year-game__wave {
@@ -871,29 +1311,40 @@
   }
 
   .year-game__wave-bar {
-    width: 4px;
+    width: 3px;
   }
 
   .year-game__answer-grid {
     grid-template-columns: 1fr;
   }
 
-  .year-game__reveal {
-    gap: 16px;
+  .year-game__answer {
+    min-height: 52px;
+  }
+
+  .year-game__reveal-card {
+    gap: 12px;
   }
 
   .year-game__reveal-art {
-    width: 84px;
-    height: 84px;
+    width: 76px;
+    height: 76px;
   }
 
-  .year-game__result {
-    width: 42px;
-    height: 42px;
+  .year-game__correct-year {
+    font-size: 2rem;
   }
 
   .year-results {
-    padding: 48px 16px 60px;
+    padding: 30px 16px 45px;
+  }
+
+  .year-results__header {
+    margin-bottom: 22px;
+  }
+
+  .year-results__header h1 {
+    font-size: 2.25rem;
   }
 
   .year-results__score {
@@ -901,12 +1352,12 @@
   }
 
   .year-results__score > div {
-    padding: 22px;
+    padding: 17px;
   }
 
   .year-results__speed,
   .year-results__breakdown {
-    padding: 20px 16px;
+    padding: 16px;
   }
 
   .year-results__speed-grid {
@@ -914,7 +1365,7 @@
   }
 
   .year-results__item {
-    gap: 9px;
+    gap: 7px;
   }
 
   .year-results__number {
@@ -922,8 +1373,8 @@
   }
 
   .year-results__art {
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
   }
 
   .year-results__year {

@@ -15,11 +15,7 @@ import {
 
 import { generateQuestion } from '../../services/gameService'
 import { submitScore } from '../../services/scoreService'
-
-import {
-  calculateFinalPoints,
-} from '../../lib/gameScoring'
-
+import { calculateFinalPoints } from '../../lib/gameScoring'
 import type { Question } from '../../types/game'
 
 import './YearGame.css'
@@ -75,10 +71,6 @@ function YearGame() {
   const [error, setError] =
     useState<string | null>(null)
 
-  /*
-   * SCORE
-   */
-
   const [score, setScore] =
     useState(0)
 
@@ -87,10 +79,6 @@ function YearGame() {
 
   const [bestStreak, setBestStreak] =
     useState(0)
-
-  /*
-   * SCORE SUBMISSION
-   */
 
   const scoreSubmitted =
     useRef(false)
@@ -101,33 +89,19 @@ function YearGame() {
   const timerRef =
     useRef<number | null>(null)
 
-  /*
-   * LOAD FIRST QUESTION
-   */
-
   useEffect(() => {
     loadQuestion()
   }, [])
 
-  /*
-   * CLEANUP
-   */
-
   useEffect(() => {
     return () => {
       if (timerRef.current !== null) {
-        window.clearInterval(
-          timerRef.current,
-        )
+        window.clearInterval(timerRef.current)
       }
 
       audioRef.current?.pause()
     }
   }, [])
-
-  /*
-   * COUNTDOWN
-   */
 
   useEffect(() => {
     if (
@@ -142,9 +116,7 @@ function YearGame() {
       window.setInterval(() => {
         setTimeRemaining((previous) => {
           if (previous <= 0.1) {
-            if (
-              timerRef.current !== null
-            ) {
+            if (timerRef.current !== null) {
               window.clearInterval(
                 timerRef.current,
               )
@@ -174,21 +146,11 @@ function YearGame() {
     isTimeUp,
   ])
 
-  /*
-   * SAVE SCORE WHEN RESULTS ARE SHOWN
-   */
-
   useEffect(() => {
     if (
       !showResults ||
-      scoreSubmitted.current
-    ) {
-      return
-    }
-
-    if (
-      results.length <
-      TOTAL_QUESTIONS
+      scoreSubmitted.current ||
+      results.length < TOTAL_QUESTIONS
     ) {
       return
     }
@@ -253,10 +215,6 @@ function YearGame() {
     bestStreak,
   ])
 
-  /*
-   * LOAD QUESTION
-   */
-
   async function loadQuestion() {
     setIsLoading(true)
     setError(null)
@@ -292,10 +250,6 @@ function YearGame() {
     }
   }
 
-  /*
-   * PLAY / PAUSE
-   */
-
   function togglePlayback() {
     const audio =
       audioRef.current
@@ -322,10 +276,6 @@ function YearGame() {
         )
       })
   }
-
-  /*
-   * ANSWER
-   */
 
   function handleAnswer(
     answer: string,
@@ -410,10 +360,6 @@ function YearGame() {
     ])
   }
 
-  /*
-   * TIME UP
-   */
-
   function handleTimeUp() {
     if (
       hasAnswered ||
@@ -453,10 +399,6 @@ function YearGame() {
     ])
   }
 
-  /*
-   * NEXT QUESTION
-   */
-
   async function handleNext() {
     if (
       questionNumber >= TOTAL_QUESTIONS
@@ -472,17 +414,9 @@ function YearGame() {
     await loadQuestion()
   }
 
-  /*
-   * RETRY
-   */
-
   function handleRetry() {
     loadQuestion()
   }
-
-  /*
-   * PLAY AGAIN
-   */
 
   function handlePlayAgain() {
     window.location.reload()
@@ -494,9 +428,7 @@ function YearGame() {
         results={results}
         score={score}
         bestStreak={bestStreak}
-        onPlayAgain={
-          handlePlayAgain
-        }
+        onPlayAgain={handlePlayAgain}
         onBack={() =>
           navigate('/play')
         }
@@ -526,7 +458,8 @@ function YearGame() {
             </span>
 
             <span>
-              / {String(
+              /{' '}
+              {String(
                 TOTAL_QUESTIONS,
               ).padStart(2, '0')}
             </span>
@@ -549,11 +482,9 @@ function YearGame() {
 
             <button
               className="year-game__retry"
-              onClick={
-                handleRetry
-              }
+              onClick={handleRetry}
             >
-              <RotateCcw size={18} />
+              <RotateCcw size={16} />
               TRY AGAIN
             </button>
           </div>
@@ -562,258 +493,262 @@ function YearGame() {
         {question &&
           !isLoading &&
           !error && (
-            <>
-              <section className="year-game__player-card">
-                <div className="year-game__timer">
-                  <span>
-                    {isTimeUp
-                      ? "TIME'S UP"
-                      : hasAnswered
-                        ? 'ANSWER LOCKED'
-                        : 'LISTEN'}
-                  </span>
-
-                  <strong
-                    className={
-                      timeRemaining <= 3 &&
-                      !hasAnswered &&
-                      !isTimeUp
-                        ? 'year-game__timer--urgent'
-                        : ''
-                    }
-                  >
-                    {timeRemaining.toFixed(
-                      1,
-                    )}
-                    s
-                  </strong>
-                </div>
-
-                <div className="year-game__wave">
-                  {Array.from(
-                    { length: 32 },
-                    (_, index) => (
-                      <span
-                        key={index}
-                        className={
-                          isPlaying
-                            ? 'year-game__wave-bar year-game__wave-bar--active'
-                            : 'year-game__wave-bar'
-                        }
-                      />
-                    ),
-                  )}
-                </div>
-
-                <button
-                  className="year-game__play"
-                  onClick={
-                    togglePlayback
-                  }
-                  disabled={
-                    hasAnswered ||
-                    isTimeUp
-                  }
-                  aria-label={
-                    isPlaying
-                      ? 'Pause song'
-                      : 'Play song'
-                  }
-                >
-                  {isPlaying ? (
-                    <Pause
-                      size={30}
-                      fill="currentColor"
-                    />
-                  ) : (
-                    <Play
-                      size={30}
-                      fill="currentColor"
-                    />
-                  )}
-                </button>
-
-                <div className="year-game__player-bottom">
-                  <Volume2 size={15} />
-
-                  <div className="year-game__progress-track">
-                    <div
-                      className="year-game__progress-fill"
-                      style={{
-                        width: `${
-                          ((ROUND_LENGTH -
-                            timeRemaining) /
-                            ROUND_LENGTH) *
-                          100
-                        }%`,
-                      }}
-                    />
+            <main className="year-game__board">
+              <section className="year-game__question">
+                <div className="year-game__artwork">
+                  <div className="year-game__artwork-placeholder">
+                    <span>?</span>
                   </div>
-
-                  <span>
-                    10s
-                  </span>
                 </div>
 
-                <audio
-                  ref={audioRef}
-                  src={
-                    question.song.audioUrl
-                  }
-                  preload="auto"
-                  onEnded={() =>
-                    setIsPlaying(false)
-                  }
-                />
-              </section>
-
-              {hasAnswered ||
-              isTimeUp ? (
-                <section className="year-game__reveal">
-                  <div className="year-game__reveal-art">
-                    {question.song
-                      .artworkUrl ? (
-                      <img
-                        src={
-                          question.song
-                            .artworkUrl
-                        }
-                        alt={`${question.song.album} album artwork`}
-                      />
-                    ) : (
-                      <div className="year-game__reveal-art-placeholder">
-                        ?
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="year-game__reveal-content">
-                    <p className="year-game__reveal-label">
+                <div className="year-game__audio">
+                  <div className="year-game__audio-top">
+                    <span>
                       {isTimeUp
                         ? "TIME'S UP"
-                        : selectedAnswer ===
-                            question.correctAnswer
-                          ? 'CORRECT'
-                          : 'NOT QUITE'}
-                    </p>
-
-                    <strong className="year-game__correct-year">
-                      {
-                        question.song
-                          .releaseYear
-                      }
-                    </strong>
-
-                    <h2>
-                      {
-                        question.song
-                          .title
-                      }
-                    </h2>
-
-                    <p>
-                      {
-                        question.song
-                          .artist
-                      }
-                      {' · '}
-                      {
-                        question.song
-                          .album
-                      }
-                    </p>
-                  </div>
-
-                  <div
-                    className={`year-game__result ${
-                      selectedAnswer ===
-                      question.correctAnswer
-                        ? 'year-game__result--correct'
-                        : 'year-game__result--wrong'
-                    }`}
-                  >
-                    {selectedAnswer ===
-                    question.correctAnswer
-                      ? '✓'
-                      : '×'}
-                  </div>
-                </section>
-              ) : (
-                <section className="year-game__answers">
-                  <div className="year-game__answers-header">
-                    <div>
-                      <p>
-                        WHEN WAS IT RELEASED?
-                      </p>
-
-                      <span>
-                        TRUST YOUR INSTINCT
-                      </span>
-                    </div>
-
-                    <span>
-                      4 CHOICES
+                        : hasAnswered
+                          ? 'ANSWER LOCKED'
+                          : 'LISTEN'}
                     </span>
+
+                    <strong
+                      className={
+                        timeRemaining <= 3 &&
+                        !hasAnswered &&
+                        !isTimeUp
+                          ? 'year-game__timer--urgent'
+                          : ''
+                      }
+                    >
+                      {timeRemaining.toFixed(1)}s
+                    </strong>
                   </div>
 
-                  <div className="year-game__answer-grid">
-                    {question.answers.map(
-                      (
-                        answer,
-                        index,
-                      ) => (
-                        <button
-                          key={answer}
-                          className="year-game__answer"
-                          onClick={() =>
-                            handleAnswer(
-                              answer,
-                            )
+                  <div className="year-game__wave">
+                    {Array.from(
+                      { length: 28 },
+                      (_, index) => (
+                        <span
+                          key={index}
+                          className={
+                            isPlaying
+                              ? 'year-game__wave-bar year-game__wave-bar--active'
+                              : 'year-game__wave-bar'
                           }
-                        >
-                          <span className="year-game__answer-number">
-                            {String(
-                              index + 1,
-                            ).padStart(
-                              2,
-                              '0',
-                            )}
-                          </span>
-
-                          <strong className="year-game__answer-year">
-                            {answer}
-                          </strong>
-
-                          <ArrowRight
-                            size={18}
-                            className="year-game__answer-arrow"
-                          />
-                        </button>
+                        />
                       ),
                     )}
                   </div>
-                </section>
-              )}
 
-              {(hasAnswered ||
-                isTimeUp) && (
-                <button
-                  className="year-game__next"
-                  onClick={
-                    handleNext
-                  }
-                >
-                  <span>
-                    {questionNumber >=
-                    TOTAL_QUESTIONS
-                      ? 'SEE RESULTS'
-                      : 'NEXT SONG'}
-                  </span>
+                  <button
+                    className="year-game__play"
+                    onClick={
+                      togglePlayback
+                    }
+                    disabled={
+                      hasAnswered ||
+                      isTimeUp
+                    }
+                    aria-label={
+                      isPlaying
+                        ? 'Pause song'
+                        : 'Play song'
+                    }
+                  >
+                    {isPlaying ? (
+                      <Pause
+                        size={20}
+                        fill="currentColor"
+                      />
+                    ) : (
+                      <Play
+                        size={20}
+                        fill="currentColor"
+                      />
+                    )}
+                  </button>
 
-                  <ArrowRight size={19} />
-                </button>
-              )}
-            </>
+                  <div className="year-game__player-bottom">
+                    <Volume2 size={14} />
+
+                    <div className="year-game__progress-track">
+                      <div
+                        className="year-game__progress-fill"
+                        style={{
+                          width: `${
+                            ((ROUND_LENGTH -
+                              timeRemaining) /
+                              ROUND_LENGTH) *
+                            100
+                          }%`,
+                        }}
+                      />
+                    </div>
+
+                    <span>10s</span>
+                  </div>
+
+                  <audio
+                    ref={audioRef}
+                    src={
+                      question.song.audioUrl
+                    }
+                    preload="auto"
+                    onEnded={() =>
+                      setIsPlaying(false)
+                    }
+                  />
+                </div>
+              </section>
+
+              <section className="year-game__play-panel">
+                {!hasAnswered &&
+                !isTimeUp ? (
+                  <section className="year-game__answers">
+                    <div className="year-game__answers-header">
+                      <div>
+                        <p>
+                          WHEN WAS IT RELEASED?
+                        </p>
+
+                        <span>
+                          TRUST YOUR INSTINCT
+                        </span>
+                      </div>
+
+                      <span>
+                        4 CHOICES
+                      </span>
+                    </div>
+
+                    <div className="year-game__answer-grid">
+                      {question.answers.map(
+                        (
+                          answer,
+                          index,
+                        ) => (
+                          <button
+                            key={answer}
+                            className="year-game__answer"
+                            onClick={() =>
+                              handleAnswer(
+                                answer,
+                              )
+                            }
+                          >
+                            <span className="year-game__answer-number">
+                              {String(
+                                index + 1,
+                              ).padStart(
+                                2,
+                                '0',
+                              )}
+                            </span>
+
+                            <strong className="year-game__answer-year">
+                              {answer}
+                            </strong>
+
+                            <ArrowRight
+                              size={16}
+                              className="year-game__answer-arrow"
+                            />
+                          </button>
+                        ),
+                      )}
+                    </div>
+                  </section>
+                ) : (
+                  <section className="year-game__reveal">
+                    <div className="year-game__reveal-heading">
+                      <span
+                        className={
+                          selectedAnswer ===
+                          question.correctAnswer
+                            ? 'year-game__reveal-status year-game__reveal-status--correct'
+                            : 'year-game__reveal-status year-game__reveal-status--wrong'
+                        }
+                      >
+                        {isTimeUp
+                          ? "TIME'S UP"
+                          : selectedAnswer ===
+                              question.correctAnswer
+                            ? 'CORRECT'
+                            : 'NOT QUITE'}
+                      </span>
+
+                      <span className="year-game__reveal-label">
+                        RELEASE YEAR
+                      </span>
+                    </div>
+
+                    <div className="year-game__reveal-card">
+                      <div className="year-game__reveal-art">
+                        {question.song
+                          .artworkUrl ? (
+                          <img
+                            src={
+                              question.song
+                                .artworkUrl
+                            }
+                            alt={`${question.song.album} album artwork`}
+                          />
+                        ) : (
+                          <div className="year-game__reveal-art-placeholder">
+                            ?
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="year-game__reveal-content">
+                        <strong className="year-game__correct-year">
+                          {
+                            question.song
+                              .releaseYear
+                          }
+                        </strong>
+
+                        <h2>
+                          {
+                            question.song
+                              .title
+                          }
+                        </h2>
+
+                        <p>
+                          {
+                            question.song
+                              .artist
+                          }
+                          {' · '}
+                          {
+                            question.song
+                              .album
+                          }
+                        </p>
+                      </div>
+                    </div>
+                  </section>
+                )}
+
+                {(hasAnswered ||
+                  isTimeUp) && (
+                  <button
+                    className="year-game__next"
+                    onClick={handleNext}
+                  >
+                    <span>
+                      {questionNumber >=
+                      TOTAL_QUESTIONS
+                        ? 'SEE RESULTS'
+                        : 'NEXT SONG'}
+                    </span>
+
+                    <ArrowRight size={17} />
+                  </button>
+                )}
+              </section>
+            </main>
           )}
       </div>
     </div>
@@ -891,6 +826,11 @@ function YearResultsScreen({
             <span
               key={index}
               className="year-results__confetti-piece"
+              style={
+                {
+                  '--i': index,
+                } as React.CSSProperties
+              }
             />
           ),
         )}
@@ -899,7 +839,7 @@ function YearResultsScreen({
       <div className="year-results__container">
         <header className="year-results__header">
           <div className="year-results__trophy">
-            <Trophy size={28} />
+            <Trophy size={25} />
           </div>
 
           <p className="year-results__eyebrow">
@@ -922,31 +862,19 @@ function YearResultsScreen({
 
         <section className="year-results__score">
           <div>
-            <span>
-              FINAL SCORE
-            </span>
-
-            <strong>
-              {score}
-            </strong>
+            <span>FINAL SCORE</span>
+            <strong>{score}</strong>
           </div>
 
           <div>
-            <span>
-              BEST STREAK
-            </span>
-
-            <strong>
-              {bestStreak}
-            </strong>
+            <span>BEST STREAK</span>
+            <strong>{bestStreak}</strong>
           </div>
         </section>
 
         <section className="year-results__score">
           <div>
-            <span>
-              YEARS GUESSED
-            </span>
+            <span>YEARS GUESSED</span>
 
             <strong>
               {recognizedCount}
@@ -957,13 +885,8 @@ function YearResultsScreen({
           </div>
 
           <div>
-            <span>
-              ACCURACY
-            </span>
-
-            <strong>
-              {accuracy}%
-            </strong>
+            <span>ACCURACY</span>
+            <strong>{accuracy}%</strong>
           </div>
         </section>
 
@@ -981,7 +904,9 @@ function YearResultsScreen({
               <span>AVERAGE</span>
 
               <strong>
-                {averageTime.toFixed(1)}s
+                {recognitionTimes.length > 0
+                  ? `${averageTime.toFixed(1)}s`
+                  : '—'}
               </strong>
             </div>
 
@@ -990,9 +915,7 @@ function YearResultsScreen({
 
               <strong>
                 {fastestTime > 0
-                  ? `${fastestTime.toFixed(
-                      1,
-                    )}s`
+                  ? `${fastestTime.toFixed(1)}s`
                   : '—'}
               </strong>
             </div>
@@ -1021,7 +944,11 @@ function YearResultsScreen({
             {results.map(
               (result) => (
                 <div
-                  className="year-results__item"
+                  className={`year-results__item ${
+                    result.correct
+                      ? 'year-results__item--correct'
+                      : 'year-results__item--missed'
+                  }`}
                   key={
                     result.questionNumber
                   }
@@ -1115,11 +1042,9 @@ function YearResultsScreen({
         <div className="year-results__actions">
           <button
             className="year-results__primary"
-            onClick={
-              onPlayAgain
-            }
+            onClick={onPlayAgain}
           >
-            <RotateCcw size={18} />
+            <RotateCcw size={17} />
             PLAY AGAIN
           </button>
 

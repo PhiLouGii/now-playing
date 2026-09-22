@@ -1,240 +1,473 @@
 .endless-game {
-  min-height: 100vh;
+min-height: calc(100dvh - var(--navbar-height));
+height: calc(100dvh - var(--navbar-height));
+padding: 14px 32px;
+overflow: hidden;
+
+color: var(--color-text);
+background: var(--color-bg);
 }
 
 .endless-game__container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 4rem 2rem;
+width: min(100%, 1180px);
+height: 100%;
+margin: 0 auto;
+
+display: flex;
+flex-direction: column;
 }
 
-.endless-game__mode {
-  margin: 0 0 0.5rem;
-  font-size: 0.8rem;
-  letter-spacing: 0.12em;
+.endless-game__header {
+flex-shrink: 0;
+margin-bottom: 18px;
 }
 
-.endless-game__container h1 {
-  margin: 0 0 2rem;
+.endless-game__eyebrow {
+margin: 0 0 4px;
+
+color: var(--color-lilac);
+font-size: 0.64rem;
+font-weight: 800;
+letter-spacing: 0.14em;
+text-transform: uppercase;
+}
+
+.endless-game__header h1 {
+margin: 0;
+
+font-family: var(--font-display);
+font-size: clamp(1.7rem, 3vw, 2.35rem);
+line-height: 0.95;
+letter-spacing: -0.04em;
+}
+
+.endless-game__status-message {
+margin: auto;
+
+color: var(--color-text-muted);
+font-size: 0.7rem;
+font-weight: 800;
+letter-spacing: 0.12em;
+text-transform: uppercase;
+}
+
+/* ============================================= */
+/* GAME BOARD */
+/* ============================================= */
+
+.endless-game__board {
+min-height: 0;
+flex: 1;
+
+display: grid;
+grid-template-columns:
+minmax(330px, 0.9fr)
+minmax(440px, 1.1fr);
+
+gap: 42px;
+align-items: center;
+}
+
+/* ============================================= */
+/* LEFT SIDE */
+/* ============================================= */
+
+.endless-game__question {
+min-width: 0;
+
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
 }
 
 .endless-game__artwork {
-  width: 300px;
-  height: 300px;
-  margin-bottom: 2rem;
-  background: #eee;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
+width: min(245px, 42vh);
+aspect-ratio: 1;
+
+overflow: hidden;
+
+border: 1px solid var(--color-border);
+border-radius: var(--radius-lg);
+
+background: var(--color-surface);
+box-shadow: var(--shadow-md);
+
+display: grid;
+place-items: center;
 }
 
 .endless-game__artwork img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+width: 100%;
+height: 100%;
+object-fit: cover;
 }
 
 .endless-game__artwork span {
-  font-size: 4rem;
-}
-
-.endless-game__container h2 {
-  margin-top: 2rem;
-  margin-bottom: 1.5rem;
-}
-
-.endless-game__actions {
-  display: flex;
-  gap: 1rem;
-  margin-top: 2rem;
-}
-
-.endless-game__advance,
-.endless-game__reveal,
-.endless-game__next {
-  border: 0;
-  padding: 0.9rem 1.25rem;
-  cursor: pointer;
-}
-
-.endless-game__advance:disabled,
-.endless-game__next:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-.endless-game__feedback {
-  margin-top: 2rem;
-  padding: 1.5rem;
-}
-
-.endless-game__feedback--correct {
-  border: 2px solid green;
-}
-
-.endless-game__feedback--incorrect {
-  border: 2px solid red;
-}
-
-.endless-game__feedback--revealed {
-  border: 2px solid #777;
-}
-
-.endless-game__feedback-label {
-  font-size: 0.8rem;
-  letter-spacing: 0.12em;
-  margin-bottom: 0.5rem;
-}
-
-.endless-game__feedback-answer {
-  font-size: 1.5rem;
-  font-weight: 700;
-}
-
-.endless-game__preview-status {
-  margin-top: 0.75rem;
-  font-size: 0.8rem;
-  letter-spacing: 0.08em;
-}
-
-.endless-game__status {
-  display: flex;
-  gap: 3rem;
-  margin-top: 2rem;
-}
-
-.endless-game__status div {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.endless-game__status span {
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
-}
-
-.endless-game__status strong {
-  font-size: 1.25rem;
-}
-
-.endless-game__next-area {
-  margin-top: 2rem;
-}
-
-.endless-game__next-status {
-  margin-bottom: 0.75rem;
-  font-size: 0.8rem;
-  letter-spacing: 0.08em;
-}
-
-.endless-game__next {
-  min-width: 180px;
-}
-
-.endless-game__reveal {
-  max-width: 720px;
-  margin-top: 3rem;
-}
-
-.endless-game__reveal-heading {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 1.25rem;
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-}
-
-.endless-game__spark {
-  font-size: 1.2rem;
-}
-
-.endless-game__song-card {
-  display: flex;
-  gap: 2rem;
-  align-items: center;
-  padding: 1.5rem;
-  border: 2px solid #111;
-  background: #f5f0e8;
-}
-
-.endless-game__cover {
-  flex: 0 0 220px;
-  width: 220px;
-  height: 220px;
-  background: #ddd;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.endless-game__cover img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.endless-game__cover span {
-  font-size: 4rem;
-}
-
-.endless-game__song-info {
-  min-width: 0;
-}
-
-.endless-game__song-info h2 {
-  margin: 0 0 0.5rem;
-  font-size: 2rem;
-  line-height: 1.05;
-}
-
-.endless-game__artist {
-  margin: 0 0 1.5rem;
-  font-size: 1.1rem;
-  font-weight: 600;
-}
-
-.endless-game__song-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  font-size: 0.8rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.endless-game__song-meta span:first-child::after {
-  content: '•';
-  margin-left: 0.5rem;
-}
-
-.endless-game__reveal--correct
-  .endless-game__song-card {
-  box-shadow: 8px 8px 0 #111;
+color: var(--color-text-muted);
+font-family: var(--font-display);
+font-size: 5rem;
 }
 
 .endless-game__artwork--hidden {
-  background: #111;
-  color: #f5f0e8;
+background: var(--color-surface);
 }
 
-@media (max-width: 700px) {
-  .endless-game__song-card {
-    flex-direction: column;
-    align-items: stretch;
-  }
+.endless-game__artwork--hidden span {
+color: var(--color-lilac);
+}
 
-  .endless-game__cover {
-    width: 100%;
-    height: auto;
-    aspect-ratio: 1;
-  }
+.endless-game__audio {
+width: min(100%, 390px);
+margin-top: 16px;
+}
 
-  .endless-game__song-info h2 {
-    font-size: 1.6rem;
-  }
+/* ============================================= */
+/* LISTENING STAGE */
+/* ============================================= */
+
+.endless-game__stage-info {
+display: flex;
+justify-content: space-between;
+
+margin-top: 10px;
+padding: 9px 11px;
+
+border: 1px solid var(--color-border);
+border-radius: var(--radius-md);
+
+background: var(--color-surface);
+box-shadow: var(--shadow-sm);
+}
+
+.endless-game__stage-info div {
+display: flex;
+flex-direction: column;
+gap: 2px;
+}
+
+.endless-game__stage-info div:last-child {
+align-items: flex-end;
+}
+
+.endless-game__stage-info span {
+color: var(--color-text-muted);
+font-size: 0.54rem;
+font-weight: 800;
+letter-spacing: 0.12em;
+text-transform: uppercase;
+}
+
+.endless-game__stage-info strong {
+font-size: 0.75rem;
+font-weight: 800;
+}
+
+.endless-game__stage-bar {
+display: flex;
+gap: 5px;
+margin-top: 8px;
+}
+
+.endless-game__stage-segment {
+flex: 1;
+height: 4px;
+
+border-radius: 999px;
+background: var(--color-border);
+}
+
+.endless-game__stage-segment--active {
+background: var(--color-lilac);
+}
+
+/* ============================================= */
+/* RIGHT SIDE */
+/* ============================================= */
+
+.endless-game__play-panel {
+min-width: 0;
+width: 100%;
+max-width: 560px;
+
+justify-self: center;
+}
+
+.endless-game__prompt {
+margin-bottom: 14px;
+}
+
+.endless-game__prompt span {
+display: block;
+margin-bottom: 4px;
+
+color: var(--color-text-muted);
+font-size: 0.57rem;
+font-weight: 800;
+letter-spacing: 0.13em;
+text-transform: uppercase;
+}
+
+.endless-game__prompt h2 {
+margin: 0;
+
+font-family: var(--font-display);
+font-size: clamp(1.35rem, 2.5vw, 1.85rem);
+line-height: 1.05;
+letter-spacing: -0.035em;
+}
+
+/* ============================================= */
+/* ACTIONS */
+/* ============================================= */
+
+.endless-game__actions {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 8px;
+
+margin-top: 9px;
+}
+
+.endless-game__advance,
+.endless-game__give-up,
+.endless-game__next {
+min-height: 40px;
+
+border: 1px solid var(--color-lilac);
+border-radius: var(--radius-md);
+
+font: inherit;
+font-size: 0.63rem;
+font-weight: 800;
+letter-spacing: 0.12em;
+text-transform: uppercase;
+
+cursor: pointer;
+
+transition:
+transform 140ms ease,
+background 140ms ease,
+border-color 140ms ease,
+box-shadow 140ms ease;
+}
+
+.endless-game__advance,
+.endless-game__next {
+color: var(--color-text);
+background: var(--color-lilac);
+box-shadow: var(--shadow-sm);
+}
+
+.endless-game__give-up {
+color: var(--color-text);
+background: var(--color-surface);
+border-color: var(--color-border-strong);
+}
+
+.endless-game__advance:hover:not(:disabled),
+.endless-game__give-up:hover:not(:disabled),
+.endless-game__next:hover:not(:disabled) {
+transform: translateY(-1px);
+}
+
+.endless-game__advance:hover:not(:disabled),
+.endless-game__next:hover:not(:disabled) {
+background: var(--color-periwinkle);
+border-color: var(--color-periwinkle);
+}
+
+.endless-game__give-up:hover:not(:disabled) {
+border-color: var(--color-lilac);
+background: var(--color-surface-hover);
+}
+
+.endless-game__advance:active:not(:disabled),
+.endless-game__give-up:active:not(:disabled),
+.endless-game__next:active:not(:disabled) {
+transform: translateY(0);
+}
+
+.endless-game__advance:disabled,
+.endless-game__give-up:disabled,
+.endless-game__next:disabled {
+opacity: 0.5;
+cursor: not-allowed;
+}
+
+/* ============================================= */
+/* REVEAL */
+/* ============================================= */
+
+.endless-game__reveal-heading {
+display: flex;
+justify-content: space-between;
+align-items: center;
+
+margin-bottom: 9px;
+
+color: var(--color-text-muted);
+font-size: 0.59rem;
+font-weight: 800;
+letter-spacing: 0.13em;
+text-transform: uppercase;
+}
+
+.endless-game__reveal--correct
+.endless-game__reveal-heading {
+color: var(--color-success);
+}
+
+.endless-game__reveal--incorrect
+.endless-game__reveal-heading {
+color: var(--color-danger);
+}
+
+.endless-game__song-card {
+padding: 17px 18px;
+
+border: 1px solid var(--color-border);
+border-radius: var(--radius-lg);
+
+background: var(--color-surface);
+box-shadow: var(--shadow-sm);
+}
+
+.endless-game__reveal--correct
+.endless-game__song-card {
+border-color: var(--color-success);
+}
+
+.endless-game__reveal--incorrect
+.endless-game__song-card {
+border-color: var(--color-danger);
+}
+
+.endless-game__song-info h2 {
+margin: 0 0 4px;
+
+font-family: var(--font-display);
+font-size: clamp(1.35rem, 2.5vw, 1.85rem);
+line-height: 1.05;
+letter-spacing: -0.035em;
+
+overflow-wrap: anywhere;
+}
+
+.endless-game__song-info p {
+margin: 0 0 13px;
+
+color: var(--color-text-muted);
+font-size: 0.76rem;
+font-weight: 700;
+}
+
+.endless-game__song-meta {
+display: flex;
+flex-wrap: wrap;
+gap: 5px 8px;
+
+color: var(--color-text-muted);
+font-size: 0.57rem;
+font-weight: 700;
+letter-spacing: 0.08em;
+line-height: 1.4;
+text-transform: uppercase;
+}
+
+.endless-game__song-meta span:first-child::after {
+content: '•';
+margin-left: 8px;
+
+color: var(--color-border-strong);
+}
+
+/* ============================================= */
+/* NEXT SONG */
+/* ============================================= */
+
+.endless-game__next-area {
+margin-top: 10px;
+}
+
+.endless-game__next-status {
+margin: 0 0 7px;
+
+color: var(--color-text-muted);
+font-size: 0.55rem;
+font-weight: 700;
+letter-spacing: 0.09em;
+text-transform: uppercase;
+}
+
+.endless-game__next {
+width: 100%;
+}
+
+/* ============================================= */
+/* RESPONSIVE */
+/* ============================================= */
+
+@media (max-width: 900px) {
+.endless-game {
+height: auto;
+min-height: calc(100dvh - var(--navbar-height));
+padding: 14px 20px 24px;
+overflow: auto;
+}
+
+.endless-game__container {
+height: auto;
+}
+
+.endless-game__board {
+grid-template-columns: 1fr;
+gap: 28px;
+}
+
+.endless-game__play-panel {
+max-width: 620px;
+}
+
+.endless-game__artwork {
+width: min(245px, 55vw);
+}
+}
+
+@media (max-width: 600px) {
+.endless-game {
+padding: 12px 14px 20px;
+}
+
+.endless-game__header {
+margin-bottom: 16px;
+}
+
+.endless-game__header h1 {
+font-size: 1.65rem;
+}
+
+.endless-game__board {
+gap: 22px;
+}
+
+.endless-game__artwork {
+width: min(210px, 62vw);
+}
+
+.endless-game__audio {
+width: 100%;
+}
+
+.endless-game__actions {
+grid-template-columns: 1fr;
+}
+
+.endless-game__song-card {
+padding: 14px;
+}
+
+.endless-game__song-info h2 {
+font-size: 1.35rem;
+}
 }
