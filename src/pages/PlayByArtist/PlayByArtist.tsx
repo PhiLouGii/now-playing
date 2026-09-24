@@ -3,291 +3,63 @@ import {
   useRef,
   useState,
 } from 'react'
-import {
-  ArrowRight,
-  Check,
-  Pause,
-  Play,
-  RotateCcw,
-  Trophy,
-  X,
-} from 'lucide-react'
+
 import {
   useLocation,
   useNavigate,
 } from 'react-router-dom'
 
-import { generateQuestion } from '../../services/gameService'
-import { submitScore } from '../../services/scoreService'
 import {
-  calculateFinalPoints,
-} from '../../lib/gameScoring'
-import type { Question } from '../../types/game'
+  Check,
+  X,
+  Play,
+  Pause,
+  Trophy,
+} from 'lucide-react'
+
+import {
+  generateQuestion,
+} from '../../services/gameService'
+
+import type {
+  Question,
+} from '../../types/game'
 
 import './PlayByArtist.css'
+
 
 const TOTAL_QUESTIONS = 10
 const RECOGNITION_TIME = 10
 
-type AnswerStatus =
-  | 'idle'
-  | 'correct'
-  | 'incorrect'
-  | 'timeout'
 
-type RecognitionResult = {
-  questionNumber: number
-  songTitle: string
-  artist: string
-  selectedAnswer: string | null
+type LocationState = {
+  artist?: string
+}
+
+
+type AnsweredSong = {
+  question: Question
+  answer: string | null
   correct: boolean
-  points: number
-  listeningTime: number
+  timedOut: boolean
 }
 
-function PlayByArtistResultsScreen({
-  results,
-  score,
-  bestStreak,
-  onPlayAgain,
-  onBackToPlay,
-}: {
-  results: RecognitionResult[]
-  score: number
-  bestStreak: number
-  onPlayAgain: () => void
-  onBackToPlay: () => void
-}) {
-  const correctAnswers = results.filter(
-    (result) => result.correct,
-  ).length
-
-  const accuracy =
-    results.length > 0
-      ? Math.round(
-          (correctAnswers / results.length) * 100,
-        )
-      : 0
-
-  const recognizedResults = results.filter(
-    (result) => result.correct,
-  )
-
-  const averageRecognitionTime =
-    recognizedResults.length > 0
-      ? recognizedResults.reduce(
-          (total, result) =>
-            total + result.listeningTime,
-          0,
-        ) / recognizedResults.length
-      : 0
-
-  const fastestResult =
-    recognizedResults.length > 0
-      ? recognizedResults.reduce(
-          (fastest, result) =>
-            result.listeningTime <
-            fastest.listeningTime
-              ? result
-              : fastest,
-        )
-      : null
-
-  return (
-    <div className="play-by-artist-results">
-      <div className="play-by-artist-results__container">
-        <div className="play-by-artist-results__hero">
-          <div className="play-by-artist-results__trophy">
-            <Trophy size={28} />
-          </div>
-
-          <p className="play-by-artist-results__eyebrow">
-            ROUND COMPLETE
-          </p>
-
-          <h1 className="play-by-artist-results__title">
-            Name That Song
-          </h1>
-
-          <p className="play-by-artist-results__subtitle">
-            You made it through all {TOTAL_QUESTIONS}{' '}
-            songs.
-          </p>
-        </div>
-
-        <div className="play-by-artist-results__score-card">
-          <span className="play-by-artist-results__score-label">
-            FINAL SCORE
-          </span>
-
-          <strong className="play-by-artist-results__score">
-            {score.toLocaleString()}
-          </strong>
-        </div>
-
-        <div className="play-by-artist-results__stats">
-          <div className="play-by-artist-results__stat">
-            <span>SONGS RECOGNIZED</span>
-            <strong>
-              {correctAnswers}/{TOTAL_QUESTIONS}
-            </strong>
-          </div>
-
-          <div className="play-by-artist-results__stat">
-            <span>ACCURACY</span>
-            <strong>{accuracy}%</strong>
-          </div>
-
-          <div className="play-by-artist-results__stat">
-            <span>BEST STREAK</span>
-            <strong>{bestStreak}</strong>
-          </div>
-
-          <div className="play-by-artist-results__stat">
-            <span>AVG. RECOGNITION</span>
-            <strong>
-              {averageRecognitionTime > 0
-                ? `${averageRecognitionTime.toFixed(1)}s`
-                : '—'}
-            </strong>
-          </div>
-        </div>
-
-        {fastestResult && (
-          <div className="play-by-artist-results__fastest">
-            <div>
-              <span className="play-by-artist-results__fastest-label">
-                FASTEST RECOGNITION
-              </span>
-
-              <strong>
-                {fastestResult.songTitle}
-              </strong>
-
-              <small>
-                {fastestResult.artist}
-              </small>
-            </div>
-
-            <span className="play-by-artist-results__fastest-time">
-              {fastestResult.listeningTime.toFixed(1)}s
-            </span>
-          </div>
-        )}
-
-        <div className="play-by-artist-results__songs">
-          <div className="play-by-artist-results__section-header">
-            <h2>Your Songs</h2>
-            <span>
-              {correctAnswers} recognized
-            </span>
-          </div>
-
-          <div className="play-by-artist-results__song-list">
-            {results.map((result) => (
-              <div
-                key={result.questionNumber}
-                className={`play-by-artist-results__song ${
-                  result.correct
-                    ? 'is-correct'
-                    : 'is-incorrect'
-                }`}
-              >
-                <div className="play-by-artist-results__song-number">
-                  {String(
-                    result.questionNumber,
-                  ).padStart(2, '0')}
-                </div>
-
-                <div className="play-by-artist-results__song-info">
-                  <strong>
-                    {result.songTitle}
-                  </strong>
-
-                  <span>{result.artist}</span>
-                </div>
-
-                <div className="play-by-artist-results__song-result">
-                  {result.correct ? (
-                    <>
-                      <Check size={16} />
-                      <span>
-                        +{result.points}
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <X size={16} />
-                      <span>Missed</span>
-                    </>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="play-by-artist-results__actions">
-          <button
-            className="play-by-artist-results__primary-button"
-            onClick={onPlayAgain}
-          >
-            <RotateCcw size={18} />
-            PLAY AGAIN
-          </button>
-
-          <button
-            className="play-by-artist-results__secondary-button"
-            onClick={onBackToPlay}
-          >
-            BACK TO PLAY
-            <ArrowRight size={18} />
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 export default function PlayByArtist() {
-  const location = useLocation()
   const navigate = useNavigate()
+  const location = useLocation()
 
-  const rawArtist = (
-    location.state as {
-      artist?: string
-    } | null
-  )?.artist
+  const {
+    artist: selectedArtist,
+  } =
+    (location.state as LocationState) ?? {}
 
-  const selectedArtist =
-    typeof rawArtist === 'string'
-      ? rawArtist.trim()
-      : ''
-
-  const audioRef = useRef<HTMLAudioElement | null>(
-    null,
-  )
-
-  const excludedTrackIdsRef = useRef<string[]>([])
-
-  const scoreSubmittedRef = useRef(false)
 
   /*
-   * Prevents React development Strict Mode from
-   * requesting the first question twice.
+   * ---------------------------------------------------------
+   * GAME STATE
+   * ---------------------------------------------------------
    */
-  const initialLoadArtistRef =
-    useRef<string | null>(null)
-
-  /*
-   * The next question is fetched in the background
-   * while the player is answering the current one.
-   */
-  const nextQuestionRef =
-    useRef<Question | null>(null)
-
-  const nextQuestionLoadingRef =
-    useRef(false)
 
   const [question, setQuestion] =
     useState<Question | null>(null)
@@ -301,165 +73,226 @@ export default function PlayByArtist() {
   const [loadingNext, setLoadingNext] =
     useState(false)
 
-  const [selectedAnswer, setSelectedAnswer] =
+  const [error, setError] =
     useState<string | null>(null)
 
-  const [answerStatus, setAnswerStatus] =
-    useState<AnswerStatus>('idle')
-
-  const [timeRemaining, setTimeRemaining] =
-    useState(RECOGNITION_TIME)
+  const [selectedAnswer, setSelectedAnswer] =
+    useState<string | null>(null)
 
   const [isPlaying, setIsPlaying] =
     useState(false)
 
-  const [score, setScore] = useState(0)
+  const [timeRemaining, setTimeRemaining] =
+    useState(RECOGNITION_TIME)
 
-  const [streak, setStreak] = useState(0)
+  const [score, setScore] =
+    useState(0)
+
+  const [correctAnswers, setCorrectAnswers] =
+    useState(0)
 
   const [bestStreak, setBestStreak] =
     useState(0)
 
-  const [recognitionResults, setRecognitionResults] =
-    useState<RecognitionResult[]>([])
+  const [currentStreak, setCurrentStreak] =
+    useState(0)
 
-  const [isGameComplete, setIsGameComplete] =
+  const [totalListeningTime, setTotalListeningTime] =
+    useState(0)
+
+  const [showResults, setShowResults] =
     useState(false)
 
-  const [error, setError] =
-    useState<string | null>(null)
+  const [answeredSongs, setAnsweredSongs] =
+    useState<AnsweredSong[]>([])
 
   /*
-   * Fetches a question from the backend and reserves
-   * its track ID immediately.
+   * ---------------------------------------------------------
+   * REFS
+   * ---------------------------------------------------------
    */
-  const fetchQuestion = async () => {
-    if (!selectedArtist) {
-      return null
-    }
 
-    const nextQuestion =
-      await generateQuestion(
-        'name-the-song',
-        'medium',
-        undefined,
-        excludedTrackIdsRef.current,
-        undefined,
-        selectedArtist,
-      )
+  const audioRef =
+    useRef<HTMLAudioElement | null>(null)
 
-    const trackId = String(
-      nextQuestion.song.id,
-    )
+  const timerRef =
+    useRef<number | null>(null)
 
-    if (
-      !excludedTrackIdsRef.current.includes(
-        trackId,
-      )
-    ) {
-      excludedTrackIdsRef.current.push(
-        trackId,
-      )
-    }
+  const questionStartTimeRef =
+    useRef<number | null>(null)
 
-    return nextQuestion
-  }
+  const excludedTrackIdsRef =
+    useRef<string[]>([])
+
+  const scoreSubmittedRef =
+    useRef(false)
+
+  const initialLoadArtistRef =
+    useRef<string | null>(null)
+
+  const nextQuestionRef =
+    useRef<Question | null>(null)
+
+  const nextQuestionPromiseRef =
+    useRef<Promise<Question | null> | null>(null)
+
 
   /*
-   * Loads the first question.
+   * ---------------------------------------------------------
+   * FETCH QUESTION
+   * ---------------------------------------------------------
    */
-  const loadInitialQuestion = async () => {
-    if (!selectedArtist) {
-      setLoading(false)
-      return
-    }
 
-    setLoading(true)
-    setError(null)
+  const fetchQuestion =
+    async (): Promise<Question | null> => {
+      if (!selectedArtist) {
+        return null
+      }
 
-    try {
-      const firstQuestion =
-        await fetchQuestion()
+      const nextQuestion =
+        await generateQuestion(
+          'name-the-song',
+          'medium',
+          undefined,
+          excludedTrackIdsRef.current,
+          undefined,
+          selectedArtist,
+        )
 
-      if (!firstQuestion) {
-        throw new Error(
-          'Could not load the first song.',
+      const trackId =
+        String(nextQuestion.song.id)
+
+      if (
+        !excludedTrackIdsRef.current.includes(
+          trackId,
+        )
+      ) {
+        excludedTrackIdsRef.current.push(
+          trackId,
         )
       }
 
-      setQuestion(firstQuestion)
-
-      /*
-       * Start preparing Question 2 immediately.
-       * The player doesn't need to wait for it.
-       */
-      if (TOTAL_QUESTIONS > 1) {
-        void preloadNextQuestion()
-      }
-    } catch (err) {
-      console.error(
-        'Failed to load artist question:',
-        err,
-      )
-
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Failed to load the first song.',
-      )
-    } finally {
-      setLoading(false)
+      return nextQuestion
     }
-  }
+
 
   /*
-   * Fetches the next question in the background.
-   *
-   * Because fetchQuestion() adds the track ID to the
-   * exclusion list immediately, the current and next
-   * questions cannot accidentally use the same song.
+   * ---------------------------------------------------------
+   * PRELOAD NEXT QUESTION
+   * ---------------------------------------------------------
    */
-  const preloadNextQuestion = async () => {
-    if (
-      !selectedArtist ||
-      nextQuestionLoadingRef.current ||
-      nextQuestionRef.current
-    ) {
-      return
+
+  const preloadNextQuestion =
+    (): Promise<Question | null> => {
+      if (
+        !selectedArtist ||
+        nextQuestionRef.current
+      ) {
+        return Promise.resolve(
+          nextQuestionRef.current,
+        )
+      }
+
+      if (
+        currentQuestion + 1 >=
+        TOTAL_QUESTIONS
+      ) {
+        return Promise.resolve(null)
+      }
+
+      if (
+        nextQuestionPromiseRef.current
+      ) {
+        return nextQuestionPromiseRef.current
+      }
+
+      const promise =
+        (async () => {
+          try {
+            const preloadedQuestion =
+              await fetchQuestion()
+
+            nextQuestionRef.current =
+              preloadedQuestion
+
+            return preloadedQuestion
+          } catch (err) {
+            console.error(
+              'Failed to preload next artist question:',
+              err,
+            )
+
+            return null
+          } finally {
+            nextQuestionPromiseRef.current =
+              null
+          }
+        })()
+
+      nextQuestionPromiseRef.current =
+        promise
+
+      return promise
     }
 
-    /*
-     * Never preload beyond the final question.
-     */
-    if (
-      currentQuestion + 1 >=
-      TOTAL_QUESTIONS
-    ) {
-      return
+
+  /*
+   * ---------------------------------------------------------
+   * LOAD INITIAL QUESTION
+   * ---------------------------------------------------------
+   */
+
+  const loadInitialQuestion =
+    async () => {
+      if (!selectedArtist) {
+        setLoading(false)
+        return
+      }
+
+      try {
+        setLoading(true)
+        setError(null)
+
+        const firstQuestion =
+          await fetchQuestion()
+
+        if (!firstQuestion) {
+          throw new Error(
+            'Could not load the first question.',
+          )
+        }
+
+        setQuestion(
+          firstQuestion,
+        )
+
+        if (
+          TOTAL_QUESTIONS > 1
+        ) {
+          void preloadNextQuestion()
+        }
+      } catch (err) {
+        console.error(
+          'Failed to load artist game:',
+          err,
+        )
+
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'Could not load the game.',
+        )
+      } finally {
+        setLoading(false)
+      }
     }
 
-    nextQuestionLoadingRef.current = true
 
-    try {
-      const preloadedQuestion =
-        await fetchQuestion()
-
-      nextQuestionRef.current =
-        preloadedQuestion
-    } catch (err) {
-      /*
-       * This is intentionally silent here.
-       * If preloading fails, NEXT SONG can fall back
-       * to fetching the question when needed.
-       */
-      console.error(
-        'Failed to preload next artist question:',
-        err,
-      )
-    } finally {
-      nextQuestionLoadingRef.current = false
-    }
-  }
+  /*
+   * ---------------------------------------------------------
+   * INITIAL LOAD
+   * ---------------------------------------------------------
+   */
 
   useEffect(() => {
     if (!selectedArtist) {
@@ -477,437 +310,855 @@ export default function PlayByArtist() {
     initialLoadArtistRef.current =
       selectedArtist
 
-    loadInitialQuestion()
+    void loadInitialQuestion()
   }, [selectedArtist])
 
-  useEffect(() => {
-    if (
-      !isPlaying ||
-      answerStatus !== 'idle' ||
-      !question
-    ) {
-      return
-    }
 
-    if (timeRemaining <= 0) {
-      handleTimeout()
-      return
-    }
-
-    const timer = window.setTimeout(() => {
-      setTimeRemaining(
-        (previous) => previous - 1,
-      )
-    }, 1000)
-
-    return () => {
-      window.clearTimeout(timer)
-    }
-  }, [
-    isPlaying,
-    answerStatus,
-    timeRemaining,
-    question,
-  ])
+  /*
+   * ---------------------------------------------------------
+   * AUDIO
+   * ---------------------------------------------------------
+   */
 
   useEffect(() => {
-    if (
-      !isGameComplete ||
-      scoreSubmittedRef.current ||
-      recognitionResults.length <
-        TOTAL_QUESTIONS
-    ) {
+    if (!question) {
       return
     }
 
-    scoreSubmittedRef.current = true
-
-    const correctAnswers =
-      recognitionResults.filter(
-        (result) => result.correct,
-      ).length
-
-    const accuracy =
-      Math.round(
-        (correctAnswers /
-          TOTAL_QUESTIONS) *
-          100,
+    const audio =
+      new Audio(
+        question.song.audioUrl,
       )
 
-    const totalListeningTime =
-      recognitionResults.reduce(
-        (total, result) =>
-          total + result.listeningTime,
-        0,
-      )
+    audioRef.current =
+      audio
 
-    submitScore({
-      gameMode: 'name-that-song',
-      score,
-      accuracy,
-      bestStreak,
-      questions: TOTAL_QUESTIONS,
-      correctAnswers,
-      totalListeningTime,
-    }).catch((submitError) => {
-      console.error(
-        'Failed to submit score:',
-        submitError,
-      )
-    })
-  }, [
-    isGameComplete,
-    recognitionResults,
-    score,
-    bestStreak,
-  ])
+    audio.preload =
+      'auto'
 
-  const startAudio = async () => {
-    if (!audioRef.current || !question) {
-      return
-    }
-
-    try {
-      await audioRef.current.play()
-      setIsPlaying(true)
-    } catch (err) {
-      console.error(
-        'Failed to play audio:',
-        err,
-      )
-    }
-  }
-
-  const pauseAudio = () => {
-    if (!audioRef.current) {
-      return
-    }
-
-    audioRef.current.pause()
-    setIsPlaying(false)
-  }
-
-  const finishRoundIfNeeded = () => {
-    if (
-      currentQuestion + 1 >=
-      TOTAL_QUESTIONS
-    ) {
-      setIsGameComplete(true)
+    audio.onended = () => {
       setIsPlaying(false)
-
-      if (audioRef.current) {
-        audioRef.current.pause()
-      }
-
-      return true
     }
 
-    return false
-  }
-
-  const handleAnswer = (
-    answer: string,
-  ) => {
-    if (
-      !question ||
-      answerStatus !== 'idle' ||
-      !isPlaying
-    ) {
-      return
+    audio.onerror = () => {
+      setIsPlaying(false)
     }
-
-    const isCorrect =
-      answer === question.correctAnswer
-
-    const listeningTime =
-      RECOGNITION_TIME - timeRemaining
-
-    const nextStreak = isCorrect
-      ? streak + 1
-      : 0
-
-    const points = isCorrect
-      ? calculateFinalPoints(
-          listeningTime,
-          nextStreak,
-        )
-      : 0
-
-    if (audioRef.current) {
-      audioRef.current.pause()
-    }
-
-    setIsPlaying(false)
-    setSelectedAnswer(answer)
-
-    setAnswerStatus(
-      isCorrect
-        ? 'correct'
-        : 'incorrect',
-    )
-
-    setStreak(nextStreak)
-
-    if (nextStreak > bestStreak) {
-      setBestStreak(nextStreak)
-    }
-
-    if (isCorrect) {
-      setScore(
-        (previous) => previous + points,
-      )
-    }
-
-    setRecognitionResults(
-      (previous) => [
-        ...previous,
-        {
-          questionNumber:
-            currentQuestion + 1,
-          songTitle:
-            question.correctAnswer,
-          artist: question.song.artist,
-          selectedAnswer: answer,
-          correct: isCorrect,
-          points,
-          listeningTime,
-        },
-      ],
-    )
 
     /*
-     * The next question should already be loading
-     * or already be waiting in nextQuestionRef.
+     * Attempt autoplay.
+     * If the browser blocks autoplay, the player
+     * can still start it with the play button.
      */
-    void preloadNextQuestion()
-  }
+    void audio.play()
+      .then(() => {
+        setIsPlaying(true)
+      })
+      .catch(() => {
+        setIsPlaying(false)
+      })
 
-  const handleTimeout = () => {
+    return () => {
+      audio.pause()
+      audio.currentTime = 0
+      audio.onended = null
+      audio.onerror = null
+
+      if (
+        audioRef.current ===
+        audio
+      ) {
+        audioRef.current =
+          null
+      }
+    }
+  }, [question])
+
+
+  /*
+   * ---------------------------------------------------------
+   * PLAY / PAUSE
+   * ---------------------------------------------------------
+   */
+
+  const togglePlayback =
+    () => {
+      const audio =
+        audioRef.current
+
+      if (!audio) {
+        return
+      }
+
+      if (audio.paused) {
+        void audio.play()
+          .then(() => {
+            setIsPlaying(true)
+          })
+          .catch(() => {
+            setIsPlaying(false)
+          })
+      } else {
+        audio.pause()
+        setIsPlaying(false)
+      }
+    }
+
+
+  /*
+   * ---------------------------------------------------------
+   * LISTENING TIME
+   * ---------------------------------------------------------
+   */
+
+  const recordListeningTime =
+    () => {
+      if (
+        questionStartTimeRef.current ===
+        null
+      ) {
+        return
+      }
+
+      const elapsed =
+        Math.max(
+          0,
+          Math.round(
+            (
+              Date.now() -
+              questionStartTimeRef.current
+            ) / 1000,
+          ),
+        )
+
+      setTotalListeningTime(
+        previous =>
+          previous + elapsed,
+      )
+
+      questionStartTimeRef.current =
+        null
+    }
+
+
+  /*
+   * ---------------------------------------------------------
+   * SCORE
+   * ---------------------------------------------------------
+   */
+
+  const calculatePoints =
+    (
+      timeLeft: number,
+      streak: number,
+    ) => {
+      const basePoints =
+        100
+
+      const speedBonus =
+        Math.round(
+          (
+            timeLeft /
+            RECOGNITION_TIME
+          ) * 100,
+        )
+
+      const streakBonus =
+        streak * 25
+
+      return (
+        basePoints +
+        speedBonus +
+        streakBonus
+      )
+    }
+
+
+  /*
+   * ---------------------------------------------------------
+   * TIMEOUT
+   * ---------------------------------------------------------
+   */
+
+  const handleTimeout =
+    () => {
+      if (
+        !question ||
+        selectedAnswer !== null
+      ) {
+        return
+      }
+
+      recordListeningTime()
+
+      if (
+        timerRef.current !== null
+      ) {
+        window.clearInterval(
+          timerRef.current,
+        )
+
+        timerRef.current =
+          null
+      }
+
+      setTimeRemaining(0)
+
+      setSelectedAnswer('')
+
+      setCurrentStreak(0)
+
+      setAnsweredSongs(
+        previous => [
+          ...previous,
+          {
+            question,
+            answer: null,
+            correct: false,
+            timedOut: true,
+          },
+        ],
+      )
+
+      void preloadNextQuestion()
+    }
+
+
+  /*
+   * ---------------------------------------------------------
+   * TIMER
+   * ---------------------------------------------------------
+   */
+
+  useEffect(() => {
     if (
       !question ||
-      answerStatus !== 'idle'
+      selectedAnswer !== null
     ) {
       return
     }
 
-    if (audioRef.current) {
-      audioRef.current.pause()
-    }
-
-    setIsPlaying(false)
-    setAnswerStatus('timeout')
-    setSelectedAnswer(null)
-    setStreak(0)
-
-    setRecognitionResults(
-      (previous) => [
-        ...previous,
-        {
-          questionNumber:
-            currentQuestion + 1,
-          songTitle:
-            question.correctAnswer,
-          artist: question.song.artist,
-          selectedAnswer: null,
-          correct: false,
-          points: 0,
-          listeningTime:
-            RECOGNITION_TIME,
-        },
-      ],
+    setTimeRemaining(
+      RECOGNITION_TIME,
     )
 
-    void preloadNextQuestion()
-  }
+    questionStartTimeRef.current =
+      Date.now()
 
-  const handleNextQuestion = async () => {
-    const roundFinished =
-      finishRoundIfNeeded()
+    timerRef.current =
+      window.setInterval(() => {
+        setTimeRemaining(
+          previous =>
+            Math.max(
+              0,
+              previous - 1,
+            ),
+        )
+      }, 1000)
 
-    if (roundFinished) {
+    return () => {
+      if (
+        timerRef.current !== null
+      ) {
+        window.clearInterval(
+          timerRef.current,
+        )
+
+        timerRef.current =
+          null
+      }
+    }
+  }, [question, selectedAnswer])
+
+
+  /*
+   * Resolve timeout outside the state updater.
+   */
+
+  useEffect(() => {
+    if (
+      timeRemaining !== 0 ||
+      !question ||
+      selectedAnswer !== null
+    ) {
       return
     }
 
-    setLoadingNext(true)
-    setError(null)
+    handleTimeout()
+  }, [
+    timeRemaining,
+    question,
+    selectedAnswer,
+  ])
 
-    try {
-      let upcomingQuestion =
-        nextQuestionRef.current
 
-      /*
-       * Normally this already exists because it was
-       * preloaded during the previous question.
-       *
-       * If the network was slow and it isn't ready yet,
-       * fall back to fetching it here.
-       */
-      if (!upcomingQuestion) {
-        upcomingQuestion =
-          await fetchQuestion()
+  /*
+   * ---------------------------------------------------------
+   * SUBMIT FINAL SCORE
+   * ---------------------------------------------------------
+   */
+
+  const submitFinalScore =
+    () => {
+      if (
+        scoreSubmittedRef.current
+      ) {
+        return
       }
 
-      if (!upcomingQuestion) {
-        throw new Error(
-          'Could not load the next song.',
+      scoreSubmittedRef.current =
+        true
+
+      const accuracy =
+        TOTAL_QUESTIONS > 0
+          ? Math.round(
+              (
+                correctAnswers /
+                TOTAL_QUESTIONS
+              ) * 100,
+            )
+          : 0
+
+      void import(
+        '../../services/scoreService',
+      )
+        .then(
+          ({
+            submitScore,
+          }) =>
+            submitScore({
+              gameMode:
+                'name-that-song',
+              score,
+              accuracy,
+              bestStreak,
+              questions:
+                TOTAL_QUESTIONS,
+              correctAnswers,
+              totalListeningTime,
+            }),
         )
-      }
-
-      /*
-       * Remove the consumed question from the buffer.
-       */
-      nextQuestionRef.current = null
-
-      setQuestion(upcomingQuestion)
-
-      setCurrentQuestion(
-        (previous) => previous + 1,
-      )
-
-      setSelectedAnswer(null)
-      setAnswerStatus('idle')
-      setTimeRemaining(RECOGNITION_TIME)
-      setIsPlaying(false)
-
-      if (audioRef.current) {
-        audioRef.current.pause()
-        audioRef.current.currentTime = 0
-      }
-
-      /*
-       * Begin loading the following question while
-       * the player is listening to this one.
-       */
-      void preloadNextQuestion()
-    } catch (err) {
-      console.error(
-        'Failed to load next artist question:',
-        err,
-      )
-
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Failed to load the next song.',
-      )
-    } finally {
-      setLoadingNext(false)
+        .catch(error => {
+          console.error(
+            'Failed to save score:',
+            error,
+          )
+        })
     }
-  }
 
-  const handlePlayAgain = () => {
-    navigate('/play-by-artist', {
-      state: {
-        artist: selectedArtist,
-      },
-      replace: true,
-    })
-  }
 
-  if (!selectedArtist) {
-    return (
-      <div className="play-by-artist__error-page">
-        <div className="play-by-artist__error-card">
-          <span className="play-by-artist__eyebrow">
-            PLAY BY ARTIST
-          </span>
+  /*
+   * ---------------------------------------------------------
+   * ANSWER
+   * ---------------------------------------------------------
+   */
 
-          <h1>No artist selected</h1>
+  const handleAnswer =
+    (
+      answer: string,
+    ) => {
+      if (
+        !question ||
+        selectedAnswer !== null
+      ) {
+        return
+      }
 
-          <p>
-            Choose an artist from the Play page
-            before starting this game.
-          </p>
+      recordListeningTime()
 
-          <button
-            onClick={() => navigate('/play')}
-          >
-            BACK TO PLAY
-            <ArrowRight size={18} />
-          </button>
-        </div>
-      </div>
-    )
-  }
+      if (
+        timerRef.current !== null
+      ) {
+        window.clearInterval(
+          timerRef.current,
+        )
 
-  if (isGameComplete) {
-    return (
-      <PlayByArtistResultsScreen
-        results={recognitionResults}
-        score={score}
-        bestStreak={bestStreak}
-        onPlayAgain={handlePlayAgain}
-        onBackToPlay={() =>
-          navigate('/play')
+        timerRef.current =
+          null
+      }
+
+      if (
+        audioRef.current
+      ) {
+        audioRef.current.pause()
+        setIsPlaying(false)
+      }
+
+      const isCorrect =
+        answer ===
+        question.correctAnswer
+
+      setSelectedAnswer(
+        answer,
+      )
+
+      setAnsweredSongs(
+        previous => [
+          ...previous,
+          {
+            question,
+            answer,
+            correct: isCorrect,
+            timedOut: false,
+          },
+        ],
+      )
+
+      if (isCorrect) {
+        const newStreak =
+          currentStreak + 1
+
+        const points =
+          calculatePoints(
+            timeRemaining,
+            newStreak,
+          )
+
+        setScore(
+          previous =>
+            previous + points,
+        )
+
+        setCorrectAnswers(
+          previous =>
+            previous + 1,
+        )
+
+        setCurrentStreak(
+          newStreak,
+        )
+
+        setBestStreak(
+          previous =>
+            Math.max(
+              previous,
+              newStreak,
+            ),
+        )
+      } else {
+        setCurrentStreak(0)
+      }
+
+      void preloadNextQuestion()
+    }
+
+
+  /*
+   * ---------------------------------------------------------
+   * NEXT QUESTION
+   * ---------------------------------------------------------
+   */
+
+  const handleNextQuestion =
+    async () => {
+      if (
+        currentQuestion + 1 >=
+        TOTAL_QUESTIONS
+      ) {
+        submitFinalScore()
+        setShowResults(true)
+        return
+      }
+
+      setLoadingNext(true)
+      setError(null)
+
+      try {
+        let upcomingQuestion =
+          nextQuestionRef.current
+
+        if (
+          !upcomingQuestion &&
+          nextQuestionPromiseRef.current
+        ) {
+          upcomingQuestion =
+            await nextQuestionPromiseRef.current
         }
-      />
-    )
-  }
 
-  if (loading) {
+        if (!upcomingQuestion) {
+          upcomingQuestion =
+            await fetchQuestion()
+        }
+
+        if (!upcomingQuestion) {
+          throw new Error(
+            'Could not load the next song.',
+          )
+        }
+
+        nextQuestionRef.current =
+          null
+
+        setQuestion(
+          upcomingQuestion,
+        )
+
+        setCurrentQuestion(
+          previous =>
+            previous + 1,
+        )
+
+        setSelectedAnswer(
+          null,
+        )
+
+        setTimeRemaining(
+          RECOGNITION_TIME,
+        )
+
+        setIsPlaying(false)
+
+        void preloadNextQuestion()
+      } catch (err) {
+        console.error(
+          'Failed to load next artist question:',
+          err,
+        )
+
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'Could not load the next question.',
+        )
+      } finally {
+        setLoadingNext(false)
+      }
+    }
+
+
+  /*
+   * ---------------------------------------------------------
+   * EXIT
+   * ---------------------------------------------------------
+   */
+
+  const handleExit =
+    () => {
+      if (
+        audioRef.current
+      ) {
+        audioRef.current.pause()
+      }
+
+      if (
+        timerRef.current !== null
+      ) {
+        window.clearInterval(
+          timerRef.current,
+        )
+
+        timerRef.current =
+          null
+      }
+
+      navigate('/play')
+    }
+
+
+  /*
+   * ---------------------------------------------------------
+   * RESULTS
+   * ---------------------------------------------------------
+   */
+
+  if (showResults) {
+    const accuracy =
+      TOTAL_QUESTIONS > 0
+        ? Math.round(
+            (
+              correctAnswers /
+              TOTAL_QUESTIONS
+            ) * 100,
+          )
+        : 0
+
+    const fastestSong =
+      answeredSongs
+        .filter(song => !song.timedOut)
+        .at(0)
+
     return (
-      <div className="play-by-artist__loading-page">
-        <div className="play-by-artist__loading-content">
-          <div className="play-by-artist__loading-spinner" />
-          <p>
-            Finding a {selectedArtist} song...
-          </p>
-        </div>
-      </div>
-    )
-  }
+      <main className="play-by-artist-results">
+        <div className="play-by-artist-results__container">
 
-  if (error || !question) {
-    return (
-      <div className="play-by-artist__error-page">
-        <div className="play-by-artist__error-card">
-          <span className="play-by-artist__eyebrow">
-            PLAY BY ARTIST
-          </span>
+          <section className="play-by-artist-results__hero">
+            <div className="play-by-artist-results__trophy">
+              <Trophy size={30} />
+            </div>
 
-          <h1>Couldn't load the song</h1>
+            <p className="play-by-artist-results__eyebrow">
+              PLAY BY ARTIST
+            </p>
 
-          <p>
-            {error ??
-              'Something went wrong while loading this round.'}
-          </p>
+            <h1 className="play-by-artist-results__title">
+              {selectedArtist}
+            </h1>
 
-          <div className="play-by-artist__error-actions">
+            <p className="play-by-artist-results__subtitle">
+              You finished all {TOTAL_QUESTIONS} songs.
+            </p>
+          </section>
+
+
+          <section className="play-by-artist-results__score-card">
+            <span className="play-by-artist-results__score-label">
+              FINAL SCORE
+            </span>
+
+            <strong className="play-by-artist-results__score">
+              {score}
+            </strong>
+          </section>
+
+
+          <section className="play-by-artist-results__stats">
+            <div className="play-by-artist-results__stat">
+              <span>CORRECT</span>
+              <strong>
+                {correctAnswers}/{TOTAL_QUESTIONS}
+              </strong>
+            </div>
+
+            <div className="play-by-artist-results__stat">
+              <span>ACCURACY</span>
+              <strong>
+                {accuracy}%
+              </strong>
+            </div>
+
+            <div className="play-by-artist-results__stat">
+              <span>BEST STREAK</span>
+              <strong>
+                {bestStreak}
+              </strong>
+            </div>
+
+            <div className="play-by-artist-results__stat">
+              <span>LISTENING</span>
+              <strong>
+                {totalListeningTime}s
+              </strong>
+            </div>
+          </section>
+
+
+          {fastestSong && (
+            <section className="play-by-artist-results__fastest">
+              <div>
+                <span className="play-by-artist-results__fastest-label">
+                  YOU KNEW THIS ONE
+                </span>
+
+                <strong>
+                  {fastestSong.question.song.title}
+                </strong>
+
+                <small>
+                  {selectedArtist}
+                </small>
+              </div>
+            </section>
+          )}
+
+
+          <section className="play-by-artist-results__songs">
+            <div className="play-by-artist-results__section-header">
+              <h2>
+                Songs Played
+              </h2>
+
+              <span>
+                {answeredSongs.length} songs
+              </span>
+            </div>
+
+            <div className="play-by-artist-results__song-list">
+              {answeredSongs.map(
+                (item, index) => (
+                  <div
+                    key={`${item.question.song.id}-${index}`}
+                    className={
+                      `play-by-artist-results__song ${
+                        item.correct
+                          ? 'is-correct'
+                          : 'is-incorrect'
+                      }`
+                    }
+                  >
+                    <span className="play-by-artist-results__song-number">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+
+                    <div className="play-by-artist-results__song-info">
+                      <strong>
+                        {item.question.song.title}
+                      </strong>
+
+                      <span>
+                        {item.question.song.album}
+                      </span>
+                    </div>
+
+                    <div className="play-by-artist-results__song-result">
+                      {item.correct ? (
+                        <>
+                          <Check size={15} />
+                          Correct
+                        </>
+                      ) : (
+                        <>
+                          <X size={15} />
+                          {item.timedOut
+                            ? 'Timed out'
+                            : 'Incorrect'}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ),
+              )}
+            </div>
+          </section>
+
+
+          <div className="play-by-artist-results__actions">
             <button
-              onClick={() =>
-                loadInitialQuestion()
-              }
-            >
-              TRY AGAIN
-              <RotateCcw size={18} />
-            </button>
-
-            <button
-              className="secondary"
+              className="play-by-artist-results__secondary-button"
               onClick={() =>
                 navigate('/play')
               }
             >
               BACK TO PLAY
             </button>
+
+            <button
+              className="play-by-artist-results__primary-button"
+              onClick={() =>
+                window.location.reload()
+              }
+            >
+              PLAY AGAIN
+            </button>
           </div>
+
         </div>
-      </div>
+      </main>
     )
   }
 
-  const hasAnswered =
-    answerStatus !== 'idle'
 
-  const progress =
-    ((currentQuestion + 1) /
-      TOTAL_QUESTIONS) *
-    100
+  /*
+   * ---------------------------------------------------------
+   * NO ARTIST
+   * ---------------------------------------------------------
+   */
+
+  if (!selectedArtist) {
+    return (
+      <main className="play-by-artist__error-page">
+        <div className="play-by-artist__error-card">
+          <h1>No artist selected</h1>
+
+          <p>
+            Choose an artist before starting
+            the game.
+          </p>
+
+          <button
+            onClick={() =>
+              navigate('/play')
+            }
+          >
+            Back to Play
+          </button>
+        </div>
+      </main>
+    )
+  }
+
+
+  /*
+   * ---------------------------------------------------------
+   * LOADING
+   * ---------------------------------------------------------
+   */
+
+  if (
+    loading &&
+    !question
+  ) {
+    return (
+      <main className="play-by-artist__loading-page">
+        <div className="play-by-artist__loading-content">
+          <div className="play-by-artist__loading-spinner" />
+
+          <p>
+            Loading {selectedArtist}...
+          </p>
+        </div>
+      </main>
+    )
+  }
+
+
+  /*
+   * ---------------------------------------------------------
+   * ERROR
+   * ---------------------------------------------------------
+   */
+
+  if (
+    error &&
+    !question
+  ) {
+    return (
+      <main className="play-by-artist__error-page">
+        <div className="play-by-artist__error-card">
+          <h1>
+            Something went wrong
+          </h1>
+
+          <p>
+            {error}
+          </p>
+
+          <button
+            onClick={() =>
+              navigate('/play')
+            }
+          >
+            Back to Play
+          </button>
+        </div>
+      </main>
+    )
+  }
+
+
+  if (!question) {
+    return null
+  }
+
+
+  const isAnswered =
+    selectedAnswer !== null
+
+  const isCorrect =
+    selectedAnswer ===
+    question.correctAnswer
+
+
+  /*
+   * ---------------------------------------------------------
+   * RENDER
+   * ---------------------------------------------------------
+   */
 
   return (
-    <div className="play-by-artist">
+    <main className="play-by-artist">
       <div className="play-by-artist__container">
+
         <header className="play-by-artist__header">
+
           <div className="play-by-artist__header-main">
             <p className="play-by-artist__eyebrow">
               PLAY BY ARTIST
@@ -918,103 +1169,128 @@ export default function PlayByArtist() {
             </h1>
 
             <div className="play-by-artist__artist-badge">
-              <span>PLAYING</span>
+              <span>ARTIST</span>
+
               <strong>
                 {selectedArtist}
               </strong>
             </div>
           </div>
 
+
           <div className="play-by-artist__header-right">
+
             <div className="play-by-artist__streak">
               <span>STREAK</span>
-              <strong>{streak}</strong>
+
+              <strong>
+                {currentStreak}
+              </strong>
             </div>
 
             <div className="play-by-artist__round">
               <span>ROUND</span>
+
               <strong>
-                {currentQuestion + 1}/
+                {currentQuestion + 1}
+                {' / '}
                 {TOTAL_QUESTIONS}
               </strong>
             </div>
+
           </div>
+
         </header>
+
 
         <div className="play-by-artist__progress">
           <div
             className="play-by-artist__progress-bar"
             style={{
-              width: `${progress}%`,
+              width: `${
+                (
+                  timeRemaining /
+                  RECOGNITION_TIME
+                ) * 100
+              }%`,
             }}
           />
         </div>
 
-        <main className="play-by-artist__board">
-          <section className="play-by-artist__question-panel">
+
+        <section className="play-by-artist__board">
+
+          <div className="play-by-artist__question-panel">
+
             <div className="play-by-artist__question-header">
               <span>
-                SONG {currentQuestion + 1}
+                IDENTIFY THE SONG
               </span>
 
               <span
-                className={`play-by-artist__timer ${
-                  timeRemaining <= 3 &&
-                  isPlaying
-                    ? 'is-danger'
-                    : ''
-                }`}
+                className={
+                  `play-by-artist__timer ${
+                    timeRemaining <= 3
+                      ? 'is-danger'
+                      : ''
+                  }`
+                }
               >
                 {timeRemaining}s
               </span>
             </div>
 
+
             <div className="play-by-artist__question-content">
-              {!hasAnswered ? (
+
+              {!isAnswered ? (
                 <>
                   <div className="play-by-artist__question-mark">
                     ?
                   </div>
 
                   <p className="play-by-artist__question-eyebrow">
-                    NAME THE SONG
+                    WHICH SONG IS THIS?
                   </p>
 
                   <h2>
-                    Which song by{' '}
+                    Can you recognize
                     <span>
+                      {' '}
                       {selectedArtist}
-                    </span>{' '}
-                    is this?
+                    </span>
+                    ?
                   </h2>
 
                   <p className="play-by-artist__instruction">
-                    Press play and identify the
-                    song as quickly as you can.
+                    Listen to the preview and choose
+                    the correct song title.
                   </p>
                 </>
               ) : (
                 <>
                   <div
-                    className={`play-by-artist__result-icon ${
-                      answerStatus === 'correct'
-                        ? 'is-correct'
-                        : 'is-incorrect'
-                    }`}
+                    className={
+                      `play-by-artist__result-icon ${
+                        isCorrect
+                          ? 'is-correct'
+                          : 'is-incorrect'
+                      }`
+                    }
                   >
-                    {answerStatus ===
-                    'correct' ? (
-                      <Check size={34} />
+                    {isCorrect ? (
+                      <Check size={28} />
                     ) : (
-                      <X size={34} />
+                      <X size={28} />
                     )}
                   </div>
 
                   <p className="play-by-artist__question-eyebrow">
-                    {answerStatus ===
-                    'correct'
-                      ? 'YOU GOT IT'
-                      : 'THE SONG WAS'}
+                    {isCorrect
+                      ? 'CORRECT'
+                      : selectedAnswer === ''
+                        ? 'TIME’S UP'
+                        : 'INCORRECT'}
                   </p>
 
                   <h2 className="play-by-artist__revealed-title">
@@ -1022,122 +1298,122 @@ export default function PlayByArtist() {
                   </h2>
 
                   <p className="play-by-artist__revealed-artist">
-                    {question.song.artist}
+                    {selectedArtist}
                   </p>
 
-                  {question.song.album && (
-                    <p className="play-by-artist__revealed-album">
-                      {question.song.album}
-                    </p>
-                  )}
+                  <p className="play-by-artist__revealed-album">
+                    {question.song.album}
+                  </p>
 
-                  {question.song.artworkUrl && (
-                    <img
-                      className="play-by-artist__artwork"
-                      src={
-                        question.song.artworkUrl
-                      }
-                      alt={
-                        question.correctAnswer
-                      }
-                    />
-                  )}
+                  <img
+                    src={
+                      question.song.artworkUrl
+                    }
+                    alt={
+                      question.song.album
+                    }
+                    className="play-by-artist__artwork"
+                  />
                 </>
               )}
+
             </div>
 
+
             <div className="play-by-artist__audio">
-              <audio
-                ref={audioRef}
-                src={question.song.audioUrl}
-                preload="auto"
-                onEnded={() =>
-                  setIsPlaying(false)
-                }
-              />
 
               <button
-                className={`play-by-artist__play-button ${
-                  isPlaying
-                    ? 'is-playing'
-                    : ''
-                }`}
+                className="play-by-artist__play-button"
                 onClick={
-                  isPlaying
-                    ? pauseAudio
-                    : startAudio
+                  togglePlayback
                 }
-                disabled={hasAnswered}
                 aria-label={
                   isPlaying
-                    ? 'Pause song'
-                    : 'Play song'
+                    ? 'Pause preview'
+                    : 'Play preview'
+                }
+                disabled={
+                  !question.song.audioUrl
                 }
               >
                 {isPlaying ? (
-                  <Pause size={28} />
+                  <Pause size={24} />
                 ) : (
-                  <Play
-                    size={28}
-                    fill="currentColor"
-                  />
+                  <Play size={24} />
                 )}
               </button>
 
+
               <div className="play-by-artist__waveform">
-                {Array.from({
-                  length: 28,
-                }).map((_, index) => (
-                  <span
-                    key={index}
-                    style={{
-                      height: `${
-                        20 +
-                        ((index * 17) % 45)
-                      }%`,
-                    }}
-                  />
-                ))}
+                {Array.from(
+                  { length: 28 },
+                  (_, index) => (
+                    <span
+                      key={index}
+                      style={{
+                        height: `${
+                          20 +
+                          (
+                            (
+                              index * 17
+                            ) % 19
+                          )
+                        }%`,
+                      }}
+                    />
+                  ),
+                )}
               </div>
+
             </div>
-          </section>
+
+          </div>
+
 
           <aside className="play-by-artist__answers-panel">
+
             <div className="play-by-artist__answers-header">
               <span className="play-by-artist__answers-eyebrow">
-                YOUR ANSWER
+                CHOOSE THE SONG
               </span>
 
               <span>
-                {timeRemaining}s
+                {question.answers.length} OPTIONS
               </span>
             </div>
 
-            <div className="play-by-artist__answers">
-              {question.answers.map(
-                (answer, index) => {
-                  const isSelected =
-                    selectedAnswer ===
-                    answer
 
-                  const isCorrect =
+            <div className="play-by-artist__answers">
+
+              {question.answers.map(
+                (
+                  answer,
+                  index,
+                ) => {
+                  const answerIsCorrect =
                     answer ===
                     question.correctAnswer
 
-                  let answerClass =
+                  const answerWasSelected =
+                    answer ===
+                    selectedAnswer
+
+                  let className =
                     'play-by-artist__answer'
 
-                  if (hasAnswered) {
-                    if (isCorrect) {
-                      answerClass +=
+                  if (isAnswered) {
+                    if (
+                      answerIsCorrect
+                    ) {
+                      className +=
                         ' is-correct'
                     } else if (
-                      isSelected
+                      answerWasSelected
                     ) {
-                      answerClass +=
+                      className +=
                         ' is-incorrect'
                     } else {
-                      answerClass +=
+                      className +=
                         ' is-disabled'
                     }
                   }
@@ -1145,15 +1421,17 @@ export default function PlayByArtist() {
                   return (
                     <button
                       key={answer}
-                      className={answerClass}
+                      className={
+                        className
+                      }
                       onClick={() =>
                         handleAnswer(
                           answer,
                         )
                       }
                       disabled={
-                        hasAnswered ||
-                        !isPlaying
+                        isAnswered ||
+                        loadingNext
                       }
                     >
                       <span className="play-by-artist__answer-letter">
@@ -1166,71 +1444,101 @@ export default function PlayByArtist() {
                         {answer}
                       </span>
 
-                      {hasAnswered &&
-                        isCorrect && (
+                      {isAnswered &&
+                        answerIsCorrect && (
                           <Check
                             size={18}
                           />
                         )}
 
-                      {hasAnswered &&
-                        isSelected &&
-                        !isCorrect && (
-                          <X size={18} />
+                      {isAnswered &&
+                        answerWasSelected &&
+                        !answerIsCorrect && (
+                          <X
+                            size={18}
+                          />
                         )}
                     </button>
                   )
                 },
               )}
+
             </div>
 
-            {!isPlaying &&
-              !hasAnswered && (
-                <p className="play-by-artist__play-hint">
-                  Press play to unlock your
-                  answers.
-                </p>
-              )}
 
-            {hasAnswered && (
+            {!isAnswered && (
+              <p className="play-by-artist__play-hint">
+                Press play to hear the song preview.
+              </p>
+            )}
+
+
+            {error && (
+              <div className="inline-error">
+                {error}
+              </div>
+            )}
+
+
+            {isAnswered && (
               <div className="play-by-artist__next-wrapper">
+
                 <button
                   className="play-by-artist__next-button"
                   onClick={
                     handleNextQuestion
                   }
-                  disabled={loadingNext}
+                  disabled={
+                    loadingNext
+                  }
                 >
-                  {currentQuestion + 1 >=
-                  TOTAL_QUESTIONS
-                    ? 'SEE RESULTS'
-                    : 'NEXT SONG'}
-
                   {loadingNext ? (
-                    <span className="play-by-artist__button-spinner" />
+                    <>
+                      <span className="play-by-artist__button-spinner" />
+                      LOADING...
+                    </>
                   ) : (
-                    <ArrowRight size={18} />
+                    currentQuestion + 1 >=
+                    TOTAL_QUESTIONS
+                      ? 'SEE RESULTS'
+                      : 'NEXT SONG'
                   )}
                 </button>
+
               </div>
             )}
+
           </aside>
-        </main>
+
+        </section>
+
 
         <footer className="play-by-artist__footer">
           <span>
-            {score.toLocaleString()} POINTS
+            {score} POINTS
           </span>
 
           <span>
-            {recognitionResults.filter(
-              (result) => result.correct,
-            ).length}{' '}
-            CORRECT
+            {correctAnswers} CORRECT
           </span>
+
+          <button
+            onClick={handleExit}
+            style={{
+              border: 0,
+              background: 'none',
+              color: 'inherit',
+              font: 'inherit',
+              cursor: 'pointer',
+              padding: 0,
+            }}
+          >
+            EXIT GAME
+          </button>
         </footer>
+
       </div>
-    </div>
+    </main>
   )
 }
 
