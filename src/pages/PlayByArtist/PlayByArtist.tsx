@@ -269,7 +269,25 @@ export default function PlayByArtist() {
   )
 
   const excludedTrackIdsRef = useRef<string[]>([])
+
   const scoreSubmittedRef = useRef(false)
+
+  /*
+   * Prevents React development Strict Mode from
+   * requesting the first question twice.
+   */
+  const initialLoadArtistRef =
+    useRef<string | null>(null)
+
+  /*
+   * The next question is fetched in the background
+   * while the player is answering the current one.
+   */
+  const nextQuestionRef =
+    useRef<Question | null>(null)
+
+  const nextQuestionLoadingRef =
+    useRef(false)
 
   const [question, setQuestion] =
     useState<Question | null>(null)
@@ -311,56 +329,72 @@ export default function PlayByArtist() {
   const [error, setError] =
     useState<string | null>(null)
 
-  const loadQuestion = async (
-    isNextQuestion = false,
-  ) => {
+  /*
+   * Fetches a question from the backend and reserves
+   * its track ID immediately.
+   */
+  const fetchQuestion = async () => {
+    if (!selectedArtist) {
+      return null
+    }
+
+    const nextQuestion =
+      await generateQuestion(
+        'name-the-song',
+        'medium',
+        undefined,
+        excludedTrackIdsRef.current,
+        undefined,
+        selectedArtist,
+      )
+
+    const trackId = String(
+      nextQuestion.song.id,
+    )
+
+    if (
+      !excludedTrackIdsRef.current.includes(
+        trackId,
+      )
+    ) {
+      excludedTrackIdsRef.current.push(
+        trackId,
+      )
+    }
+
+    return nextQuestion
+  }
+
+  /*
+   * Loads the first question.
+   */
+  const loadInitialQuestion = async () => {
     if (!selectedArtist) {
       setLoading(false)
       return
     }
 
-    if (isNextQuestion) {
-      setLoadingNext(true)
-    } else {
-      setLoading(true)
-    }
-
+    setLoading(true)
     setError(null)
-    setSelectedAnswer(null)
-    setAnswerStatus('idle')
-    setTimeRemaining(RECOGNITION_TIME)
-    setIsPlaying(false)
-
-    if (audioRef.current) {
-      audioRef.current.pause()
-      audioRef.current.currentTime = 0
-    }
 
     try {
-      const nextQuestion =
-        await generateQuestion(
-          'name-the-song',
-          'medium',
-          undefined,
-          excludedTrackIdsRef.current,
-          undefined,
-          selectedArtist,
-        )
+      const firstQuestion =
+        await fetchQuestion()
 
-      setQuestion(nextQuestion)
-
-      const trackId = String(
-        nextQuestion.song.id,
-      )
-
-      if (
-        !excludedTrackIdsRef.current.includes(
-          trackId,
+      if (!firstQuestion) {
+        throw new Error(
+          'Could not load the first song.',
         )
-      ) {
-        excludedTrackIdsRef.current.push(
-          trackId,
-        )
+      }
+
+      setQuestion(firstQuestion)
+
+      /*
+       * Start preparing Question 2 immediately.
+       * The player doesn't need to wait for it.
+       */
+      if (TOTAL_QUESTIONS > 1) {
+        void preloadNextQuestion()
       }
     } catch (err) {
       console.error(
@@ -371,11 +405,59 @@ export default function PlayByArtist() {
       setError(
         err instanceof Error
           ? err.message
-          : 'Failed to load the next song.',
+          : 'Failed to load the first song.',
       )
     } finally {
       setLoading(false)
-      setLoadingNext(false)
+    }
+  }
+
+  /*
+   * Fetches the next question in the background.
+   *
+   * Because fetchQuestion() adds the track ID to the
+   * exclusion list immediately, the current and next
+   * questions cannot accidentally use the same song.
+   */
+  const preloadNextQuestion = async () => {
+    if (
+      !selectedArtist ||
+      nextQuestionLoadingRef.current ||
+      nextQuestionRef.current
+    ) {
+      return
+    }
+
+    /*
+     * Never preload beyond the final question.
+     */
+    if (
+      currentQuestion + 1 >=
+      TOTAL_QUESTIONS
+    ) {
+      return
+    }
+
+    nextQuestionLoadingRef.current = true
+
+    try {
+      const preloadedQuestion =
+        await fetchQuestion()
+
+      nextQuestionRef.current =
+        preloadedQuestion
+    } catch (err) {
+      /*
+       * This is intentionally silent here.
+       * If preloading fails, NEXT SONG can fall back
+       * to fetching the question when needed.
+       */
+      console.error(
+        'Failed to preload next artist question:',
+        err,
+      )
+    } finally {
+      nextQuestionLoadingRef.current = false
     }
   }
 
@@ -385,7 +467,17 @@ export default function PlayByArtist() {
       return
     }
 
-    loadQuestion()
+    if (
+      initialLoadArtistRef.current ===
+      selectedArtist
+    ) {
+      return
+    }
+
+    initialLoadArtistRef.current =
+      selectedArtist
+
+    loadInitialQuestion()
   }, [selectedArtist])
 
   useEffect(() => {
@@ -547,6 +639,7 @@ export default function PlayByArtist() {
 
     setIsPlaying(false)
     setSelectedAnswer(answer)
+
     setAnswerStatus(
       isCorrect
         ? 'correct'
@@ -581,6 +674,12 @@ export default function PlayByArtist() {
         },
       ],
     )
+
+    /*
+     * The next question should already be loading
+     * or already be waiting in nextQuestionRef.
+     */
+    void preloadNextQuestion()
   }
 
   const handleTimeout = () => {
@@ -617,6 +716,8 @@ export default function PlayByArtist() {
         },
       ],
     )
+
+    void preloadNextQuestion()
   }
 
   const handleNextQuestion = async () => {
@@ -627,11 +728,71 @@ export default function PlayByArtist() {
       return
     }
 
-    setCurrentQuestion(
-      (previous) => previous + 1,
-    )
+    setLoadingNext(true)
+    setError(null)
 
-    await loadQuestion(true)
+    try {
+      let upcomingQuestion =
+        nextQuestionRef.current
+
+      /*
+       * Normally this already exists because it was
+       * preloaded during the previous question.
+       *
+       * If the network was slow and it isn't ready yet,
+       * fall back to fetching it here.
+       */
+      if (!upcomingQuestion) {
+        upcomingQuestion =
+          await fetchQuestion()
+      }
+
+      if (!upcomingQuestion) {
+        throw new Error(
+          'Could not load the next song.',
+        )
+      }
+
+      /*
+       * Remove the consumed question from the buffer.
+       */
+      nextQuestionRef.current = null
+
+      setQuestion(upcomingQuestion)
+
+      setCurrentQuestion(
+        (previous) => previous + 1,
+      )
+
+      setSelectedAnswer(null)
+      setAnswerStatus('idle')
+      setTimeRemaining(RECOGNITION_TIME)
+      setIsPlaying(false)
+
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current.currentTime = 0
+      }
+
+      /*
+       * Begin loading the following question while
+       * the player is listening to this one.
+       */
+      void preloadNextQuestion()
+    } catch (err) {
+      console.error(
+        'Failed to load next artist question:',
+        err,
+      )
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Failed to load the next song.',
+      )
+    } finally {
+      setLoadingNext(false)
+    }
   }
 
   const handlePlayAgain = () => {
@@ -714,7 +875,7 @@ export default function PlayByArtist() {
           <div className="play-by-artist__error-actions">
             <button
               onClick={() =>
-                loadQuestion()
+                loadInitialQuestion()
               }
             >
               TRY AGAIN
@@ -747,7 +908,7 @@ export default function PlayByArtist() {
     <div className="play-by-artist">
       <div className="play-by-artist__container">
         <header className="play-by-artist__header">
-          <div>
+          <div className="play-by-artist__header-main">
             <p className="play-by-artist__eyebrow">
               PLAY BY ARTIST
             </p>
@@ -954,7 +1115,7 @@ export default function PlayByArtist() {
 
             <div className="play-by-artist__answers">
               {question.answers.map(
-                (answer) => {
+                (answer, index) => {
                   const isSelected =
                     selectedAnswer ===
                     answer
@@ -997,10 +1158,7 @@ export default function PlayByArtist() {
                     >
                       <span className="play-by-artist__answer-letter">
                         {String.fromCharCode(
-                          65 +
-                            question.answers.indexOf(
-                              answer,
-                            ),
+                          65 + index,
                         )}
                       </span>
 

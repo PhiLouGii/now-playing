@@ -10,7 +10,7 @@ const FEATURED_ARTISTS = [
   'Rihanna',
   'Madonna',
   'The Beatles',
-  'Billie Eillish',
+  'Billie Eilish',
   'The Weeknd',
   'Burna Boy',
   'Bruno Mars',
