@@ -9,7 +9,7 @@ import './Play.css'
 const FEATURED_ARTISTS = [
   'Rihanna',
   'Madonna',
-  'The Beatles',
+  'BTS',
   'Billie Eilish',
   'The Weeknd',
   'Burna Boy',
