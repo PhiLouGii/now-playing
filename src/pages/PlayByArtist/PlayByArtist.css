@@ -891,6 +891,279 @@
   color: var(--color-text);
 }
 
+/* =========================================================
+   RESULTS SCREEN — TIGHTER LAYOUT
+   ========================================================= */
+
+.play-by-artist-results {
+  position: relative;
+  overflow: hidden;
+}
+
+.play-by-artist-results__container {
+  position: relative;
+  z-index: 2;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 28px 24px 36px;
+}
+
+.play-by-artist-results__hero {
+  margin-bottom: 18px;
+}
+
+.play-by-artist-results__trophy {
+  color: #f7edfe;
+  background: #6264a8;
+  border: 1px solid rgba(63, 52, 43, 0.18);
+  box-shadow: 0 8px 24px rgba(63, 52, 43, 0.12);
+}
+
+.play-by-artist-results__subtitle {
+  margin-bottom: 6px;
+}
+
+.play-by-artist-results__message {
+  margin: 6px auto 0;
+  color: #6d5848;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* =========================================================
+   SCORE / STATS
+   ========================================================= */
+
+.play-by-artist-results__score-card {
+  padding: 18px 24px;
+  margin-bottom: 12px;
+}
+
+.play-by-artist-results__score {
+  line-height: 0.95;
+}
+
+.play-by-artist-results__stats {
+  margin-bottom: 14px;
+}
+
+/* =========================================================
+   FASTEST / SLOWEST
+   ========================================================= */
+
+.play-by-artist-results__recognition {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.play-by-artist-results__recognition-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 2px 16px;
+  padding: 14px 17px;
+  border: 1px solid rgba(63, 52, 43, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 252, 246, 0.72);
+}
+
+.play-by-artist-results__recognition-label {
+  grid-column: 1 / -1;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #8a725d;
+}
+
+.play-by-artist-results__recognition-card strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #3f342b;
+  font-size: 0.95rem;
+}
+
+.play-by-artist-results__recognition-card small {
+  color: #765f4e;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   SONG LIST — SMALLER / TIGHTER
+   ========================================================= */
+
+.play-by-artist-results__songs {
+  margin-top: 0;
+}
+
+.play-by-artist-results__song-list {
+  gap: 7px;
+}
+
+.play-by-artist-results__song {
+  min-height: 58px;
+  padding: 8px 12px;
+}
+
+.play-by-artist-results__song-artwork {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border-radius: 8px;
+  object-fit: cover;
+  display: block;
+}
+
+.play-by-artist-results__song-info {
+  min-width: 0;
+}
+
+.play-by-artist-results__song-info strong,
+.play-by-artist-results__song-info span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.play-by-artist-results__song-result {
+  white-space: nowrap;
+}
+
+/* =========================================================
+   ACTIONS
+   ========================================================= */
+
+.play-by-artist-results__actions {
+  margin-top: 18px;
+  gap: 10px;
+}
+
+.play-by-artist-results__primary-button {
+  background: #3f342b;
+  color: #fffaf2;
+  border-color: #3f342b;
+  box-shadow: 0 7px 18px rgba(63, 52, 43, 0.18);
+}
+
+.play-by-artist-results__primary-button:hover {
+  background: #2e2721;
+  border-color: #2e2721;
+  transform: translateY(-1px);
+}
+
+.play-by-artist-results__secondary-button {
+  color: #3f342b;
+  border-color: rgba(63, 52, 43, 0.25);
+}
+
+/* =========================================================
+   CONFETTI
+   ========================================================= */
+
+.play-by-artist-results__confetti {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.play-by-artist-results__confetti span {
+  position: absolute;
+  top: -24px;
+  left: var(--confetti-x);
+  width: 7px;
+  height: 13px;
+  border-radius: 2px;
+  background: #6d5848;
+  opacity: 0;
+  transform: rotate(var(--confetti-rotation));
+  animation:
+    play-by-artist-confetti-fall
+    var(--confetti-duration)
+    var(--confetti-delay)
+    ease-out
+    forwards;
+}
+
+.play-by-artist-results__confetti span:nth-child(3n) {
+  background: #6264a8;
+}
+
+.play-by-artist-results__confetti span:nth-child(4n) {
+  background: #6b87c9;
+}
+
+.play-by-artist-results__confetti span:nth-child(5n) {
+  background: #4f3f77;
+}
+
+.play-by-artist-results__confetti.is-celebration span {
+  width: 9px;
+  height: 16px;
+  animation-duration: calc(
+    var(--confetti-duration) * 0.85
+  );
+}
+
+@keyframes play-by-artist-confetti-fall {
+  0% {
+    opacity: 0;
+    transform:
+      translate3d(0, -20px, 0)
+      rotate(0deg);
+  }
+
+  10% {
+    opacity: 0.95;
+  }
+
+  100% {
+    opacity: 0;
+    transform:
+      translate3d(
+        calc(
+          (var(--confetti-x) - 50%) * 0.18
+        ),
+        620px,
+        0
+      )
+      rotate(720deg);
+  }
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 700px) {
+  .play-by-artist-results__container {
+    padding: 22px 16px 28px;
+  }
+
+  .play-by-artist-results__recognition {
+    grid-template-columns: 1fr;
+  }
+
+  .play-by-artist-results__song {
+    min-height: 54px;
+  }
+
+  .play-by-artist-results__song-artwork {
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
+  }
+
+  .play-by-artist-results__song-result {
+    font-size: 0.75rem;
+  }
+}
+
 /* Responsive */
 
 @media (max-width: 900px) {

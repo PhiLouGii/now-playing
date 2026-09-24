@@ -3,19 +3,18 @@ import {
   CalendarDays,
   Disc3,
 } from 'lucide-react'
+import {
+  useEffect,
+  useState,
+} from 'react'
 import { useNavigate } from 'react-router-dom'
 import './Play.css'
 
-const FEATURED_ARTISTS = [
-  'Rihanna',
-  'Madonna',
-  'BTS',
-  'Billie Eilish',
-  'The Weeknd',
-  'Burna Boy',
-  'Bruno Mars',
-  'Elton John',
-]
+type FeaturedArtist = {
+  id: string
+  name: string
+  image: string | null
+}
 
 const ERAS = [
   { label: '60s', decade: 1960 },
@@ -30,12 +29,50 @@ const ERAS = [
 function Play() {
   const navigate = useNavigate()
 
+  const [artists, setArtists] =
+    useState<FeaturedArtist[]>([])
+
+  const [artistsLoading, setArtistsLoading] =
+    useState(true)
+
+  useEffect(() => {
+    async function loadArtists() {
+      try {
+        const response =
+          await fetch('/api/music/artists')
+
+        if (!response.ok) {
+          throw new Error(
+            'Failed to load artists',
+          )
+        }
+
+        const data =
+          await response.json()
+
+        setArtists(
+          data.artists ?? [],
+        )
+      } catch (error) {
+        console.error(
+          'Failed to load featured artists:',
+          error,
+        )
+      } finally {
+        setArtistsLoading(false)
+      }
+    }
+
+    loadArtists()
+  }, [])
+
   function handleArtistSelect(
-    artist: string,
+    artist: FeaturedArtist,
   ) {
     navigate('/play-by-artist', {
       state: {
-        artist,
+        artistId: artist.id,
+        artist: artist.name,
       },
     })
   }
@@ -49,7 +86,9 @@ function Play() {
           id: `decade-${decade}`,
           name: `${decade}s`,
           questionCount: 10,
-          questionTypes: ['name-the-song'],
+          questionTypes: [
+            'name-the-song',
+          ],
           difficulty: 'medium',
           decade,
         },
@@ -73,7 +112,9 @@ function Play() {
     <div className="play-page">
       <div className="play-page__container">
         <header className="play-page__header">
-          <p className="label">PLAY</p>
+          <p className="label">
+            PLAY
+          </p>
 
           <h1 className="display-lg">
             Choose your music.
@@ -144,7 +185,9 @@ function Play() {
                   PLAY BY ARTIST
                 </p>
 
-                <h2>Pick an artist.</h2>
+                <h2>
+                  Pick an artist.
+                </h2>
 
                 <p>
                   Name their songs and see how
@@ -154,10 +197,24 @@ function Play() {
             </div>
 
             <div className="artist-grid">
-              {FEATURED_ARTISTS.map(
-                (artist) => (
+              {artistsLoading ? (
+                Array.from({
+                  length: 10,
+                }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="artist-card artist-card--loading"
+                    aria-hidden="true"
+                  >
+                    <div className="artist-card__image-skeleton" />
+
+                    <div className="artist-card__name-skeleton" />
+                  </div>
+                ))
+              ) : (
+                artists.map((artist) => (
                   <button
-                    key={artist}
+                    key={artist.id}
                     type="button"
                     className="artist-card"
                     onClick={() =>
@@ -166,8 +223,22 @@ function Play() {
                       )
                     }
                   >
+                    {artist.image ? (
+                      <img
+                        src={artist.image}
+                        alt=""
+                        className="artist-card__image"
+                      />
+                    ) : (
+                      <div className="artist-card__image artist-card__image--fallback">
+                        {artist.name
+                          .charAt(0)
+                          .toUpperCase()}
+                      </div>
+                    )}
+
                     <span className="artist-card__name">
-                      {artist}
+                      {artist.name}
                     </span>
 
                     <ArrowRight
@@ -175,9 +246,17 @@ function Play() {
                       className="artist-card__arrow"
                     />
                   </button>
-                ),
+                ))
               )}
             </div>
+
+            {!artistsLoading &&
+              artists.length === 0 && (
+                <p className="artist-grid__empty">
+                  Unable to load artists right now.
+                  Please try again later.
+                </p>
+              )}
 
             <button
               type="button"
@@ -186,7 +265,7 @@ function Play() {
                 navigate('/play-by-artist')
               }
             >
-              View all artists
+              View more artists
               <ArrowRight size={16} />
             </button>
           </section>
@@ -198,7 +277,9 @@ function Play() {
                   PLAY BY ERA
                 </p>
 
-                <h2>Pick a decade.</h2>
+                <h2>
+                  Pick a decade.
+                </h2>
 
                 <p>
                   Go back through the music that
@@ -246,7 +327,9 @@ function Play() {
                   MORE WAYS TO PLAY
                 </p>
 
-                <h2>Pixel Cover</h2>
+                <h2>
+                  Pixel Cover
+                </h2>
 
                 <p>
                   How little of an album cover

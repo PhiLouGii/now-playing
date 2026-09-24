@@ -2,6 +2,29 @@ import type { Request, Response } from 'express'
 import { deezerMusicProvider } from '../services/music/deezerMusicProvider.js'
 import { discoverTracks } from '../services/music/musicDiscoveryService.js'
 
+const FEATURED_ARTISTS = [
+  'Rihanna',
+  'Madonna',
+  'Labrinth',
+  'Billie Eilish',
+  'Arctic Monkeys',
+  'One Direction',
+  'Burna Boy',
+  'Bruno Mars',
+  'Elton John',
+  'The Weeknd',
+  'Beyoncé',
+  'Taylor Swift',
+  'Adele',
+  'Michael Jackson',
+  'Lady Gaga',
+  'Drake',
+  'SZA',
+  'Ariana Grande',
+  'Dua Lipa',
+  'Coldplay',
+]
+
 export async function searchMusic(
   req: Request,
   res: Response,
@@ -77,6 +100,75 @@ export async function getMusicTrack(
 
     return res.status(500).json({
       error: 'Failed to get music track',
+    })
+  }
+}
+
+export async function getFeaturedArtists(
+  _req: Request,
+  res: Response,
+) {
+  try {
+    const results =
+      await Promise.all(
+        FEATURED_ARTISTS.map(
+          async (artistName) => {
+            const artists =
+              await deezerMusicProvider.searchArtists(
+                artistName,
+                5,
+              )
+
+            const exactMatch =
+              artists.find(
+                (artist) =>
+                  artist.name?.toLowerCase() ===
+                  artistName.toLowerCase(),
+              )
+
+            const artist =
+              exactMatch ?? artists[0]
+
+            if (!artist) {
+              return null
+            }
+
+            return {
+              id: String(artist.id),
+              name:
+                artist.name ??
+                artistName,
+              image:
+                artist.picture_medium ??
+                artist.picture_big ??
+                artist.picture ??
+                null,
+            }
+          },
+        ),
+      )
+
+    const artists =
+      results.filter(
+        (
+          artist,
+        ): artist is NonNullable<
+          typeof artist
+        > => artist !== null,
+      )
+
+    return res.json({
+      artists,
+    })
+  } catch (error) {
+    console.error(
+      'Featured artist lookup failed:',
+      error,
+    )
+
+    return res.status(500).json({
+      error:
+        'Failed to get featured artists',
     })
   }
 }

@@ -42,6 +42,7 @@ type AnsweredSong = {
   answer: string | null
   correct: boolean
   timedOut: boolean
+  recognitionTime: number | null
 }
 
 
@@ -82,6 +83,9 @@ export default function PlayByArtist() {
   const [isPlaying, setIsPlaying] =
     useState(false)
 
+  const [hasStartedListening, setHasStartedListening] =
+    useState(false)
+
   const [timeRemaining, setTimeRemaining] =
     useState(RECOGNITION_TIME)
 
@@ -105,6 +109,7 @@ export default function PlayByArtist() {
 
   const [answeredSongs, setAnsweredSongs] =
     useState<AnsweredSong[]>([])
+
 
   /*
    * ---------------------------------------------------------
@@ -345,17 +350,11 @@ export default function PlayByArtist() {
     }
 
     /*
-     * Attempt autoplay.
-     * If the browser blocks autoplay, the player
-     * can still start it with the play button.
+     * Do NOT autoplay.
+     *
+     * The recognition timer begins only after
+     * the player manually presses Play.
      */
-    void audio.play()
-      .then(() => {
-        setIsPlaying(true)
-      })
-      .catch(() => {
-        setIsPlaying(false)
-      })
 
     return () => {
       audio.pause()
@@ -393,6 +392,20 @@ export default function PlayByArtist() {
         void audio.play()
           .then(() => {
             setIsPlaying(true)
+
+            /*
+             * Start the recognition clock ONLY on
+             * the first successful Play press.
+             */
+            if (
+              !hasStartedListening &&
+              selectedAnswer === null
+            ) {
+              questionStartTimeRef.current =
+                Date.now()
+
+              setHasStartedListening(true)
+            }
           })
           .catch(() => {
             setIsPlaying(false)
@@ -410,16 +423,17 @@ export default function PlayByArtist() {
    * ---------------------------------------------------------
    */
 
-  const recordListeningTime =
+  const getRecognitionTime =
     () => {
       if (
         questionStartTimeRef.current ===
         null
       ) {
-        return
+        return null
       }
 
-      const elapsed =
+      return Math.min(
+        RECOGNITION_TIME,
         Math.max(
           0,
           Math.round(
@@ -428,15 +442,31 @@ export default function PlayByArtist() {
               questionStartTimeRef.current
             ) / 1000,
           ),
-        )
+        ),
+      )
+    }
+
+
+  const recordListeningTime =
+    () => {
+      const recognitionTime =
+        getRecognitionTime()
+
+      if (
+        recognitionTime === null
+      ) {
+        return null
+      }
 
       setTotalListeningTime(
         previous =>
-          previous + elapsed,
+          previous + recognitionTime,
       )
 
       questionStartTimeRef.current =
         null
+
+      return recognitionTime
     }
 
 
@@ -488,7 +518,8 @@ export default function PlayByArtist() {
         return
       }
 
-      recordListeningTime()
+      const recognitionTime =
+        recordListeningTime()
 
       if (
         timerRef.current !== null
@@ -505,6 +536,8 @@ export default function PlayByArtist() {
 
       setSelectedAnswer('')
 
+      setHasStartedListening(false)
+
       setCurrentStreak(0)
 
       setAnsweredSongs(
@@ -515,9 +548,15 @@ export default function PlayByArtist() {
             answer: null,
             correct: false,
             timedOut: true,
+            recognitionTime,
           },
         ],
       )
+
+      if (audioRef.current) {
+        audioRef.current.pause()
+        setIsPlaying(false)
+      }
 
       void preloadNextQuestion()
     }
@@ -527,22 +566,20 @@ export default function PlayByArtist() {
    * ---------------------------------------------------------
    * TIMER
    * ---------------------------------------------------------
+   *
+   * The timer does NOT begin when the question loads.
+   * It only begins after the first successful Play.
+   * ---------------------------------------------------------
    */
 
   useEffect(() => {
     if (
       !question ||
+      !hasStartedListening ||
       selectedAnswer !== null
     ) {
       return
     }
-
-    setTimeRemaining(
-      RECOGNITION_TIME,
-    )
-
-    questionStartTimeRef.current =
-      Date.now()
 
     timerRef.current =
       window.setInterval(() => {
@@ -567,18 +604,25 @@ export default function PlayByArtist() {
           null
       }
     }
-  }, [question, selectedAnswer])
+  }, [
+    question,
+    hasStartedListening,
+    selectedAnswer,
+  ])
 
 
   /*
-   * Resolve timeout outside the state updater.
+   * ---------------------------------------------------------
+   * RESOLVE TIMEOUT
+   * ---------------------------------------------------------
    */
 
   useEffect(() => {
     if (
       timeRemaining !== 0 ||
       !question ||
-      selectedAnswer !== null
+      selectedAnswer !== null ||
+      !hasStartedListening
     ) {
       return
     }
@@ -588,6 +632,7 @@ export default function PlayByArtist() {
     timeRemaining,
     question,
     selectedAnswer,
+    hasStartedListening,
   ])
 
 
@@ -663,7 +708,8 @@ export default function PlayByArtist() {
         return
       }
 
-      recordListeningTime()
+      const recognitionTime =
+        recordListeningTime()
 
       if (
         timerRef.current !== null
@@ -675,6 +721,8 @@ export default function PlayByArtist() {
         timerRef.current =
           null
       }
+
+      setHasStartedListening(false)
 
       if (
         audioRef.current
@@ -699,6 +747,7 @@ export default function PlayByArtist() {
             answer,
             correct: isCorrect,
             timedOut: false,
+            recognitionTime,
           },
         ],
       )
@@ -805,7 +854,14 @@ export default function PlayByArtist() {
           RECOGNITION_TIME,
         )
 
+        setHasStartedListening(
+          false,
+        )
+
         setIsPlaying(false)
+
+        questionStartTimeRef.current =
+          null
 
         void preloadNextQuestion()
       } catch (err) {
@@ -856,6 +912,52 @@ export default function PlayByArtist() {
 
   /*
    * ---------------------------------------------------------
+   * RESULTS HELPERS
+   * ---------------------------------------------------------
+   */
+
+  const getResultMessage =
+    () => {
+      if (correctAnswers === 10) {
+        return 'Perfect score! The crowd goes wild!'
+      }
+
+      if (correctAnswers >= 7) {
+        return 'Almost flawless… the crowd’s already cheering.'
+      }
+
+      if (correctAnswers >= 4) {
+        return 'Solid effort, you’re halfway to superstar status!'
+      }
+
+      return 'Hey, even legends miss a few notes.'
+    }
+
+
+  const getConfettiCount =
+    () => {
+      if (correctAnswers === 10) {
+        return 80
+      }
+
+      if (correctAnswers >= 7) {
+        return 45
+      }
+
+      if (correctAnswers >= 4) {
+        return 22
+      }
+
+      if (correctAnswers > 0) {
+        return 7
+      }
+
+      return 0
+    }
+
+
+  /*
+   * ---------------------------------------------------------
    * RESULTS
    * ---------------------------------------------------------
    */
@@ -871,16 +973,93 @@ export default function PlayByArtist() {
           )
         : 0
 
+    const recognisedSongs =
+      answeredSongs.filter(
+        song =>
+          song.recognitionTime !== null,
+      )
+
     const fastestSong =
-      answeredSongs
-        .filter(song => !song.timedOut)
-        .at(0)
+      recognisedSongs.length > 0
+        ? recognisedSongs.reduce(
+            (
+              fastest,
+              current,
+            ) =>
+              (
+                current.recognitionTime ?? Infinity
+              ) <
+              (
+                fastest.recognitionTime ?? Infinity
+              )
+                ? current
+                : fastest,
+          )
+        : null
+
+    const slowestSong =
+      recognisedSongs.length > 0
+        ? recognisedSongs.reduce(
+            (
+              slowest,
+              current,
+            ) =>
+              (
+                current.recognitionTime ?? -Infinity
+              ) >
+              (
+                slowest.recognitionTime ?? -Infinity
+              )
+                ? current
+                : slowest,
+          )
+        : null
+
+    const confettiCount =
+      getConfettiCount()
 
     return (
       <main className="play-by-artist-results">
+
+        {confettiCount > 0 && (
+          <div
+            className={`play-by-artist-results__confetti ${
+              correctAnswers === 10
+                ? 'is-celebration'
+                : ''
+            }`}
+            aria-hidden="true"
+          >
+            {Array.from(
+              { length: confettiCount },
+              (_, index) => (
+                <span
+                  key={index}
+                  style={{
+                    '--confetti-x': `${(
+                      (index * 47) % 100
+                    )}%`,
+                    '--confetti-delay': `${(
+                      (index * 0.07) % 1.4
+                    )}s`,
+                    '--confetti-rotation': `${
+                      (index * 37) % 360
+                    }deg`,
+                    '--confetti-duration': `${
+                      2.5 +
+                      ((index * 13) % 20) / 10
+                    }s`,
+                  } as React.CSSProperties}
+                />
+              ),
+            )}
+          </div>
+        )}
+
         <div className="play-by-artist-results__container">
 
           <section className="play-by-artist-results__hero">
+
             <div className="play-by-artist-results__trophy">
               <Trophy size={30} />
             </div>
@@ -896,6 +1075,11 @@ export default function PlayByArtist() {
             <p className="play-by-artist-results__subtitle">
               You finished all {TOTAL_QUESTIONS} songs.
             </p>
+
+            <p className="play-by-artist-results__message">
+              {getResultMessage()}
+            </p>
+
           </section>
 
 
@@ -911,8 +1095,10 @@ export default function PlayByArtist() {
 
 
           <section className="play-by-artist-results__stats">
+
             <div className="play-by-artist-results__stat">
               <span>CORRECT</span>
+
               <strong>
                 {correctAnswers}/{TOTAL_QUESTIONS}
               </strong>
@@ -920,6 +1106,7 @@ export default function PlayByArtist() {
 
             <div className="play-by-artist-results__stat">
               <span>ACCURACY</span>
+
               <strong>
                 {accuracy}%
               </strong>
@@ -927,6 +1114,7 @@ export default function PlayByArtist() {
 
             <div className="play-by-artist-results__stat">
               <span>BEST STREAK</span>
+
               <strong>
                 {bestStreak}
               </strong>
@@ -934,33 +1122,56 @@ export default function PlayByArtist() {
 
             <div className="play-by-artist-results__stat">
               <span>LISTENING</span>
+
               <strong>
                 {totalListeningTime}s
               </strong>
             </div>
+
           </section>
 
 
-          {fastestSong && (
-            <section className="play-by-artist-results__fastest">
-              <div>
-                <span className="play-by-artist-results__fastest-label">
-                  YOU KNEW THIS ONE
-                </span>
+          {recognisedSongs.length > 0 && (
+            <section className="play-by-artist-results__recognition">
 
-                <strong>
-                  {fastestSong.question.song.title}
-                </strong>
+              {fastestSong && (
+                <div className="play-by-artist-results__recognition-card">
+                  <span className="play-by-artist-results__recognition-label">
+                    FASTEST TO RECOGNISE
+                  </span>
 
-                <small>
-                  {selectedArtist}
-                </small>
-              </div>
+                  <strong>
+                    {fastestSong.question.song.title}
+                  </strong>
+
+                  <small>
+                    {fastestSong.recognitionTime}s
+                  </small>
+                </div>
+              )}
+
+              {slowestSong && (
+                <div className="play-by-artist-results__recognition-card">
+                  <span className="play-by-artist-results__recognition-label">
+                    SLOWEST TO RECOGNISE
+                  </span>
+
+                  <strong>
+                    {slowestSong.question.song.title}
+                  </strong>
+
+                  <small>
+                    {slowestSong.recognitionTime}s
+                  </small>
+                </div>
+              )}
+
             </section>
           )}
 
 
           <section className="play-by-artist-results__songs">
+
             <div className="play-by-artist-results__section-header">
               <h2>
                 Songs Played
@@ -971,9 +1182,14 @@ export default function PlayByArtist() {
               </span>
             </div>
 
+
             <div className="play-by-artist-results__song-list">
+
               {answeredSongs.map(
-                (item, index) => (
+                (
+                  item,
+                  index,
+                ) => (
                   <div
                     key={`${item.question.song.id}-${index}`}
                     className={
@@ -984,9 +1200,21 @@ export default function PlayByArtist() {
                       }`
                     }
                   >
-                    <span className="play-by-artist-results__song-number">
-                      {String(index + 1).padStart(2, '0')}
-                    </span>
+
+                    {item.question.song.artworkUrl ? (
+                      <img
+                        src={
+                          item.question.song.artworkUrl
+                        }
+                        alt=""
+                        className="play-by-artist-results__song-artwork"
+                      />
+                    ) : (
+                      <span className="play-by-artist-results__song-number">
+                        {String(index + 1).padStart(2, '0')}
+                      </span>
+                    )}
+
 
                     <div className="play-by-artist-results__song-info">
                       <strong>
@@ -998,7 +1226,9 @@ export default function PlayByArtist() {
                       </span>
                     </div>
 
+
                     <div className="play-by-artist-results__song-result">
+
                       {item.correct ? (
                         <>
                           <Check size={15} />
@@ -1007,20 +1237,26 @@ export default function PlayByArtist() {
                       ) : (
                         <>
                           <X size={15} />
+
                           {item.timedOut
                             ? 'Timed out'
                             : 'Incorrect'}
                         </>
                       )}
+
                     </div>
+
                   </div>
                 ),
               )}
+
             </div>
+
           </section>
 
 
           <div className="play-by-artist-results__actions">
+
             <button
               className="play-by-artist-results__secondary-button"
               onClick={() =>
@@ -1033,11 +1269,20 @@ export default function PlayByArtist() {
             <button
               className="play-by-artist-results__primary-button"
               onClick={() =>
-                window.location.reload()
+                navigate(
+                  '/play-by-artist',
+                  {
+                    state: {
+                      artist:
+                        selectedArtist,
+                    },
+                  },
+                )
               }
             >
               PLAY AGAIN
             </button>
+
           </div>
 
         </div>
@@ -1056,7 +1301,10 @@ export default function PlayByArtist() {
     return (
       <main className="play-by-artist__error-page">
         <div className="play-by-artist__error-card">
-          <h1>No artist selected</h1>
+
+          <h1>
+            No artist selected
+          </h1>
 
           <p>
             Choose an artist before starting
@@ -1070,6 +1318,7 @@ export default function PlayByArtist() {
           >
             Back to Play
           </button>
+
         </div>
       </main>
     )
@@ -1088,13 +1337,17 @@ export default function PlayByArtist() {
   ) {
     return (
       <main className="play-by-artist__loading-page">
+
         <div className="play-by-artist__loading-content">
+
           <div className="play-by-artist__loading-spinner" />
 
           <p>
             Loading {selectedArtist}...
           </p>
+
         </div>
+
       </main>
     )
   }
@@ -1112,7 +1365,9 @@ export default function PlayByArtist() {
   ) {
     return (
       <main className="play-by-artist__error-page">
+
         <div className="play-by-artist__error-card">
+
           <h1>
             Something went wrong
           </h1>
@@ -1128,7 +1383,9 @@ export default function PlayByArtist() {
           >
             Back to Play
           </button>
+
         </div>
+
       </main>
     )
   }
@@ -1155,11 +1412,13 @@ export default function PlayByArtist() {
 
   return (
     <main className="play-by-artist">
+
       <div className="play-by-artist__container">
 
         <header className="play-by-artist__header">
 
           <div className="play-by-artist__header-main">
+
             <p className="play-by-artist__eyebrow">
               PLAY BY ARTIST
             </p>
@@ -1169,33 +1428,46 @@ export default function PlayByArtist() {
             </h1>
 
             <div className="play-by-artist__artist-badge">
-              <span>ARTIST</span>
+
+              <span>
+                ARTIST
+              </span>
 
               <strong>
                 {selectedArtist}
               </strong>
+
             </div>
+
           </div>
 
 
           <div className="play-by-artist__header-right">
 
             <div className="play-by-artist__streak">
-              <span>STREAK</span>
+
+              <span>
+                STREAK
+              </span>
 
               <strong>
                 {currentStreak}
               </strong>
+
             </div>
 
             <div className="play-by-artist__round">
-              <span>ROUND</span>
+
+              <span>
+                ROUND
+              </span>
 
               <strong>
                 {currentQuestion + 1}
                 {' / '}
                 {TOTAL_QUESTIONS}
               </strong>
+
             </div>
 
           </div>
@@ -1204,6 +1476,7 @@ export default function PlayByArtist() {
 
 
         <div className="play-by-artist__progress">
+
           <div
             className="play-by-artist__progress-bar"
             style={{
@@ -1215,6 +1488,7 @@ export default function PlayByArtist() {
               }%`,
             }}
           />
+
         </div>
 
 
@@ -1223,6 +1497,7 @@ export default function PlayByArtist() {
           <div className="play-by-artist__question-panel">
 
             <div className="play-by-artist__question-header">
+
               <span>
                 IDENTIFY THE SONG
               </span>
@@ -1230,14 +1505,18 @@ export default function PlayByArtist() {
               <span
                 className={
                   `play-by-artist__timer ${
-                    timeRemaining <= 3
+                    timeRemaining <= 3 &&
+                    hasStartedListening
                       ? 'is-danger'
                       : ''
                   }`
                 }
               >
-                {timeRemaining}s
+                {hasStartedListening
+                  ? `${timeRemaining}s`
+                  : 'READY'}
               </span>
+
             </div>
 
 
@@ -1263,8 +1542,8 @@ export default function PlayByArtist() {
                   </h2>
 
                   <p className="play-by-artist__instruction">
-                    Listen to the preview and choose
-                    the correct song title.
+                    Press play to start the timer,
+                    then choose the correct song title.
                   </p>
                 </>
               ) : (
@@ -1345,6 +1624,7 @@ export default function PlayByArtist() {
 
 
               <div className="play-by-artist__waveform">
+
                 {Array.from(
                   { length: 28 },
                   (_, index) => (
@@ -1363,6 +1643,7 @@ export default function PlayByArtist() {
                     />
                   ),
                 )}
+
               </div>
 
             </div>
@@ -1373,6 +1654,7 @@ export default function PlayByArtist() {
           <aside className="play-by-artist__answers-panel">
 
             <div className="play-by-artist__answers-header">
+
               <span className="play-by-artist__answers-eyebrow">
                 CHOOSE THE SONG
               </span>
@@ -1380,6 +1662,7 @@ export default function PlayByArtist() {
               <span>
                 {question.answers.length} OPTIONS
               </span>
+
             </div>
 
 
@@ -1434,6 +1717,7 @@ export default function PlayByArtist() {
                         loadingNext
                       }
                     >
+
                       <span className="play-by-artist__answer-letter">
                         {String.fromCharCode(
                           65 + index,
@@ -1458,6 +1742,7 @@ export default function PlayByArtist() {
                             size={18}
                           />
                         )}
+
                     </button>
                   )
                 },
@@ -1468,7 +1753,8 @@ export default function PlayByArtist() {
 
             {!isAnswered && (
               <p className="play-by-artist__play-hint">
-                Press play to hear the song preview.
+                Press play to hear the song preview
+                and start the timer.
               </p>
             )}
 
@@ -1514,6 +1800,7 @@ export default function PlayByArtist() {
 
 
         <footer className="play-by-artist__footer">
+
           <span>
             {score} POINTS
           </span>
@@ -1535,10 +1822,11 @@ export default function PlayByArtist() {
           >
             EXIT GAME
           </button>
+
         </footer>
 
       </div>
+
     </main>
   )
 }
-
