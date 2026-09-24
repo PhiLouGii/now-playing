@@ -374,10 +374,7 @@
     nowrap;
 }
 
-
-/* ─────────────────────────────
-   ARTISTS
-───────────────────────────── */
+/* ARTISTS */
 
 .artist-grid {
   display:
@@ -387,7 +384,7 @@
     repeat(5, minmax(0, 1fr));
 
   gap:
-    12px;
+    10px;
 }
 
 .artist-card {
@@ -395,7 +392,7 @@
     relative;
 
   aspect-ratio:
-    1 / 1;
+    1 / 1.08;
 
   display:
     flex;
@@ -473,6 +470,11 @@
     scale(1.04);
 }
 
+/*
+ * Soft overlay rather than a heavy dark gradient.
+ * Keeps the image visible while giving the label
+ * a little more separation from the background.
+ */
 .artist-card::after {
   content:
     '';
@@ -480,20 +482,151 @@
   position:
     absolute;
 
-  inset:
+  left:
     0;
+
+  right:
+    0;
+
+  bottom:
+    0;
+
+  height:
+    35%;
 
   background:
     linear-gradient(
       to top,
-      rgba(0, 0, 0, 0.72) 0%,
-      rgba(0, 0, 0, 0.28) 42%,
-      transparent 72%
+      rgba(0, 0, 0, 0.22),
+      transparent
     );
 
   pointer-events:
     none;
 }
+
+/* ARTIST NAME */
+
+.artist-card__name {
+  position:
+    relative;
+
+  z-index:
+    2;
+
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  gap:
+    8px;
+
+  max-width:
+    calc(100% - 20px);
+
+  margin:
+    0 10px 10px;
+
+  padding:
+    7px 9px;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.75);
+
+  border-radius:
+    7px;
+
+  background:
+    rgba(250, 248, 255, 0.94);
+
+  color:
+    var(--color-text);
+
+  font-size:
+    0.68rem;
+
+  font-weight:
+    800;
+
+  line-height:
+    1.15;
+
+  box-shadow:
+    0 2px 8px
+    rgba(0, 0, 0, 0.12);
+
+  backdrop-filter:
+    blur(4px);
+
+  transition:
+    transform 160ms ease,
+    background 160ms ease;
+}
+
+.artist-card:hover
+.artist-card__name {
+  background:
+    var(--color-surface);
+
+  transform:
+    translateY(-1px);
+}
+
+/* ARROW */
+
+.artist-card__arrow {
+  position:
+    absolute;
+
+  z-index:
+    3;
+
+  right:
+    17px;
+
+  bottom:
+    17px;
+
+  width:
+    26px;
+
+  height:
+    26px;
+
+  padding:
+    5px;
+
+  border-radius:
+    6px;
+
+  background:
+    rgba(250, 248, 255, 0.94);
+
+  color:
+    var(--color-text);
+
+  box-shadow:
+    0 2px 8px
+    rgba(0, 0, 0, 0.12);
+
+  transition:
+    transform 140ms ease,
+    background 140ms ease;
+}
+
+.artist-card:hover
+.artist-card__arrow {
+  background:
+    var(--color-surface);
+
+  transform:
+    translateX(2px);
+}
+
+/* FALLBACK IMAGE */
 
 .artist-card__image--fallback {
   display:
@@ -509,81 +642,13 @@
     var(--font-display);
 
   font-size:
-    3rem;
+    2.2rem;
 
   font-weight:
     700;
 }
 
-.artist-card__name {
-  position:
-    relative;
-
-  z-index:
-    1;
-
-  max-width:
-    calc(100% - 42px);
-
-  padding:
-    0 0 16px 16px;
-
-  font-size:
-    0.78rem;
-
-  font-weight:
-    800;
-
-  line-height:
-    1.2;
-
-  text-shadow:
-    0 1px 3px
-    rgba(0, 0, 0, 0.35);
-}
-
-.artist-card__arrow {
-  position:
-    absolute;
-
-  z-index:
-    1;
-
-  right:
-    13px;
-
-  bottom:
-    14px;
-
-  flex-shrink:
-    0;
-
-  color:
-    rgba(
-      255,
-      255,
-      255,
-      0.82
-    );
-
-  transition:
-    transform 140ms ease,
-    color 140ms ease;
-}
-
-.artist-card:hover
-.artist-card__arrow {
-  color:
-    var(--color-text);
-
-  transform:
-    translateX(2px);
-}
-
-
-/* ─────────────────────────────
-   ARTIST LOADING STATE
-───────────────────────────── */
+/* ARTIST LOADING STATE */
 
 .artist-card--loading {
   cursor:
@@ -613,19 +678,19 @@
     absolute;
 
   z-index:
-    1;
+    2;
 
   left:
-    16px;
+    10px;
 
   bottom:
-    16px;
+    10px;
 
   width:
-    55%;
+    48%;
 
   height:
-    10px;
+    9px;
 
   border-radius:
     999px;
@@ -664,7 +729,6 @@
   line-height:
     1.5;
 }
-
 
 /* ─────────────────────────────
    SECTION LINK

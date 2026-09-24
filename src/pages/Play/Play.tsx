@@ -16,6 +16,39 @@ type FeaturedArtist = {
   image: string | null
 }
 
+/*
+ * Custom artwork for artists.
+ *
+ * Add your own images to:
+ *
+ * public/artists/
+ *
+ * Example:
+ * public/artists/rihanna.webp
+ *
+ * Artists without a custom image will temporarily
+ * fall back to their Deezer image.
+ */
+const CUSTOM_ARTIST_IMAGES: Record<
+  string,
+  string
+> = {
+  'Rihanna':
+    '/artists/rihanna.png',
+
+  'Madonna':
+    '/artists/madonna.png',
+
+  'Billie Eilish':
+    '/artists/billie-eilish.png',
+
+  'Lionel Richie':
+    '/artists/lionel-richie.png',
+
+  'The Killers':
+    '/artists/the-killers.png',
+}
+
 const ERAS = [
   { label: '60s', decade: 1960 },
   { label: '70s', decade: 1970 },
@@ -108,6 +141,19 @@ function Play() {
     navigate('/daily-challenge')
   }
 
+  function getArtistImage(
+    artist: FeaturedArtist,
+  ) {
+    return (
+      CUSTOM_ARTIST_IMAGES[
+        artist.name
+      ] ?? artist.image
+    )
+  }
+
+  const featuredArtists =
+    artists.slice(0, 5)
+
   return (
     <div className="play-page">
       <div className="play-page__container">
@@ -199,7 +245,7 @@ function Play() {
             <div className="artist-grid">
               {artistsLoading ? (
                 Array.from({
-                  length: 10,
+                  length: 5,
                 }).map((_, index) => (
                   <div
                     key={index}
@@ -212,41 +258,50 @@ function Play() {
                   </div>
                 ))
               ) : (
-                artists.map((artist) => (
-                  <button
-                    key={artist.id}
-                    type="button"
-                    className="artist-card"
-                    onClick={() =>
-                      handleArtistSelect(
+                featuredArtists.map(
+                  (artist) => {
+                    const image =
+                      getArtistImage(
                         artist,
                       )
-                    }
-                  >
-                    {artist.image ? (
-                      <img
-                        src={artist.image}
-                        alt=""
-                        className="artist-card__image"
-                      />
-                    ) : (
-                      <div className="artist-card__image artist-card__image--fallback">
-                        {artist.name
-                          .charAt(0)
-                          .toUpperCase()}
-                      </div>
-                    )}
 
-                    <span className="artist-card__name">
-                      {artist.name}
-                    </span>
+                    return (
+                      <button
+                        key={artist.id}
+                        type="button"
+                        className="artist-card"
+                        onClick={() =>
+                          handleArtistSelect(
+                            artist,
+                          )
+                        }
+                      >
+                        {image ? (
+                          <img
+                            src={image}
+                            alt=""
+                            className="artist-card__image"
+                          />
+                        ) : (
+                          <div className="artist-card__image artist-card__image--fallback">
+                            {artist.name
+                              .charAt(0)
+                              .toUpperCase()}
+                          </div>
+                        )}
 
-                    <ArrowRight
-                      size={16}
-                      className="artist-card__arrow"
-                    />
-                  </button>
-                ))
+                        <span className="artist-card__name">
+                          {artist.name}
+                        </span>
+
+                        <ArrowRight
+                          size={15}
+                          className="artist-card__arrow"
+                        />
+                      </button>
+                    )
+                  },
+                )
               )}
             </div>
 

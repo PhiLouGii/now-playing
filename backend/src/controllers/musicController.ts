@@ -2,19 +2,22 @@ import type { Request, Response } from 'express'
 import { deezerMusicProvider } from '../services/music/deezerMusicProvider.js'
 import { discoverTracks } from '../services/music/musicDiscoveryService.js'
 
+
 const FEATURED_ARTISTS = [
   'Rihanna',
   'Madonna',
-  'Labrinth',
   'Billie Eilish',
-  'Arctic Monkeys',
-  'One Direction',
+  'Lionel Richie',
+  'The Killers',
   'Burna Boy',
   'Bruno Mars',
   'Elton John',
   'The Weeknd',
   'Beyoncé',
   'Taylor Swift',
+  'Labrinth',
+  'Arctic Monkeys',
+  'One Direction',
   'Adele',
   'Michael Jackson',
   'Lady Gaga',
@@ -23,7 +26,24 @@ const FEATURED_ARTISTS = [
   'Ariana Grande',
   'Dua Lipa',
   'Coldplay',
+  'Frank Ocean',
+  'Doja Cat',
+  'Tyler, The Creator',
+  'Kendrick Lamar',
+  'Nicki Minaj',
+  'Miley Cyrus',
+  'Justin Bieber',
+  'Harry Styles',
+  'The Beatles',
+  'Queen',
+  'ABBA',
+  'Fleetwood Mac',
+  'Amy Winehouse',
+  'Tems',
+  'Wizkid',
 ]
+
+
 
 export async function searchMusic(
   req: Request,
