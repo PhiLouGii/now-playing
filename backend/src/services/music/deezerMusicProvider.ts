@@ -27,6 +27,8 @@ type DeezerTrack = {
 
 type DeezerSearchResponse = {
   data?: DeezerTrack[]
+  next?: string
+  total?: number
 }
 
 type DeezerGenre = {
@@ -45,7 +47,6 @@ type DeezerArtist = {
   nb_album?: number
   nb_fan?: number
 }
-
 
 type DeezerArtistResponse = {
   data?: DeezerArtist[]
@@ -158,7 +159,7 @@ class DeezerMusicProvider
     tracks: MusicTrack[],
   ): Promise<MusicTrack[]> {
     return Promise.all(
-      tracks.map((track) =>
+      tracks.map(track =>
         this.fetchTrackDetails(
           track,
         ),
@@ -333,63 +334,146 @@ class DeezerMusicProvider
     return data.data ?? []
   }
 
-async searchArtists(
-  query: string,
-  limit = 5,
-): Promise<DeezerArtist[]> {
-  const url = new URL(
-    'https://api.deezer.com/search/artist',
-  )
-
-  url.searchParams.set('q', query)
-  url.searchParams.set('limit', String(limit))
-
-  const response = await fetch(url)
-
-  if (!response.ok) {
-    throw new Error(
-      `Deezer artist search failed: ${response.status}`,
+  async searchArtists(
+    query: string,
+    limit = 5,
+  ): Promise<DeezerArtist[]> {
+    const url = new URL(
+      'https://api.deezer.com/search/artist',
     )
+
+    url.searchParams.set(
+      'q',
+      query,
+    )
+
+    url.searchParams.set(
+      'limit',
+      String(limit),
+    )
+
+    const response =
+      await fetch(url)
+
+    if (!response.ok) {
+      throw new Error(
+        `Deezer artist search failed: ${response.status}`,
+      )
+    }
+
+    const data =
+      (await response.json()) as DeezerArtistResponse
+
+    return data.data ?? []
   }
 
-  const data =
-    (await response.json()) as DeezerArtistResponse
+  async getArtistTracksByUrl(
+    tracklistUrl: string,
+    limit = 50,
+  ): Promise<MusicTrack[]> {
+    /*
+     * Deezer artist tracklists are paginated.
+     *
+     * Previously we only requested one page,
+     * which meant an artist could have hundreds
+     * of songs but we might only receive 50 or
+     * fewer.
+     *
+     * We now follow Deezer's `next` URL so that
+     * Play by Artist has a much larger catalogue
+     * to work with.
+     */
 
-  return data.data ?? []
-}
+    const MAX_PAGES = 10
 
-async getArtistTracksByUrl(
-  tracklistUrl: string,
-  limit = 50,
-): Promise<MusicTrack[]> {
-  const url = new URL(tracklistUrl)
+    const allTracks: MusicTrack[] = []
 
-  url.searchParams.set(
-    'limit',
-    String(limit),
-  )
+    let nextUrl:
+      string | undefined =
+      tracklistUrl
 
-  const response = await fetch(url)
+    let page = 0
 
-  if (!response.ok) {
-    throw new Error(
-      `Deezer artist tracklist request failed: ${response.status}`,
+    while (
+      nextUrl &&
+      page < MAX_PAGES
+    ) {
+      const url =
+        new URL(nextUrl)
+
+      /*
+       * Keep each page reasonably sized.
+       */
+      url.searchParams.set(
+        'limit',
+        String(
+          Math.min(limit, 100),
+        ),
+      )
+
+      const response =
+        await fetch(url)
+
+      if (!response.ok) {
+        throw new Error(
+          `Deezer artist tracklist request failed: ${response.status}`,
+        )
+      }
+
+      const data =
+        (await response.json()) as DeezerSearchResponse
+
+      const tracks =
+        (data.data ?? [])
+          .map(transformTrack)
+          .filter(
+            (
+              track,
+            ): track is MusicTrack =>
+              track !== null,
+          )
+
+      allTracks.push(
+        ...tracks,
+      )
+
+      page += 1
+
+      /*
+       * Deezer provides the next page through
+       * the `next` field.
+       */
+      nextUrl = data.next
+    }
+
+    /*
+     * Remove duplicate Deezer tracks while
+     * preserving their original order.
+     */
+    const seenIds =
+      new Set<string>()
+
+    const uniqueTracks =
+      allTracks.filter(track => {
+        if (
+          seenIds.has(track.id)
+        ) {
+          return false
+        }
+
+        seenIds.add(track.id)
+
+        return true
+      })
+
+    console.log(
+      `Fetched ${uniqueTracks.length} tracks from Deezer artist tracklist across ${page} page(s).`,
+    )
+
+    return this.enrichTracks(
+      uniqueTracks,
     )
   }
-
-  const data =
-    (await response.json()) as DeezerSearchResponse
-
-  const tracks = (data.data ?? [])
-    .map(transformTrack)
-    .filter(
-      (track): track is MusicTrack =>
-        track !== null,
-    )
-
-  return this.enrichTracks(tracks)
-}
-
 
   async getArtistTopTracks(
     artistId: number,
@@ -434,3 +518,4 @@ async getArtistTracksByUrl(
 
 export const deezerMusicProvider =
   new DeezerMusicProvider()
+

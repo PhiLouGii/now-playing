@@ -587,12 +587,15 @@ throw new Error(
 *
 * distractors = other song titles
   */
-  return generateQuestion(
+return generateQuestion(
   correctTrack,
   type,
   difficulty,
   decade,
   excludedTrackIds,
   categoryId,
-  )
-  }
+  artist
+    ? eligibleTracks
+    : undefined,
+)
+}
