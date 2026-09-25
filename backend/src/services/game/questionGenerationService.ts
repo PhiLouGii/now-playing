@@ -258,14 +258,11 @@ export async function generateQuestion(
       )
 
     const candidates =
-      candidateSnapshot.filter(
-        track =>
-          !excludedIds.has(
-            track.id,
-          ) &&
-          track.id !==
-            correctTrack.id,
-      )
+  candidateSnapshot.filter(
+    track =>
+      track.id !==
+      correctTrack.id,
+  )
 
     const distractors =
       selectRestrictedSongAnswers(

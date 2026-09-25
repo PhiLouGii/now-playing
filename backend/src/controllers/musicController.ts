@@ -52,6 +52,7 @@ const FEATURED_ARTISTS = [
   'Twenty One Pilots',
   'Shawn Mendes',
   'BTS',
+  'Usher',
   'Queen',
   'PARTYNEXTDOOR',
   'ABBA',
