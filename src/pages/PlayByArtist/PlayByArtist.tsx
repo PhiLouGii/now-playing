@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react'
@@ -173,9 +174,7 @@ export default function PlayByArtist() {
     answeredSongs,
     setAnsweredSongs,
   ] =
-    useState<AnsweredSong[]>(
-      [],
-    )
+    useState<AnsweredSong[]>([])
 
 
   const audioRef =
@@ -189,23 +188,25 @@ export default function PlayByArtist() {
     )
 
   const questionStartTimeRef =
-    useRef<number>(
-      Date.now(),
+    useRef<number | null>(
+      null,
     )
 
+  /*
+   * Tracks whether the player has pressed
+   * Play at least once for the current song.
+   *
+   * This is reset whenever a new question loads.
+   */
+  const hasStartedListeningRef =
+    useRef(false)
+
   const excludedTrackIdsRef =
-    useRef<string[]>(
-      [],
-    )
+    useRef<string[]>([])
 
   const scoreSubmittedRef =
     useRef(false)
 
-  /*
-   * The initial request is stored so React Strict Mode can
-   * safely run the loading effect more than once without
-   * creating two different first questions.
-   */
   const initialQuestionPromiseRef =
     useRef<Promise<Question | null> | null>(
       null,
@@ -252,9 +253,8 @@ export default function PlayByArtist() {
    * -------------------------------------------------------
    * QUESTION AUDIO
    * -------------------------------------------------------
-   *
-   * Every question gets its own Audio object.
    */
+
   useEffect(() => {
     const previousAudio =
       audioRef.current
@@ -285,6 +285,7 @@ export default function PlayByArtist() {
 
     audio.onended = () => {
       setIsPlaying(false)
+      stopTimer()
     }
 
     audio.onerror = () => {
@@ -294,6 +295,7 @@ export default function PlayByArtist() {
       )
 
       setIsPlaying(false)
+      stopTimer()
     }
 
     audioRef.current =
@@ -303,9 +305,11 @@ export default function PlayByArtist() {
       audio.pause()
       audio.currentTime = 0
       audio.src = ''
+      stopTimer()
     }
   }, [
     question,
+    stopTimer,
   ])
 
 
@@ -351,10 +355,6 @@ export default function PlayByArtist() {
             )
           }
 
-          /*
-           * Reserve the track only after the question has
-           * successfully been generated.
-           */
           if (
             nextQuestion.song.id &&
             !excludedTrackIdsRef.current.includes(
@@ -389,17 +389,21 @@ export default function PlayByArtist() {
     )
 
 
+  /*
+   * -------------------------------------------------------
+   * TIMER
+   * -------------------------------------------------------
+   *
+   * The timer does NOT start when a question loads.
+   *
+   * It only starts after the player successfully
+   * presses Play.
+   */
+
   const startTimer =
     useCallback(
       () => {
         stopTimer()
-
-        questionStartTimeRef.current =
-          Date.now()
-
-        setTimeRemaining(
-          RECOGNITION_TIME,
-        )
 
         timerRef.current =
           window.setInterval(
@@ -448,13 +452,17 @@ export default function PlayByArtist() {
           nextQuestion,
         )
 
-        questionStartTimeRef.current =
-          Date.now()
+        /*
+         * A new song always requires a fresh
+         * Play press before the timer begins.
+         */
+        hasStartedListeningRef.current =
+          false
 
-        startTimer()
+        questionStartTimeRef.current =
+          null
       },
       [
-        startTimer,
         stopAudio,
         stopTimer,
       ],
@@ -465,10 +473,8 @@ export default function PlayByArtist() {
    * -------------------------------------------------------
    * INITIAL QUESTION
    * -------------------------------------------------------
-   *
-   * The promise is cached so React Strict Mode cannot
-   * accidentally create two different first questions.
    */
+
   useEffect(() => {
     let cancelled = false
 
@@ -554,9 +560,6 @@ export default function PlayByArtist() {
         stopTimer()
         stopAudio()
 
-        const recognitionTime =
-          RECOGNITION_TIME
-
         setSelectedAnswer(
           '',
         )
@@ -573,7 +576,8 @@ export default function PlayByArtist() {
               answer: null,
               correct: false,
               timedOut: true,
-              recognitionTime,
+              recognitionTime:
+                RECOGNITION_TIME,
               points: 0,
             },
           ],
@@ -609,10 +613,18 @@ export default function PlayByArtist() {
           return
         }
 
+        /*
+         * PAUSE
+         *
+         * Pausing stops the timer.
+         * The remaining time stays where it is.
+         */
         if (
           isPlaying
         ) {
           audio.pause()
+
+          stopTimer()
 
           setIsPlaying(
             false,
@@ -621,12 +633,36 @@ export default function PlayByArtist() {
           return
         }
 
+        /*
+         * PLAY / RESUME
+         */
         try {
           await audio.play()
 
           setIsPlaying(
             true,
           )
+
+          /*
+           * The first successful Play press
+           * starts the recognition clock.
+           */
+          if (
+            !hasStartedListeningRef.current
+          ) {
+            hasStartedListeningRef.current =
+              true
+
+            questionStartTimeRef.current =
+              Date.now()
+          }
+
+          /*
+           * On the first Play, this starts the timer.
+           * On Resume, it continues from the current
+           * remaining time.
+           */
+          startTimer()
         } catch (err) {
           console.error(
             'Could not play audio:',
@@ -636,12 +672,17 @@ export default function PlayByArtist() {
           setIsPlaying(
             false,
           )
+
+          stopTimer()
         }
       },
       [
         isPlaying,
         question,
-      ])
+        startTimer,
+        stopTimer,
+      ],
+    )
 
 
   /*
@@ -668,15 +709,17 @@ export default function PlayByArtist() {
         stopAudio()
 
         const recognitionTime =
-          Math.min(
-            RECOGNITION_TIME,
-            Math.max(
-              0,
-              (Date.now() -
-                questionStartTimeRef.current) /
-                1000,
-            ),
-          )
+          questionStartTimeRef.current
+            ? Math.min(
+                RECOGNITION_TIME,
+                Math.max(
+                  0,
+                  (Date.now() -
+                    questionStartTimeRef.current) /
+                    1000,
+                ),
+              )
+            : 0
 
         const correctAnswer =
           question.correctAnswer
@@ -763,7 +806,8 @@ export default function PlayByArtist() {
         stopAudio,
         stopTimer,
         timeRemaining,
-      ])
+      ],
+    )
 
 
   /*
@@ -825,7 +869,8 @@ export default function PlayByArtist() {
         correctAnswers,
         score,
         totalListeningTime,
-      ])
+      ],
+    )
 
 
   /*
@@ -900,8 +945,15 @@ export default function PlayByArtist() {
         stopAudio,
         stopTimer,
         submitFinalScore,
-      ])
+      ],
+    )
 
+
+  /*
+   * -------------------------------------------------------
+   * EXIT
+   * -------------------------------------------------------
+   */
 
   const handleExit =
     useCallback(
@@ -915,7 +967,8 @@ export default function PlayByArtist() {
         navigate,
         stopAudio,
         stopTimer,
-      ])
+      ],
+    )
 
 
   const handlePlayAgain =
@@ -937,7 +990,142 @@ export default function PlayByArtist() {
         navigate,
         selectedArtist,
         selectedArtistId,
-      ])
+      ],
+    )
+
+
+  /*
+   * -------------------------------------------------------
+   * RESULTS DATA
+   * -------------------------------------------------------
+   */
+
+  const fastestSong =
+    useMemo(() => {
+      const answered =
+        answeredSongs.filter(
+          song =>
+            !song.timedOut,
+        )
+
+      if (
+        answered.length ===
+        0
+      ) {
+        return null
+      }
+
+      return answered.reduce(
+        (
+          fastest,
+          current,
+        ) =>
+          current.recognitionTime <
+          fastest.recognitionTime
+            ? current
+            : fastest,
+      )
+    }, [
+      answeredSongs,
+    ])
+
+
+  const slowestSong =
+    useMemo(() => {
+      const answered =
+        answeredSongs.filter(
+          song =>
+            !song.timedOut,
+        )
+
+      if (
+        answered.length ===
+        0
+      ) {
+        return null
+      }
+
+      return answered.reduce(
+        (
+          slowest,
+          current,
+        ) =>
+          current.recognitionTime >
+          slowest.recognitionTime
+            ? current
+            : slowest,
+      )
+    }, [
+      answeredSongs,
+    ])
+
+
+  const resultMessage =
+    correctAnswers >=
+    10
+      ? 'That’s a standing ovation score.'
+      : correctAnswers >=
+          7
+        ? 'Almost flawless… the crowd’s already cheering.'
+        : correctAnswers >=
+            4
+          ? 'Solid effort, you’re halfway to superstar status!'
+          : 'Hey, even legends miss a few notes.'
+
+
+  const confettiCount =
+    correctAnswers >=
+    10
+      ? 100
+      : correctAnswers >=
+          7
+        ? 65
+        : correctAnswers >=
+            4
+          ? 35
+          : 12
+
+
+  const confettiPieces =
+    useMemo(
+      () =>
+        Array.from(
+          {
+            length:
+              confettiCount,
+          },
+          (
+            _,
+            index,
+          ) => ({
+            id: index,
+            x:
+              `${(
+                (index * 37) %
+                101
+              )}%`,
+            rotation:
+              `${(
+                (index * 47) %
+                360
+              )}deg`,
+            duration:
+              `${3 +
+                ((index * 13) %
+                  25) /
+                  10}s`,
+            delay:
+              `${(
+                (index * 17) %
+                18
+              ) /
+                10}s`,
+          }),
+        ),
+      [
+        confettiCount,
+      ],
+    )
 
 
   /*
@@ -1052,38 +1240,30 @@ export default function PlayByArtist() {
           )
         : 0
 
-    const answeredWithRecognition =
-      answeredSongs.filter(
-        song =>
-          !song.timedOut &&
-          song.recognitionTime >=
-            0,
-      )
-
-    const fastestSong =
-      answeredWithRecognition.length >
-      0
-        ? answeredWithRecognition.reduce(
-            (
-              fastest,
-              current,
-            ) =>
-              current.recognitionTime <
-              fastest.recognitionTime
-                ? current
-                : fastest,
-          )
-        : null
-
     return (
       <main className="play-by-artist-results">
+        <div className="play-by-artist-results__confetti is-celebration">
+          {confettiPieces.map(
+            piece => (
+              <span
+                key={piece.id}
+                style={{
+                  '--confetti-x':
+                    piece.x,
+                  '--confetti-rotation':
+                    piece.rotation,
+                  '--confetti-duration':
+                    piece.duration,
+                  '--confetti-delay':
+                    piece.delay,
+                } as React.CSSProperties}
+              />
+            ),
+          )}
+        </div>
+
         <div className="play-by-artist-results__container">
           <section className="play-by-artist-results__hero">
-            <div
-              className="play-by-artist-results__confetti"
-              aria-hidden="true"
-            />
-
             <div className="play-by-artist-results__trophy">
               <Trophy
                 size={42}
@@ -1106,16 +1286,7 @@ export default function PlayByArtist() {
             </p>
 
             <p className="play-by-artist-results__message">
-              {score >=
-              2500
-                ? 'You really know this artist.'
-                : score >=
-                    1800
-                  ? 'You know your way around their catalogue.'
-                  : score >=
-                      1000
-                    ? 'A solid run. There are a few more songs to learn.'
-                    : 'Keep playing. Their catalogue has more surprises waiting.'}
+              {resultMessage}
             </p>
           </section>
 
@@ -1175,37 +1346,72 @@ export default function PlayByArtist() {
             </div>
           </section>
 
-          {fastestSong && (
+          {(
+            fastestSong ||
+            slowestSong
+          ) && (
             <section className="play-by-artist-results__recognition">
-              <div className="play-by-artist-results__recognition-card">
-                <Clock
-                  size={20}
-                />
+              {fastestSong && (
+                <div className="play-by-artist-results__recognition-card">
+                  <Clock
+                    size={20}
+                  />
 
-                <div>
-                  <p className="play-by-artist-results__recognition-label">
-                    FASTEST
-                    RECOGNITION
-                  </p>
-                  
+                  <div>
+                    <p className="play-by-artist-results__recognition-label">
+                      FASTEST
+                      RECOGNITION
+                    </p>
 
-                  <strong>
-                    {fastestSong.recognitionTime.toFixed(
-                      1,
-                    )}
-                    s
-                  </strong>
+                    <strong>
+                      {fastestSong.recognitionTime.toFixed(
+                        1,
+                      )}
+                      s
+                    </strong>
 
-                  <span>
-                    {
-                      fastestSong
-                        .question
-                        .song
-                        .title
-                    }
-                  </span>
+                    <span>
+                      {
+                        fastestSong
+                          .question
+                          .song
+                          .title
+                      }
+                    </span>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {slowestSong && (
+                <div className="play-by-artist-results__recognition-card">
+                  <Clock
+                    size={20}
+                  />
+
+                  <div>
+                    <p className="play-by-artist-results__recognition-label">
+                      SLOWEST
+                      RECOGNITION
+                    </p>
+
+                    <strong>
+                      {slowestSong.recognitionTime.toFixed(
+                        1,
+                      )}
+                      s
+                    </strong>
+
+                    <span>
+                      {
+                        slowestSong
+                          .question
+                          .song
+                          .title
+                      }
+                    </span>
+                  </div>
+                </div>
+              )}
             </section>
           )}
 
@@ -1387,18 +1593,22 @@ export default function PlayByArtist() {
       <div className="play-by-artist__container">
         <header className="play-by-artist__header">
           <div className="play-by-artist__header-main">
+
             <button
               type="button"
-              className="play-by-artist__eyebrow"
+              className="play-by-artist__exit-button"
               onClick={
                 handleExit
               }
+              aria-label="Exit game"
             >
               <ArrowLeft
-                size={15}
+                size={16}
               />
 
-              EXIT
+              <span>
+                EXIT
+              </span>
             </button>
 
             <h1 className="play-by-artist__title">
@@ -1579,7 +1789,8 @@ export default function PlayByArtist() {
                 disabled={
                   !question
                     .song
-                    .audioUrl
+                    .audioUrl ||
+                  answerLocked
                 }
                 aria-label={
                   isPlaying
@@ -1745,8 +1956,7 @@ export default function PlayByArtist() {
               : answerIsCorrect
                 ? `+${calculateArtistPoints(
                     timeRemaining,
-                    currentStreak -
-                      1,
+                    currentStreak - 1,
                   )} POINTS`
                 : `THE ANSWER WAS "${question.correctAnswer.toUpperCase()}"`}
         </div>
