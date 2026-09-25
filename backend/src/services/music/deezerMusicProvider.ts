@@ -383,99 +383,53 @@ export class DeezerMusicProvider
   }
 
   async getArtistTracks(
-    artistId: number,
+    artistId: string,
     limit = 100,
   ): Promise<MusicTrack[]> {
-    const MAX_ALBUM_PAGES = 10
-    const MAX_ALBUMS = 100
-    const MAX_TRACK_PAGES_PER_ALBUM = 10
-
-    const ALBUM_PAGE_SIZE = 100
-    const TRACK_PAGE_SIZE = 100
+    console.log(
+      `Loading Deezer artist catalogue using ID ${artistId}.`,
+    )
 
     const allTracks: MusicTrack[] = []
-
     const seenTrackIds =
       new Set<string>()
 
-    const seenAlbumIds =
-      new Set<number>()
+    /*
+     * ---------------------------------------------------------
+     * ALBUM CATALOGUE
+     * ---------------------------------------------------------
+     */
 
-    let nextAlbumsUrl =
-      `${this.baseUrl}/artist/${artistId}/albums?limit=${ALBUM_PAGE_SIZE}`
-
-    let albumPages = 0
-
-    while (
-      nextAlbumsUrl &&
-      albumPages < MAX_ALBUM_PAGES &&
-      seenAlbumIds.size < MAX_ALBUMS &&
-      allTracks.length < limit
-    ) {
-      const albumResponse =
-        await this.fetchJson<DeezerAlbumResponse>(
-          nextAlbumsUrl,
+    try {
+      const albumsResponse =
+        await this.fetchJson<DeezerSearchResponse>(
+          `${this.baseUrl}/artist/${artistId}/albums?limit=100`,
         )
 
+      /*
+       * The artist albums endpoint returns album objects,
+       * not track objects, so use the dedicated album response
+       * shape here.
+       */
       const albums =
-        albumResponse.data ?? []
+        albumsResponse.data ?? []
 
-      for (const album of albums) {
-        if (
-          seenAlbumIds.has(
-            album.id,
-          )
-        ) {
-          continue
-        }
+      for (const albumRef of albums) {
+        const albumId =
+          albumRef.id
 
-        seenAlbumIds.add(
-          album.id,
-        )
-
-        let nextTracksUrl =
-          `${this.baseUrl}/album/${album.id}/tracks?limit=${TRACK_PAGE_SIZE}`
-
-        let trackPages = 0
-
-        while (
-          nextTracksUrl &&
-          trackPages <
-            MAX_TRACK_PAGES_PER_ALBUM &&
-          allTracks.length < limit
-        ) {
-          const trackResponse =
-            await this.fetchJson<DeezerSearchResponse>(
-              nextTracksUrl,
+        try {
+          const album =
+            await this.fetchJson<DeezerAlbumResponse>(
+              `${this.baseUrl}/album/${albumId}`,
             )
 
-          const tracks =
-            trackResponse.data ?? []
+          const albumTracks =
+            album.tracks?.data ?? []
 
-          for (const track of tracks) {
-            const trackId =
-              String(track.id)
-
-            if (
-              seenTrackIds.has(
-                trackId,
-              )
-            ) {
-              continue
-            }
-
-            /*
-             * IMPORTANT:
-             *
-             * Tracks returned by
-             * /album/{id}/tracks do not
-             * reliably contain the full
-             * album object.
-             *
-             * We already know which album
-             * we requested, so pass that
-             * album into transformTrack().
-             */
+          for (
+            const track of albumTracks
+          ) {
             const transformed =
               transformTrack(
                 track,
@@ -486,6 +440,18 @@ export class DeezerMusicProvider
               continue
             }
 
+            const trackId =
+              transformed.providerId ??
+              transformed.id
+
+            if (
+              seenTrackIds.has(
+                trackId,
+              )
+            ) {
+              continue
+            }
+
             seenTrackIds.add(
               trackId,
             )
@@ -493,22 +459,18 @@ export class DeezerMusicProvider
             allTracks.push(
               transformed,
             )
-
-            if (
-              allTracks.length >=
-              limit
-            ) {
-              break
-            }
           }
-
-          nextTracksUrl =
-            trackResponse.next ??
-            ''
-
-          trackPages += 1
+        } catch (error) {
+          console.warn(
+            `Failed to load Deezer album ${albumId}:`,
+            error,
+          )
         }
 
+        /*
+         * Don't build an unnecessarily huge catalogue.
+         * The game only needs a reasonable pool of songs.
+         */
         if (
           allTracks.length >=
           limit
@@ -517,23 +479,111 @@ export class DeezerMusicProvider
         }
       }
 
-      nextAlbumsUrl =
-        albumResponse.next ??
-        ''
-
-      albumPages += 1
+      console.log(
+        `Fetched ${allTracks.length} tracks from ${albums.length} albums for Deezer artist ${artistId}.`,
+      )
+    } catch (error) {
+      console.warn(
+        `Failed to load album catalogue for Deezer artist ${artistId}:`,
+        error,
+      )
     }
 
-    console.log(
-      `Fetched ${allTracks.length} tracks from ${seenAlbumIds.size} albums for Deezer artist ${artistId}.`,
-    )
+    /*
+     * ---------------------------------------------------------
+     * TOP TRACK SUPPLEMENT
+     * ---------------------------------------------------------
+     *
+     * Important:
+     * We supplement whenever the album catalogue is small.
+     *
+     * Rihanna was returning 1 album track, so a simple
+     * "if length === 0" fallback was not enough.
+     */
 
-    return this.enrichTracks(
+    if (
+      allTracks.length < 20
+    ) {
+      try {
+        const topResponse =
+          await this.fetchJson<DeezerSearchResponse>(
+            `${this.baseUrl}/artist/${artistId}/top?limit=50`,
+          )
+
+        const topTracks =
+          topResponse.data ?? []
+
+        console.log(
+          `Fallback returned ${topTracks.length} top tracks for Deezer artist ${artistId}.`,
+        )
+
+        for (
+          const track of topTracks
+        ) {
+          const transformed =
+            transformTrack(track)
+
+          if (!transformed) {
+            continue
+          }
+
+          const trackId =
+            transformed.providerId ??
+            transformed.id
+
+          if (
+            seenTrackIds.has(
+              trackId,
+            )
+          ) {
+            continue
+          }
+
+          seenTrackIds.add(
+            trackId,
+          )
+
+          allTracks.push(
+            transformed,
+          )
+
+          if (
+            allTracks.length >=
+            limit
+          ) {
+            break
+          }
+        }
+      } catch (error) {
+        console.warn(
+          `Failed to load top tracks for Deezer artist ${artistId}:`,
+          error,
+        )
+      }
+    }
+
+    /*
+     * ---------------------------------------------------------
+     * RELEASE YEAR ENRICHMENT
+     * ---------------------------------------------------------
+     */
+
+    const tracks =
       allTracks.slice(
         0,
         limit,
-      ),
+      )
+
+    const enrichedTracks =
+      await this.enrichReleaseYears(
+        tracks,
+      )
+
+    console.log(
+      `Fetched ${enrichedTracks.length} total tracks for Deezer artist ${artistId}.`,
     )
+
+    return enrichedTracks
   }
 
   async getArtistTopTracks(
@@ -568,4 +618,3 @@ export class DeezerMusicProvider
 
 export const deezerMusicProvider =
   new DeezerMusicProvider()
-

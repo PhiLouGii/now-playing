@@ -60,192 +60,25 @@ function normalizeArtistName(
 
 /*
  * ---------------------------------------------------------
- * ARTIST RESOLUTION
- * ---------------------------------------------------------
- *
- * The frontend gives us an artist name such as "BTS".
- *
- * We resolve that name to the Deezer artist once.
- *
- * The promise itself is cached so simultaneous requests
- * for the same artist share the same resolution request.
- */
-
-type DeezerArtistResult = {
-  id: number
-  name?: string
-  picture?: string
-  picture_small?: string
-  picture_medium?: string
-  picture_big?: string
-  picture_xl?: string
-  tracklist?: string
-  nb_album?: number
-  nb_fan?: number
-}
-
-const artistResolutionCache =
-  new Map<
-    string,
-    Promise<DeezerArtistResult | null>
-  >()
-
-
-async function searchForArtist(
-  artist: string,
-): Promise<DeezerArtistResult | null> {
-  const normalizedArtist =
-    normalizeArtistName(
-      artist,
-    )
-
-  const cached =
-    artistResolutionCache.get(
-      normalizedArtist,
-    )
-
-  if (cached) {
-    return cached
-  }
-
-  const resolutionPromise =
-    resolveArtistFromDeezer(
-      artist,
-    )
-
-  artistResolutionCache.set(
-    normalizedArtist,
-    resolutionPromise,
-  )
-
-  return resolutionPromise
-}
-
-
-async function resolveArtistFromDeezer(
-  artist: string,
-): Promise<DeezerArtistResult | null> {
-  const normalizedArtist =
-    normalizeArtistName(
-      artist,
-    )
-
-  try {
-    const artists =
-      await deezerMusicProvider.searchArtists(
-        artist,
-        10,
-      )
-
-    /*
-     * An empty result simply means this request did not
-     * resolve the artist. Do not retry and do not invent
-     * another source of truth.
-     */
-    if (
-      artists.length === 0
-    ) {
-      console.warn(
-        `No Deezer artist search results for "${artist}".`,
-      )
-
-      return null
-    }
-
-    /*
-     * Only accept exact normalized artist-name matches.
-     */
-    const exactArtists =
-      artists.filter(
-        candidate =>
-          normalizeArtistName(
-            candidate.name ?? '',
-          ) === normalizedArtist,
-      )
-
-    if (
-      exactArtists.length === 0
-    ) {
-      console.warn(
-        `No exact Deezer artist match for "${artist}".`,
-      )
-
-      return null
-    }
-
-    /*
-     * If multiple artists have the same name,
-     * prefer the one with the largest fan count.
-     */
-    const selectedArtist =
-      [...exactArtists].sort(
-        (a, b) => {
-          const fanDifference =
-            (b.nb_fan ?? 0) -
-            (a.nb_fan ?? 0)
-
-          if (
-            fanDifference !== 0
-          ) {
-            return fanDifference
-          }
-
-          return (
-            (b.nb_album ?? 0) -
-            (a.nb_album ?? 0)
-          )
-        },
-      )[0]
-
-    return selectedArtist
-  } catch (error) {
-    console.error(
-      `Deezer artist search failed for "${artist}":`,
-      error,
-    )
-
-    return null
-  }
-}
-
-
-/*
- * ---------------------------------------------------------
  * ARTIST CATALOGUE CACHE
  * ---------------------------------------------------------
  *
- * THIS IS THE IMPORTANT FIX.
+ * The frontend sends the Deezer artist ID as a string.
  *
- * Previously:
- *
- *   Q1 -> fetch BTS catalogue
- *   Q2 -> fetch BTS catalogue
- *   Q3 -> fetch BTS catalogue
- *   ...
- *
- * Now:
- *
- *   Q1 -> fetch BTS catalogue
- *   Q2 -> use cached BTS catalogue
- *   Q3 -> use cached BTS catalogue
- *   ...
- *
- * The cache stores the complete catalogue independently
- * from excluded track IDs.
- *
- * Exclusions belong to the individual question request,
- * not to the shared catalogue.
+ * We keep that ID as a string throughout the game service.
+ * Only the Deezer provider receives the numeric version
+ * when it needs to call the Deezer API.
  */
 
 const artistCatalogueCache =
   new Map<
-    number,
+    string,
     Promise<MusicTrack[]>
   >()
 
 
 async function getArtistCatalogue(
-  artistId: number,
+  artistId: string,
 ): Promise<MusicTrack[]> {
   const cached =
     artistCatalogueCache.get(
@@ -256,13 +89,29 @@ async function getArtistCatalogue(
     return cached
   }
 
+  const numericArtistId =
+    Number(artistId)
+
+  if (
+    !Number.isInteger(
+      numericArtistId,
+    ) ||
+    numericArtistId <= 0
+  ) {
+    console.warn(
+      `Invalid Deezer artist ID "${artistId}".`,
+    )
+
+    return []
+  }
+
   const cataloguePromise =
     (async () => {
       const tracks =
-        await deezerMusicProvider.getArtistTracks(
-          artistId,
-          250,
-        )
+  await deezerMusicProvider.getArtistTracks(
+    artistId,
+    250,
+  )
 
       return tracks.filter(
         isPlayableMusicTrack,
@@ -270,11 +119,8 @@ async function getArtistCatalogue(
     })()
 
   /*
-   * Store the promise immediately.
-   *
-   * If two requests arrive at nearly the same time,
-   * they share the same catalogue request instead of
-   * both rebuilding the catalogue.
+   * Store the promise immediately so concurrent
+   * requests share the same catalogue request.
    */
   artistCatalogueCache.set(
     artistId,
@@ -287,8 +133,6 @@ async function getArtistCatalogue(
 
     /*
      * Never permanently cache an empty catalogue.
-     *
-     * An empty response is not useful catalogue data.
      */
     if (
       tracks.length === 0
@@ -301,8 +145,8 @@ async function getArtistCatalogue(
     return tracks
   } catch (error) {
     /*
-     * If the catalogue request actually fails, allow the
-     * next request to make a fresh attempt.
+     * Allow a future request to retry if
+     * Deezer failed.
      */
     artistCatalogueCache.delete(
       artistId,
@@ -503,25 +347,26 @@ async function getEligibleCategoryTracks(
  * PLAY BY ARTIST
  * ---------------------------------------------------------
  *
- * The selected artist is a SOURCE FILTER.
+ * The artist ID is the source of truth.
  *
- * Example:
+ * Flow:
  *
- *     Play
- *       ↓
- *     Artist
- *       ↓
- *     BTS
+ *   Play
+ *     ↓
+ *   Artist selected
+ *     ↓
+ *   Deezer artist ID
+ *     ↓
+ *   getArtistCatalogue(artistId)
+ *     ↓
+ *   playable artist tracks
  *
- * The player hears a BTS song and identifies the
- * song title.
- *
- * The important distinction here is that the artist
- * catalogue is loaded ONCE and then reused.
+ * There is NO artist-name search here.
  */
 
 async function getEligibleArtistTracks(
   artist: string,
+  artistId: string,
   type: QuestionType,
   excludedTrackIds: string[] = [],
 ): Promise<MusicTrack[]> {
@@ -541,41 +386,43 @@ async function getEligibleArtistTracks(
   const excludedIds =
     new Set(excludedTrackIds)
 
+  /*
+   * Validate the ID while keeping the
+   * application-level value as a string.
+   */
+  const numericArtistId =
+    Number(artistId)
+
+  if (
+    !Number.isInteger(
+      numericArtistId,
+    ) ||
+    numericArtistId <= 0
+  ) {
+    console.warn(
+      `Invalid Deezer artist ID "${artistId}" for artist "${artist}".`,
+    )
+
+    return []
+  }
+
   try {
-    /*
-     * Resolve the artist name to its Deezer ID.
-     */
-    const selectedArtist =
-      await searchForArtist(
-        artist,
-      )
-
-    if (!selectedArtist) {
-      console.warn(
-        `Could not resolve Deezer artist "${artist}".`,
-      )
-
-      return []
-    }
-
     console.log(
-      `Selected Deezer artist "${selectedArtist.name}" (ID ${selectedArtist.id}) for "${artist}". Fans: ${selectedArtist.nb_fan ?? 0}, albums: ${selectedArtist.nb_album ?? 0}`,
+      `Loading Deezer artist "${artist}" using ID ${artistId}.`,
     )
 
     /*
-     * Get the catalogue from the shared cache.
-     *
-     * This is the part that prevents Q2, Q3, Q4, etc.
-     * from repeatedly hitting Deezer for the same artist.
+     * Get the complete artist catalogue
+     * from the shared cache.
      */
     const tracks =
       await getArtistCatalogue(
-        selectedArtist.id,
+        artistId,
       )
 
     /*
-     * Keep only tracks actually credited to the selected
-     * artist.
+     * Keep only tracks whose credited artist
+     * matches the selected artist.
      */
     const artistTracks =
       tracks
@@ -593,10 +440,9 @@ async function getEligibleArtistTracks(
         )
 
     /*
-     * Remove duplicate song titles.
-     *
-     * This handles re-releases, deluxe editions,
-     * compilations and repeated catalogue entries.
+     * Remove duplicate song titles caused by
+     * re-releases, deluxe editions, compilations,
+     * etc.
      */
     const seen =
       new Set<string>()
@@ -624,13 +470,13 @@ async function getEligibleArtistTracks(
       )
 
     console.log(
-      `Found ${uniqueTracks.length} playable tracks for artist "${artist}".`,
+      `Found ${uniqueTracks.length} playable tracks for artist "${artist}" (ID ${artistId}).`,
     )
 
     return uniqueTracks
   } catch (error) {
     console.error(
-      `Failed to fetch tracks for artist "${artist}":`,
+      `Failed to fetch tracks for artist "${artist}" (ID ${artistId}):`,
       error,
     )
 
@@ -671,6 +517,7 @@ export async function generateGameQuestion(
   excludedTrackIds: string[] = [],
   categoryId?: string,
   artist?: string,
+  artistId?: string,
 ) {
   let eligibleTracks: MusicTrack[]
 
@@ -689,19 +536,35 @@ export async function generateGameQuestion(
   /*
    * ARTIST FILTER
    *
-   * Play -> Artist -> BTS
+   * Artist gameplay requires BOTH:
    *
-   * The question remains:
+   *   artist
+   *   artistId
    *
-   * "Which song is this?"
+   * The name is used for display/filtering.
+   * The ID is used to retrieve the catalogue.
    */
-  else if (artist) {
+  else if (
+    artist &&
+    artistId
+  ) {
     eligibleTracks =
       await getEligibleArtistTracks(
         artist,
+        artistId,
         type,
         excludedTrackIds,
       )
+  }
+
+  /*
+   * Artist name without ID should never
+   * reach the catalogue lookup.
+   */
+  else if (artist) {
+    throw new Error(
+      `Artist ID is required for artist game: ${artist}`,
+    )
   }
 
   /*
@@ -748,9 +611,10 @@ export async function generateGameQuestion(
     )
 
   /*
-   * For Play by Artist, pass the complete eligible
-   * artist pool so questionGenerationService can create
-   * song-title distractors from the same artist.
+   * For Play by Artist, pass the complete
+   * eligible artist pool so the question
+   * generation service can create distractors
+   * from the same artist.
    */
   return generateQuestion(
     correctTrack,
