@@ -110,7 +110,7 @@ async function getArtistCatalogue(
       const tracks =
   await deezerMusicProvider.getArtistTracks(
     artistId,
-    250,
+    50,
   )
 
       return tracks.filter(

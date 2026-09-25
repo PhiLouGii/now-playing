@@ -1,620 +1,567 @@
 import type {
-  MusicProvider,
   MusicTrack,
-} from './musicProvider'
+} from '../music/musicProvider.js'
 
 type DeezerArtistRef = {
   id: number
-  name?: string
-  tracklist?: string
+  name: string
+  picture?: string
+  picture_medium?: string
+  picture_big?: string
 }
 
 type DeezerAlbum = {
   id: number
-  title?: string
+  title: string
   cover?: string
   cover_medium?: string
   cover_big?: string
-  cover_xl?: string
   release_date?: string
 }
 
 type DeezerTrack = {
   id: number
-  title?: string
-  title_short?: string
-  title_version?: string
+  title: string
   duration?: number
   preview?: string
-  isrc?: string
-  release_date?: string
-  readable?: boolean
-
+  explicit_lyrics?: boolean
   artist?: DeezerArtistRef
-
   album?: DeezerAlbum
 }
 
-type DeezerSearchResponse = {
+type DeezerTrackListResponse = {
   data?: DeezerTrack[]
   total?: number
   next?: string
-  prev?: string
+  error?: {
+    type?: string
+    message?: string
+    code?: number
+  }
 }
 
 type DeezerGenre = {
   id: number
   name: string
   picture?: string
-  picture_small?: string
   picture_medium?: string
   picture_big?: string
-  picture_xl?: string
 }
 
 type DeezerGenreResponse = {
   data?: DeezerGenre[]
+  error?: {
+    type?: string
+    message?: string
+    code?: number
+  }
 }
 
-type DeezerArtist = {
-  id: number
-  name?: string
-
-  picture?: string
-  picture_small?: string
-  picture_medium?: string
-  picture_big?: string
-  picture_xl?: string
-
-  tracklist?: string
-  nb_album?: number
-  nb_fan?: number
+type DeezerArtistListResponse = {
+  data?: DeezerArtistRef[]
+  total?: number
+  next?: string
+  error?: {
+    type?: string
+    message?: string
+    code?: number
+  }
 }
 
-type DeezerArtistResponse = {
-  id: number
-  name?: string
+const baseUrl = 'https://api.deezer.com'
 
-  picture?: string
-  picture_small?: string
-  picture_medium?: string
-  picture_big?: string
-  picture_xl?: string
+/*
+ * Deezer applies a short rolling request quota.
+ *
+ * We deliberately stay far below the commonly observed threshold
+ * instead of trying to use the maximum available rate.
+ *
+ * 100ms between requests = approximately 10 requests/second.
+ *
+ * This queue is shared by every Deezer request made by this process.
+ */
+const REQUEST_INTERVAL_MS = 100
 
-  tracklist?: string
-  nb_album?: number
-  nb_fan?: number
+let nextRequestAt = 0
+
+let requestQueue: Promise<void> = Promise.resolve()
+
+function sleep(
+  milliseconds: number,
+): Promise<void> {
+  return new Promise(
+    (resolve) => {
+      setTimeout(
+        resolve,
+        milliseconds,
+      )
+    },
+  )
 }
 
-type DeezerAlbumResponse = {
-  id: number
-  title?: string
-  cover?: string
-  cover_medium?: string
-  cover_big?: string
-  cover_xl?: string
-  release_date?: string
+function enqueueRequest<T>(
+  request: () => Promise<T>,
+): Promise<T> {
+  const execute = async (): Promise<T> => {
+    const now = Date.now()
 
-  tracks?: {
-    data?: DeezerTrack[]
-    next?: string
-    total?: number
+    const wait =
+      Math.max(
+        0,
+        nextRequestAt - now,
+      )
+
+    if (wait > 0) {
+      await sleep(wait)
+    }
+
+    nextRequestAt =
+      Date.now() +
+      REQUEST_INTERVAL_MS
+
+    return request()
   }
 
-  data?: DeezerAlbum[]
-  next?: string
+  const result =
+    requestQueue.then(
+      execute,
+      execute,
+    )
+
+  requestQueue =
+    result.then(
+      () => undefined,
+      () => undefined,
+    )
+
+  return result
+}
+
+function isQuotaError(
+  error: unknown,
+): boolean {
+  if (
+    !error ||
+    typeof error !== 'object'
+  ) {
+    return false
+  }
+
+  const candidate =
+    error as {
+      code?: number
+      message?: string
+    }
+
+  return (
+    candidate.code === 4 ||
+    candidate.message?.toLowerCase()
+      .includes(
+        'quota limit exceeded',
+      ) === true
+  )
+}
+
+async function fetchJson<T>(
+  path: string,
+): Promise<T> {
+  return enqueueRequest(
+    async () => {
+      const url =
+        `${baseUrl}${path}`
+
+      const response =
+        await fetch(url)
+
+      const text =
+        await response.text()
+
+      if (!response.ok) {
+        throw new Error(
+          `Deezer request failed (${response.status}): ${text}`,
+        )
+      }
+
+      let data: T
+
+      try {
+        data =
+          JSON.parse(text) as T
+      } catch {
+        throw new Error(
+          `Deezer returned invalid JSON for ${path}.`,
+        )
+      }
+
+      return data
+    },
+  )
+}
+
+async function fetchJsonWithQuotaRetry<T>(
+  path: string,
+  retries = 2,
+): Promise<T> {
+  for (
+    let attempt = 0;
+    attempt <= retries;
+    attempt += 1
+  ) {
+    try {
+      const response =
+        await fetchJson<T>(path)
+
+      const responseWithError =
+        response as T & {
+          error?: {
+            type?: string
+            message?: string
+            code?: number
+          }
+        }
+
+      if (
+        responseWithError.error &&
+        isQuotaError(
+          responseWithError.error,
+        )
+      ) {
+        if (
+          attempt === retries
+        ) {
+          throw new Error(
+            'Deezer quota limit exceeded after retries.',
+          )
+        }
+
+        /*
+         * Deezer's quota error can arrive inside a
+         * successful HTTP response, so we need to
+         * inspect the JSON body rather than status code.
+         */
+        await sleep(
+          5000 * (attempt + 1),
+        )
+
+        continue
+      }
+
+      return response
+    } catch (error) {
+      if (
+        !isQuotaError(error) ||
+        attempt === retries
+      ) {
+        throw error
+      }
+
+      await sleep(
+        5000 * (attempt + 1),
+      )
+    }
+  }
+
+  throw new Error(
+    'Deezer request failed.',
+  )
+}
+
+function getArtworkUrl(
+  track: DeezerTrack,
+): string {
+  return (
+    track.album?.cover_big ??
+    track.album?.cover_medium ??
+    track.album?.cover ??
+    track.artist?.picture_big ??
+    track.artist?.picture_medium ??
+    track.artist?.picture ??
+    ''
+  )
 }
 
 function getReleaseYear(
-  releaseDate?: string,
-): number | undefined {
+  track: DeezerTrack,
+): number {
+  const releaseDate =
+    track.album?.release_date
+
   if (!releaseDate) {
-    return undefined
+    return 0
   }
 
-  const year = Number(
-    releaseDate.slice(0, 4),
-  )
+  const year =
+    Number(
+      releaseDate.slice(0, 4),
+    )
 
-  return Number.isFinite(year)
+  return Number.isInteger(year)
     ? year
-    : undefined
+    : 0
 }
 
 function transformTrack(
   track: DeezerTrack,
-  fallbackAlbum?: DeezerAlbum,
-): MusicTrack | null {
-  const album =
-    track.album ?? fallbackAlbum
-
-  if (
-    !track.id ||
-    !track.title ||
-    !track.artist?.name ||
-    !album?.title
-  ) {
-    return null
-  }
-
+): MusicTrack {
   return {
     id: String(track.id),
-
     title: track.title,
-
     artist:
-      track.artist.name,
-
+      track.artist?.name ??
+      'Unknown Artist',
     album:
-      album.title,
-
+      track.album?.title ??
+      'Unknown Album',
     releaseYear:
-      getReleaseYear(
-        track.release_date ??
-          album.release_date,
-      ),
-
-    isrc:
-      track.isrc,
-
+      getReleaseYear(track),
     artworkUrl:
-      album.cover_big ??
-      album.cover_medium ??
-      album.cover,
-
+      getArtworkUrl(track),
     previewUrl:
-      track.preview,
-
+  track.preview ?? undefined,
     genres: [],
-
-    provider:
-      'deezer',
-
+    provider: 'deezer',
     providerId:
       String(track.id),
   }
 }
 
-export class DeezerMusicProvider
-  implements MusicProvider
-{
-  private readonly baseUrl =
-    'https://api.deezer.com'
+function cleanTracks(
+  tracks: DeezerTrack[],
+): MusicTrack[] {
+  const seen =
+    new Set<string>()
 
-  private async fetchJson<T>(
-    url: string,
-  ): Promise<T> {
-    const response =
-      await fetch(url)
+  const result: MusicTrack[] = []
 
-    if (!response.ok) {
-      throw new Error(
-        `Deezer request failed: ${response.status} ${response.statusText}`,
-      )
+  for (const track of tracks) {
+    if (!track.preview) {
+      continue
     }
-
-    return response.json() as Promise<T>
-  }
-
-  private async fetchTrackDetails(
-    track: MusicTrack,
-  ): Promise<MusicTrack> {
-    try {
-      const details =
-        await this.fetchJson<DeezerTrack>(
-          `${this.baseUrl}/track/${track.providerId}`,
-        )
-
-      const transformed =
-        transformTrack(details)
-
-      if (!transformed) {
-        return track
-      }
-
-      return {
-        ...track,
-
-        releaseYear:
-          transformed.releaseYear ??
-          track.releaseYear,
-
-        artworkUrl:
-          transformed.artworkUrl ??
-          track.artworkUrl,
-
-        isrc:
-          transformed.isrc ??
-          track.isrc,
-
-        previewUrl:
-          transformed.previewUrl ??
-          track.previewUrl,
-
-        album:
-          transformed.album ||
-          track.album,
-      }
-    } catch {
-      return track
-    }
-  }
-
-  private async enrichTracks(
-    tracks: MusicTrack[],
-  ): Promise<MusicTrack[]> {
-    return Promise.all(
-      tracks.map(
-        (track) =>
-          this.fetchTrackDetails(
-            track,
-          ),
-      ),
-    )
-  }
-
-  async searchTracks(
-    query: string,
-    limit = 25,
-  ): Promise<MusicTrack[]> {
-    const encodedQuery =
-      encodeURIComponent(query)
-
-    const url =
-      `${this.baseUrl}/search?q=${encodedQuery}&limit=${limit}`
-
-    const data =
-      await this.fetchJson<DeezerSearchResponse>(
-        url,
-      )
-
-    const tracks =
-      (data.data ?? [])
-        .map((track) =>
-          transformTrack(track),
-        )
-        .filter(
-          (
-            track,
-          ): track is MusicTrack =>
-            track !== null,
-        )
-
-    return this.enrichTracks(
-      tracks,
-    )
-  }
-
-  async getTrackById(
-    id: string,
-  ): Promise<MusicTrack | null> {
-    try {
-      const track =
-        await this.fetchJson<DeezerTrack>(
-          `${this.baseUrl}/track/${id}`,
-        )
-
-      return transformTrack(
-        track,
-      )
-    } catch {
-      return null
-    }
-  }
-
-  async enrichReleaseYears(
-    tracks: MusicTrack[],
-  ): Promise<MusicTrack[]> {
-    return this.enrichTracks(
-      tracks,
-    )
-  }
-
-  async getChartTracks(
-    limit = 50,
-  ): Promise<MusicTrack[]> {
-    const url =
-      `${this.baseUrl}/chart/0/tracks?limit=${limit}`
-
-    const data =
-      await this.fetchJson<DeezerSearchResponse>(
-        url,
-      )
-
-    const tracks =
-      (data.data ?? [])
-        .map((track) =>
-          transformTrack(track),
-        )
-        .filter(
-          (
-            track,
-          ): track is MusicTrack =>
-            track !== null,
-        )
-
-    return this.enrichTracks(
-      tracks,
-    )
-  }
-
-  async getGenres(): Promise<
-    DeezerGenre[]
-  > {
-    const data =
-      await this.fetchJson<DeezerGenreResponse>(
-        `${this.baseUrl}/genre`,
-      )
-
-    return data.data ?? []
-  }
-
-  async getGenreArtists(
-    genreId: number,
-    limit = 25,
-  ): Promise<DeezerArtist[]> {
-    const url =
-      `${this.baseUrl}/genre/${genreId}/artists?limit=${limit}`
-
-    const data =
-      await this.fetchJson<{
-        data?: DeezerArtist[]
-      }>(url)
-
-    return data.data ?? []
-  }
-
-  async searchArtists(
-    query: string,
-    limit = 25,
-  ): Promise<DeezerArtist[]> {
-    const encodedQuery =
-      encodeURIComponent(query)
-
-    const url =
-      `${this.baseUrl}/search/artist?q=${encodedQuery}&limit=${limit}`
-
-    const data =
-      await this.fetchJson<{
-        data?: DeezerArtist[]
-      }>(url)
-
-    return data.data ?? []
-  }
-
-  async getArtistTracks(
-    artistId: string,
-    limit = 100,
-  ): Promise<MusicTrack[]> {
-    console.log(
-      `Loading Deezer artist catalogue using ID ${artistId}.`,
-    )
-
-    const allTracks: MusicTrack[] = []
-    const seenTrackIds =
-      new Set<string>()
-
-    /*
-     * ---------------------------------------------------------
-     * ALBUM CATALOGUE
-     * ---------------------------------------------------------
-     */
-
-    try {
-      const albumsResponse =
-        await this.fetchJson<DeezerSearchResponse>(
-          `${this.baseUrl}/artist/${artistId}/albums?limit=100`,
-        )
-
-      /*
-       * The artist albums endpoint returns album objects,
-       * not track objects, so use the dedicated album response
-       * shape here.
-       */
-      const albums =
-        albumsResponse.data ?? []
-
-      for (const albumRef of albums) {
-        const albumId =
-          albumRef.id
-
-        try {
-          const album =
-            await this.fetchJson<DeezerAlbumResponse>(
-              `${this.baseUrl}/album/${albumId}`,
-            )
-
-          const albumTracks =
-            album.tracks?.data ?? []
-
-          for (
-            const track of albumTracks
-          ) {
-            const transformed =
-              transformTrack(
-                track,
-                album,
-              )
-
-            if (!transformed) {
-              continue
-            }
-
-            const trackId =
-              transformed.providerId ??
-              transformed.id
-
-            if (
-              seenTrackIds.has(
-                trackId,
-              )
-            ) {
-              continue
-            }
-
-            seenTrackIds.add(
-              trackId,
-            )
-
-            allTracks.push(
-              transformed,
-            )
-          }
-        } catch (error) {
-          console.warn(
-            `Failed to load Deezer album ${albumId}:`,
-            error,
-          )
-        }
-
-        /*
-         * Don't build an unnecessarily huge catalogue.
-         * The game only needs a reasonable pool of songs.
-         */
-        if (
-          allTracks.length >=
-          limit
-        ) {
-          break
-        }
-      }
-
-      console.log(
-        `Fetched ${allTracks.length} tracks from ${albums.length} albums for Deezer artist ${artistId}.`,
-      )
-    } catch (error) {
-      console.warn(
-        `Failed to load album catalogue for Deezer artist ${artistId}:`,
-        error,
-      )
-    }
-
-    /*
-     * ---------------------------------------------------------
-     * TOP TRACK SUPPLEMENT
-     * ---------------------------------------------------------
-     *
-     * Important:
-     * We supplement whenever the album catalogue is small.
-     *
-     * Rihanna was returning 1 album track, so a simple
-     * "if length === 0" fallback was not enough.
-     */
 
     if (
-      allTracks.length < 20
+      !track.artist?.name ||
+      !track.title
     ) {
-      try {
-        const topResponse =
-          await this.fetchJson<DeezerSearchResponse>(
-            `${this.baseUrl}/artist/${artistId}/top?limit=50`,
-          )
-
-        const topTracks =
-          topResponse.data ?? []
-
-        console.log(
-          `Fallback returned ${topTracks.length} top tracks for Deezer artist ${artistId}.`,
-        )
-
-        for (
-          const track of topTracks
-        ) {
-          const transformed =
-            transformTrack(track)
-
-          if (!transformed) {
-            continue
-          }
-
-          const trackId =
-            transformed.providerId ??
-            transformed.id
-
-          if (
-            seenTrackIds.has(
-              trackId,
-            )
-          ) {
-            continue
-          }
-
-          seenTrackIds.add(
-            trackId,
-          )
-
-          allTracks.push(
-            transformed,
-          )
-
-          if (
-            allTracks.length >=
-            limit
-          ) {
-            break
-          }
-        }
-      } catch (error) {
-        console.warn(
-          `Failed to load top tracks for Deezer artist ${artistId}:`,
-          error,
-        )
-      }
+      continue
     }
 
-    /*
-     * ---------------------------------------------------------
-     * RELEASE YEAR ENRICHMENT
-     * ---------------------------------------------------------
-     */
+    const id =
+      String(track.id)
 
-    const tracks =
-      allTracks.slice(
-        0,
-        limit,
-      )
+    if (seen.has(id)) {
+      continue
+    }
 
-    const enrichedTracks =
-      await this.enrichReleaseYears(
-        tracks,
-      )
+    seen.add(id)
 
-    console.log(
-      `Fetched ${enrichedTracks.length} total tracks for Deezer artist ${artistId}.`,
-    )
-
-    return enrichedTracks
-  }
-
-  async getArtistTopTracks(
-    artistId: number,
-    limit = 50,
-  ): Promise<MusicTrack[]> {
-    const url =
-      `${this.baseUrl}/artist/${artistId}/top?limit=${limit}`
-
-    const data =
-      await this.fetchJson<DeezerSearchResponse>(
-        url,
-      )
-
-    const tracks =
-      (data.data ?? [])
-        .map((track) =>
-          transformTrack(track),
-        )
-        .filter(
-          (
-            track,
-          ): track is MusicTrack =>
-            track !== null,
-        )
-
-    return this.enrichTracks(
-      tracks,
+    result.push(
+      transformTrack(track),
     )
   }
+
+  return result
 }
 
-export const deezerMusicProvider =
-  new DeezerMusicProvider()
+async function searchTracks(
+  query: string,
+  limit = 25,
+): Promise<MusicTrack[]> {
+  const encoded =
+    encodeURIComponent(query)
+
+  const response =
+    await fetchJsonWithQuotaRetry<DeezerTrackListResponse>(
+      `/search?q=${encoded}&limit=${limit}`,
+    )
+
+  if (response.error) {
+    throw new Error(
+      `Deezer track search error: ${
+        response.error.message ??
+        'Unknown error'
+      }`,
+    )
+  }
+
+  return cleanTracks(
+    response.data ?? [],
+  )
+}
+
+async function getTrackById(
+  id: string,
+): Promise<MusicTrack | null> {
+  const response =
+    await fetchJsonWithQuotaRetry<DeezerTrack>(
+      `/track/${encodeURIComponent(id)}`,
+    )
+
+  if (
+    !response ||
+    !response.id ||
+    !response.preview
+  ) {
+    return null
+  }
+
+  return transformTrack(
+    response,
+  )
+}
+
+async function getChartTracks(
+  limit = 50,
+): Promise<MusicTrack[]> {
+  const response =
+    await fetchJsonWithQuotaRetry<DeezerTrackListResponse>(
+      `/chart/0/tracks?limit=${limit}`,
+    )
+
+  if (response.error) {
+    throw new Error(
+      `Deezer chart error: ${
+        response.error.message ??
+        'Unknown error'
+      }`,
+    )
+  }
+
+  return cleanTracks(
+    response.data ?? [],
+  )
+}
+
+async function getGenres(): Promise<DeezerGenre[]> {
+  const response =
+    await fetchJsonWithQuotaRetry<DeezerGenreResponse>(
+      '/genre',
+    )
+
+  if (response.error) {
+    throw new Error(
+      `Deezer genre error: ${
+        response.error.message ??
+        'Unknown error'
+      }`,
+    )
+  }
+
+  return response.data ?? []
+}
+
+async function getGenreArtists(
+  genreId: string,
+  limit = 50,
+): Promise<DeezerArtistRef[]> {
+  const response =
+    await fetchJsonWithQuotaRetry<DeezerArtistListResponse>(
+      `/genre/${encodeURIComponent(
+        genreId,
+      )}/artists?limit=${limit}`,
+    )
+
+  if (response.error) {
+    throw new Error(
+      `Deezer genre artist error: ${
+        response.error.message ??
+        'Unknown error'
+      }`,
+    )
+  }
+
+  return response.data ?? []
+}
+
+async function searchArtists(
+  query: string,
+  limit = 5,
+): Promise<DeezerArtistRef[]> {
+  const encoded =
+    encodeURIComponent(query)
+
+  const response =
+    await fetchJsonWithQuotaRetry<DeezerArtistListResponse>(
+      `/search/artist?q=${encoded}&limit=${limit}`,
+    )
+
+  if (response.error) {
+    throw new Error(
+      `Deezer artist search error: ${
+        response.error.message ??
+        'Unknown error'
+      }`,
+    )
+  }
+
+  return response.data ?? []
+}
+
+async function getArtistTopTracks(
+  artistId: string,
+  limit = 50,
+): Promise<MusicTrack[]> {
+  const response =
+    await fetchJsonWithQuotaRetry<DeezerTrackListResponse>(
+      `/artist/${encodeURIComponent(
+        artistId,
+      )}/top?limit=${limit}`,
+    )
+
+  if (response.error) {
+    throw new Error(
+      `Deezer artist top tracks error: ${
+        response.error.message ??
+        'Unknown error'
+      }`,
+    )
+  }
+
+  return cleanTracks(
+    response.data ?? [],
+  )
+}
+
+/*
+ * This is intentionally NOT a full album catalogue anymore.
+ *
+ * The previous implementation did:
+ *
+ * artist
+ *   -> albums
+ *      -> every album
+ *         -> every album's tracks
+ *            -> extra requests
+ *               -> top tracks fallback
+ *
+ * That creates an N+1 request explosion.
+ *
+ * For the quiz we only need a pool of playable tracks.
+ * Deezer's artist/top endpoint already gives us exactly
+ * that in one request.
+ */
+async function getArtistTracks(
+  artistId: string,
+  limit = 50,
+): Promise<MusicTrack[]> {
+  const safeLimit =
+    Math.min(
+      Math.max(limit, 1),
+      100,
+    )
+
+  return getArtistTopTracks(
+    artistId,
+    safeLimit,
+  )
+}
+
+export const deezerMusicProvider = {
+  searchTracks,
+  getTrackById,
+  getChartTracks,
+  getGenres,
+  getGenreArtists,
+  searchArtists,
+  getArtistTopTracks,
+  getArtistTracks,
+}

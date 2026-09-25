@@ -1,7 +1,8 @@
 import type { Request, Response } from 'express'
-import { deezerMusicProvider } from '../services/music/deezerMusicProvider.js'
-import { discoverTracks } from '../services/music/musicDiscoveryService.js'
 
+import {
+  deezerMusicProvider,
+} from '../services/music/deezerMusicProvider.js'
 
 const FEATURED_ARTISTS = [
   'Rihanna',
@@ -43,38 +44,161 @@ const FEATURED_ARTISTS = [
   'Wizkid',
 ]
 
+type FeaturedArtist = {
+  id: string
+  name: string
+  image: string | null
+}
 
+const artistLookupCache =
+  new Map<
+    string,
+    Promise<FeaturedArtist | null>
+  >()
+
+async function lookupArtist(
+  artistName: string,
+): Promise<FeaturedArtist | null> {
+  const cached =
+    artistLookupCache.get(
+      artistName,
+    )
+
+  if (cached) {
+    return cached
+  }
+
+  const lookupPromise =
+    (async () => {
+      try {
+        const artists =
+          await deezerMusicProvider.searchArtists(
+            artistName,
+            5,
+          )
+
+        if (
+          artists.length === 0
+        ) {
+          console.warn(
+            `No Deezer artist found for "${artistName}".`,
+          )
+
+          return null
+        }
+
+        const normalizedQuery =
+          artistName
+            .trim()
+            .toLowerCase()
+
+        const exactMatch =
+          artists.find(
+            (artist) =>
+              artist.name
+                .trim()
+                .toLowerCase() ===
+              normalizedQuery,
+          )
+
+        const artist =
+          exactMatch ??
+          artists[0]
+
+        return {
+          id: String(artist.id),
+          name:
+            artist.name ??
+            artistName,
+          image:
+            artist.picture_medium ??
+            artist.picture_big ??
+            artist.picture ??
+            null,
+        }
+      } catch (error) {
+        console.error(
+          `Featured artist lookup failed for "${artistName}":`,
+          error,
+        )
+
+        return null
+      }
+    })()
+
+  artistLookupCache.set(
+    artistName,
+    lookupPromise,
+  )
+
+  try {
+    return await lookupPromise
+  } catch (error) {
+    artistLookupCache.delete(
+      artistName,
+    )
+
+    throw error
+  }
+}
+
+export async function getFeaturedArtists(
+  _req: Request,
+  res: Response,
+): Promise<void> {
+  const artists: FeaturedArtist[] = []
+
+  /*
+   * Deliberately sequential.
+   *
+   * The provider already has a global request queue,
+   * but doing this sequentially also prevents this
+   * endpoint from creating a large burst of queued work.
+   */
+  for (
+    const artistName of FEATURED_ARTISTS
+  ) {
+    const artist =
+      await lookupArtist(
+        artistName,
+      )
+
+    if (artist) {
+      artists.push(artist)
+    }
+  }
+
+  res.json({
+    artists,
+  })
+}
 
 export async function searchMusic(
   req: Request,
   res: Response,
-) {
+): Promise<void> {
+  const query =
+    typeof req.query.q === 'string'
+      ? req.query.q.trim()
+      : ''
+
+  if (!query) {
+    res.status(400).json({
+      error:
+        'Search query is required.',
+    })
+
+    return
+  }
+
   try {
-    const query =
-      typeof req.query.q === 'string'
-        ? req.query.q.trim()
-        : ''
-
-    if (!query) {
-      return res.status(400).json({
-        error: 'Search query is required',
-      })
-    }
-
-    const limit =
-      typeof req.query.limit === 'string'
-        ? Number(req.query.limit)
-        : 10
-
     const tracks =
       await deezerMusicProvider.searchTracks(
         query,
-        Number.isFinite(limit)
-          ? Math.min(Math.max(limit, 1), 50)
-          : 10,
+        25,
       )
 
-    return res.json({
+    res.json({
       tracks,
     })
   } catch (error) {
@@ -83,112 +207,11 @@ export async function searchMusic(
       error,
     )
 
-    return res.status(500).json({
-      error: 'Failed to search music',
-    })
-  }
-}
-
-export async function getMusicTrack(
-  req: Request,
-  res: Response,
-) {
-  try {
-    const id = req.params.id
-
-    if (typeof id !== 'string') {
-      return res.status(400).json({
-        error: 'Track ID is required',
-      })
-    }
-
-    const track =
-      await deezerMusicProvider.getTrackById(id)
-
-    if (!track) {
-      return res.status(404).json({
-        error: 'Track not found',
-      })
-    }
-
-    return res.json({ track })
-  } catch (error) {
-    console.error(
-      'Music track lookup failed:',
-      error,
-    )
-
-    return res.status(500).json({
-      error: 'Failed to get music track',
-    })
-  }
-}
-
-export async function getFeaturedArtists(
-  _req: Request,
-  res: Response,
-) {
-  try {
-    const results =
-      await Promise.all(
-        FEATURED_ARTISTS.map(
-          async (artistName) => {
-            const artists =
-              await deezerMusicProvider.searchArtists(
-                artistName,
-                5,
-              )
-
-            const exactMatch =
-              artists.find(
-                (artist) =>
-                  artist.name?.toLowerCase() ===
-                  artistName.toLowerCase(),
-              )
-
-            const artist =
-              exactMatch ?? artists[0]
-
-            if (!artist) {
-              return null
-            }
-
-            return {
-              id: String(artist.id),
-              name:
-                artist.name ??
-                artistName,
-              image:
-                artist.picture_medium ??
-                artist.picture_big ??
-                artist.picture ??
-                null,
-            }
-          },
-        ),
-      )
-
-    const artists =
-      results.filter(
-        (
-          artist,
-        ): artist is NonNullable<
-          typeof artist
-        > => artist !== null,
-      )
-
-    return res.json({
-      artists,
-    })
-  } catch (error) {
-    console.error(
-      'Featured artist lookup failed:',
-      error,
-    )
-
-    return res.status(500).json({
+    res.status(500).json({
       error:
-        'Failed to get featured artists',
+        error instanceof Error
+          ? error.message
+          : 'Music search failed.',
     })
   }
 }
@@ -196,35 +219,33 @@ export async function getFeaturedArtists(
 export async function discoverMusic(
   req: Request,
   res: Response,
-) {
+): Promise<void> {
+  const genre =
+    typeof req.query.genre === 'string'
+      ? req.query.genre.trim()
+      : ''
+
   try {
-    const limit =
-      typeof req.query.limit === 'string'
-        ? Number(req.query.limit)
-        : 20
+    if (genre) {
+      const artists =
+        await deezerMusicProvider.getGenreArtists(
+          genre,
+          50,
+        )
 
-    const decade =
-      typeof req.query.decade === 'string'
-        ? Number(req.query.decade)
-        : undefined
+      res.json({
+        artists,
+      })
 
-    const validDecade =
-      decade !== undefined &&
-      [1960, 1970, 1980, 1990, 2000, 2010, 2020].includes(
-        decade,
-      )
-        ? decade
-        : undefined
+      return
+    }
 
     const tracks =
-      await discoverTracks(
-        Number.isFinite(limit)
-          ? Math.min(Math.max(limit, 1), 50)
-          : 20,
-        validDecade,
+      await deezerMusicProvider.getChartTracks(
+        50,
       )
 
-    return res.json({
+    res.json({
       tracks,
     })
   } catch (error) {
@@ -233,8 +254,60 @@ export async function discoverMusic(
       error,
     )
 
-    return res.status(500).json({
-      error: 'Failed to discover music',
+    res.status(500).json({
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Music discovery failed.',
+    })
+  }
+}
+
+export async function getMusicTrack(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const id =
+    typeof req.params.id === 'string'
+      ? req.params.id.trim()
+      : ''
+
+  if (!id) {
+    res.status(400).json({
+      error:
+        'Track ID is required.',
+    })
+
+    return
+  }
+
+  try {
+    const track =
+      await deezerMusicProvider.getTrackById(
+        id,
+      )
+
+    if (!track) {
+      res.status(404).json({
+        error:
+          'Track not found.',
+      })
+
+      return
+    }
+
+    res.json(track)
+  } catch (error) {
+    console.error(
+      'Track lookup failed:',
+      error,
+    )
+
+    res.status(500).json({
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Track lookup failed.',
     })
   }
 }
