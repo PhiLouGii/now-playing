@@ -317,7 +317,7 @@ function Play() {
               type="button"
               className="section-link"
               onClick={() =>
-                navigate('/play-by-artist')
+                navigate('/artists')
               }
             >
               View more artists

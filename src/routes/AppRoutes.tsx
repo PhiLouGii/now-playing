@@ -10,6 +10,7 @@ import ArtistGame from '../pages/ArtistGame/ArtistGame'
 import AlbumGame from '../pages/AlbumGame/AlbumGame'
 import YearGame from '../pages/YearGame/YearGame'
 import PlayByArtist from '../pages/PlayByArtist/PlayByArtist'
+import Artists from '../pages/Artists/Artists'
 import DailyChallenge from '../pages/DailyChallenge/DailyChallenge'
 import DailyChallengeResults from '../pages/DailyChallenge/DailyChallengeResults'
 import SignUp from '../pages/Auth/SignUp'
@@ -22,6 +23,10 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/play" element={<Play />} />
+      <Route
+  path="/artists"
+  element={<Artists />}
+/>
       <Route path="/game" element={<Game />} />
       <Route
         path="/artist-game"
