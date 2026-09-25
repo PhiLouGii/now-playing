@@ -201,8 +201,15 @@ export default function PlayByArtist() {
   const scoreSubmittedRef =
     useRef(false)
 
-  const initialLoadRef =
-    useRef(false)
+  /*
+   * The initial request is stored so React Strict Mode can
+   * safely run the loading effect more than once without
+   * creating two different first questions.
+   */
+  const initialQuestionPromiseRef =
+    useRef<Promise<Question | null> | null>(
+      null,
+    )
 
 
   const stopTimer =
@@ -247,12 +254,6 @@ export default function PlayByArtist() {
    * -------------------------------------------------------
    *
    * Every question gets its own Audio object.
-   *
-   * This is critical.
-   *
-   * The previous implementation created an Audio object
-   * only the first time the player was clicked, meaning
-   * question 2 could still play question 1's preview.
    */
   useEffect(() => {
     const previousAudio =
@@ -308,6 +309,12 @@ export default function PlayByArtist() {
   ])
 
 
+  /*
+   * -------------------------------------------------------
+   * FETCH QUESTION
+   * -------------------------------------------------------
+   */
+
   const fetchQuestion =
     useCallback(
       async () => {
@@ -319,20 +326,12 @@ export default function PlayByArtist() {
             'No artist was selected.',
           )
 
-          setLoading(false)
-
           return null
         }
 
         try {
           setError(null)
 
-          /*
-           * This request is made ONLY when we actually
-           * need the next question.
-           *
-           * There is no background preloading.
-           */
           const nextQuestion =
             await generateQuestion(
               'name-the-song',
@@ -353,8 +352,8 @@ export default function PlayByArtist() {
           }
 
           /*
-           * Reserve this track only after the question
-           * has actually been generated.
+           * Reserve the track only after the question has
+           * successfully been generated.
            */
           if (
             nextQuestion.song.id &&
@@ -445,11 +444,6 @@ export default function PlayByArtist() {
           RECOGNITION_TIME,
         )
 
-        /*
-         * Setting the question here triggers the audio
-         * effect above, which creates a completely new
-         * Audio object for this exact question.
-         */
         setQuestion(
           nextQuestion,
         )
@@ -471,24 +465,41 @@ export default function PlayByArtist() {
    * -------------------------------------------------------
    * INITIAL QUESTION
    * -------------------------------------------------------
+   *
+   * The promise is cached so React Strict Mode cannot
+   * accidentally create two different first questions.
    */
-
   useEffect(() => {
+    let cancelled = false
+
     if (
-      initialLoadRef.current
+      !selectedArtist ||
+      !selectedArtistId
     ) {
+      setLoading(false)
+
       return
     }
 
-    initialLoadRef.current =
-      true
+    if (
+      !initialQuestionPromiseRef.current
+    ) {
+      initialQuestionPromiseRef.current =
+        fetchQuestion()
+    }
 
     const loadInitialQuestion =
       async () => {
         setLoading(true)
 
         const firstQuestion =
-          await fetchQuestion()
+          await initialQuestionPromiseRef.current
+
+        if (
+          cancelled
+        ) {
+          return
+        }
 
         if (
           firstQuestion
@@ -504,12 +515,15 @@ export default function PlayByArtist() {
     void loadInitialQuestion()
 
     return () => {
+      cancelled = true
       stopTimer()
       stopAudio()
     }
   }, [
     fetchQuestion,
     loadQuestion,
+    selectedArtist,
+    selectedArtistId,
     stopAudio,
     stopTimer,
   ])
@@ -608,10 +622,6 @@ export default function PlayByArtist() {
         }
 
         try {
-          /*
-           * The audio object was created specifically
-           * for the current question.
-           */
           await audio.play()
 
           setIsPlaying(
@@ -631,8 +641,7 @@ export default function PlayByArtist() {
       [
         isPlaying,
         question,
-      ],
-    )
+      ])
 
 
   /*
@@ -754,8 +763,7 @@ export default function PlayByArtist() {
         stopAudio,
         stopTimer,
         timeRemaining,
-      ],
-    )
+      ])
 
 
   /*
@@ -817,19 +825,13 @@ export default function PlayByArtist() {
         correctAnswers,
         score,
         totalListeningTime,
-      ],
-    )
+      ])
 
 
   /*
    * -------------------------------------------------------
    * NEXT QUESTION
    * -------------------------------------------------------
-   *
-   * No preloaded question exists anymore.
-   *
-   * We generate the next question only after the player
-   * explicitly finishes the current one.
    */
 
   const handleNextQuestion =
@@ -898,8 +900,7 @@ export default function PlayByArtist() {
         stopAudio,
         stopTimer,
         submitFinalScore,
-      ],
-    )
+      ])
 
 
   const handleExit =
@@ -914,8 +915,7 @@ export default function PlayByArtist() {
         navigate,
         stopAudio,
         stopTimer,
-      ],
-    )
+      ])
 
 
   const handlePlayAgain =
@@ -937,8 +937,7 @@ export default function PlayByArtist() {
         navigate,
         selectedArtist,
         selectedArtistId,
-      ],
-    )
+      ])
 
 
   /*
@@ -1188,6 +1187,7 @@ export default function PlayByArtist() {
                     FASTEST
                     RECOGNITION
                   </p>
+                  
 
                   <strong>
                     {fastestSong.recognitionTime.toFixed(
