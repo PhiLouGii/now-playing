@@ -2,6 +2,7 @@ import type {
   MusicTrack,
 } from '../music/musicProvider.js'
 
+
 type DeezerArtistRef = {
   id: number
   name: string
@@ -9,6 +10,7 @@ type DeezerArtistRef = {
   picture_medium?: string
   picture_big?: string
 }
+
 
 type DeezerAlbum = {
   id: number
@@ -19,6 +21,7 @@ type DeezerAlbum = {
   release_date?: string
 }
 
+
 type DeezerTrack = {
   id: number
   title: string
@@ -28,6 +31,7 @@ type DeezerTrack = {
   artist?: DeezerArtistRef
   album?: DeezerAlbum
 }
+
 
 type DeezerTrackListResponse = {
   data?: DeezerTrack[]
@@ -40,6 +44,7 @@ type DeezerTrackListResponse = {
   }
 }
 
+
 type DeezerGenre = {
   id: number
   name: string
@@ -47,6 +52,7 @@ type DeezerGenre = {
   picture_medium?: string
   picture_big?: string
 }
+
 
 type DeezerGenreResponse = {
   data?: DeezerGenre[]
@@ -56,6 +62,7 @@ type DeezerGenreResponse = {
     code?: number
   }
 }
+
 
 type DeezerArtistListResponse = {
   data?: DeezerArtistRef[]
@@ -68,29 +75,37 @@ type DeezerArtistListResponse = {
   }
 }
 
-const baseUrl = 'https://api.deezer.com'
+
+const baseUrl =
+  'https://api.deezer.com'
+
 
 /*
+ * ---------------------------------------------------------
+ * REQUEST QUEUE
+ * ---------------------------------------------------------
+ *
  * Deezer applies a short rolling request quota.
  *
- * We deliberately stay far below the commonly observed threshold
- * instead of trying to use the maximum available rate.
- *
- * 100ms between requests = approximately 10 requests/second.
- *
- * This queue is shared by every Deezer request made by this process.
+ * All requests made through this provider pass through
+ * the same queue.
  */
-const REQUEST_INTERVAL_MS = 100
+
+const REQUEST_INTERVAL_MS =
+  100
 
 let nextRequestAt = 0
 
-let requestQueue: Promise<void> = Promise.resolve()
+let requestQueue:
+  Promise<void> =
+  Promise.resolve()
+
 
 function sleep(
   milliseconds: number,
 ): Promise<void> {
   return new Promise(
-    (resolve) => {
+    resolve => {
       setTimeout(
         resolve,
         milliseconds,
@@ -99,28 +114,36 @@ function sleep(
   )
 }
 
+
 function enqueueRequest<T>(
   request: () => Promise<T>,
 ): Promise<T> {
-  const execute = async (): Promise<T> => {
-    const now = Date.now()
+  const execute =
+    async (): Promise<T> => {
+      const now =
+        Date.now()
 
-    const wait =
-      Math.max(
-        0,
-        nextRequestAt - now,
-      )
+      const wait =
+        Math.max(
+          0,
+          nextRequestAt -
+            now,
+        )
 
-    if (wait > 0) {
-      await sleep(wait)
+      if (
+        wait > 0
+      ) {
+        await sleep(
+          wait,
+        )
+      }
+
+      nextRequestAt =
+        Date.now() +
+        REQUEST_INTERVAL_MS
+
+      return request()
     }
-
-    nextRequestAt =
-      Date.now() +
-      REQUEST_INTERVAL_MS
-
-    return request()
-  }
 
   const result =
     requestQueue.then(
@@ -137,12 +160,20 @@ function enqueueRequest<T>(
   return result
 }
 
+
+/*
+ * ---------------------------------------------------------
+ * QUOTA HANDLING
+ * ---------------------------------------------------------
+ */
+
 function isQuotaError(
   error: unknown,
 ): boolean {
   if (
     !error ||
-    typeof error !== 'object'
+    typeof error !==
+      'object'
   ) {
     return false
   }
@@ -154,13 +185,16 @@ function isQuotaError(
     }
 
   return (
-    candidate.code === 4 ||
-    candidate.message?.toLowerCase()
+    candidate.code ===
+      4 ||
+    candidate.message
+      ?.toLowerCase()
       .includes(
         'quota limit exceeded',
       ) === true
   )
 }
+
 
 async function fetchJson<T>(
   path: string,
@@ -176,7 +210,9 @@ async function fetchJson<T>(
       const text =
         await response.text()
 
-      if (!response.ok) {
+      if (
+        !response.ok
+      ) {
         throw new Error(
           `Deezer request failed (${response.status}): ${text}`,
         )
@@ -186,7 +222,9 @@ async function fetchJson<T>(
 
       try {
         data =
-          JSON.parse(text) as T
+          JSON.parse(
+            text,
+          ) as T
       } catch {
         throw new Error(
           `Deezer returned invalid JSON for ${path}.`,
@@ -197,6 +235,7 @@ async function fetchJson<T>(
     },
   )
 }
+
 
 async function fetchJsonWithQuotaRetry<T>(
   path: string,
@@ -209,7 +248,9 @@ async function fetchJsonWithQuotaRetry<T>(
   ) {
     try {
       const response =
-        await fetchJson<T>(path)
+        await fetchJson<T>(
+          path,
+        )
 
       const responseWithError =
         response as T & {
@@ -227,36 +268,39 @@ async function fetchJsonWithQuotaRetry<T>(
         )
       ) {
         if (
-          attempt === retries
+          attempt ===
+          retries
         ) {
           throw new Error(
             'Deezer quota limit exceeded after retries.',
           )
         }
 
-        /*
-         * Deezer's quota error can arrive inside a
-         * successful HTTP response, so we need to
-         * inspect the JSON body rather than status code.
-         */
         await sleep(
-          5000 * (attempt + 1),
+          5000 *
+            (attempt + 1),
         )
 
         continue
       }
 
       return response
-    } catch (error) {
+    } catch (
+      error
+    ) {
       if (
-        !isQuotaError(error) ||
-        attempt === retries
+        !isQuotaError(
+          error,
+        ) ||
+        attempt ===
+          retries
       ) {
         throw error
       }
 
       await sleep(
-        5000 * (attempt + 1),
+        5000 *
+          (attempt + 1),
       )
     }
   }
@@ -266,64 +310,101 @@ async function fetchJsonWithQuotaRetry<T>(
   )
 }
 
+
+/*
+ * ---------------------------------------------------------
+ * TRACK TRANSFORMATION
+ * ---------------------------------------------------------
+ */
+
 function getArtworkUrl(
   track: DeezerTrack,
 ): string {
   return (
-    track.album?.cover_big ??
-    track.album?.cover_medium ??
-    track.album?.cover ??
-    track.artist?.picture_big ??
-    track.artist?.picture_medium ??
-    track.artist?.picture ??
+    track.album
+      ?.cover_big ??
+    track.album
+      ?.cover_medium ??
+    track.album
+      ?.cover ??
+    track.artist
+      ?.picture_big ??
+    track.artist
+      ?.picture_medium ??
+    track.artist
+      ?.picture ??
     ''
   )
 }
+
 
 function getReleaseYear(
   track: DeezerTrack,
 ): number {
   const releaseDate =
-    track.album?.release_date
+    track.album
+      ?.release_date
 
-  if (!releaseDate) {
+  if (
+    !releaseDate
+  ) {
     return 0
   }
 
   const year =
     Number(
-      releaseDate.slice(0, 4),
+      releaseDate.slice(
+        0,
+        4,
+      ),
     )
 
-  return Number.isInteger(year)
+  return Number.isInteger(
+    year,
+  )
     ? year
     : 0
 }
+
 
 function transformTrack(
   track: DeezerTrack,
 ): MusicTrack {
   return {
-    id: String(track.id),
-    title: track.title,
+    id: String(
+      track.id,
+    ),
+    title:
+      track.title,
     artist:
-      track.artist?.name ??
+      track.artist
+        ?.name ??
       'Unknown Artist',
     album:
-      track.album?.title ??
+      track.album
+        ?.title ??
       'Unknown Album',
     releaseYear:
-      getReleaseYear(track),
+      getReleaseYear(
+        track,
+      ),
     artworkUrl:
-      getArtworkUrl(track),
+      getArtworkUrl(
+        track,
+      ),
     previewUrl:
-  track.preview ?? undefined,
+      track.preview ??
+      undefined,
     genres: [],
-    provider: 'deezer',
+    provider:
+      'deezer',
     providerId:
-      String(track.id),
+      String(
+        track.id,
+      ),
   }
 }
+
 
 function cleanTracks(
   tracks: DeezerTrack[],
@@ -331,50 +412,77 @@ function cleanTracks(
   const seen =
     new Set<string>()
 
-  const result: MusicTrack[] = []
+  const result:
+    MusicTrack[] = []
 
-  for (const track of tracks) {
-    if (!track.preview) {
+  for (
+    const track of tracks
+  ) {
+    /*
+     * Play by Artist depends on Deezer preview URLs,
+     * so tracks without previews cannot participate.
+     */
+    if (
+      !track.preview
+    ) {
       continue
     }
 
     if (
-      !track.artist?.name ||
+      !track.artist
+        ?.name ||
       !track.title
     ) {
       continue
     }
 
     const id =
-      String(track.id)
+      String(
+        track.id,
+      )
 
-    if (seen.has(id)) {
+    if (
+      seen.has(id)
+    ) {
       continue
     }
 
     seen.add(id)
 
     result.push(
-      transformTrack(track),
+      transformTrack(
+        track,
+      ),
     )
   }
 
   return result
 }
 
+
+/*
+ * ---------------------------------------------------------
+ * SEARCH
+ * ---------------------------------------------------------
+ */
+
 async function searchTracks(
   query: string,
   limit = 25,
 ): Promise<MusicTrack[]> {
   const encoded =
-    encodeURIComponent(query)
+    encodeURIComponent(
+      query,
+    )
 
   const response =
     await fetchJsonWithQuotaRetry<DeezerTrackListResponse>(
       `/search?q=${encoded}&limit=${limit}`,
     )
 
-  if (response.error) {
+  if (
+    response.error
+  ) {
     throw new Error(
       `Deezer track search error: ${
         response.error.message ??
@@ -384,16 +492,26 @@ async function searchTracks(
   }
 
   return cleanTracks(
-    response.data ?? [],
+    response.data ??
+      [],
   )
 }
+
+
+/*
+ * ---------------------------------------------------------
+ * SINGLE TRACK
+ * ---------------------------------------------------------
+ */
 
 async function getTrackById(
   id: string,
 ): Promise<MusicTrack | null> {
   const response =
     await fetchJsonWithQuotaRetry<DeezerTrack>(
-      `/track/${encodeURIComponent(id)}`,
+      `/track/${encodeURIComponent(
+        id,
+      )}`,
     )
 
   if (
@@ -409,6 +527,13 @@ async function getTrackById(
   )
 }
 
+
+/*
+ * ---------------------------------------------------------
+ * CHARTS
+ * ---------------------------------------------------------
+ */
+
 async function getChartTracks(
   limit = 50,
 ): Promise<MusicTrack[]> {
@@ -417,7 +542,9 @@ async function getChartTracks(
       `/chart/0/tracks?limit=${limit}`,
     )
 
-  if (response.error) {
+  if (
+    response.error
+  ) {
     throw new Error(
       `Deezer chart error: ${
         response.error.message ??
@@ -427,17 +554,29 @@ async function getChartTracks(
   }
 
   return cleanTracks(
-    response.data ?? [],
+    response.data ??
+      [],
   )
 }
 
-async function getGenres(): Promise<DeezerGenre[]> {
+
+/*
+ * ---------------------------------------------------------
+ * GENRES
+ * ---------------------------------------------------------
+ */
+
+async function getGenres(): Promise<
+  DeezerGenre[]
+> {
   const response =
     await fetchJsonWithQuotaRetry<DeezerGenreResponse>(
       '/genre',
     )
 
-  if (response.error) {
+  if (
+    response.error
+  ) {
     throw new Error(
       `Deezer genre error: ${
         response.error.message ??
@@ -446,13 +585,19 @@ async function getGenres(): Promise<DeezerGenre[]> {
     )
   }
 
-  return response.data ?? []
+  return (
+    response.data ??
+    []
+  )
 }
+
 
 async function getGenreArtists(
   genreId: string,
   limit = 50,
-): Promise<DeezerArtistRef[]> {
+): Promise<
+  DeezerArtistRef[]
+> {
   const response =
     await fetchJsonWithQuotaRetry<DeezerArtistListResponse>(
       `/genre/${encodeURIComponent(
@@ -460,7 +605,9 @@ async function getGenreArtists(
       )}/artists?limit=${limit}`,
     )
 
-  if (response.error) {
+  if (
+    response.error
+  ) {
     throw new Error(
       `Deezer genre artist error: ${
         response.error.message ??
@@ -469,22 +616,38 @@ async function getGenreArtists(
     )
   }
 
-  return response.data ?? []
+  return (
+    response.data ??
+    []
+  )
 }
+
+
+/*
+ * ---------------------------------------------------------
+ * ARTISTS
+ * ---------------------------------------------------------
+ */
 
 async function searchArtists(
   query: string,
   limit = 5,
-): Promise<DeezerArtistRef[]> {
+): Promise<
+  DeezerArtistRef[]
+> {
   const encoded =
-    encodeURIComponent(query)
+    encodeURIComponent(
+      query,
+    )
 
   const response =
     await fetchJsonWithQuotaRetry<DeezerArtistListResponse>(
       `/search/artist?q=${encoded}&limit=${limit}`,
     )
 
-  if (response.error) {
+  if (
+    response.error
+  ) {
     throw new Error(
       `Deezer artist search error: ${
         response.error.message ??
@@ -493,21 +656,42 @@ async function searchArtists(
     )
   }
 
-  return response.data ?? []
+  return (
+    response.data ??
+    []
+  )
 }
+
+
+/*
+ * ---------------------------------------------------------
+ * ARTIST TOP TRACKS
+ * ---------------------------------------------------------
+ */
 
 async function getArtistTopTracks(
   artistId: string,
   limit = 50,
 ): Promise<MusicTrack[]> {
+  const safeLimit =
+    Math.min(
+      Math.max(
+        limit,
+        1,
+      ),
+      100,
+    )
+
   const response =
     await fetchJsonWithQuotaRetry<DeezerTrackListResponse>(
       `/artist/${encodeURIComponent(
         artistId,
-      )}/top?limit=${limit}`,
+      )}/top?limit=${safeLimit}`,
     )
 
-  if (response.error) {
+  if (
+    response.error
+  ) {
     throw new Error(
       `Deezer artist top tracks error: ${
         response.error.message ??
@@ -517,35 +701,35 @@ async function getArtistTopTracks(
   }
 
   return cleanTracks(
-    response.data ?? [],
+    response.data ??
+      [],
   )
 }
 
+
 /*
- * This is intentionally NOT a full album catalogue anymore.
+ * ---------------------------------------------------------
+ * ARTIST TRACKS
+ * ---------------------------------------------------------
  *
- * The previous implementation did:
+ * This intentionally uses the artist top endpoint rather
+ * than walking every album.
  *
- * artist
- *   -> albums
- *      -> every album
- *         -> every album's tracks
- *            -> extra requests
- *               -> top tracks fallback
- *
- * That creates an N+1 request explosion.
- *
- * For the quiz we only need a pool of playable tracks.
- * Deezer's artist/top endpoint already gives us exactly
- * that in one request.
+ * The game service can use searchTracks() as a fallback
+ * when an artist's top endpoint contains too few playable
+ * previews.
  */
+
 async function getArtistTracks(
   artistId: string,
   limit = 50,
 ): Promise<MusicTrack[]> {
   const safeLimit =
     Math.min(
-      Math.max(limit, 1),
+      Math.max(
+        limit,
+        1,
+      ),
       100,
     )
 
@@ -555,13 +739,21 @@ async function getArtistTracks(
   )
 }
 
-export const deezerMusicProvider = {
-  searchTracks,
-  getTrackById,
-  getChartTracks,
-  getGenres,
-  getGenreArtists,
-  searchArtists,
-  getArtistTopTracks,
-  getArtistTracks,
-}
+
+/*
+ * ---------------------------------------------------------
+ * PROVIDER
+ * ---------------------------------------------------------
+ */
+
+export const deezerMusicProvider =
+  {
+    searchTracks,
+    getTrackById,
+    getChartTracks,
+    getGenres,
+    getGenreArtists,
+    searchArtists,
+    getArtistTopTracks,
+    getArtistTracks,
+  }

@@ -63,11 +63,16 @@ function normalizeArtistName(
  * ARTIST CATALOGUE CACHE
  * ---------------------------------------------------------
  *
- * The frontend sends the Deezer artist ID as a string.
+ * The cache stores the result of the Deezer lookup.
  *
- * We keep that ID as a string throughout the game service.
- * Only the Deezer provider receives the numeric version
- * when it needs to call the Deezer API.
+ * IMPORTANT:
+ *
+ * A cached catalogue must NEVER be handed directly to
+ * question-generation code because that code may filter,
+ * shuffle, or otherwise create derived arrays from it.
+ *
+ * Every caller receives a fresh array and fresh track
+ * objects.
  */
 
 const artistCatalogueCache =
@@ -77,7 +82,22 @@ const artistCatalogueCache =
   >()
 
 
+function cloneTracks(
+  tracks: MusicTrack[],
+): MusicTrack[] {
+  return tracks.map(
+    track => ({
+      ...track,
+      genres: [
+        ...track.genres,
+      ],
+    }),
+  )
+}
+
+
 async function getArtistCatalogue(
+  artist: string,
   artistId: string,
 ): Promise<MusicTrack[]> {
   const cached =
@@ -86,7 +106,12 @@ async function getArtistCatalogue(
     )
 
   if (cached) {
-    return cached
+    const tracks =
+      await cached
+
+    return cloneTracks(
+      tracks,
+    )
   }
 
   const numericArtistId =
@@ -105,22 +130,161 @@ async function getArtistCatalogue(
     return []
   }
 
+  const normalizedArtist =
+    normalizeArtistName(
+      artist,
+    )
+
   const cataloguePromise =
     (async () => {
-      const tracks =
-  await deezerMusicProvider.getArtistTracks(
-    artistId,
-    50,
-  )
+      /*
+       * First source:
+       *
+       * Deezer's artist top-tracks endpoint.
+       *
+       * This is cheap and normally gives us the most
+       * useful tracks for a quiz.
+       */
+      let tracks =
+        await deezerMusicProvider.getArtistTracks(
+          artistId,
+          50,
+        )
 
-      return tracks.filter(
-        isPlayableMusicTrack,
-      )
+      tracks =
+        tracks.filter(
+          isPlayableMusicTrack,
+        )
+
+      /*
+       * Some artists have no playable previews in the
+       * top-tracks response.
+       *
+       * Fall back to Deezer track search so artists such
+       * as Rihanna and The Killers can still participate.
+       */
+      if (
+        tracks.length < 4
+      ) {
+        try {
+          console.log(
+            `Artist top tracks provided only ${tracks.length} playable tracks for "${artist}". Trying Deezer artist search fallback.`,
+          )
+
+          const searchedTracks =
+            await deezerMusicProvider.searchTracks(
+              artist,
+              50,
+            )
+
+          const fallbackTracks =
+            searchedTracks
+              .filter(
+                isPlayableMusicTrack,
+              )
+              .filter(
+                track =>
+                  normalizeArtistName(
+                    track.artist,
+                  ) === normalizedArtist,
+              )
+
+          const byId =
+            new Map<
+              string,
+              MusicTrack
+            >()
+
+          for (
+            const track of tracks
+          ) {
+            byId.set(
+              track.id,
+              track,
+            )
+          }
+
+          for (
+            const track of fallbackTracks
+          ) {
+            if (
+              !byId.has(
+                track.id,
+              )
+            ) {
+              byId.set(
+                track.id,
+                track,
+              )
+            }
+          }
+
+          tracks =
+            Array.from(
+              byId.values(),
+            )
+        } catch (error) {
+          /*
+           * The top-track result is still usable if
+           * the fallback search fails.
+           */
+          console.warn(
+            `Artist search fallback failed for "${artist}". Using top-track results.`,
+            error,
+          )
+        }
+      }
+
+      /*
+       * Final artist verification.
+       *
+       * This prevents a search result for a similarly
+       * named artist from entering the selected artist's
+       * question pool.
+       */
+      const artistTracks =
+        tracks.filter(
+          track =>
+            normalizeArtistName(
+              track.artist,
+            ) === normalizedArtist,
+        )
+
+      /*
+       * Remove duplicate songs caused by alternate
+       * releases, editions, or duplicate API results.
+       */
+      const seen =
+        new Set<string>()
+
+      const uniqueTracks =
+        artistTracks.filter(
+          track => {
+            const key =
+              `${normalizeArtistName(
+                track.title,
+              )}::${normalizeArtistName(
+                track.artist,
+              )}`
+
+            if (
+              seen.has(key)
+            ) {
+              return false
+            }
+
+            seen.add(key)
+
+            return true
+          },
+        )
+
+      return uniqueTracks
     })()
 
   /*
-   * Store the promise immediately so concurrent
-   * requests share the same catalogue request.
+   * Store the promise immediately so concurrent requests
+   * for the same artist share the same API request.
    */
   artistCatalogueCache.set(
     artistId,
@@ -142,11 +306,12 @@ async function getArtistCatalogue(
       )
     }
 
-    return tracks
+    return cloneTracks(
+      tracks,
+    )
   } catch (error) {
     /*
-     * Allow a future request to retry if
-     * Deezer failed.
+     * Allow a future request to retry if Deezer failed.
      */
     artistCatalogueCache.delete(
       artistId,
@@ -346,22 +511,6 @@ async function getEligibleCategoryTracks(
  * ---------------------------------------------------------
  * PLAY BY ARTIST
  * ---------------------------------------------------------
- *
- * The artist ID is the source of truth.
- *
- * Flow:
- *
- *   Play
- *     ↓
- *   Artist selected
- *     ↓
- *   Deezer artist ID
- *     ↓
- *   getArtistCatalogue(artistId)
- *     ↓
- *   playable artist tracks
- *
- * There is NO artist-name search here.
  */
 
 async function getEligibleArtistTracks(
@@ -386,10 +535,6 @@ async function getEligibleArtistTracks(
   const excludedIds =
     new Set(excludedTrackIds)
 
-  /*
-   * Validate the ID while keeping the
-   * application-level value as a string.
-   */
   const numericArtistId =
     Number(artistId)
 
@@ -412,18 +557,15 @@ async function getEligibleArtistTracks(
     )
 
     /*
-     * Get the complete artist catalogue
-     * from the shared cache.
+     * The catalogue itself is cached, but this call receives
+     * a fresh copy every time.
      */
     const tracks =
       await getArtistCatalogue(
+        artist,
         artistId,
       )
 
-    /*
-     * Keep only tracks whose credited artist
-     * matches the selected artist.
-     */
     const artistTracks =
       tracks
         .filter(
@@ -440,9 +582,8 @@ async function getEligibleArtistTracks(
         )
 
     /*
-     * Remove duplicate song titles caused by
-     * re-releases, deluxe editions, compilations,
-     * etc.
+     * Remove duplicate song titles caused by re-releases,
+     * deluxe editions, compilations, etc.
      */
     const seen =
       new Set<string>()
@@ -535,14 +676,6 @@ export async function generateGameQuestion(
 
   /*
    * ARTIST FILTER
-   *
-   * Artist gameplay requires BOTH:
-   *
-   *   artist
-   *   artistId
-   *
-   * The name is used for display/filtering.
-   * The ID is used to retrieve the catalogue.
    */
   else if (
     artist &&
@@ -558,8 +691,8 @@ export async function generateGameQuestion(
   }
 
   /*
-   * Artist name without ID should never
-   * reach the catalogue lookup.
+   * Artist name without ID should never reach
+   * the catalogue lookup.
    */
   else if (artist) {
     throw new Error(
@@ -611,10 +744,11 @@ export async function generateGameQuestion(
     )
 
   /*
-   * For Play by Artist, pass the complete
-   * eligible artist pool so the question
-   * generation service can create distractors
-   * from the same artist.
+   * Play by Artist gets the exact same eligible pool
+   * used to choose the correct song.
+   *
+   * This guarantees the distractors are derived from
+   * the same artist catalogue.
    */
   return generateQuestion(
     correctTrack,
@@ -624,8 +758,9 @@ export async function generateGameQuestion(
     excludedTrackIds,
     categoryId,
     artist
-      ? eligibleTracks
+      ? cloneTracks(
+          eligibleTracks,
+        )
       : undefined,
   )
 }
-
