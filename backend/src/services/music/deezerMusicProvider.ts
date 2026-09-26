@@ -349,15 +349,12 @@ function getArtworkUrl(
 
 function getReleaseYear(
   track: DeezerTrack,
-): number {
+): number | undefined {
   const releaseDate =
-    track.album
-      ?.release_date
+    track.album?.release_date
 
-  if (
-    !releaseDate
-  ) {
-    return 0
+  if (!releaseDate) {
+    return undefined
   }
 
   const year =
@@ -368,11 +365,9 @@ function getReleaseYear(
       ),
     )
 
-  return Number.isInteger(
-    year,
-  )
+  return Number.isInteger(year)
     ? year
-    : 0
+    : undefined
 }
 
 
@@ -862,44 +857,48 @@ async function getAlbumTracks(
     }
 
     /*
-     * Deezer's album-track endpoint may return tracks
-     * without their complete album object.
-     *
-     * We already know which album these tracks came from,
-     * so restore that metadata before transformation.
+     * Deezer can return a partial album object on each
+     * track. Merge it with the complete album metadata
+     * we already obtained from /artist/{id}/albums.
      */
     const tracksWithAlbum =
       page.map(
         track => ({
           ...track,
 
-          album:
-            track.album ??
-            {
-              id:
-                album.id,
+          album: {
+            ...(track.album ?? {}),
 
-              title:
-                album.title,
+            id:
+              album.id,
 
-              cover:
-                album.cover,
+            title:
+              album.title,
 
-              cover_small:
-                album.cover_small,
+            cover:
+              track.album?.cover ??
+              album.cover,
 
-              cover_medium:
-                album.cover_medium,
+            cover_small:
+              track.album?.cover_small ??
+              album.cover_small,
 
-              cover_big:
-                album.cover_big,
+            cover_medium:
+              track.album?.cover_medium ??
+              album.cover_medium,
 
-              cover_xl:
-                album.cover_xl,
+            cover_big:
+              track.album?.cover_big ??
+              album.cover_big,
 
-              release_date:
-                album.release_date,
-            },
+            cover_xl:
+              track.album?.cover_xl ??
+              album.cover_xl,
+
+            release_date:
+              track.album?.release_date ??
+              album.release_date,
+          },
         }),
       )
 
@@ -907,10 +906,6 @@ async function getAlbumTracks(
       ...tracksWithAlbum,
     )
 
-    /*
-     * Continue pagination if Deezer says another page
-     * exists.
-     */
     if (
       response.next
     ) {
@@ -920,9 +915,6 @@ async function getAlbumTracks(
       continue
     }
 
-    /*
-     * Some responses provide total without a next URL.
-     */
     if (
       response.total !== undefined &&
       index +
@@ -942,6 +934,8 @@ async function getAlbumTracks(
     allTracks,
   )
 }
+
+
 
 
 

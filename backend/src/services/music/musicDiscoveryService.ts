@@ -106,7 +106,10 @@ async function enrichReleaseYears(
 ): Promise<MusicTrack[]> {
   return Promise.all(
     tracks.map(async (track) => {
-      if (track.releaseYear !== undefined) {
+      if (
+        track.releaseYear !== undefined &&
+        track.releaseYear > 0
+      ) {
         return track
       }
 
@@ -116,8 +119,25 @@ async function enrichReleaseYears(
             track.id,
           )
 
-        return detailed ?? track
-      } catch {
+        if (detailed) {
+          console.log(
+            `Release year lookup: ${track.title} → ${detailed.releaseYear}`,
+          )
+
+          return detailed
+        }
+
+        console.log(
+          `Release year lookup failed: ${track.title}`,
+        )
+
+        return track
+      } catch (error) {
+        console.error(
+          `Failed to get release year for "${track.title}":`,
+          error,
+        )
+
         return track
       }
     }),
@@ -162,7 +182,8 @@ async function discoverFromArtists(
       }),
     )
 
-  const flattened = results.flat()
+  const flattened =
+    results.flat()
 
   return deduplicateTracks(
     filterGameTracks(flattened),
@@ -172,9 +193,8 @@ async function discoverFromArtists(
 async function discoverFromBasicArtists(
   limit: number,
 ): Promise<MusicTrack[]> {
-  const artists = shuffle(
-    DISCOVERY_ARTISTS,
-  )
+  const artists =
+    shuffle(DISCOVERY_ARTISTS)
 
   const candidates: MusicTrack[] = []
 
@@ -185,10 +205,11 @@ async function discoverFromBasicArtists(
     index < artists.length;
     index += batchSize
   ) {
-    const batch = artists.slice(
-      index,
-      index + batchSize,
-    )
+    const batch =
+      artists.slice(
+        index,
+        index + batchSize,
+      )
 
     const discovered =
       await discoverFromArtists(
@@ -196,18 +217,24 @@ async function discoverFromBasicArtists(
         20,
       )
 
-    candidates.push(...discovered)
+    candidates.push(
+      ...discovered,
+    )
 
     const usable =
       limitTracksPerArtist(
         deduplicateTracks(
-          filterGameTracks(candidates),
+          filterGameTracks(
+            candidates,
+          ),
         ),
         2,
       )
 
     if (usable.length >= limit) {
-      return shuffle(usable).slice(
+      return shuffle(
+        usable,
+      ).slice(
         0,
         limit,
       )
@@ -217,11 +244,16 @@ async function discoverFromBasicArtists(
   return shuffle(
     limitTracksPerArtist(
       deduplicateTracks(
-        filterGameTracks(candidates),
+        filterGameTracks(
+          candidates,
+        ),
       ),
       2,
     ),
-  ).slice(0, limit)
+  ).slice(
+    0,
+    limit,
+  )
 }
 
 async function discoverTracksForDecade(
@@ -229,12 +261,19 @@ async function discoverTracksForDecade(
   decade: number,
 ): Promise<MusicTrack[]> {
   const artists =
-    getArtistsForDecade(decade)
+    getArtistsForDecade(
+      decade,
+    )
 
   const selectedArtists =
-    shuffle(artists).slice(
+    shuffle(
+      artists,
+    ).slice(
       0,
-      Math.min(20, artists.length),
+      Math.min(
+        20,
+        artists.length,
+      ),
     )
 
   const tracks =
@@ -244,7 +283,22 @@ async function discoverTracksForDecade(
     )
 
   const enriched =
-    await enrichReleaseYears(tracks)
+    await enrichReleaseYears(
+      tracks,
+    )
+
+  console.log(
+    `After enrichment for ${decade}:`,
+    enriched.slice(
+      0,
+      10,
+    ).map((track) => ({
+      title: track.title,
+      artist: track.artist,
+      releaseYear:
+        track.releaseYear,
+    })),
+  )
 
   const decadeTracks =
     filterByDecade(
@@ -252,12 +306,34 @@ async function discoverTracksForDecade(
       decade,
     )
 
+  console.log(
+    `Eligible ${decade}s tracks:`,
+    decadeTracks.length,
+  )
+
+  console.log(
+    decadeTracks.slice(
+      0,
+      10,
+    ).map((track) => ({
+      title: track.title,
+      artist: track.artist,
+      releaseYear:
+        track.releaseYear,
+    })),
+  )
+
   return shuffle(
     limitTracksPerArtist(
-      deduplicateTracks(decadeTracks),
+      deduplicateTracks(
+        decadeTracks,
+      ),
       2,
     ),
-  ).slice(0, limit)
+  ).slice(
+    0,
+    limit,
+  )
 }
 
 export async function discoverTracks(
@@ -271,5 +347,8 @@ export async function discoverTracks(
     )
   }
 
-  return discoverFromBasicArtists(limit)
+  return discoverFromBasicArtists(
+    limit,
+  )
 }
+
