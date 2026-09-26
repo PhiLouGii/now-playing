@@ -1,6 +1,5 @@
 import {
   ArrowRight,
-  CalendarDays,
   Disc3,
 } from 'lucide-react'
 
@@ -109,6 +108,70 @@ const ERAS = [
 ]
 
 
+/*
+ * ---------------------------------------------------------
+ * GENRES
+ * ---------------------------------------------------------
+ *
+ * Add the corresponding artwork to:
+ *
+ * public/genres/
+ */
+
+const GENRES = [
+  {
+    label: 'Pop',
+    genre: 'pop',
+    image: '/genres/pop.png',
+  },
+
+  {
+    label: 'Hip-Hop',
+    genre: 'hip-hop',
+    image: '/genres/hip-hop.png',
+  },
+
+  {
+    label: 'R&B',
+    genre: 'rnb',
+    image: '/genres/rnb.png',
+  },
+
+  {
+    label: 'Rock',
+    genre: 'rock',
+    image: '/genres/rock.png',
+  },
+
+  {
+    label: 'Latin Pop',
+    genre: 'latin',
+    image: '/genres/latin.png',
+  },
+
+  {
+    label: 'K-Pop',
+    genre: 'kpop',
+    image: '/genres/kpop.png',
+  },
+  {
+    label: 'Country',
+    genre: 'country',
+    image: '/genres/country.png',
+  },
+  {
+    label: 'Reggae',
+    genre: 'regae',
+    image: '/genres/reggae.png',
+  },
+  {
+    label: 'Afrobeats',
+    genre: 'afrobeats',
+    image: '/genres/afrobeats.png',
+  },
+]
+
+
 function Play() {
   const navigate =
     useNavigate()
@@ -212,6 +275,39 @@ function Play() {
   }
 
 
+  function handleGenreSelect(
+    genre: string,
+    label: string,
+  ) {
+    navigate(
+      '/game',
+      {
+        state: {
+          roundConfig: {
+            id:
+              `genre-${genre}`,
+
+            name:
+              label,
+
+            questionCount:
+              10,
+
+            questionTypes: [
+              'name-the-song',
+            ],
+
+            difficulty:
+              'medium',
+
+            genre,
+          },
+        },
+      },
+    )
+  }
+
+
   function handlePixelCover() {
     navigate(
       '/album-game',
@@ -221,13 +317,6 @@ function Play() {
             'pixel-cover',
         },
       },
-    )
-  }
-
-
-  function handleDailyChallenge() {
-    navigate(
-      '/daily-challenge',
     )
   }
 
@@ -271,64 +360,16 @@ function Play() {
 
         <main className="play-page__content">
 
-          <section className="play-section play-section--featured">
 
-            <div className="play-section__heading">
-              <div>
-                <p className="play-section__eyebrow">
-                  FEATURED
-                </p>
-
-                <h2>
-                  Today&apos;s Challenge
-                </h2>
-              </div>
-
-              <CalendarDays
-                size={22}
-                strokeWidth={1.8}
-              />
-            </div>
-
-
-            <button
-              type="button"
-              className="daily-card"
-              onClick={
-                handleDailyChallenge
-              }
-            >
-              <div className="daily-card__content">
-                <span className="daily-card__label">
-                  DAILY CHALLENGE
-                </span>
-
-                <h3>
-                  One challenge.
-                  <br />
-                  One score.
-                </h3>
-
-                <p>
-                  Ten songs. One chance to
-                  see how well you know
-                  today&apos;s music.
-                </p>
-              </div>
-
-              <span className="daily-card__action">
-                Play today
-                <ArrowRight size={17} />
-              </span>
-            </button>
-
-          </section>
-
+          {/* -------------------------------------------------
+              PLAY BY ARTIST
+              ------------------------------------------------- */}
 
           <section className="play-section">
 
             <div className="play-section__heading">
               <div>
+
                 <p className="play-section__eyebrow">
                   PLAY BY ARTIST
                 </p>
@@ -341,6 +382,7 @@ function Play() {
                   Name their songs and see how
                   well you know their music.
                 </p>
+
               </div>
             </div>
 
@@ -348,24 +390,32 @@ function Play() {
             <div className="artist-grid">
 
               {artistsLoading ? (
+
                 Array.from({
                   length: 5,
                 }).map(
                   (_, index) => (
+
                     <div
                       key={index}
                       className="artist-card artist-card--loading"
                       aria-hidden="true"
                     >
+
                       <div className="artist-card__image-skeleton" />
 
                       <div className="artist-card__name-skeleton" />
+
                     </div>
+
                   ),
                 )
+
               ) : (
+
                 featuredArtists.map(
                   artist => {
+
                     const image =
                       getArtistImage(
                         artist,
@@ -384,7 +434,9 @@ function Play() {
                           )
                         }
                       >
+
                         {image ? (
+
                           <img
                             src={
                               image
@@ -392,12 +444,15 @@ function Play() {
                             alt=""
                             className="artist-card__image"
                           />
+
                         ) : (
+
                           <div className="artist-card__image artist-card__image--fallback">
                             {artist.name
                               .charAt(0)
                               .toUpperCase()}
                           </div>
+
                         )}
 
                         <span className="artist-card__name">
@@ -408,10 +463,12 @@ function Play() {
                           size={15}
                           className="artist-card__arrow"
                         />
+
                       </button>
                     )
                   },
                 )
+
               )}
 
             </div>
@@ -419,10 +476,12 @@ function Play() {
 
             {!artistsLoading &&
               artists.length === 0 && (
+
                 <p className="artist-grid__empty">
                   Unable to load artists right now.
                   Please try again later.
                 </p>
+
               )}
 
 
@@ -435,11 +494,13 @@ function Play() {
                 )
               }
             >
+
               View more artists
 
               <ArrowRight
                 size={16}
               />
+
             </button>
 
           </section>
@@ -452,7 +513,9 @@ function Play() {
           <section className="play-section">
 
             <div className="play-section__heading">
+
               <div>
+
                 <p className="play-section__eyebrow">
                   PLAY BY ERA
                 </p>
@@ -465,7 +528,9 @@ function Play() {
                   Go back through the music that
                   defined each era.
                 </p>
+
               </div>
+
             </div>
 
 
@@ -473,6 +538,7 @@ function Play() {
 
               {ERAS.map(
                 era => (
+
                   <button
                     key={
                       era.decade
@@ -487,6 +553,7 @@ function Play() {
                   >
 
                     <div className="era-card__image-wrapper">
+
                       <img
                         src={
                           era.image
@@ -494,18 +561,21 @@ function Play() {
                         alt={`${era.label} music era`}
                         className="era-card__image"
                       />
+
                     </div>
 
 
                     <div className="era-card__content">
 
                       <div>
+
                         <span className="era-card__label">
                           {era.label}
                         </span>
 
                         <span className="era-card__description">
                         </span>
+
                       </div>
 
                       <ArrowRight
@@ -516,6 +586,7 @@ function Play() {
                     </div>
 
                   </button>
+
                 ),
               )}
 
@@ -524,15 +595,103 @@ function Play() {
           </section>
 
 
+          {/* -------------------------------------------------
+              PLAY BY GENRE
+              ------------------------------------------------- */}
+
+          <section className="play-section">
+
+            <div className="play-section__heading">
+
+              <div>
+
+                <p className="play-section__eyebrow">
+                  PLAY BY GENRE
+                </p>
+
+                <h2>
+                  Pick a sound.
+                </h2>
+
+                <p>
+                  Dive into the music you love.
+                </p>
+
+              </div>
+
+            </div>
+
+
+            <div className="genre-grid">
+
+              {GENRES.map(
+                genre => (
+
+                  <button
+                    key={
+                      genre.genre
+                    }
+                    type="button"
+                    className="genre-card"
+                    onClick={() =>
+                      handleGenreSelect(
+                        genre.genre,
+                        genre.label,
+                      )
+                    }
+                  >
+
+                    <div className="genre-card__image-wrapper">
+
+                      <img
+                        src={
+                          genre.image
+                        }
+                        alt={`${genre.label} music`}
+                        className="genre-card__image"
+                      />
+
+                    </div>
+
+
+                    <div className="genre-card__content">
+
+                      <span className="genre-card__label">
+                        {genre.label}
+                      </span>
+
+                      <ArrowRight
+                        size={15}
+                        className="genre-card__arrow"
+                      />
+
+                    </div>
+
+                  </button>
+
+                ),
+              )}
+
+            </div>
+
+          </section>
+
+
+          {/* -------------------------------------------------
+              MORE WAYS TO PLAY
+              ------------------------------------------------- */}
+
           <section className="play-section play-section--pixel">
 
             <div className="pixel-card">
 
               <div className="pixel-card__icon">
+
                 <Disc3
                   size={24}
                   strokeWidth={1.7}
                 />
+
               </div>
 
 
@@ -561,16 +720,19 @@ function Play() {
                   handlePixelCover
                 }
               >
+
                 Play
 
                 <ArrowRight
                   size={16}
                 />
+
               </button>
 
             </div>
 
           </section>
+
 
         </main>
 
