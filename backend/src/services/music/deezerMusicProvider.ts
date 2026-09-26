@@ -16,8 +16,10 @@ type DeezerAlbum = {
   id: number
   title: string
   cover?: string
+  cover_small?: string
   cover_medium?: string
   cover_big?: string
+  cover_xl?: string
   release_date?: string
 }
 
@@ -801,10 +803,19 @@ async function getArtistAlbums(
  * ---------------------------------------------------------
  * ALBUM TRACKS
  * ---------------------------------------------------------
+ *
+ * Loads tracks from an album and restores the album
+ * metadata that Deezer may omit from individual track
+ * objects returned by /album/{id}/tracks.
+ *
+ * The album metadata comes directly from the album list
+ * returned by /artist/{id}/albums, so we do not need an
+ * additional /album/{id} request.
  */
 
 async function getAlbumTracks(
   albumId: string,
+  album: DeezerAlbum,
   limit = 100,
 ): Promise<MusicTrack[]> {
   const safeLimit =
@@ -816,10 +827,10 @@ async function getAlbumTracks(
       100,
     )
 
-  const tracks:
-    DeezerTrack[] = []
-
   let index = 0
+
+  const allTracks:
+    DeezerTrack[] = []
 
   while (true) {
     const response =
@@ -844,27 +855,95 @@ async function getAlbumTracks(
       response.data ??
       []
 
-    tracks.push(
-      ...page,
-    )
-
     if (
-      page.length === 0 ||
-      !response.next ||
-      tracks.length >=
-        (response.total ?? tracks.length)
+      page.length === 0
     ) {
       break
     }
 
-    index +=
-      page.length
+    /*
+     * Deezer's album-track endpoint may return tracks
+     * without their complete album object.
+     *
+     * We already know which album these tracks came from,
+     * so restore that metadata before transformation.
+     */
+    const tracksWithAlbum =
+      page.map(
+        track => ({
+          ...track,
+
+          album:
+            track.album ??
+            {
+              id:
+                album.id,
+
+              title:
+                album.title,
+
+              cover:
+                album.cover,
+
+              cover_small:
+                album.cover_small,
+
+              cover_medium:
+                album.cover_medium,
+
+              cover_big:
+                album.cover_big,
+
+              cover_xl:
+                album.cover_xl,
+
+              release_date:
+                album.release_date,
+            },
+        }),
+      )
+
+    allTracks.push(
+      ...tracksWithAlbum,
+    )
+
+    /*
+     * Continue pagination if Deezer says another page
+     * exists.
+     */
+    if (
+      response.next
+    ) {
+      index +=
+        page.length
+
+      continue
+    }
+
+    /*
+     * Some responses provide total without a next URL.
+     */
+    if (
+      response.total !== undefined &&
+      index +
+        page.length <
+        response.total
+    ) {
+      index +=
+        page.length
+
+      continue
+    }
+
+    break
   }
 
   return cleanTracks(
-    tracks,
+    allTracks,
   )
 }
+
+
 
 
 /*
@@ -893,12 +972,13 @@ async function getArtistDiscography(
   ) {
     try {
       const tracks =
-        await getAlbumTracks(
-          String(
-            album.id,
-          ),
-          100,
-        )
+  await getAlbumTracks(
+    String(
+      album.id,
+    ),
+    album,
+    100,
+  )
 
       allTracks.push(
         ...tracks,
