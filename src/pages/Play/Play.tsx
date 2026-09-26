@@ -3,12 +3,18 @@ import {
   CalendarDays,
   Disc3,
 } from 'lucide-react'
+
 import {
   useEffect,
   useState,
 } from 'react'
-import { useNavigate } from 'react-router-dom'
+
+import {
+  useNavigate,
+} from 'react-router-dom'
+
 import './Play.css'
+
 
 type FeaturedArtist = {
   id: string
@@ -16,18 +22,13 @@ type FeaturedArtist = {
   image: string | null
 }
 
+
 /*
  * Custom artwork for artists.
  *
  * Add your own images to:
  *
  * public/artists/
- *
- * Example:
- * public/artists/rihanna.webp
- *
- * Artists without a custom image will temporarily
- * fall back to their Deezer image.
  */
 const CUSTOM_ARTIST_IMAGES: Record<
   string,
@@ -49,30 +50,96 @@ const CUSTOM_ARTIST_IMAGES: Record<
     '/artists/the-killers.png',
 }
 
+
+/*
+ * ---------------------------------------------------------
+ * ERAS
+ * ---------------------------------------------------------
+ *
+ * Each era has its own visual representing how people
+ * experienced music during that period.
+ *
+ * The source images should be 600 x 600px and stored in:
+ *
+ * public/eras/
+ */
+
 const ERAS = [
-  { label: '60s', decade: 1960 },
-  { label: '70s', decade: 1970 },
-  { label: '80s', decade: 1980 },
-  { label: '90s', decade: 1990 },
-  { label: '00s', decade: 2000 },
-  { label: '10s', decade: 2010 },
-  { label: '20s', decade: 2020 },
+  {
+    label: '60s',
+    image: '/eras/60s.png',
+    description: 'Jukebox',
+    decade: 1960,
+  },
+
+  {
+    label: '70s',
+    image: '/eras/70s.png',
+    description: 'Vinyl',
+    decade: 1970,
+  },
+
+  {
+    label: '80s',
+    image: '/eras/80s.png',
+    description: 'Cassette',
+    decade: 1980,
+  },
+
+  {
+    label: '90s',
+    image: '/eras/90s.png',
+    description: 'CD',
+    decade: 1990,
+  },
+
+  {
+    label: '00s',
+    image: '/eras/00s.png',
+    description: 'iPod',
+    decade: 2000,
+  },
+
+  {
+    label: '10s',
+    image: '/eras/10s.png',
+    description: 'Streaming',
+    decade: 2010,
+  },
+
+  {
+    label: '20s',
+    image: '/eras/20s.png',
+    description: 'Now Playing',
+    decade: 2020,
+  },
 ]
 
-function Play() {
-  const navigate = useNavigate()
 
-  const [artists, setArtists] =
+function Play() {
+  const navigate =
+    useNavigate()
+
+  const [
+    artists,
+    setArtists,
+  ] =
     useState<FeaturedArtist[]>([])
 
-  const [artistsLoading, setArtistsLoading] =
+  const [
+    artistsLoading,
+    setArtistsLoading,
+  ] =
     useState(true)
+
 
   useEffect(() => {
     async function loadArtists() {
       try {
         const response =
-          await fetch('/api/music/artists')
+          await fetch(
+            '/api/music/artists',
+          )
 
         if (!response.ok) {
           throw new Error(
@@ -92,54 +159,85 @@ function Play() {
           error,
         )
       } finally {
-        setArtistsLoading(false)
+        setArtistsLoading(
+          false,
+        )
       }
     }
 
     loadArtists()
   }, [])
 
+
   function handleArtistSelect(
     artist: FeaturedArtist,
   ) {
-    navigate('/play-by-artist', {
-      state: {
-        artistId: artist.id,
-        artist: artist.name,
+    navigate(
+      '/play-by-artist',
+      {
+        state: {
+          artistId:
+            artist.id,
+
+          artist:
+            artist.name,
+        },
       },
-    })
+    )
   }
+
 
   function handleEraSelect(
     decade: number,
   ) {
-    navigate('/game', {
-      state: {
-        roundConfig: {
-          id: `decade-${decade}`,
-          name: `${decade}s`,
-          questionCount: 10,
-          questionTypes: [
-            'name-the-song',
-          ],
-          difficulty: 'medium',
-          decade,
+    navigate(
+      '/game',
+      {
+        state: {
+          roundConfig: {
+            id:
+              `decade-${decade}`,
+
+            name:
+              `${decade}s`,
+
+            questionCount:
+              10,
+
+            questionTypes: [
+              'name-the-song',
+            ],
+
+            difficulty:
+              'medium',
+
+            decade,
+          },
         },
       },
-    })
+    )
   }
+
 
   function handlePixelCover() {
-    navigate('/album-game', {
-      state: {
-        mode: 'pixel-cover',
+    navigate(
+      '/album-game',
+      {
+        state: {
+          mode:
+            'pixel-cover',
+        },
       },
-    })
+    )
   }
 
+
   function handleDailyChallenge() {
-    navigate('/daily-challenge')
+    navigate(
+      '/daily-challenge',
+    )
   }
+
 
   function getArtistImage(
     artist: FeaturedArtist,
@@ -147,16 +245,20 @@ function Play() {
     return (
       CUSTOM_ARTIST_IMAGES[
         artist.name
-      ] ?? artist.image
+      ] ??
+      artist.image
     )
   }
+
 
   const featuredArtists =
     artists.slice(0, 5)
 
+
   return (
     <div className="play-page">
       <div className="play-page__container">
+
         <header className="play-page__header">
           <p className="label">
             PLAY
@@ -173,8 +275,11 @@ function Play() {
           </p>
         </header>
 
+
         <main className="play-page__content">
+
           <section className="play-section play-section--featured">
+
             <div className="play-section__heading">
               <div>
                 <p className="play-section__eyebrow">
@@ -191,6 +296,7 @@ function Play() {
                 strokeWidth={1.8}
               />
             </div>
+
 
             <button
               type="button"
@@ -222,9 +328,12 @@ function Play() {
                 <ArrowRight size={17} />
               </span>
             </button>
+
           </section>
 
+
           <section className="play-section">
+
             <div className="play-section__heading">
               <div>
                 <p className="play-section__eyebrow">
@@ -242,24 +351,28 @@ function Play() {
               </div>
             </div>
 
+
             <div className="artist-grid">
+
               {artistsLoading ? (
                 Array.from({
                   length: 5,
-                }).map((_, index) => (
-                  <div
-                    key={index}
-                    className="artist-card artist-card--loading"
-                    aria-hidden="true"
-                  >
-                    <div className="artist-card__image-skeleton" />
+                }).map(
+                  (_, index) => (
+                    <div
+                      key={index}
+                      className="artist-card artist-card--loading"
+                      aria-hidden="true"
+                    >
+                      <div className="artist-card__image-skeleton" />
 
-                    <div className="artist-card__name-skeleton" />
-                  </div>
-                ))
+                      <div className="artist-card__name-skeleton" />
+                    </div>
+                  ),
+                )
               ) : (
                 featuredArtists.map(
-                  (artist) => {
+                  artist => {
                     const image =
                       getArtistImage(
                         artist,
@@ -267,7 +380,9 @@ function Play() {
 
                     return (
                       <button
-                        key={artist.id}
+                        key={
+                          artist.id
+                        }
                         type="button"
                         className="artist-card"
                         onClick={() =>
@@ -278,7 +393,9 @@ function Play() {
                       >
                         {image ? (
                           <img
-                            src={image}
+                            src={
+                              image
+                            }
                             alt=""
                             className="artist-card__image"
                           />
@@ -303,7 +420,9 @@ function Play() {
                   },
                 )
               )}
+
             </div>
+
 
             {!artistsLoading &&
               artists.length === 0 && (
@@ -313,19 +432,32 @@ function Play() {
                 </p>
               )}
 
+
             <button
               type="button"
               className="section-link"
               onClick={() =>
-                navigate('/artists')
+                navigate(
+                  '/artists',
+                )
               }
             >
               View more artists
-              <ArrowRight size={16} />
+
+              <ArrowRight
+                size={16}
+              />
             </button>
+
           </section>
 
+
+          {/* -------------------------------------------------
+              PLAY BY ERA
+              ------------------------------------------------- */}
+
           <section className="play-section">
+
             <div className="play-section__heading">
               <div>
                 <p className="play-section__eyebrow">
@@ -343,33 +475,67 @@ function Play() {
               </div>
             </div>
 
-            <div className="era-grid">
-              {ERAS.map((era) => (
-                <button
-                  key={era.decade}
-                  type="button"
-                  className="era-card"
-                  onClick={() =>
-                    handleEraSelect(
-                      era.decade,
-                    )
-                  }
-                >
-                  <span>
-                    {era.label}
-                  </span>
 
-                  <ArrowRight
-                    size={15}
-                    className="era-card__arrow"
-                  />
-                </button>
-              ))}
+            <div className="era-grid">
+
+              {ERAS.map(
+                era => (
+                  <button
+                    key={
+                      era.decade
+                    }
+                    type="button"
+                    className="era-card"
+                    onClick={() =>
+                      handleEraSelect(
+                        era.decade,
+                      )
+                    }
+                  >
+
+                    <div className="era-card__image-wrapper">
+                      <img
+                        src={
+                          era.image
+                        }
+                        alt={`${era.label} music era`}
+                        className="era-card__image"
+                      />
+                    </div>
+
+
+                    <div className="era-card__content">
+
+                      <div>
+                        <span className="era-card__label">
+                          {era.label}
+                        </span>
+
+                        <span className="era-card__description">
+                          {era.description}
+                        </span>
+                      </div>
+
+                      <ArrowRight
+                        size={15}
+                        className="era-card__arrow"
+                      />
+
+                    </div>
+
+                  </button>
+                ),
+              )}
+
             </div>
+
           </section>
 
+
           <section className="play-section play-section--pixel">
+
             <div className="pixel-card">
+
               <div className="pixel-card__icon">
                 <Disc3
                   size={24}
@@ -377,7 +543,9 @@ function Play() {
                 />
               </div>
 
+
               <div className="pixel-card__content">
+
                 <p className="play-section__eyebrow">
                   MORE WAYS TO PLAY
                 </p>
@@ -390,7 +558,9 @@ function Play() {
                   How little of an album cover
                   do you need to recognize it?
                 </p>
+
               </div>
+
 
               <button
                 type="button"
@@ -400,15 +570,23 @@ function Play() {
                 }
               >
                 Play
-                <ArrowRight size={16} />
+
+                <ArrowRight
+                  size={16}
+                />
               </button>
+
             </div>
+
           </section>
+
         </main>
+
       </div>
     </div>
   )
 }
+
 
 export default Play
 
