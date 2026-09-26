@@ -751,16 +751,14 @@ export async function generateGameQuestion(
    * the same artist catalogue.
    */
   return generateQuestion(
-    correctTrack,
-    type,
-    difficulty,
-    decade,
-    excludedTrackIds,
-    categoryId,
-    artist
-      ? cloneTracks(
-          eligibleTracks,
-        )
-      : undefined,
-  )
+  correctTrack,
+  type,
+  difficulty,
+  decade,
+  excludedTrackIds,
+  categoryId,
+  Boolean(
+    artist,
+  ),
+)
 }

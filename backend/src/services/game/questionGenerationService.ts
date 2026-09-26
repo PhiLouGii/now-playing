@@ -162,54 +162,6 @@ function toGeneratedSong(
   }
 }
 
-
-function selectRestrictedSongAnswers(
-  candidates: MusicTrack[],
-  correctTrack: MusicTrack,
-): MusicTrack[] {
-  const correctTitle =
-    correctTrack.title
-      .trim()
-      .toLowerCase()
-
-  const seenTitles =
-    new Set<string>([
-      correctTitle,
-    ])
-
-  const available =
-    shuffle(
-      candidates,
-    ).filter(
-      track => {
-        const title =
-          track.title
-            .trim()
-            .toLowerCase()
-
-        if (
-          seenTitles.has(
-            title,
-          )
-        ) {
-          return false
-        }
-
-        seenTitles.add(
-          title,
-        )
-
-        return true
-      },
-    )
-
-  return available.slice(
-    0,
-    3,
-  )
-}
-
-
 export async function generateQuestion(
   correctTrack: MusicTrack,
   type: QuestionType = 'name-the-song',
@@ -217,100 +169,13 @@ export async function generateQuestion(
   decade?: number,
   excludedTrackIds: string[] = [],
   categoryId?: string,
-  restrictedCandidateTracks?: MusicTrack[],
+  artistMode = false,
 ): Promise<GeneratedQuestion> {
   const excludedIds =
     new Set(
       excludedTrackIds,
     )
 
-  /*
-   * -------------------------------------------------------
-   * ARTIST-SPECIFIC QUESTION
-   * -------------------------------------------------------
-   *
-   * The candidate pool has already been restricted to
-   * the selected artist by gameQuestionService.
-   *
-   * Make another defensive copy so this function cannot
-   * accidentally mutate anything owned by the caller.
-   */
-  if (
-    restrictedCandidateTracks &&
-    restrictedCandidateTracks.length > 0
-  ) {
-    if (
-      type !== 'name-the-song'
-    ) {
-      throw new Error(
-        'Restricted artist questions only support the "name-the-song" type.',
-      )
-    }
-
-    const candidateSnapshot =
-      restrictedCandidateTracks.map(
-        track => ({
-          ...track,
-          genres: [
-            ...track.genres,
-          ],
-        }),
-      )
-
-    const candidates =
-  candidateSnapshot.filter(
-    track =>
-      track.id !==
-      correctTrack.id,
-  )
-
-    const distractors =
-      selectRestrictedSongAnswers(
-        candidates,
-        correctTrack,
-      )
-
-    if (
-      distractors.length !== 3
-    ) {
-      throw new Error(
-        `Could not generate exactly 3 artist-specific distractors. Found ${distractors.length}.`,
-      )
-    }
-
-    const correctAnswer =
-      getCorrectAnswer(
-        correctTrack,
-        type,
-      )
-
-    const distractorAnswers =
-      distractors.map(
-        distractor =>
-          getDistractorAnswer(
-            distractor,
-            type,
-          ),
-      )
-
-    const answers =
-      shuffle([
-        correctAnswer,
-        ...distractorAnswers,
-      ])
-
-    return {
-      id: createQuestionId(),
-      type,
-      song:
-        toGeneratedSong(
-          correctTrack,
-        ),
-      answers,
-      correctAnswer,
-      difficulty,
-    }
-  }
 
   /*
    * -------------------------------------------------------
@@ -319,26 +184,38 @@ export async function generateQuestion(
    */
 
   const candidates =
-    categoryId
-      ? await getCategoryCandidatePool(
-          categoryId,
-          correctTrack,
-          type,
-          excludedIds,
-        )
-      : await getCandidatePool(
-          correctTrack,
-          {
-            requireReleaseYear:
-              type ===
-              'guess-the-year',
-            decade,
-            questionType:
-              type,
-            excludedTrackIds:
-              excludedIds,
-          },
-        )
+  categoryId
+    ? await getCategoryCandidatePool(
+        categoryId,
+        correctTrack,
+        type,
+        excludedIds,
+      )
+    : await getCandidatePool(
+        correctTrack,
+        {
+          requireReleaseYear:
+            type ===
+            'guess-the-year',
+          decade,
+          questionType:
+            type,
+
+          /*
+           * Artist mode is different:
+           *
+           * Previously used correct songs are allowed
+           * to appear as distractors.
+           *
+           * The correctTrack itself is already excluded
+           * by getCandidatePool's same-track checks.
+           */
+          excludedTrackIds:
+            artistMode
+              ? new Set<string>()
+              : excludedIds,
+        },
+      )
 
   const distractors =
     selectDistractors(
