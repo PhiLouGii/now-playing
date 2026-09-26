@@ -45,6 +45,18 @@ type DeezerTrackListResponse = {
 }
 
 
+type DeezerAlbumListResponse = {
+  data?: DeezerAlbum[]
+  total?: number
+  next?: string
+  error?: {
+    type?: string
+    message?: string
+    code?: number
+  }
+}
+
+
 type DeezerGenre = {
   id: number
   name: string
@@ -84,11 +96,6 @@ const baseUrl =
  * ---------------------------------------------------------
  * REQUEST QUEUE
  * ---------------------------------------------------------
- *
- * Deezer applies a short rolling request quota.
- *
- * All requests made through this provider pass through
- * the same queue.
  */
 
 const REQUEST_INTERVAL_MS =
@@ -418,10 +425,6 @@ function cleanTracks(
   for (
     const track of tracks
   ) {
-    /*
-     * Play by Artist depends on Deezer preview URLs,
-     * so tracks without previews cannot participate.
-     */
     if (
       !track.preview
     ) {
@@ -709,20 +712,100 @@ async function getArtistTopTracks(
 
 /*
  * ---------------------------------------------------------
- * ARTIST TRACKS
+ * ARTIST ALBUMS
  * ---------------------------------------------------------
- *
- * This intentionally uses the artist top endpoint rather
- * than walking every album.
- *
- * The game service can use searchTracks() as a fallback
- * when an artist's top endpoint contains too few playable
- * previews.
  */
 
-async function getArtistTracks(
+async function getArtistAlbums(
   artistId: string,
-  limit = 50,
+  limit = 100,
+): Promise<DeezerAlbum[]> {
+  const safeLimit =
+    Math.min(
+      Math.max(
+        limit,
+        1,
+      ),
+      100,
+    )
+
+  const albums:
+    DeezerAlbum[] = []
+
+  let index = 0
+
+  while (true) {
+    const response =
+      await fetchJsonWithQuotaRetry<DeezerAlbumListResponse>(
+        `/artist/${encodeURIComponent(
+          artistId,
+        )}/albums?limit=${safeLimit}&index=${index}`,
+      )
+
+    if (
+      response.error
+    ) {
+      throw new Error(
+        `Deezer artist albums error: ${
+          response.error.message ??
+          'Unknown error'
+        }`,
+      )
+    }
+
+    const page =
+      response.data ??
+      []
+
+    albums.push(
+      ...page,
+    )
+
+    if (
+      page.length === 0 ||
+      !response.next ||
+      albums.length >=
+        (response.total ?? albums.length)
+    ) {
+      break
+    }
+
+    index +=
+      page.length
+  }
+
+  const seen =
+    new Set<number>()
+
+  return albums.filter(
+    album => {
+      if (
+        seen.has(
+          album.id,
+        )
+      ) {
+        return false
+      }
+
+      seen.add(
+        album.id,
+      )
+
+      return true
+    },
+  )
+}
+
+
+/*
+ * ---------------------------------------------------------
+ * ALBUM TRACKS
+ * ---------------------------------------------------------
+ */
+
+async function getAlbumTracks(
+  albumId: string,
+  limit = 100,
 ): Promise<MusicTrack[]> {
   const safeLimit =
     Math.min(
@@ -733,9 +816,155 @@ async function getArtistTracks(
       100,
     )
 
-  return getArtistTopTracks(
+  const tracks:
+    DeezerTrack[] = []
+
+  let index = 0
+
+  while (true) {
+    const response =
+      await fetchJsonWithQuotaRetry<DeezerTrackListResponse>(
+        `/album/${encodeURIComponent(
+          albumId,
+        )}/tracks?limit=${safeLimit}&index=${index}`,
+      )
+
+    if (
+      response.error
+    ) {
+      throw new Error(
+        `Deezer album tracks error: ${
+          response.error.message ??
+          'Unknown error'
+        }`,
+      )
+    }
+
+    const page =
+      response.data ??
+      []
+
+    tracks.push(
+      ...page,
+    )
+
+    if (
+      page.length === 0 ||
+      !response.next ||
+      tracks.length >=
+        (response.total ?? tracks.length)
+    ) {
+      break
+    }
+
+    index +=
+      page.length
+  }
+
+  return cleanTracks(
+    tracks,
+  )
+}
+
+
+/*
+ * ---------------------------------------------------------
+ * FULL ARTIST DISCOGRAPHY
+ * ---------------------------------------------------------
+ *
+ * Builds a much broader catalogue than the artist top
+ * endpoint by walking through the artist's albums.
+ */
+
+async function getArtistDiscography(
+  artistId: string,
+): Promise<MusicTrack[]> {
+  const albums =
+    await getArtistAlbums(
+      artistId,
+      100,
+    )
+
+  const allTracks:
+    MusicTrack[] = []
+
+  for (
+    const album of albums
+  ) {
+    try {
+      const tracks =
+        await getAlbumTracks(
+          String(
+            album.id,
+          ),
+          100,
+        )
+
+      allTracks.push(
+        ...tracks,
+      )
+    } catch (
+      error
+    ) {
+      console.warn(
+        `Failed to load tracks for Deezer album "${album.title}" (${album.id}).`,
+        error,
+      )
+    }
+  }
+
+  const seen =
+    new Set<string>()
+
+  return allTracks.filter(
+    track => {
+      const key =
+        `${track.title
+          .trim()
+          .toLowerCase()}::${track.artist
+          .trim()
+          .toLowerCase()}`
+
+      if (
+        seen.has(key)
+      ) {
+        return false
+      }
+
+      seen.add(
+        key,
+      )
+
+      return true
+    },
+  )
+}
+
+
+/*
+ * ---------------------------------------------------------
+ * ARTIST TRACKS
+ * ---------------------------------------------------------
+ *
+ * Returns the broader artist catalogue.
+ *
+ * The top-tracks endpoint remains available separately
+ * for places that specifically want popular tracks.
+ */
+
+async function getArtistTracks(
+  artistId: string,
+  limit = 50,
+): Promise<MusicTrack[]> {
+  /*
+   * The limit is retained for compatibility with the
+   * existing provider interface, but the full artist
+   * catalogue is now preferred.
+   */
+  void limit
+
+  return getArtistDiscography(
     artistId,
-    safeLimit,
   )
 }
 
@@ -755,5 +984,9 @@ export const deezerMusicProvider =
     getGenreArtists,
     searchArtists,
     getArtistTopTracks,
+    getArtistAlbums,
+    getAlbumTracks,
+    getArtistDiscography,
     getArtistTracks,
   }
+

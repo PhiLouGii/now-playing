@@ -63,16 +63,11 @@ function normalizeArtistName(
  * ARTIST CATALOGUE CACHE
  * ---------------------------------------------------------
  *
- * The cache stores the result of the Deezer lookup.
- *
- * IMPORTANT:
- *
- * A cached catalogue must NEVER be handed directly to
- * question-generation code because that code may filter,
- * shuffle, or otherwise create derived arrays from it.
+ * The cache stores the result of the Deezer artist
+ * catalogue lookup.
  *
  * Every caller receives a fresh array and fresh track
- * objects.
+ * objects so filtering cannot mutate the cached catalogue.
  */
 
 const artistCatalogueCache =
@@ -95,6 +90,27 @@ function cloneTracks(
   )
 }
 
+
+/*
+ * ---------------------------------------------------------
+ * ARTIST CATALOGUE
+ * ---------------------------------------------------------
+ *
+ * The artist catalogue is built from the artist's full
+ * Deezer discography rather than only Deezer's top tracks.
+ *
+ * This is important for artists such as Sabrina Carpenter
+ * where the top-tracks endpoint may only provide a small
+ * subset of the artist's actual catalogue.
+ *
+ * If the discography has too few playable previews, we
+ * expand it with:
+ *
+ *   1. Deezer top tracks
+ *   2. Deezer artist track search
+ *
+ * All sources are merged and deduplicated.
+ */
 
 async function getArtistCatalogue(
   artist: string,
@@ -138,17 +154,16 @@ async function getArtistCatalogue(
   const cataloguePromise =
     (async () => {
       /*
-       * First source:
+       * ---------------------------------------------------
+       * FIRST SOURCE: FULL ARTIST DISCOGRAPHY
+       * ---------------------------------------------------
        *
-       * Deezer's artist top-tracks endpoint.
-       *
-       * This is cheap and normally gives us the most
-       * useful tracks for a quiz.
+       * This walks the artist's albums and collects their
+       * tracks instead of relying only on top tracks.
        */
       let tracks =
-        await deezerMusicProvider.getArtistTracks(
+        await deezerMusicProvider.getArtistDiscography(
           artistId,
-          50,
         )
 
       tracks =
@@ -156,20 +171,32 @@ async function getArtistCatalogue(
           isPlayableMusicTrack,
         )
 
+      console.log(
+        `Artist discography provided ${tracks.length} playable tracks for "${artist}".`,
+      )
+
       /*
-       * Some artists have no playable previews in the
-       * top-tracks response.
+       * ---------------------------------------------------
+       * EXPANSION SOURCES
+       * ---------------------------------------------------
        *
-       * Fall back to Deezer track search so artists such
-       * as Rihanna and The Killers can still participate.
+       * If the discography contains too few playable
+       * previews, use top tracks and Deezer search to widen
+       * the catalogue.
        */
       if (
-        tracks.length < 4
+        tracks.length < 10
       ) {
         try {
           console.log(
-            `Artist top tracks provided only ${tracks.length} playable tracks for "${artist}". Trying Deezer artist search fallback.`,
+            `Artist discography provided only ${tracks.length} playable tracks for "${artist}". Expanding with top tracks and Deezer search.`,
           )
+
+          const additionalTracks =
+            await deezerMusicProvider.getArtistTopTracks(
+              artistId,
+              100,
+            )
 
           const searchedTracks =
             await deezerMusicProvider.searchTracks(
@@ -177,24 +204,15 @@ async function getArtistCatalogue(
               50,
             )
 
-          const fallbackTracks =
-            searchedTracks
-              .filter(
-                isPlayableMusicTrack,
-              )
-              .filter(
-                track =>
-                  normalizeArtistName(
-                    track.artist,
-                  ) === normalizedArtist,
-              )
-
           const byId =
             new Map<
               string,
               MusicTrack
             >()
 
+          /*
+           * Start with the full discography.
+           */
           for (
             const track of tracks
           ) {
@@ -204,18 +222,59 @@ async function getArtistCatalogue(
             )
           }
 
+          /*
+           * Add playable top tracks belonging to the
+           * selected artist.
+           */
           for (
-            const track of fallbackTracks
+            const track of additionalTracks
           ) {
             if (
-              !byId.has(
-                track.id,
-              )
-            ) {
-              byId.set(
-                track.id,
+              isPlayableMusicTrack(
                 track,
-              )
+              ) &&
+              normalizeArtistName(
+                track.artist,
+              ) === normalizedArtist
+            ) {
+              if (
+                !byId.has(
+                  track.id,
+                )
+              ) {
+                byId.set(
+                  track.id,
+                  track,
+                )
+              }
+            }
+          }
+
+          /*
+           * Add playable search results belonging to the
+           * selected artist.
+           */
+          for (
+            const track of searchedTracks
+          ) {
+            if (
+              isPlayableMusicTrack(
+                track,
+              ) &&
+              normalizeArtistName(
+                track.artist,
+              ) === normalizedArtist
+            ) {
+              if (
+                !byId.has(
+                  track.id,
+                )
+              ) {
+                byId.set(
+                  track.id,
+                  track,
+                )
+              }
             }
           }
 
@@ -223,24 +282,29 @@ async function getArtistCatalogue(
             Array.from(
               byId.values(),
             )
+
+          console.log(
+            `Expanded artist catalogue to ${tracks.length} playable tracks for "${artist}".`,
+          )
         } catch (error) {
           /*
-           * The top-track result is still usable if
-           * the fallback search fails.
+           * The full discography is still useful if one of
+           * the additional sources fails.
            */
           console.warn(
-            `Artist search fallback failed for "${artist}". Using top-track results.`,
+            `Additional artist catalogue expansion failed for "${artist}". Using discography results.`,
             error,
           )
         }
       }
 
       /*
-       * Final artist verification.
+       * ---------------------------------------------------
+       * FINAL ARTIST VERIFICATION
+       * ---------------------------------------------------
        *
-       * This prevents a search result for a similarly
-       * named artist from entering the selected artist's
-       * question pool.
+       * Only tracks actually credited to the selected
+       * artist are allowed into the artist game.
        */
       const artistTracks =
         tracks.filter(
@@ -251,8 +315,18 @@ async function getArtistCatalogue(
         )
 
       /*
-       * Remove duplicate songs caused by alternate
-       * releases, editions, or duplicate API results.
+       * ---------------------------------------------------
+       * FINAL SONG DEDUPLICATION
+       * ---------------------------------------------------
+       *
+       * The same song can appear on:
+       *
+       *   - the original album
+       *   - deluxe editions
+       *   - compilations
+       *   - re-releases
+       *
+       * Keep only one copy of each title + artist pair.
        */
       const seen =
         new Set<string>()
@@ -268,12 +342,16 @@ async function getArtistCatalogue(
               )}`
 
             if (
-              seen.has(key)
+              seen.has(
+                key,
+              )
             ) {
               return false
             }
 
-            seen.add(key)
+            seen.add(
+              key,
+            )
 
             return true
           },
@@ -284,7 +362,7 @@ async function getArtistCatalogue(
 
   /*
    * Store the promise immediately so concurrent requests
-   * for the same artist share the same API request.
+   * for the same artist share the same API work.
    */
   artistCatalogueCache.set(
     artistId,
@@ -311,7 +389,7 @@ async function getArtistCatalogue(
     )
   } catch (error) {
     /*
-     * Allow a future request to retry if Deezer failed.
+     * Allow a future request to retry if Deezer fails.
      */
     artistCatalogueCache.delete(
       artistId,
@@ -557,8 +635,8 @@ async function getEligibleArtistTracks(
     )
 
     /*
-     * The catalogue itself is cached, but this call receives
-     * a fresh copy every time.
+     * The catalogue is cached, but every call receives a
+     * fresh copy.
      */
     const tracks =
       await getArtistCatalogue(
@@ -599,12 +677,16 @@ async function getEligibleArtistTracks(
             )}`
 
           if (
-            seen.has(key)
+            seen.has(
+              key,
+            )
           ) {
             return false
           }
 
-          seen.add(key)
+          seen.add(
+            key,
+          )
 
           return true
         },
@@ -744,21 +826,30 @@ export async function generateGameQuestion(
     )
 
   /*
-   * Play by Artist gets the exact same eligible pool
-   * used to choose the correct song.
+   * Artist mode uses the smart distractor system rather
+   * than restricting distractors to the selected artist.
    *
-   * This guarantees the distractors are derived from
-   * the same artist catalogue.
+   * This means distractors can come from:
+   *
+   *   - the same artist
+   *   - similar artists
+   *   - similar tracks
+   *   - discovery candidates
+   *
+   * Previously-used correct tracks are also allowed to
+   * become distractors, while the current correct track
+   * is still excluded by the candidate service.
    */
   return generateQuestion(
-  correctTrack,
-  type,
-  difficulty,
-  decade,
-  excludedTrackIds,
-  categoryId,
-  Boolean(
-    artist,
-  ),
-)
+    correctTrack,
+    type,
+    difficulty,
+    decade,
+    excludedTrackIds,
+    categoryId,
+    Boolean(
+      artist,
+    ),
+  )
 }
+

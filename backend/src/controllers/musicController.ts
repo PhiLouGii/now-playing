@@ -35,7 +35,7 @@ const FEATURED_ARTISTS = [
   'Sam Smith',
   'Coldplay',
   'Cardi B',
-  'Frank Ocean',
+  'Dolly Parton',
   'Doja Cat',
   'Tyler, The Creator',
   'Elvis Presley',
