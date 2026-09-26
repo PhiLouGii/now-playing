@@ -1165,6 +1165,9 @@
 
   overflow:
     hidden;
+
+  z-index:
+    0;
 }
 
 .genre-card__image {
@@ -1180,8 +1183,21 @@
   object-fit:
     cover;
 
+  opacity:
+    0.3;
+
   transition:
-    transform 220ms ease;
+    transform 220ms ease,
+    opacity 220ms ease;
+}
+
+.genre-card:hover
+.genre-card__image {
+  transform:
+    scale(1.045);
+
+  opacity:
+    0.82;
 }
 
 .genre-card:hover
@@ -1190,6 +1206,27 @@
     scale(1.045);
 }
 
+/* DARK IMAGE WASH */
+
+.genre-card::before {
+  content:
+    '';
+
+  position:
+    absolute;
+
+  inset:
+    0;
+
+  z-index:
+    1;
+
+  background:
+    rgba(10, 10, 16, 0.3);
+
+  pointer-events:
+    none;
+}
 
 /* SOFT BOTTOM OVERLAY */
 
@@ -1211,6 +1248,9 @@
 
   height:
     50%;
+
+  z-index:
+    1;
 
   background:
     linear-gradient(
