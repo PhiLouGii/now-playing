@@ -68,49 +68,42 @@ const ERAS = [
   {
     label: '60s',
     image: '/eras/60s.png',
-    description: 'Jukebox',
     decade: 1960,
   },
 
   {
     label: '70s',
     image: '/eras/70s.png',
-    description: 'Vinyl',
     decade: 1970,
   },
 
   {
     label: '80s',
     image: '/eras/80s.png',
-    description: 'Cassette',
     decade: 1980,
   },
 
   {
     label: '90s',
     image: '/eras/90s.png',
-    description: 'CD',
     decade: 1990,
   },
 
   {
     label: '00s',
     image: '/eras/00s.png',
-    description: 'iPod',
     decade: 2000,
   },
 
   {
     label: '10s',
     image: '/eras/10s.png',
-    description: 'Streaming',
     decade: 2010,
   },
 
   {
     label: '20s',
     image: '/eras/20s.png',
-    description: 'Now Playing',
     decade: 2020,
   },
 ]
@@ -512,7 +505,6 @@ function Play() {
                         </span>
 
                         <span className="era-card__description">
-                          {era.description}
                         </span>
                       </div>
 

@@ -787,7 +787,7 @@
     grid;
 
   grid-template-columns:
-    repeat(4, minmax(0, 1fr));
+    repeat(7, minmax(0, 1fr));
 
   gap:
     10px;
