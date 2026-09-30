@@ -19,6 +19,7 @@ const FEATURED_ARTISTS = [
   'Beyoncé',
   'Drake',
   'Taylor Swift',
+  'The Beatles',
   'Labrinth',
   'Arctic Monkeys',
   'One Direction',
