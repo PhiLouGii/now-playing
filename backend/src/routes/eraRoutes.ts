@@ -1,37 +1,54 @@
 import { Router } from 'express'
-
 import { db } from '../config/firebase.js'
-
 import { deezerMusicProvider } from '../services/music/deezerMusicProvider.js'
-
+import {
+  eraLibraries,
+  type Era,
+} from '../data/eras/index.js'
 
 const router = Router()
 
-
 router.get(
-  '/1960s',
-  async (_req, res) => {
+  '/:era',
+  async (req, res) => {
     try {
+      const era =
+        req.params.era as Era
+
+      if (
+        !Object.prototype.hasOwnProperty.call(
+          eraLibraries,
+          era,
+        )
+      ) {
+        return res.status(400).json({
+          message: `Unsupported era: ${era}`,
+        })
+      }
+
       const snapshot =
         await db
           .collection('songs')
-          .where('era', '==', '1960s')
+          .where('era', '==', era)
           .get()
 
       if (snapshot.empty) {
         return res.status(404).json({
-          message:
-            'No songs found for the 1960s',
+          message: `No songs found for the ${era}`,
         })
       }
 
       const songs = []
 
-      for (const document of snapshot.docs) {
+      for (
+        const document of snapshot.docs
+      ) {
         const data =
           document.data()
 
-        if (!data.providerSongId) {
+        if (
+          !data.providerSongId
+        ) {
           continue
         }
 
@@ -51,39 +68,33 @@ router.get(
           album: data.album,
           year: data.year,
           era: data.era,
-
-          provider:
-            data.provider,
-
+          provider: data.provider,
           providerSongId:
             data.providerSongId,
-
           previewUrl:
             track.previewUrl,
-
           artworkUrl:
             track.artworkUrl,
         })
       }
 
       return res.json({
-        era: '1960s',
+        era,
         count: songs.length,
         songs,
       })
     } catch (error) {
       console.error(
-        'Failed to load 1960s songs:',
+        `Failed to load ${req.params.era}:`,
         error,
       )
 
       return res.status(500).json({
         message:
-          'Failed to load 1960s songs',
+          `Failed to load ${req.params.era}`,
       })
     }
   },
 )
-
 
 export default router
