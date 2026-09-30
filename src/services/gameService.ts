@@ -202,6 +202,76 @@ export async function getEraSongs(
 }
 
 /* =========================================================
+   GENRE TYPES
+   ========================================================= */
+
+export type GenreKey =
+  | 'pop'
+  | 'hip-hop'
+  | 'r&b'
+  | 'rock'
+  | 'latin'
+  | 'k-pop'
+  | 'country'
+  | 'reggae'
+  | 'afrobeats'
+
+export type GenreSong = {
+  id: string
+  title: string
+  artist: string
+  album: string
+  year: number
+  era?: string
+  genres: string[]
+  provider: string
+  providerSongId: string
+  previewUrl: string
+  artworkUrl: string
+}
+
+export type GenreSongsResponse = {
+  genre: string
+  count: number
+  songs: GenreSong[]
+}
+
+/* =========================================================
+   GET GENRE SONGS
+   ========================================================= */
+
+export async function getGenreSongs(
+  genre: GenreKey,
+): Promise<GenreSongsResponse> {
+  const response =
+    await fetch(
+      `${API_URL}/genres/${encodeURIComponent(genre)}`,
+    )
+
+  if (!response.ok) {
+    let message =
+      `Failed to load ${genre} songs`
+
+    try {
+      const data =
+        (await response.json()) as {
+          message?: string
+        }
+
+      if (data.message) {
+        message = data.message
+      }
+    } catch {
+      // Keep the default error message.
+    }
+
+    throw new Error(message)
+  }
+
+  return response.json()
+}
+
+/* =========================================================
    SHUFFLE
    ========================================================= */
 
@@ -252,6 +322,32 @@ function eraSongToSong(
     audioUrl:
       song.previewUrl,
     genres: [],
+    provider:
+      song.provider,
+    providerId:
+      song.providerSongId,
+  }
+}
+
+/* =========================================================
+   CONVERT GENRE SONG TO NORMAL SONG
+   ========================================================= */
+
+function genreSongToSong(
+  song: GenreSong,
+): Song {
+  return {
+    id: song.id,
+    title: song.title,
+    artist: song.artist,
+    album: song.album,
+    releaseYear: song.year,
+    artworkUrl:
+      song.artworkUrl,
+    audioUrl:
+      song.previewUrl,
+    genres:
+      song.genres,
     provider:
       song.provider,
     providerId:
@@ -413,6 +509,169 @@ export async function generateEraRound(
         ]
 
       return createEraQuestion(
+        song,
+        data.songs,
+        type,
+        difficulty,
+      )
+    },
+  )
+}
+
+/* =========================================================
+   CREATE GENRE QUESTION
+   ========================================================= */
+
+function createGenreQuestion(
+  song: GenreSong,
+  allSongs: GenreSong[],
+  type: Question['type'],
+  difficulty: Question['difficulty'],
+): Question {
+  const correctAnswer =
+    type === 'name-the-song'
+      ? song.title
+      : type ===
+          'name-the-artist'
+        ? song.artist
+        : type ===
+            'name-the-album'
+          ? song.album
+          : String(song.year)
+
+  let candidateAnswers: string[]
+
+  switch (type) {
+    case 'name-the-song':
+      candidateAnswers =
+        allSongs
+          .filter(
+            other =>
+              other.id !==
+              song.id,
+          )
+          .map(
+            other =>
+              other.title,
+          )
+      break
+
+    case 'name-the-artist':
+      candidateAnswers =
+        allSongs
+          .filter(
+            other =>
+              other.id !==
+              song.id,
+          )
+          .map(
+            other =>
+              other.artist,
+          )
+      break
+
+    case 'name-the-album':
+      candidateAnswers =
+        allSongs
+          .filter(
+            other =>
+              other.id !==
+              song.id,
+          )
+          .map(
+            other =>
+              other.album,
+          )
+      break
+
+    case 'guess-the-year':
+      candidateAnswers =
+        allSongs
+          .filter(
+            other =>
+              other.id !==
+              song.id,
+          )
+          .map(
+            other =>
+              String(
+                other.year,
+              ),
+          )
+      break
+
+    default:
+      candidateAnswers = []
+  }
+
+  const uniqueAnswers =
+    Array.from(
+      new Set(
+        candidateAnswers.filter(
+          answer =>
+            answer !==
+            correctAnswer,
+        ),
+      ),
+    )
+
+  const distractors =
+    shuffle(
+      uniqueAnswers,
+    ).slice(0, 3)
+
+  return {
+    id: `genre-${song.id}-${type}`,
+
+    type,
+
+    song:
+      genreSongToSong(song),
+
+    answers: shuffle([
+      correctAnswer,
+      ...distractors,
+    ]),
+
+    correctAnswer,
+
+    difficulty,
+  }
+}
+
+/* =========================================================
+   GENERATE GENRE ROUND
+   ========================================================= */
+
+export async function generateGenreRound(
+  genre: GenreKey,
+  questionCount: number,
+  questionTypes: Question['type'][],
+  difficulty: Question['difficulty'],
+): Promise<Question[]> {
+  const data =
+    await getGenreSongs(genre)
+
+  const selectedSongs =
+    shuffle(
+      data.songs,
+    ).slice(
+      0,
+      Math.min(
+        questionCount,
+        data.songs.length,
+      ),
+    )
+
+  return selectedSongs.map(
+    (song, index) => {
+      const type =
+        questionTypes[
+          index %
+            questionTypes.length
+        ]
+
+      return createGenreQuestion(
         song,
         data.songs,
         type,

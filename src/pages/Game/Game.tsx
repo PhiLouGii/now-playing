@@ -24,7 +24,9 @@ import { defaultRound } from '../../data/defaultRound'
 import {
   generateQuestion,
   generateEraRound,
+  generateGenreRound,
   type EraKey,
+  type GenreKey,
 } from '../../services/gameService'
 
 import {
@@ -179,6 +181,20 @@ function Game() {
     useRef<AudioPlayerHandle | null>(null)
 
   /* =========================================================
+     ROUND TYPE HELPERS
+     ========================================================= */
+
+  const isEraRound =
+    roundConfig.decade !== undefined
+
+  const isGenreRound =
+    roundConfig.genre !== undefined
+
+  const isCuratedRound =
+    isEraRound ||
+    isGenreRound
+
+  /* =========================================================
      LOAD ROUND
      ========================================================= */
 
@@ -192,40 +208,79 @@ function Game() {
 
       try {
         /*
-         * 1960s uses the curated Firestore
-         * era library instead of the normal
-         * random game-question endpoint.
+         * Curated era rounds load the complete
+         * round from the Firestore era library.
          */
-        if (roundConfig.decade !== undefined) {
-  const era =
-    `${roundConfig.decade}s` as EraKey
+        if (
+          roundConfig.decade !==
+          undefined
+        ) {
+          const era =
+            `${roundConfig.decade}s` as EraKey
 
-  const eraQuestions =
-    await generateEraRound(
-      era,
-      roundConfig.questionCount,
-      roundConfig.questionTypes,
-      roundConfig.difficulty,
-    )
+          const eraQuestions =
+            await generateEraRound(
+              era,
+              roundConfig.questionCount,
+              roundConfig.questionTypes,
+              roundConfig.difficulty,
+            )
 
-  if (isMounted) {
-    eraQuestions.forEach(
-      question => {
-        usedTrackIds.current.add(
-          question.song.id,
-        )
-      },
-    )
+          if (isMounted) {
+            eraQuestions.forEach(
+              question => {
+                usedTrackIds.current.add(
+                  question.song.id,
+                )
+              },
+            )
 
-    setQuestions(
-      eraQuestions,
-    )
+            setQuestions(
+              eraQuestions,
+            )
 
-    setIsLoading(false)
-  }
+            setIsLoading(false)
+          }
 
-  return
-}
+          return
+        }
+
+        /*
+         * Curated genre rounds load the complete
+         * round from the Firestore genre library.
+         */
+        if (
+          roundConfig.genre
+        ) {
+          const genre =
+            roundConfig.genre as GenreKey
+
+          const genreQuestions =
+            await generateGenreRound(
+              genre,
+              roundConfig.questionCount,
+              roundConfig.questionTypes,
+              roundConfig.difficulty,
+            )
+
+          if (isMounted) {
+            genreQuestions.forEach(
+              question => {
+                usedTrackIds.current.add(
+                  question.song.id,
+                )
+              },
+            )
+
+            setQuestions(
+              genreQuestions,
+            )
+
+            setIsLoading(false)
+          }
+
+          return
+        }
 
         /*
          * All other game modes continue
@@ -279,15 +334,10 @@ function Game() {
 
   useEffect(() => {
     /*
-     * 1960s rounds are already loaded
-     * completely by generateSixtiesRound().
-     *
-     * Therefore we do not use the normal
-     * question preloader for them.
+     * Curated era and genre rounds are
+     * already loaded completely.
      */
-    if (
-      roundConfig.decade === 1960
-    ) {
+    if (isCuratedRound) {
       return
     }
 
@@ -360,6 +410,7 @@ function Game() {
   }, [
     questions.length,
     roundConfig,
+    isCuratedRound,
   ])
 
   /* =========================================================
@@ -445,7 +496,9 @@ function Game() {
     return (
       <div className="game-page">
         <div className="game-page__container">
+
           <main className="game-content game-content--loading">
+
             <p className="game-content__category">
               {roundConfig.name.toUpperCase()}
             </p>
@@ -453,7 +506,9 @@ function Game() {
             <h1>
               GETTING YOUR ROUND READY
             </h1>
+
           </main>
+
         </div>
       </div>
     )
@@ -467,7 +522,9 @@ function Game() {
     return (
       <div className="game-page">
         <div className="game-page__container">
+
           <main className="game-content game-content--loading">
+
             <p className="game-content__category">
               {roundConfig.name.toUpperCase()}
             </p>
@@ -480,7 +537,9 @@ function Game() {
               We couldn't generate a
               round right now.
             </p>
+
           </main>
+
         </div>
       </div>
     )
@@ -776,8 +835,8 @@ function Game() {
       currentQuestion + 1
 
     /*
-     * For the 1960s, all questions
-     * were loaded at the beginning.
+     * Curated era and genre rounds
+     * have already loaded all questions.
      */
     if (questions[nextIndex]) {
       setCurrentQuestion(
@@ -853,6 +912,7 @@ function Game() {
 
   return (
     <div className="game-page">
+
       <div className="game-page__container">
 
         <GameHeader
@@ -879,6 +939,7 @@ function Game() {
           <div className="game-content__heading">
 
             <p className="game-content__category">
+
               {question.type ===
                 'name-the-song' &&
                 'NAME THAT SONG'}
@@ -903,9 +964,11 @@ function Game() {
                     )
                     .toUpperCase()
                 : roundConfig.name.toUpperCase()}
+
             </p>
 
             <h1>
+
               {question.type ===
                 'name-the-song' &&
                 'What song is this?'}
@@ -921,6 +984,7 @@ function Game() {
               {question.type ===
                 'guess-the-year' &&
                 'When was this song released?'}
+
             </h1>
 
           </div>
@@ -1142,6 +1206,7 @@ function Game() {
           <div className="game-status">
 
             <div className="game-streak">
+
               <span>
                 STREAK
               </span>
@@ -1149,9 +1214,11 @@ function Game() {
               <strong>
                 {streak}
               </strong>
+
             </div>
 
             <div className="game-listening-time">
+
               <span>
                 LISTEN TIME
               </span>
@@ -1165,6 +1232,7 @@ function Game() {
                       timeRemaining,
                     )}s`}
               </strong>
+
             </div>
 
           </div>
@@ -1203,7 +1271,9 @@ function Game() {
           )}
 
         </main>
+
       </div>
+
     </div>
   )
 }
