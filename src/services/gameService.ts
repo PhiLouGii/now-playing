@@ -8,7 +8,8 @@ type GeneratedQuestionResponse = {
   question: Question
 }
 
-const API_URL = 'http://localhost:3000/api'
+const API_URL =
+  'http://localhost:3000/api'
 
 /* =========================================================
    GENERAL GAME QUESTION
@@ -23,10 +24,14 @@ export async function generateQuestion(
   artist?: string,
   artistId?: string,
 ): Promise<Question> {
-  const params = new URLSearchParams()
+  const params =
+    new URLSearchParams()
 
   params.set('type', type)
-  params.set('difficulty', difficulty)
+  params.set(
+    'difficulty',
+    difficulty,
+  )
 
   if (decade !== undefined) {
     params.set(
@@ -65,9 +70,10 @@ export async function generateQuestion(
     )
   }
 
-  const response = await fetch(
-    `${API_URL}/game/question?${params.toString()}`,
-  )
+  const response =
+    await fetch(
+      `${API_URL}/game/question?${params.toString()}`,
+    )
 
   if (!response.ok) {
     let message =
@@ -129,8 +135,17 @@ export async function generateRound(
 }
 
 /* =========================================================
-   ERA SONG TYPES
+   ERA TYPES
    ========================================================= */
+
+export type EraKey =
+  | '1960s'
+  | '1970s'
+  | '1980s'
+  | '1990s'
+  | '2000s'
+  | '2010s'
+  | '2020s'
 
 export type EraSong = {
   id: string
@@ -152,17 +167,20 @@ export type EraSongsResponse = {
 }
 
 /* =========================================================
-   GET 1960s SONGS
+   GET ERA SONGS
    ========================================================= */
 
-export async function getSixtiesSongs(): Promise<EraSongsResponse> {
-  const response = await fetch(
-    `${API_URL}/eras/1960s`,
-  )
+export async function getEraSongs(
+  era: EraKey,
+): Promise<EraSongsResponse> {
+  const response =
+    await fetch(
+      `${API_URL}/eras/${era}`,
+    )
 
   if (!response.ok) {
     let message =
-      'Failed to load 1960s songs'
+      `Failed to load ${era} songs`
 
     try {
       const data =
@@ -193,7 +211,8 @@ function shuffle<T>(
   const shuffled = [...array]
 
   for (
-    let i = shuffled.length - 1;
+    let i =
+      shuffled.length - 1;
     i > 0;
     i--
   ) {
@@ -228,10 +247,13 @@ function eraSongToSong(
     artist: song.artist,
     album: song.album,
     releaseYear: song.year,
-    artworkUrl: song.artworkUrl,
-    audioUrl: song.previewUrl,
+    artworkUrl:
+      song.artworkUrl,
+    audioUrl:
+      song.previewUrl,
     genres: [],
-    provider: song.provider,
+    provider:
+      song.provider,
     providerId:
       song.providerSongId,
   }
@@ -250,9 +272,11 @@ function createEraQuestion(
   const correctAnswer =
     type === 'name-the-song'
       ? song.title
-      : type === 'name-the-artist'
+      : type ===
+          'name-the-artist'
         ? song.artist
-        : type === 'name-the-album'
+        : type ===
+            'name-the-album'
           ? song.album
           : String(song.year)
 
@@ -264,7 +288,8 @@ function createEraQuestion(
         allSongs
           .filter(
             other =>
-              other.id !== song.id,
+              other.id !==
+              song.id,
           )
           .map(
             other =>
@@ -277,7 +302,8 @@ function createEraQuestion(
         allSongs
           .filter(
             other =>
-              other.id !== song.id,
+              other.id !==
+              song.id,
           )
           .map(
             other =>
@@ -290,7 +316,8 @@ function createEraQuestion(
         allSongs
           .filter(
             other =>
-              other.id !== song.id,
+              other.id !==
+              song.id,
           )
           .map(
             other =>
@@ -303,11 +330,14 @@ function createEraQuestion(
         allSongs
           .filter(
             other =>
-              other.id !== song.id,
+              other.id !==
+              song.id,
           )
           .map(
             other =>
-              String(other.year),
+              String(
+                other.year,
+              ),
           )
       break
 
@@ -351,19 +381,22 @@ function createEraQuestion(
 }
 
 /* =========================================================
-   GENERATE 1960s ROUND
+   GENERATE ERA ROUND
    ========================================================= */
 
-export async function generateSixtiesRound(
+export async function generateEraRound(
+  era: EraKey,
   questionCount: number,
   questionTypes: Question['type'][],
   difficulty: Question['difficulty'],
 ): Promise<Question[]> {
   const data =
-    await getSixtiesSongs()
+    await getEraSongs(era)
 
   const selectedSongs =
-    shuffle(data.songs).slice(
+    shuffle(
+      data.songs,
+    ).slice(
       0,
       Math.min(
         questionCount,

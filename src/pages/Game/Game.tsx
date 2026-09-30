@@ -23,7 +23,8 @@ import { defaultRound } from '../../data/defaultRound'
 
 import {
   generateQuestion,
-  generateSixtiesRound,
+  generateEraRound,
+  type EraKey,
 } from '../../services/gameService'
 
 import {
@@ -195,34 +196,36 @@ function Game() {
          * era library instead of the normal
          * random game-question endpoint.
          */
-        if (
-          roundConfig.decade === 1960
-        ) {
-          const eraQuestions =
-            await generateSixtiesRound(
-              roundConfig.questionCount,
-              roundConfig.questionTypes,
-              roundConfig.difficulty,
-            )
+        if (roundConfig.decade !== undefined) {
+  const era =
+    `${roundConfig.decade}s` as EraKey
 
-          if (isMounted) {
-            eraQuestions.forEach(
-              question => {
-                usedTrackIds.current.add(
-                  question.song.id,
-                )
-              },
-            )
+  const eraQuestions =
+    await generateEraRound(
+      era,
+      roundConfig.questionCount,
+      roundConfig.questionTypes,
+      roundConfig.difficulty,
+    )
 
-            setQuestions(
-              eraQuestions,
-            )
+  if (isMounted) {
+    eraQuestions.forEach(
+      question => {
+        usedTrackIds.current.add(
+          question.song.id,
+        )
+      },
+    )
 
-            setIsLoading(false)
-          }
+    setQuestions(
+      eraQuestions,
+    )
 
-          return
-        }
+    setIsLoading(false)
+  }
+
+  return
+}
 
         /*
          * All other game modes continue
