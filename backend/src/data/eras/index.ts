@@ -4,6 +4,7 @@ import { eightiesSongs } from './eighties.js'
 import { ninetiesSongs } from './nineties.js'
 import { twoThousandsSongs } from './twothousands.js'
 import { twoThousandTensSongs } from './twoThousandTens.js'
+import { twoThousandTwentiesSongs } from './twoThousandTwenties.js'
 
 export const eraLibraries = {
   '1960s': sixtiesSongs,
@@ -11,7 +12,8 @@ export const eraLibraries = {
   '1980s': eightiesSongs,
   '1990s': ninetiesSongs,
   '2000s': twoThousandsSongs,
-  '2010s': twoThousandTensSongs
+  '2010s': twoThousandTensSongs,
+  '2020s': twoThousandTwentiesSongs
 } as const
 
 export type Era = keyof typeof eraLibraries
