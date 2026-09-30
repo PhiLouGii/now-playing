@@ -3,13 +3,17 @@ import {
   useRef,
   useState,
 } from 'react'
+
 import {
   useLocation,
   useSearchParams,
 } from 'react-router-dom'
 
 import AudioPlayer from '../../components/game/AudioPlayer'
-import type { AudioPlayerHandle } from '../../components/game/AudioPlayer'
+import type {
+  AudioPlayerHandle,
+} from '../../components/game/AudioPlayer'
+
 import AnswerGrid from '../../components/game/AnswerGrid'
 import GameHeader from '../../components/game/GameHeader'
 import GameProgress from '../../components/game/GameProgress'
@@ -19,6 +23,7 @@ import { defaultRound } from '../../data/defaultRound'
 
 import {
   generateQuestion,
+  generateSixtiesRound,
 } from '../../services/gameService'
 
 import {
@@ -61,6 +66,10 @@ export type RecognitionResult = {
   correct: boolean
 }
 
+/* =========================================================
+   GAME MODE
+   ========================================================= */
+
 function getGameMode(
   questionType: Question['type'],
 ) {
@@ -82,25 +91,35 @@ function getGameMode(
   }
 }
 
+/* =========================================================
+   GAME
+   ========================================================= */
+
 function Game() {
   const location = useLocation()
-const [searchParams] = useSearchParams()
 
-const categoryId =
-  searchParams.get('category') ?? undefined
+  const [searchParams] =
+    useSearchParams()
+
+  const categoryId =
+    searchParams.get('category') ??
+    undefined
 
   const roundConfig =
     (
       location.state as {
         roundConfig?: RoundConfig
       } | null
-    )?.roundConfig ?? defaultRound
+    )?.roundConfig ??
+    defaultRound
 
   const [questions, setQuestions] =
     useState<Question[]>([])
 
   const usedTrackIds =
-    useRef<Set<string>>(new Set())
+    useRef<Set<string>>(
+      new Set(),
+    )
 
   const [isLoading, setIsLoading] =
     useState(true)
@@ -158,6 +177,10 @@ const categoryId =
   const audioPlayerRef =
     useRef<AudioPlayerHandle | null>(null)
 
+  /* =========================================================
+     LOAD ROUND
+     ========================================================= */
+
   useEffect(() => {
     let isMounted = true
 
@@ -167,24 +190,65 @@ const categoryId =
       usedTrackIds.current.clear()
 
       try {
+        /*
+         * 1960s uses the curated Firestore
+         * era library instead of the normal
+         * random game-question endpoint.
+         */
+        if (
+          roundConfig.decade === 1960
+        ) {
+          const eraQuestions =
+            await generateSixtiesRound(
+              roundConfig.questionCount,
+              roundConfig.questionTypes,
+              roundConfig.difficulty,
+            )
+
+          if (isMounted) {
+            eraQuestions.forEach(
+              question => {
+                usedTrackIds.current.add(
+                  question.song.id,
+                )
+              },
+            )
+
+            setQuestions(
+              eraQuestions,
+            )
+
+            setIsLoading(false)
+          }
+
+          return
+        }
+
+        /*
+         * All other game modes continue
+         * using the existing generator.
+         */
         const firstType =
           roundConfig.questionTypes[0]
 
         const firstQuestion =
-  await generateQuestion(
-    firstType,
-    roundConfig.difficulty,
-    roundConfig.decade,
-    [],
-    categoryId,
-  )
+          await generateQuestion(
+            firstType,
+            roundConfig.difficulty,
+            roundConfig.decade,
+            [],
+            categoryId,
+          )
 
         if (isMounted) {
           usedTrackIds.current.add(
             firstQuestion.song.id,
           )
 
-          setQuestions([firstQuestion])
+          setQuestions([
+            firstQuestion,
+          ])
+
           setIsLoading(false)
         }
       } catch (error) {
@@ -206,7 +270,24 @@ const categoryId =
     }
   }, [roundConfig])
 
+  /* =========================================================
+     PRELOAD NORMAL GAME QUESTIONS
+     ========================================================= */
+
   useEffect(() => {
+    /*
+     * 1960s rounds are already loaded
+     * completely by generateSixtiesRound().
+     *
+     * Therefore we do not use the normal
+     * question preloader for them.
+     */
+    if (
+      roundConfig.decade === 1960
+    ) {
+      return
+    }
+
     if (
       questions.length === 0 ||
       questions.length >=
@@ -229,19 +310,19 @@ const categoryId =
           ]
 
         const nextQuestion =
-  await generateQuestion(
-    nextType,
-    roundConfig.difficulty,
-    roundConfig.decade,
-    Array.from(
-      usedTrackIds.current,
-    ),
-    categoryId,
-  )
+          await generateQuestion(
+            nextType,
+            roundConfig.difficulty,
+            roundConfig.decade,
+            Array.from(
+              usedTrackIds.current,
+            ),
+            categoryId,
+          )
 
         if (isMounted) {
           setQuestions(
-            (current) => {
+            current => {
               if (
                 current.length >
                 nextIndex
@@ -278,6 +359,10 @@ const categoryId =
     roundConfig,
   ])
 
+  /* =========================================================
+     SAVE SCORE
+     ========================================================= */
+
   useEffect(() => {
     if (
       !isGameComplete ||
@@ -291,7 +376,8 @@ const categoryId =
     const totalListeningTime =
       recognitionResults.reduce(
         (total, result) =>
-          total + result.listenDuration,
+          total +
+          result.listenDuration,
         0,
       )
 
@@ -348,6 +434,10 @@ const categoryId =
     roundConfig.questionTypes,
   ])
 
+  /* =========================================================
+     LOADING
+     ========================================================= */
+
   if (isLoading) {
     return (
       <div className="game-page">
@@ -366,6 +456,10 @@ const categoryId =
     )
   }
 
+  /* =========================================================
+     NO QUESTIONS
+     ========================================================= */
+
   if (questions.length === 0) {
     return (
       <div className="game-page">
@@ -380,14 +474,18 @@ const categoryId =
             </h1>
 
             <p>
-              We couldn't generate a round
-              right now.
+              We couldn't generate a
+              round right now.
             </p>
           </main>
         </div>
       </div>
     )
   }
+
+  /* =========================================================
+     RESULTS
+     ========================================================= */
 
   if (isGameComplete) {
     return (
@@ -416,7 +514,13 @@ const categoryId =
     answerStatus !== 'idle'
 
   const maxListenDuration =
-    LISTENING_STAGES[listeningStage]
+    LISTENING_STAGES[
+      listeningStage
+    ]
+
+  /* =========================================================
+     AUDIO
+     ========================================================= */
 
   function handleTimeUpdate(
     time: number,
@@ -435,16 +539,24 @@ const categoryId =
     setTimeRemaining(0)
   }
 
+  /* =========================================================
+     RECOGNITION
+     ========================================================= */
+
   function recordRecognition(
     result: RecognitionResult,
   ) {
     setRecognitionResults(
-      (current) => [
+      current => [
         ...current,
         result,
       ],
     )
   }
+
+  /* =========================================================
+     ANSWER
+     ========================================================= */
 
   function handleAnswer(
     answer: string,
@@ -454,7 +566,8 @@ const categoryId =
     }
 
     const isCorrect =
-      answer === question.correctAnswer
+      answer ===
+      question.correctAnswer
 
     audioPlayerRef.current?.playPreview()
 
@@ -488,10 +601,12 @@ const categoryId =
           multiplier,
         )
 
-      setStreak(nextStreak)
+      setStreak(
+        nextStreak,
+      )
 
       setBestStreak(
-        (previous) =>
+        previous =>
           Math.max(
             previous,
             nextStreak,
@@ -499,16 +614,18 @@ const categoryId =
       )
 
       setScore(
-        (previous) =>
+        previous =>
           previous + points,
       )
 
       setCorrectAnswers(
-        (previous) =>
+        previous =>
           previous + 1,
       )
 
-      setPointsEarned(points)
+      setPointsEarned(
+        points,
+      )
 
       setMultiplierEarned(
         multiplier,
@@ -548,6 +665,10 @@ const categoryId =
     })
   }
 
+  /* =========================================================
+     LISTENING STAGE
+     ========================================================= */
+
   function handleAdvance() {
     if (isAnswered) {
       return
@@ -563,12 +684,20 @@ const categoryId =
     const nextStage =
       listeningStage + 1
 
-    setListeningStage(nextStage)
+    setListeningStage(
+      nextStage,
+    )
 
     setTimeRemaining(
-      LISTENING_STAGES[nextStage],
+      LISTENING_STAGES[
+        nextStage
+      ],
     )
   }
+
+  /* =========================================================
+     REVEAL ANSWER
+     ========================================================= */
 
   function handleRevealAnswer() {
     if (isAnswered) {
@@ -577,7 +706,10 @@ const categoryId =
 
     audioPlayerRef.current?.playPreview()
 
-    setAnswerStatus('revealed')
+    setAnswerStatus(
+      'revealed',
+    )
+
     setSelectedAnswer(null)
 
     setStreak(0)
@@ -600,17 +732,33 @@ const categoryId =
     })
   }
 
+  /* =========================================================
+     RESET QUESTION
+     ========================================================= */
+
   function resetQuestionState() {
     setSelectedAnswer(null)
-    setAnswerStatus('idle')
+
+    setAnswerStatus(
+      'idle',
+    )
+
     setListeningStage(0)
+
     setPointsEarned(0)
+
     setMultiplierEarned(1)
+
     setPreviewComplete(false)
+
     setTimeRemaining(
       LISTENING_STAGES[0],
     )
   }
+
+  /* =========================================================
+     NEXT SONG
+     ========================================================= */
 
   async function handleNextSong() {
     if (
@@ -624,12 +772,24 @@ const categoryId =
     const nextIndex =
       currentQuestion + 1
 
+    /*
+     * For the 1960s, all questions
+     * were loaded at the beginning.
+     */
     if (questions[nextIndex]) {
-      setCurrentQuestion(nextIndex)
+      setCurrentQuestion(
+        nextIndex,
+      )
+
       resetQuestionState()
+
       return
     }
 
+    /*
+     * Fallback for normal game modes
+     * that load questions individually.
+     */
     setIsLoadingNext(true)
 
     try {
@@ -640,22 +800,22 @@ const categoryId =
         ]
 
       const nextQuestion =
-  await generateQuestion(
-    nextType,
-    roundConfig.difficulty,
-    roundConfig.decade,
-    Array.from(
-      usedTrackIds.current,
-    ),
-    categoryId,
-  )
+        await generateQuestion(
+          nextType,
+          roundConfig.difficulty,
+          roundConfig.decade,
+          Array.from(
+            usedTrackIds.current,
+          ),
+          categoryId,
+        )
 
       usedTrackIds.current.add(
         nextQuestion.song.id,
       )
 
       setQuestions(
-        (current) => {
+        current => {
           if (
             current[nextIndex]
           ) {
@@ -669,7 +829,10 @@ const categoryId =
         },
       )
 
-      setCurrentQuestion(nextIndex)
+      setCurrentQuestion(
+        nextIndex,
+      )
+
       resetQuestionState()
     } catch (error) {
       console.error(
@@ -681,9 +844,14 @@ const categoryId =
     }
   }
 
+  /* =========================================================
+     RENDER
+     ========================================================= */
+
   return (
     <div className="game-page">
       <div className="game-page__container">
+
         <GameHeader
           currentQuestion={
             currentQuestion + 1
@@ -704,7 +872,9 @@ const categoryId =
         />
 
         <main className="game-content">
+
           <div className="game-content__heading">
+
             <p className="game-content__category">
               {question.type ===
                 'name-the-song' &&
@@ -723,10 +893,13 @@ const categoryId =
                 'GUESS THE YEAR'}
 
               {categoryId
-    ? categoryId
-        .replace(/-/g, ' ')
-        .toUpperCase()
-    : roundConfig.name.toUpperCase()}
+                ? categoryId
+                    .replace(
+                      /-/g,
+                      ' ',
+                    )
+                    .toUpperCase()
+                : roundConfig.name.toUpperCase()}
             </p>
 
             <h1>
@@ -746,10 +919,13 @@ const categoryId =
                 'guess-the-year' &&
                 'When was this song released?'}
             </h1>
+
           </div>
 
           <div className="game-board">
+
             <section className="game-question">
+
               <div
                 className={`game-question__art ${
                   isAnswered
@@ -771,10 +947,15 @@ const categoryId =
               </div>
 
               <AudioPlayer
-                ref={audioPlayerRef}
-                key={question.id}
+                ref={
+                  audioPlayerRef
+                }
+                key={
+                  question.id
+                }
                 audioUrl={
-                  question.song.audioUrl ?? ''
+                  question.song
+                    .audioUrl ?? ''
                 }
                 maxListenDuration={
                   maxListenDuration
@@ -797,21 +978,29 @@ const categoryId =
 
               {isAnswered && (
                 <div className="game-song-reveal">
+
                   <p className="game-song-reveal__title">
-                    {question.song.title}
+                    {
+                      question.song.title
+                    }
                   </p>
 
                   <p className="game-song-reveal__artist">
-                    {question.song.artist}
+                    {
+                      question.song.artist
+                    }
                   </p>
 
                   <p className="game-song-reveal__album">
-                    {question.song.album}
+                    {
+                      question.song.album
+                    }
                   </p>
 
                   {question.type ===
                     'guess-the-year' &&
-                    question.song.releaseYear !==
+                    question.song
+                      .releaseYear !==
                       undefined && (
                       <p className="game-song-reveal__year">
                         {
@@ -820,11 +1009,14 @@ const categoryId =
                         }
                       </p>
                     )}
+
                 </div>
               )}
+
             </section>
 
             <section className="game-play-panel">
+
               <AnswerGrid
                 answers={
                   question.answers
@@ -845,6 +1037,7 @@ const categoryId =
 
               {!isAnswered && (
                 <div className="game-actions">
+
                   <button
                     type="button"
                     className="game-advance"
@@ -853,14 +1046,17 @@ const categoryId =
                     }
                     disabled={
                       listeningStage >=
-                      LISTENING_STAGES.length - 1
+                      LISTENING_STAGES.length -
+                        1
                     }
                   >
                     {listeningStage <
-                    LISTENING_STAGES.length - 1
+                    LISTENING_STAGES.length -
+                      1
                       ? `ADVANCE → ${
                           LISTENING_STAGES[
-                            listeningStage + 1
+                            listeningStage +
+                              1
                           ]
                         }s`
                       : 'MAX LISTEN TIME'}
@@ -875,6 +1071,7 @@ const categoryId =
                   >
                     REVEAL ANSWER
                   </button>
+
                 </div>
               )}
 
@@ -890,6 +1087,7 @@ const categoryId =
                         : 'game-feedback--incorrect'
                   }`}
                 >
+
                   <div className="game-feedback__label">
                     {answerStatus ===
                     'revealed'
@@ -930,14 +1128,20 @@ const categoryId =
                       ? 'PREVIEW COMPLETE'
                       : 'PREVIEW CONTINUES'}
                   </div>
+
                 </div>
               )}
+
             </section>
+
           </div>
 
           <div className="game-status">
+
             <div className="game-streak">
-              <span>STREAK</span>
+              <span>
+                STREAK
+              </span>
 
               <strong>
                 {streak}
@@ -945,20 +1149,26 @@ const categoryId =
             </div>
 
             <div className="game-listening-time">
-              <span>LISTEN TIME</span>
+              <span>
+                LISTEN TIME
+              </span>
 
               <strong>
                 {timeRemaining < 1
-                  ? `${timeRemaining.toFixed(1)}s`
+                  ? `${timeRemaining.toFixed(
+                      1,
+                    )}s`
                   : `${Math.ceil(
                       timeRemaining,
                     )}s`}
               </strong>
             </div>
+
           </div>
 
           {isAnswered && (
             <div className="game-next-area">
+
               {!previewComplete && (
                 <div className="game-next-status">
                   <span>
@@ -980,12 +1190,15 @@ const categoryId =
                 {isLoadingNext
                   ? 'LOADING...'
                   : currentQuestion >=
-                      roundConfig.questionCount - 1
+                      roundConfig.questionCount -
+                        1
                     ? 'SEE RESULTS'
                     : 'NEXT SONG →'}
               </button>
+
             </div>
           )}
+
         </main>
       </div>
     </div>

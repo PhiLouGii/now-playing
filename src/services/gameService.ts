@@ -1,6 +1,7 @@
 import type {
   Question,
   RoundConfig,
+  Song,
 } from '../types/game'
 
 type GeneratedQuestionResponse = {
@@ -8,6 +9,10 @@ type GeneratedQuestionResponse = {
 }
 
 const API_URL = 'http://localhost:3000/api'
+
+/* =========================================================
+   GENERAL GAME QUESTION
+   ========================================================= */
 
 export async function generateQuestion(
   type: Question['type'],
@@ -90,6 +95,10 @@ export async function generateQuestion(
   return data.question
 }
 
+/* =========================================================
+   GENERAL ROUND GENERATOR
+   ========================================================= */
+
 export async function generateRound(
   roundConfig: RoundConfig,
 ): Promise<Question[]> {
@@ -116,5 +125,266 @@ export async function generateRound(
 
   return Promise.all(
     questionRequests,
+  )
+}
+
+/* =========================================================
+   ERA SONG TYPES
+   ========================================================= */
+
+export type EraSong = {
+  id: string
+  title: string
+  artist: string
+  album: string
+  year: number
+  era: string
+  provider: string
+  providerSongId: string
+  previewUrl: string
+  artworkUrl: string
+}
+
+export type EraSongsResponse = {
+  era: string
+  count: number
+  songs: EraSong[]
+}
+
+/* =========================================================
+   GET 1960s SONGS
+   ========================================================= */
+
+export async function getSixtiesSongs(): Promise<EraSongsResponse> {
+  const response = await fetch(
+    `${API_URL}/eras/1960s`,
+  )
+
+  if (!response.ok) {
+    let message =
+      'Failed to load 1960s songs'
+
+    try {
+      const data =
+        (await response.json()) as {
+          message?: string
+        }
+
+      if (data.message) {
+        message = data.message
+      }
+    } catch {
+      // Keep the default error message.
+    }
+
+    throw new Error(message)
+  }
+
+  return response.json()
+}
+
+/* =========================================================
+   SHUFFLE
+   ========================================================= */
+
+function shuffle<T>(
+  array: T[],
+): T[] {
+  const shuffled = [...array]
+
+  for (
+    let i = shuffled.length - 1;
+    i > 0;
+    i--
+  ) {
+    const j =
+      Math.floor(
+        Math.random() *
+          (i + 1),
+      )
+
+    ;[
+      shuffled[i],
+      shuffled[j],
+    ] = [
+      shuffled[j],
+      shuffled[i],
+    ]
+  }
+
+  return shuffled
+}
+
+/* =========================================================
+   CONVERT ERA SONG TO NORMAL SONG
+   ========================================================= */
+
+function eraSongToSong(
+  song: EraSong,
+): Song {
+  return {
+    id: song.id,
+    title: song.title,
+    artist: song.artist,
+    album: song.album,
+    releaseYear: song.year,
+    artworkUrl: song.artworkUrl,
+    audioUrl: song.previewUrl,
+    genres: [],
+    provider: song.provider,
+    providerId:
+      song.providerSongId,
+  }
+}
+
+/* =========================================================
+   CREATE ERA QUESTION
+   ========================================================= */
+
+function createEraQuestion(
+  song: EraSong,
+  allSongs: EraSong[],
+  type: Question['type'],
+  difficulty: Question['difficulty'],
+): Question {
+  const correctAnswer =
+    type === 'name-the-song'
+      ? song.title
+      : type === 'name-the-artist'
+        ? song.artist
+        : type === 'name-the-album'
+          ? song.album
+          : String(song.year)
+
+  let candidateAnswers: string[]
+
+  switch (type) {
+    case 'name-the-song':
+      candidateAnswers =
+        allSongs
+          .filter(
+            other =>
+              other.id !== song.id,
+          )
+          .map(
+            other =>
+              other.title,
+          )
+      break
+
+    case 'name-the-artist':
+      candidateAnswers =
+        allSongs
+          .filter(
+            other =>
+              other.id !== song.id,
+          )
+          .map(
+            other =>
+              other.artist,
+          )
+      break
+
+    case 'name-the-album':
+      candidateAnswers =
+        allSongs
+          .filter(
+            other =>
+              other.id !== song.id,
+          )
+          .map(
+            other =>
+              other.album,
+          )
+      break
+
+    case 'guess-the-year':
+      candidateAnswers =
+        allSongs
+          .filter(
+            other =>
+              other.id !== song.id,
+          )
+          .map(
+            other =>
+              String(other.year),
+          )
+      break
+
+    default:
+      candidateAnswers = []
+  }
+
+  const uniqueAnswers =
+    Array.from(
+      new Set(
+        candidateAnswers.filter(
+          answer =>
+            answer !==
+            correctAnswer,
+        ),
+      ),
+    )
+
+  const distractors =
+    shuffle(
+      uniqueAnswers,
+    ).slice(0, 3)
+
+  return {
+    id: `era-${song.id}-${type}`,
+
+    type,
+
+    song:
+      eraSongToSong(song),
+
+    answers: shuffle([
+      correctAnswer,
+      ...distractors,
+    ]),
+
+    correctAnswer,
+
+    difficulty,
+  }
+}
+
+/* =========================================================
+   GENERATE 1960s ROUND
+   ========================================================= */
+
+export async function generateSixtiesRound(
+  questionCount: number,
+  questionTypes: Question['type'][],
+  difficulty: Question['difficulty'],
+): Promise<Question[]> {
+  const data =
+    await getSixtiesSongs()
+
+  const selectedSongs =
+    shuffle(data.songs).slice(
+      0,
+      Math.min(
+        questionCount,
+        data.songs.length,
+      ),
+    )
+
+  return selectedSongs.map(
+    (song, index) => {
+      const type =
+        questionTypes[
+          index %
+            questionTypes.length
+        ]
+
+      return createEraQuestion(
+        song,
+        data.songs,
+        type,
+        difficulty,
+      )
+    },
   )
 }
