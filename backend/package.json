@@ -8,6 +8,7 @@
     "build": "tsc",
     "seed:60s": "tsx src/scripts/seedSixties.ts",
     "seed:era": "tsx src/scripts/seedEra.ts",
+    "seed:genre": "tsx src/scripts/seedGenre.ts",
     "start": "node dist/server.js"
   },
   "keywords": [],
