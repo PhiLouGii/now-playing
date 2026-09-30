@@ -21,85 +21,64 @@ type FeaturedArtist = {
   image: string | null
 }
 
+type Era = {
+  label: string
+  image: string
+  decade: number
+}
 
-/*
- * Custom artwork for artists.
- *
- * Add your own images to:
- *
- * public/artists/
- */
-const CUSTOM_ARTIST_IMAGES: Record<
-  string,
-  string
-> = {
-  'Rihanna':
-    '/artists/rihanna.png',
+type Genre = {
+  label: string
+  genre: string
+  image: string
+}
 
-  'Madonna':
-    '/artists/madonna.png',
-
-  'Billie Eilish':
-    '/artists/billie-eilish.png',
-
-  'Lionel Richie':
-    '/artists/lionel-richie.png',
-
-  'The Killers':
-    '/artists/the-killers.png',
+type Theme = {
+  label: string
+  description: string
 }
 
 
-/*
- * ---------------------------------------------------------
- * ERAS
- * ---------------------------------------------------------
- *
- * Each era has its own visual representing how people
- * experienced music during that period.
- *
- * The source images should be 600 x 600px and stored in:
- *
- * public/eras/
- */
+const CUSTOM_ARTIST_IMAGES: Record<string, string> = {
+  Rihanna: '/artists/rihanna.png',
+  Madonna: '/artists/madonna.png',
+  'Billie Eilish': '/artists/billie-eilish.png',
+  'Lionel Richie': '/artists/lionel-richie.png',
+  'The Killers': '/artists/the-killers.png',
+}
 
-const ERAS = [
+
+const ERAS: Era[] = [
   {
     label: '60s',
     image: '/eras/60s.png',
     decade: 1960,
   },
-
   {
     label: '70s',
     image: '/eras/70s.png',
     decade: 1970,
   },
-
   {
     label: '80s',
     image: '/eras/80s.png',
     decade: 1980,
   },
-
   {
     label: '90s',
     image: '/eras/90s.png',
     decade: 1990,
   },
-
   {
     label: '00s',
     image: '/eras/00s.png',
     decade: 2000,
   },
-
   {
     label: '10s',
     image: '/eras/10s.png',
     decade: 2010,
   },
-
   {
     label: '20s',
     image: '/eras/20s.png',
@@ -108,47 +87,32 @@ const ERAS = [
 ]
 
 
-/*
- * ---------------------------------------------------------
- * GENRES
- * ---------------------------------------------------------
- *
- * Add the corresponding artwork to:
- *
- * public/genres/
- */
-
-const GENRES = [
+const GENRES: Genre[] = [
   {
     label: 'Pop',
     genre: 'pop',
     image: '/genres/pop.png',
   },
-
   {
     label: 'Hip-Hop',
     genre: 'hip-hop',
     image: '/genres/hip-hop.png',
   },
-
   {
     label: 'R&B',
     genre: 'rnb',
     image: '/genres/rnb.png',
   },
-
   {
     label: 'Rock',
     genre: 'rock',
     image: '/genres/rock.png',
   },
-
   {
     label: 'Latin Pop',
     genre: 'latin',
     image: '/genres/latin.png',
   },
-
   {
     label: 'K-Pop',
     genre: 'kpop',
@@ -161,7 +125,7 @@ const GENRES = [
   },
   {
     label: 'Reggae',
-    genre: 'regae',
+    genre: 'reggae',
     image: '/genres/reggae.png',
   },
   {
@@ -172,30 +136,62 @@ const GENRES = [
 ]
 
 
+const THEMES: Theme[] = [
+  {
+    label: 'Heartbreak Anthems',
+    description: 'Songs for shattered hearts',
+  },
+  {
+    label: 'Songs of Yearning',
+    description: 'Craving what is gone',
+  },
+  {
+    label: 'Endless Summer',
+    description: 'Sunshine on repeat',
+  },
+  {
+    label: 'Good Vibes Only',
+    description: 'Pure positivity playlist',
+  },
+  {
+    label: 'Bitter & Better',
+    description: 'Resentment remixed',
+  },
+  {
+    label: 'Midnight Tears',
+    description: 'Sadness in stereo',
+  },
+  {
+    label: 'Wheel & Feel',
+    description: 'Journey jams',
+  },
+  {
+    label: 'Butterflies',
+    description: 'Songs for stolen glances',
+  },
+]
+
+
 function Play() {
-  const navigate =
-    useNavigate()
+  const navigate = useNavigate()
 
   const [
     artists,
     setArtists,
-  ] =
-    useState<FeaturedArtist[]>([])
+  ] = useState<FeaturedArtist[]>([])
 
   const [
     artistsLoading,
     setArtistsLoading,
-  ] =
-    useState(true)
+  ] = useState(true)
 
 
   useEffect(() => {
     async function loadArtists() {
       try {
-        const response =
-          await fetch(
-            '/api/music/artists',
-          )
+        const response = await fetch(
+          '/api/music/artists',
+        )
 
         if (!response.ok) {
           throw new Error(
@@ -215,9 +211,7 @@ function Play() {
           error,
         )
       } finally {
-        setArtistsLoading(
-          false,
-        )
+        setArtistsLoading(false)
       }
     }
 
@@ -232,11 +226,8 @@ function Play() {
       '/play-by-artist',
       {
         state: {
-          artistId:
-            artist.id,
-
-          artist:
-            artist.name,
+          artistId: artist.id,
+          artist: artist.name,
         },
       },
     )
@@ -251,22 +242,13 @@ function Play() {
       {
         state: {
           roundConfig: {
-            id:
-              `decade-${decade}`,
-
-            name:
-              `${decade}s`,
-
-            questionCount:
-              10,
-
+            id: `decade-${decade}`,
+            name: `${decade}s`,
+            questionCount: 10,
             questionTypes: [
               'name-the-song',
             ],
-
-            difficulty:
-              'medium',
-
+            difficulty: 'medium',
             decade,
           },
         },
@@ -276,31 +258,43 @@ function Play() {
 
 
   function handleGenreSelect(
-    genre: string,
-    label: string,
+    genre: Genre,
   ) {
     navigate(
       '/game',
       {
         state: {
           roundConfig: {
-            id:
-              `genre-${genre}`,
-
-            name:
-              label,
-
-            questionCount:
-              10,
-
+            id: `genre-${genre.genre}`,
+            name: genre.label,
+            questionCount: 10,
             questionTypes: [
               'name-the-song',
             ],
+            difficulty: 'medium',
+            genre: genre.genre,
+          },
+        },
+      },
+    )
+  }
 
-            difficulty:
-              'medium',
 
-            genre,
+  function handleThemeSelect(
+    theme: Theme,
+  ) {
+    navigate(
+      '/game',
+      {
+        state: {
+          roundConfig: {
+            id: theme.label,
+            name: theme.label,
+            questionCount: 10,
+            questionTypes: [
+              'name-the-song',
+            ],
+            difficulty: 'medium',
           },
         },
       },
@@ -313,8 +307,7 @@ function Play() {
       '/album-game',
       {
         state: {
-          mode:
-            'pixel-cover',
+          mode: 'pixel-cover',
         },
       },
     )
@@ -325,9 +318,7 @@ function Play() {
     artist: FeaturedArtist,
   ) {
     return (
-      CUSTOM_ARTIST_IMAGES[
-        artist.name
-      ] ??
+      CUSTOM_ARTIST_IMAGES[artist.name] ??
       artist.image
     )
   }
@@ -339,9 +330,11 @@ function Play() {
 
   return (
     <div className="play-page">
+
       <div className="play-page__container">
 
         <header className="play-page__header">
+
           <p className="label">
             PLAY
           </p>
@@ -355,19 +348,16 @@ function Play() {
             decade, or try something a little
             different.
           </p>
+
         </header>
 
 
         <main className="play-page__content">
 
-
-          {/* -------------------------------------------------
-              PLAY BY ARTIST
-              ------------------------------------------------- */}
-
           <section className="play-section">
 
             <div className="play-section__heading">
+
               <div>
 
                 <p className="play-section__eyebrow">
@@ -384,6 +374,7 @@ function Play() {
                 </p>
 
               </div>
+
             </div>
 
 
@@ -423,9 +414,7 @@ function Play() {
 
                     return (
                       <button
-                        key={
-                          artist.id
-                        }
+                        key={artist.id}
                         type="button"
                         className="artist-card"
                         onClick={() =>
@@ -438,9 +427,7 @@ function Play() {
                         {image ? (
 
                           <img
-                            src={
-                              image
-                            }
+                            src={image}
                             alt=""
                             className="artist-card__image"
                           />
@@ -489,9 +476,7 @@ function Play() {
               type="button"
               className="section-link"
               onClick={() =>
-                navigate(
-                  '/artists',
-                )
+                navigate('/artists')
               }
             >
 
@@ -505,10 +490,6 @@ function Play() {
 
           </section>
 
-
-          {/* -------------------------------------------------
-              PLAY BY ERA
-              ------------------------------------------------- */}
 
           <section className="play-section">
 
@@ -540,9 +521,7 @@ function Play() {
                 era => (
 
                   <button
-                    key={
-                      era.decade
-                    }
+                    key={era.decade}
                     type="button"
                     className="era-card"
                     onClick={() =>
@@ -555,9 +534,7 @@ function Play() {
                     <div className="era-card__image-wrapper">
 
                       <img
-                        src={
-                          era.image
-                        }
+                        src={era.image}
                         alt={`${era.label} music era`}
                         className="era-card__image"
                       />
@@ -567,16 +544,9 @@ function Play() {
 
                     <div className="era-card__content">
 
-                      <div>
-
-                        <span className="era-card__label">
-                          {era.label}
-                        </span>
-
-                        <span className="era-card__description">
-                        </span>
-
-                      </div>
+                      <span className="era-card__label">
+                        {era.label}
+                      </span>
 
                       <ArrowRight
                         size={15}
@@ -594,10 +564,6 @@ function Play() {
 
           </section>
 
-
-          {/* -------------------------------------------------
-              PLAY BY GENRE
-              ------------------------------------------------- */}
 
           <section className="play-section">
 
@@ -628,15 +594,12 @@ function Play() {
                 genre => (
 
                   <button
-                    key={
-                      genre.genre
-                    }
+                    key={genre.genre}
                     type="button"
                     className="genre-card"
                     onClick={() =>
                       handleGenreSelect(
-                        genre.genre,
-                        genre.label,
+                        genre,
                       )
                     }
                   >
@@ -644,9 +607,7 @@ function Play() {
                     <div className="genre-card__image-wrapper">
 
                       <img
-                        src={
-                          genre.image
-                        }
+                        src={genre.image}
                         alt={`${genre.label} music`}
                         className="genre-card__image"
                       />
@@ -677,9 +638,73 @@ function Play() {
           </section>
 
 
-          {/* -------------------------------------------------
-              MORE WAYS TO PLAY
-              ------------------------------------------------- */}
+          <section className="play-section">
+
+            <div className="play-section__heading">
+
+              <div>
+
+                <p className="play-section__eyebrow">
+                  PLAY BY THEME
+                </p>
+
+                <h2>
+                  Pick a mood.
+                </h2>
+
+                <p>
+                  Choose a feeling and see which
+                  songs you can recognize.
+                </p>
+
+              </div>
+
+            </div>
+
+
+            <div className="theme-grid">
+
+              {THEMES.map(
+                theme => (
+
+                  <button
+                    key={theme.label}
+                    type="button"
+                    className="theme-card"
+                    onClick={() =>
+                      handleThemeSelect(
+                        theme,
+                      )
+                    }
+                  >
+
+                    <div className="theme-card__content">
+
+                      <span className="theme-card__label">
+                        {theme.label}
+                      </span>
+
+                      <span className="theme-card__description">
+                        {theme.description}
+                      </span>
+
+                    </div>
+
+
+                    <ArrowRight
+                      size={15}
+                      className="theme-card__arrow"
+                    />
+
+                  </button>
+
+                ),
+              )}
+
+            </div>
+
+          </section>
+
 
           <section className="play-section play-section--pixel">
 
@@ -716,9 +741,7 @@ function Play() {
               <button
                 type="button"
                 className="pixel-card__button"
-                onClick={
-                  handlePixelCover
-                }
+                onClick={handlePixelCover}
               >
 
                 Play
@@ -733,10 +756,10 @@ function Play() {
 
           </section>
 
-
         </main>
 
       </div>
+
     </div>
   )
 }
