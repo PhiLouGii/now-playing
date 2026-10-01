@@ -18,6 +18,7 @@ import AnswerGrid from '../../components/game/AnswerGrid'
 import GameHeader from '../../components/game/GameHeader'
 import GameProgress from '../../components/game/GameProgress'
 import ResultsScreen from '../../components/game/ResultsScreen'
+import LoadingScreen from '../../components/loading/LoadingScreen'
 
 import { defaultRound } from '../../data/defaultRound'
 
@@ -25,8 +26,10 @@ import {
   generateQuestion,
   generateEraRound,
   generateGenreRound,
+  getLoadingFacts,
   type EraKey,
   type GenreKey,
+  type LoadingFact,
 } from '../../services/gameService'
 
 import {
@@ -127,6 +130,9 @@ function Game() {
   const [isLoading, setIsLoading] =
     useState(true)
 
+  const [loadingFacts, setLoadingFacts] =
+    useState<LoadingFact[]>([])
+
   const [isLoadingNext, setIsLoadingNext] =
     useState(false)
 
@@ -205,6 +211,26 @@ function Game() {
       setIsLoading(true)
 
       usedTrackIds.current.clear()
+
+      /*
+       * Loading facts are fetched independently from
+       * the game data so they do not become another
+       * unnecessary reason for the game to wait.
+       */
+      getLoadingFacts()
+        .then(data => {
+          if (isMounted) {
+            setLoadingFacts(
+              data.facts,
+            )
+          }
+        })
+        .catch(error => {
+          console.error(
+            'Failed to load loading facts:',
+            error,
+          )
+        })
 
       try {
         /*
@@ -494,23 +520,10 @@ function Game() {
 
   if (isLoading) {
     return (
-      <div className="game-page">
-        <div className="game-page__container">
-
-          <main className="game-content game-content--loading">
-
-            <p className="game-content__category">
-              {roundConfig.name.toUpperCase()}
-            </p>
-
-            <h1>
-              GETTING YOUR ROUND READY
-            </h1>
-
-          </main>
-
-        </div>
-      </div>
+      <LoadingScreen
+        facts={loadingFacts}
+        message={`Loading ${roundConfig.name}...`}
+      />
     )
   }
 

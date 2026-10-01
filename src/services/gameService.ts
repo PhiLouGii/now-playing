@@ -28,6 +28,7 @@ export async function generateQuestion(
     new URLSearchParams()
 
   params.set('type', type)
+
   params.set(
     'difficulty',
     difficulty,
@@ -156,14 +157,15 @@ export type EraSong = {
   era: string
   provider: string
   providerSongId: string
-  previewUrl: string
-  artworkUrl: string
+  previewUrl?: string
+  artworkUrl?: string
 }
 
 export type EraSongsResponse = {
   era: string
   count: number
   songs: EraSong[]
+  playableSongs: EraSong[]
 }
 
 /* =========================================================
@@ -172,10 +174,11 @@ export type EraSongsResponse = {
 
 export async function getEraSongs(
   era: EraKey,
+  questionCount = 10,
 ): Promise<EraSongsResponse> {
   const response =
     await fetch(
-      `${API_URL}/eras/${era}`,
+      `${API_URL}/eras/${era}?limit=${questionCount}`,
     )
 
   if (!response.ok) {
@@ -226,14 +229,15 @@ export type GenreSong = {
   genres: string[]
   provider: string
   providerSongId: string
-  previewUrl: string
-  artworkUrl: string
+  previewUrl?: string
+  artworkUrl?: string
 }
 
 export type GenreSongsResponse = {
   genre: string
   count: number
   songs: GenreSong[]
+  playableSongs: GenreSong[]
 }
 
 /* =========================================================
@@ -242,10 +246,13 @@ export type GenreSongsResponse = {
 
 export async function getGenreSongs(
   genre: GenreKey,
+  questionCount = 10,
 ): Promise<GenreSongsResponse> {
   const response =
     await fetch(
-      `${API_URL}/genres/${encodeURIComponent(genre)}`,
+      `${API_URL}/genres/${encodeURIComponent(
+        genre,
+      )}?limit=${questionCount}`,
     )
 
   if (!response.ok) {
@@ -318,9 +325,9 @@ function eraSongToSong(
     album: song.album,
     releaseYear: song.year,
     artworkUrl:
-      song.artworkUrl,
+      song.artworkUrl ?? '',
     audioUrl:
-      song.previewUrl,
+      song.previewUrl ?? '',
     genres: [],
     provider:
       song.provider,
@@ -343,9 +350,9 @@ function genreSongToSong(
     album: song.album,
     releaseYear: song.year,
     artworkUrl:
-      song.artworkUrl,
+      song.artworkUrl ?? '',
     audioUrl:
-      song.previewUrl,
+      song.previewUrl ?? '',
     genres:
       song.genres,
     provider:
@@ -487,16 +494,19 @@ export async function generateEraRound(
   difficulty: Question['difficulty'],
 ): Promise<Question[]> {
   const data =
-    await getEraSongs(era)
+    await getEraSongs(
+      era,
+      questionCount,
+    )
 
   const selectedSongs =
     shuffle(
-      data.songs,
+      data.playableSongs,
     ).slice(
       0,
       Math.min(
         questionCount,
-        data.songs.length,
+        data.playableSongs.length,
       ),
     )
 
@@ -650,16 +660,19 @@ export async function generateGenreRound(
   difficulty: Question['difficulty'],
 ): Promise<Question[]> {
   const data =
-    await getGenreSongs(genre)
+    await getGenreSongs(
+      genre,
+      questionCount,
+    )
 
   const selectedSongs =
     shuffle(
-      data.songs,
+      data.playableSongs,
     ).slice(
       0,
       Math.min(
         questionCount,
-        data.songs.length,
+        data.playableSongs.length,
       ),
     )
 
@@ -681,6 +694,10 @@ export async function generateGenreRound(
   )
 }
 
+/* =========================================================
+   LOADING FACTS
+   ========================================================= */
+
 export type LoadingFact = {
   id: string
   text: string
@@ -698,9 +715,10 @@ export type LoadingFactsResponse = {
 }
 
 export async function getLoadingFacts(): Promise<LoadingFactsResponse> {
-  const response = await fetch(
-    `${API_URL}/loading-facts`,
-  )
+  const response =
+    await fetch(
+      `${API_URL}/loading-facts`,
+    )
 
   if (!response.ok) {
     let message =
@@ -715,7 +733,9 @@ export async function getLoadingFacts(): Promise<LoadingFactsResponse> {
       if (data.message) {
         message = data.message
       }
-    } catch {}
+    } catch {
+      // Keep the default error message.
+    }
 
     throw new Error(message)
   }
