@@ -9,6 +9,7 @@
     "seed:60s": "tsx src/scripts/seedSixties.ts",
     "seed:era": "tsx src/scripts/seedEra.ts",
     "seed:genre": "tsx src/scripts/seedGenre.ts",
+    "seed:loading-facts": "tsx src/scripts/seedLoadingFacts.ts",
     "start": "node dist/server.js"
   },
   "keywords": [],
