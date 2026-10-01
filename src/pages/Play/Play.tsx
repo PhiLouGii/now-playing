@@ -115,7 +115,7 @@ const GENRES: Genre[] = [
   },
   {
     label: 'K-Pop',
-    genre: 'kpop',
+    genre: 'k-pop',
     image: '/genres/kpop.png',
   },
   {
