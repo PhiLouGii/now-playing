@@ -19,6 +19,7 @@ export type LoadingFact = {
 type LoadingScreenProps = {
   facts: LoadingFact[]
   message?: string
+  isComplete?: boolean
 }
 
 function shuffle<T>(
@@ -53,6 +54,7 @@ function shuffle<T>(
 export default function LoadingScreen({
   facts,
   message = 'Loading your game...',
+  isComplete = false,
 }: LoadingScreenProps) {
   const [
     shuffledFacts,
@@ -69,6 +71,10 @@ export default function LoadingScreen({
     setProgress,
   ] = useState(0)
 
+  /*
+   * Shuffle facts whenever the
+   * supplied facts change.
+   */
   useEffect(() => {
     if (facts.length === 0) {
       setShuffledFacts([])
@@ -82,6 +88,9 @@ export default function LoadingScreen({
     setCurrentFactIndex(0)
   }, [facts])
 
+  /*
+   * Rotate facts every 10 seconds.
+   */
   useEffect(() => {
     if (shuffledFacts.length <= 1) {
       return
@@ -103,7 +112,19 @@ export default function LoadingScreen({
     }
   }, [shuffledFacts])
 
+  /*
+   * Loading progress.
+   *
+   * While the game is loading,
+   * progress can reach 90% but
+   * never finishes on its own.
+   */
   useEffect(() => {
+    if (isComplete) {
+      setProgress(100)
+      return
+    }
+
     const interval =
       window.setInterval(() => {
         setProgress(
@@ -112,7 +133,7 @@ export default function LoadingScreen({
               currentProgress >=
               90
             ) {
-              return currentProgress
+              return 90
             }
 
             return Math.min(
@@ -129,7 +150,7 @@ export default function LoadingScreen({
         interval,
       )
     }
-  }, [])
+  }, [isComplete])
 
   const currentFact =
     shuffledFacts[
@@ -160,7 +181,9 @@ export default function LoadingScreen({
           </div>
 
           <p className="loading-screen__message">
-            {message}
+            {isComplete
+              ? 'Ready!'
+              : message}
           </p>
 
           <div className="loading-screen__progress">

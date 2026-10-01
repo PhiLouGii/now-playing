@@ -133,6 +133,11 @@ function Game() {
   const [loadingFacts, setLoadingFacts] =
     useState<LoadingFact[]>([])
 
+  const [
+    loadingComplete,
+    setLoadingComplete,
+  ] = useState(false)
+
   const [isLoadingNext, setIsLoadingNext] =
     useState(false)
 
@@ -209,6 +214,7 @@ function Game() {
 
     async function loadFirstQuestion() {
       setIsLoading(true)
+      setLoadingComplete(false)
 
       usedTrackIds.current.clear()
 
@@ -265,6 +271,12 @@ function Game() {
               eraQuestions,
             )
 
+            /*
+             * The actual game data has finished
+             * loading successfully.
+             */
+            setLoadingComplete(true)
+
             setIsLoading(false)
           }
 
@@ -302,6 +314,12 @@ function Game() {
               genreQuestions,
             )
 
+            /*
+             * The actual game data has finished
+             * loading successfully.
+             */
+            setLoadingComplete(true)
+
             setIsLoading(false)
           }
 
@@ -332,6 +350,12 @@ function Game() {
           setQuestions([
             firstQuestion,
           ])
+
+          /*
+           * The actual game data has finished
+           * loading successfully.
+           */
+          setLoadingComplete(true)
 
           setIsLoading(false)
         }
@@ -523,6 +547,7 @@ function Game() {
       <LoadingScreen
         facts={loadingFacts}
         message={`Loading ${roundConfig.name}...`}
+        isComplete={loadingComplete}
       />
     )
   }
@@ -808,7 +833,7 @@ function Game() {
   }
 
   /* =========================================================
-     RESET QUESTION
+     RESET QUESTION STATE
      ========================================================= */
 
   function resetQuestionState() {
