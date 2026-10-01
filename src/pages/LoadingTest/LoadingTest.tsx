@@ -1,36 +1,58 @@
-import LoadingScreen from '../../components/loading/LoadingScreen'
+import {
+  useEffect,
+  useState,
+} from 'react'
 
-const testFacts = [
-  {
-    id: 'test-1',
-    text: 'Blinding Lights became one of the defining pop hits of the early 2020s.',
-    category: 'song',
-    relatedArtist: 'The Weeknd',
-    relatedSong: 'Blinding Lights',
-  },
-  {
-    id: 'test-2',
-    text: 'Bob Marley helped bring reggae music to audiences around the world.',
-    category: 'artist',
-    relatedArtist: 'Bob Marley',
-  },
-  {
-    id: 'test-3',
-    text: 'The 1990s saw major shifts in hip-hop, R&B, grunge, pop, and alternative rock.',
-    category: 'era',
-    relatedEra: '1990s',
-  },
-  {
-    id: 'test-4',
-    text: 'Listen for distinctive drum patterns, guitar riffs, synth sounds, and vocal styles when guessing a song.',
-    category: 'tip',
-  },
-]
+import LoadingScreen from '../../components/loading/LoadingScreen'
+import {
+  getLoadingFacts,
+  type LoadingFact,
+} from '../../services/gameService'
 
 export default function LoadingTest() {
+  const [
+    facts,
+    setFacts,
+  ] = useState<LoadingFact[]>([])
+
+  const [
+    error,
+    setError,
+  ] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function loadFacts() {
+      try {
+        const data =
+          await getLoadingFacts()
+
+        setFacts(data.facts)
+      } catch (err) {
+        console.error(
+          'Failed to load loading facts:',
+          err,
+        )
+
+        setError(
+          'Could not load music facts.',
+        )
+      }
+    }
+
+    loadFacts()
+  }, [])
+
+  if (error) {
+    return (
+      <main>
+        <p>{error}</p>
+      </main>
+    )
+  }
+
   return (
     <LoadingScreen
-      facts={testFacts}
+      facts={facts}
       message="Loading your game..."
     />
   )

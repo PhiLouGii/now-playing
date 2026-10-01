@@ -680,3 +680,45 @@ export async function generateGenreRound(
     },
   )
 }
+
+export type LoadingFact = {
+  id: string
+  text: string
+  category: string
+  relatedArtist?: string
+  relatedSong?: string
+  relatedAlbum?: string
+  relatedGenre?: string
+  relatedEra?: string
+}
+
+export type LoadingFactsResponse = {
+  count: number
+  facts: LoadingFact[]
+}
+
+export async function getLoadingFacts(): Promise<LoadingFactsResponse> {
+  const response = await fetch(
+    `${API_URL}/loading-facts`,
+  )
+
+  if (!response.ok) {
+    let message =
+      'Failed to load music facts'
+
+    try {
+      const data =
+        (await response.json()) as {
+          message?: string
+        }
+
+      if (data.message) {
+        message = data.message
+      }
+    } catch {}
+
+    throw new Error(message)
+  }
+
+  return response.json()
+}
