@@ -19,8 +19,15 @@ import {
   X,
 } from 'lucide-react'
 
+import LoadingScreen from '../../components/loading/LoadingScreen'
+
 import {
   generateQuestion,
+  getLoadingFacts,
+} from '../../services/gameService'
+
+import type {
+  LoadingFact,
 } from '../../services/gameService'
 
 import type {
@@ -97,6 +104,24 @@ export default function PlayByArtist() {
     setLoading,
   ] =
     useState(true)
+
+  const [
+    isInitialLoading,
+    setIsInitialLoading,
+  ] =
+    useState(true)
+
+  const [
+    loadingFacts,
+    setLoadingFacts,
+  ] =
+    useState<LoadingFact[]>([])
+
+  const [
+    loadingComplete,
+    setLoadingComplete,
+  ] =
+    useState(false)
 
   const [
     loadingNext,
@@ -483,27 +508,46 @@ export default function PlayByArtist() {
       !selectedArtistId
     ) {
       setLoading(false)
+      setIsInitialLoading(false)
 
       return
     }
 
-    if (
-      !initialQuestionPromiseRef.current
-    ) {
-      initialQuestionPromiseRef.current =
-        fetchQuestion()
-    }
-
-    const loadInitialQuestion =
+    const loadInitialGame =
       async () => {
         setLoading(true)
+        setLoadingComplete(false)
+
+        /*
+         * Loading facts and the first question
+         * can load independently.
+         */
+        getLoadingFacts()
+          .then(data => {
+            if (!cancelled) {
+              setLoadingFacts(
+                data.facts,
+              )
+            }
+          })
+          .catch(error => {
+            console.error(
+              'Failed to load loading facts:',
+              error,
+            )
+          })
+
+        if (
+          !initialQuestionPromiseRef.current
+        ) {
+          initialQuestionPromiseRef.current =
+            fetchQuestion()
+        }
 
         const firstQuestion =
           await initialQuestionPromiseRef.current
 
-        if (
-          cancelled
-        ) {
+        if (cancelled) {
           return
         }
 
@@ -513,12 +557,17 @@ export default function PlayByArtist() {
           loadQuestion(
             firstQuestion,
           )
+
+          setLoadingComplete(
+            true,
+          )
         }
 
         setLoading(false)
+        setIsInitialLoading(false)
       }
 
-    void loadInitialQuestion()
+    void loadInitialGame()
 
     return () => {
       cancelled = true
@@ -1171,19 +1220,17 @@ export default function PlayByArtist() {
    * -------------------------------------------------------
    */
 
-  if (loading) {
+  if (
+    isInitialLoading
+  ) {
     return (
-      <main className="play-by-artist__loading-page">
-        <div className="play-by-artist__loading-content">
-          <div className="play-by-artist__loading-spinner" />
-
-          <p>
-            LOADING{' '}
-            {selectedArtist.toUpperCase()}
-            ...
-          </p>
-        </div>
-      </main>
+      <LoadingScreen
+        facts={loadingFacts}
+        message={`Loading ${selectedArtist}...`}
+        isComplete={
+          loadingComplete
+        }
+      />
     )
   }
 
