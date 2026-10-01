@@ -17,6 +17,7 @@ import SignUp from '../pages/Auth/SignUp'
 import Login from '../pages/Auth/Login'
 import EndlessGame from '../pages/EndlessGame/EndlessGame'
 import BuildGame from '../pages/BuildGame/BuildGame'
+import LoadingTest from '../pages/LoadingTest/LoadingTest'
 
 function AppRoutes() {
   return (
@@ -28,6 +29,10 @@ function AppRoutes() {
   element={<Artists />}
 />
       <Route path="/game" element={<Game />} />
+      <Route
+  path="/loading-test"
+  element={<LoadingTest />}
+/>
       <Route
         path="/artist-game"
         element={<ArtistGame />}
