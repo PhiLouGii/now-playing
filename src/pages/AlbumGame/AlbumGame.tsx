@@ -3,7 +3,9 @@ import {
   useRef,
   useState,
 } from 'react'
+
 import { useNavigate } from 'react-router-dom'
+
 import {
   ArrowRight,
   Pause,
@@ -13,7 +15,14 @@ import {
   Volume2,
 } from 'lucide-react'
 
-import { generateQuestion } from '../../services/gameService'
+import LoadingScreen from '../../components/loading/LoadingScreen'
+
+import {
+  generateQuestion,
+  getLoadingFacts,
+  type LoadingFact,
+} from '../../services/gameService'
+
 import { submitScore } from '../../services/scoreService'
 
 import {
@@ -75,6 +84,18 @@ function AlbumGame() {
     useState<string | null>(null)
 
   /*
+   * LOADING SCREEN
+   */
+
+  const [loadingFacts, setLoadingFacts] =
+    useState<LoadingFact[]>([])
+
+  const [
+    loadingComplete,
+    setLoadingComplete,
+  ] = useState(false)
+
+  /*
    * SCORE
    */
 
@@ -105,7 +126,41 @@ function AlbumGame() {
    */
 
   useEffect(() => {
-    loadQuestion()
+    let isMounted = true
+
+    async function initializeGame() {
+      setIsLoading(true)
+      setLoadingComplete(false)
+
+      /*
+       * Load the shared music facts independently
+       * from the question itself.
+       */
+      getLoadingFacts()
+        .then((data) => {
+          if (isMounted) {
+            setLoadingFacts(
+              data.facts,
+            )
+          }
+        })
+        .catch((error) => {
+          console.error(
+            'Failed to load loading facts:',
+            error,
+          )
+        })
+
+      await loadQuestion(
+        isMounted,
+      )
+    }
+
+    initializeGame()
+
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   /*
@@ -256,7 +311,9 @@ function AlbumGame() {
    * Generate a new album question.
    */
 
-  async function loadQuestion() {
+  async function loadQuestion(
+    isInitialLoad = false,
+  ) {
     setIsLoading(true)
     setError(null)
 
@@ -277,6 +334,14 @@ function AlbumGame() {
       setQuestion(
         generatedQuestion,
       )
+
+      /*
+       * Only the initial question controls
+       * the shared full-screen loading state.
+       */
+      if (isInitialLoad) {
+        setLoadingComplete(true)
+      }
     } catch (err) {
       console.error(
         'Failed to generate album question:',
@@ -481,6 +546,20 @@ function AlbumGame() {
 
   function handlePlayAgain() {
     window.location.reload()
+  }
+
+  /*
+   * SHARED LOADING SCREEN
+   */
+
+  if (isLoading && !question) {
+    return (
+      <LoadingScreen
+        facts={loadingFacts}
+        message="Loading Name the Album..."
+        isComplete={loadingComplete}
+      />
+    )
   }
 
   if (showResults) {

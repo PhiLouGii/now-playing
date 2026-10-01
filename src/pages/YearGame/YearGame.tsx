@@ -13,7 +13,14 @@ import {
   Volume2,
 } from 'lucide-react'
 
-import { generateQuestion } from '../../services/gameService'
+import LoadingScreen from '../../components/loading/LoadingScreen'
+
+import {
+  generateQuestion,
+  getLoadingFacts,
+  type LoadingFact,
+} from '../../services/gameService'
+
 import { submitScore } from '../../services/scoreService'
 import { calculateFinalPoints } from '../../lib/gameScoring'
 import type { Question } from '../../types/game'
@@ -71,6 +78,22 @@ function YearGame() {
   const [error, setError] =
     useState<string | null>(null)
 
+  /*
+   * LOADING SCREEN
+   */
+
+  const [loadingFacts, setLoadingFacts] =
+    useState<LoadingFact[]>([])
+
+  const [
+    loadingComplete,
+    setLoadingComplete,
+  ] = useState(false)
+
+  /*
+   * SCORE
+   */
+
   const [score, setScore] =
     useState(0)
 
@@ -89,19 +112,67 @@ function YearGame() {
   const timerRef =
     useRef<number | null>(null)
 
+  /*
+   * Generate the first question.
+   */
+
   useEffect(() => {
-    loadQuestion()
+    let isMounted = true
+
+    async function initializeGame() {
+      setIsLoading(true)
+      setLoadingComplete(false)
+
+      /*
+       * Load the shared music facts independently.
+       */
+      getLoadingFacts()
+        .then((data) => {
+          if (isMounted) {
+            setLoadingFacts(
+              data.facts,
+            )
+          }
+        })
+        .catch((error) => {
+          console.error(
+            'Failed to load loading facts:',
+            error,
+          )
+        })
+
+      await loadQuestion(
+        isMounted,
+        true,
+      )
+    }
+
+    initializeGame()
+
+    return () => {
+      isMounted = false
+    }
   }, [])
+
+  /*
+   * Clean up timer and audio.
+   */
 
   useEffect(() => {
     return () => {
       if (timerRef.current !== null) {
-        window.clearInterval(timerRef.current)
+        window.clearInterval(
+          timerRef.current,
+        )
       }
 
       audioRef.current?.pause()
     }
   }, [])
+
+  /*
+   * Countdown.
+   */
 
   useEffect(() => {
     if (
@@ -145,6 +216,10 @@ function YearGame() {
     hasAnswered,
     isTimeUp,
   ])
+
+  /*
+   * Save score when results are shown.
+   */
 
   useEffect(() => {
     if (
@@ -215,7 +290,14 @@ function YearGame() {
     bestStreak,
   ])
 
-  async function loadQuestion() {
+  /*
+   * Generate a new year question.
+   */
+
+  async function loadQuestion(
+    isMounted = true,
+    isInitialLoad = false,
+  ) {
     setIsLoading(true)
     setError(null)
 
@@ -233,22 +315,38 @@ function YearGame() {
           'medium',
         )
 
+      if (!isMounted) {
+        return
+      }
+
       setQuestion(
         generatedQuestion,
       )
+
+      if (isInitialLoad) {
+        setLoadingComplete(true)
+      }
     } catch (err) {
       console.error(
         'Failed to generate year question:',
         err,
       )
 
-      setError(
-        'We could not load the next song. Please try again.',
-      )
+      if (isMounted) {
+        setError(
+          'We could not load the next song. Please try again.',
+        )
+      }
     } finally {
-      setIsLoading(false)
+      if (isMounted) {
+        setIsLoading(false)
+      }
     }
   }
+
+  /*
+   * Start / pause the preview.
+   */
 
   function togglePlayback() {
     const audio =
@@ -276,6 +374,10 @@ function YearGame() {
         )
       })
   }
+
+  /*
+   * Submit an answer.
+   */
 
   function handleAnswer(
     answer: string,
@@ -360,6 +462,10 @@ function YearGame() {
     ])
   }
 
+  /*
+   * Handle the player reaching 10 seconds.
+   */
+
   function handleTimeUp() {
     if (
       hasAnswered ||
@@ -399,6 +505,10 @@ function YearGame() {
     ])
   }
 
+  /*
+   * Move to the next question.
+   */
+
   async function handleNext() {
     if (
       questionNumber >= TOTAL_QUESTIONS
@@ -414,12 +524,34 @@ function YearGame() {
     await loadQuestion()
   }
 
+  /*
+   * Retry if question generation fails.
+   */
+
   function handleRetry() {
     loadQuestion()
   }
 
+  /*
+   * Restart the complete round.
+   */
+
   function handlePlayAgain() {
     window.location.reload()
+  }
+
+  /*
+   * SHARED LOADING SCREEN
+   */
+
+  if (isLoading && !question) {
+    return (
+      <LoadingScreen
+        facts={loadingFacts}
+        message="Loading Guess the Year..."
+        isComplete={loadingComplete}
+      />
+    )
   }
 
   if (showResults) {

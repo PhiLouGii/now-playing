@@ -16,7 +16,14 @@ import {
 
 import { useNavigate } from 'react-router-dom'
 
-import { generateQuestion } from '../../services/gameService'
+import LoadingScreen from '../../components/loading/LoadingScreen'
+
+import {
+  generateQuestion,
+  getLoadingFacts,
+  type LoadingFact,
+} from '../../services/gameService'
+
 import { submitScore } from '../../services/scoreService'
 
 import {
@@ -70,6 +77,20 @@ function ArtistGame() {
 
   /*
    * --------------------------------------------------
+   * LOADING SCREEN
+   * --------------------------------------------------
+   */
+
+  const [loadingFacts, setLoadingFacts] =
+    useState<LoadingFact[]>([])
+
+  const [
+    loadingComplete,
+    setLoadingComplete,
+  ] = useState(false)
+
+  /*
+   * --------------------------------------------------
    * ANSWER STATE
    * --------------------------------------------------
    */
@@ -113,8 +134,10 @@ function ArtistGame() {
    * --------------------------------------------------
    */
 
-  const [recognitionResults, setRecognitionResults] =
-    useState<ArtistRecognitionResult[]>([])
+  const [
+    recognitionResults,
+    setRecognitionResults,
+  ] = useState<ArtistRecognitionResult[]>([])
 
   const [isGameComplete, setIsGameComplete] =
     useState(false)
@@ -148,6 +171,26 @@ function ArtistGame() {
 
     async function loadFirstQuestion() {
       setIsLoading(true)
+      setLoadingComplete(false)
+
+      /*
+       * Loading facts are fetched independently
+       * from the game data.
+       */
+      getLoadingFacts()
+        .then(data => {
+          if (isMounted) {
+            setLoadingFacts(
+              data.facts,
+            )
+          }
+        })
+        .catch(error => {
+          console.error(
+            'Failed to load loading facts:',
+            error,
+          )
+        })
 
       try {
         const firstQuestion =
@@ -160,7 +203,15 @@ function ArtistGame() {
           return
         }
 
-        setQuestions([firstQuestion])
+        setQuestions([
+          firstQuestion,
+        ])
+
+        /*
+         * The first Artist question has
+         * finished loading successfully.
+         */
+        setLoadingComplete(true)
         setIsLoading(false)
       } catch (error) {
         console.error(
@@ -212,7 +263,10 @@ function ArtistGame() {
         }
 
         setQuestions((current) => {
-          if (current.length > nextIndex) {
+          if (
+            current.length >
+            nextIndex
+          ) {
             return current
           }
 
@@ -261,7 +315,8 @@ function ArtistGame() {
 
     const correctAnswers =
       recognitionResults.filter(
-        (result) => result.correct,
+        (result) =>
+          result.correct,
       ).length
 
     const accuracy =
@@ -274,18 +329,21 @@ function ArtistGame() {
     const totalListeningTime =
       recognitionResults.reduce(
         (total, result) =>
-          total + result.recognitionTime,
+          total +
+          result.recognitionTime,
         0,
       )
 
     async function saveScore() {
       try {
         await submitScore({
-          gameMode: 'name-the-artist',
+          gameMode:
+            'name-the-artist',
           score,
           accuracy,
           bestStreak,
-          questions: TOTAL_QUESTIONS,
+          questions:
+            TOTAL_QUESTIONS,
           correctAnswers,
           totalListeningTime,
         })
@@ -296,7 +354,8 @@ function ArtistGame() {
             score,
             accuracy,
             bestStreak,
-            questions: TOTAL_QUESTIONS,
+            questions:
+              TOTAL_QUESTIONS,
             correctAnswers,
             totalListeningTime,
           },
@@ -333,9 +392,14 @@ function ArtistGame() {
    */
 
   useEffect(() => {
-    setTimeRemaining(ROUND_LENGTH)
+    setTimeRemaining(
+      ROUND_LENGTH,
+    )
+
     setSelectedAnswer(null)
+
     setAnswerStatus('idle')
+
     setIsPlaying(false)
 
     if (audioRef.current) {
@@ -361,59 +425,77 @@ function ArtistGame() {
 
     const timer =
       window.setInterval(() => {
-        setTimeRemaining((current) => {
-          if (current <= 0.1) {
-            window.clearInterval(timer)
+        setTimeRemaining(
+          (current) => {
+            if (current <= 0.1) {
+              window.clearInterval(
+                timer,
+              )
 
-            setIsPlaying(false)
-            setAnswerStatus('timeout')
-            setStreak(0)
+              setIsPlaying(false)
 
-            setRecognitionResults(
-              (currentResults) => [
-                ...currentResults,
-                {
-                  questionNumber:
-                    currentQuestion + 1,
+              setAnswerStatus(
+                'timeout',
+              )
 
-                  title:
-                    question.song.title,
+              setStreak(0)
 
-                  artist:
-                    question.song.artist,
+              setRecognitionResults(
+                (currentResults) => [
+                  ...currentResults,
+                  {
+                    questionNumber:
+                      currentQuestion +
+                      1,
 
-                  album:
-                    question.song.album,
+                    title:
+                      question.song
+                        .title,
 
-                  artworkUrl:
-                    question.song.artworkUrl ?? '',
+                    artist:
+                      question.song
+                        .artist,
 
-                  recognitionTime:
-                    ROUND_LENGTH,
+                    album:
+                      question.song
+                        .album,
 
-                  correct: false,
+                    artworkUrl:
+                      question.song
+                        .artworkUrl ??
+                      '',
 
-                  points: 0,
-                },
-              ],
-            )
+                    recognitionTime:
+                      ROUND_LENGTH,
 
-            if (audioRef.current) {
-              audioRef.current.pause()
+                    correct: false,
+
+                    points: 0,
+                  },
+                ],
+              )
+
+              if (
+                audioRef.current
+              ) {
+                audioRef.current.pause()
+              }
+
+              return 0
             }
 
-            return 0
-          }
-
-          return Math.max(
-            0,
-            current - 0.1,
-          )
-        })
+            return Math.max(
+              0,
+              current - 0.1,
+            )
+          },
+        )
       }, 100)
 
     return () => {
-      window.clearInterval(timer)
+      window.clearInterval(
+        timer,
+      )
     }
   }, [
     isPlaying,
@@ -438,12 +520,15 @@ function ArtistGame() {
 
     if (isPlaying) {
       audioRef.current.pause()
+
       setIsPlaying(false)
+
       return
     }
 
     try {
       await audioRef.current.play()
+
       setIsPlaying(true)
     } catch (error) {
       console.error(
@@ -470,15 +555,18 @@ function ArtistGame() {
     }
 
     const isCorrect =
-      answer === question.correctAnswer
+      answer ===
+      question.correctAnswer
 
-    const recognitionTime = Math.min(
-      ROUND_LENGTH,
-      Math.max(
-        0,
-        ROUND_LENGTH - timeRemaining,
-      ),
-    )
+    const recognitionTime =
+      Math.min(
+        ROUND_LENGTH,
+        Math.max(
+          0,
+          ROUND_LENGTH -
+            timeRemaining,
+        ),
+      )
 
     const nextStreak =
       isCorrect
@@ -502,6 +590,7 @@ function ArtistGame() {
     )
 
     setIsPlaying(false)
+
     setStreak(nextStreak)
 
     if (isCorrect) {
@@ -516,7 +605,8 @@ function ArtistGame() {
 
     setScore(
       (currentScore) =>
-        currentScore + earnedPoints,
+        currentScore +
+        earnedPoints,
     )
 
     if (audioRef.current) {
@@ -540,7 +630,8 @@ function ArtistGame() {
             question.song.album,
 
           artworkUrl:
-            question.song.artworkUrl ?? '',
+            question.song.artworkUrl ??
+            '',
 
           recognitionTime,
           correct: isCorrect,
@@ -576,6 +667,7 @@ function ArtistGame() {
       }
 
       setIsGameComplete(true)
+
       return
     }
 
@@ -583,7 +675,10 @@ function ArtistGame() {
       currentQuestion + 1
 
     if (questions[nextIndex]) {
-      setCurrentQuestion(nextIndex)
+      setCurrentQuestion(
+        nextIndex,
+      )
+
       return
     }
 
@@ -597,7 +692,9 @@ function ArtistGame() {
         )
 
       setQuestions((current) => {
-        if (current[nextIndex]) {
+        if (
+          current[nextIndex]
+        ) {
           return current
         }
 
@@ -607,7 +704,9 @@ function ArtistGame() {
         ]
       })
 
-      setCurrentQuestion(nextIndex)
+      setCurrentQuestion(
+        nextIndex,
+      )
     } catch (error) {
       console.error(
         'Failed to generate next artist question:',
@@ -626,24 +725,13 @@ function ArtistGame() {
 
   if (isLoading) {
     return (
-      <div className="artist-game">
-        <div className="artist-game__container">
-          <main className="artist-game__loading">
-            <p className="artist-game__eyebrow">
-              QUICK MODE
-            </p>
-
-            <h1>
-              GETTING YOUR SONG READY
-            </h1>
-
-            <p>
-              Finding something you might
-              recognize...
-            </p>
-          </main>
-        </div>
-      </div>
+      <LoadingScreen
+        facts={loadingFacts}
+        message="Loading Name the Artist..."
+        isComplete={
+          loadingComplete
+        }
+      />
     )
   }
 
@@ -653,11 +741,16 @@ function ArtistGame() {
    * --------------------------------------------------
    */
 
-  if (!question && !isGameComplete) {
+  if (
+    !question &&
+    !isGameComplete
+  ) {
     return (
       <div className="artist-game">
         <div className="artist-game__container">
+
           <main className="artist-game__loading">
+
             <p className="artist-game__eyebrow">
               GUESS THE ARTIST
             </p>
@@ -667,10 +760,12 @@ function ArtistGame() {
             </h1>
 
             <p>
-              We couldn't generate a song
-              right now.
+              We couldn't generate a
+              song right now.
             </p>
+
           </main>
+
         </div>
       </div>
     )
@@ -685,9 +780,13 @@ function ArtistGame() {
   if (isGameComplete) {
     return (
       <ArtistResultsScreen
-        results={recognitionResults}
+        results={
+          recognitionResults
+        }
         score={score}
-        bestStreak={bestStreak}
+        bestStreak={
+          bestStreak
+        }
         onPlayAgain={() =>
           window.location.reload()
         }
@@ -699,7 +798,8 @@ function ArtistGame() {
   }
 
   const progress =
-    ((ROUND_LENGTH - timeRemaining) /
+    ((ROUND_LENGTH -
+      timeRemaining) /
       ROUND_LENGTH) *
     100
 
@@ -718,7 +818,9 @@ function ArtistGame() {
         ================================================= */}
 
         <header className="artist-game__header">
+
           <div>
+
             <p className="artist-game__eyebrow">
               QUICK MODE
             </p>
@@ -726,20 +828,25 @@ function ArtistGame() {
             <h1 className="artist-game__title">
               Guess the Artist
             </h1>
+
           </div>
 
           <div className="artist-game__round">
+
             <span>
               ROUND
             </span>
 
             <strong>
               {currentQuestion + 1}
+
               <small>
                 /{TOTAL_QUESTIONS}
               </small>
             </strong>
+
           </div>
+
         </header>
 
         {/* =================================================
@@ -769,7 +876,8 @@ function ArtistGame() {
                 {question.song.artworkUrl ? (
                   <img
                     src={
-                      question.song.artworkUrl
+                      question.song
+                        .artworkUrl
                     }
                     alt={`${question.song.album} album cover`}
                     className="artist-game__artwork"
@@ -785,7 +893,9 @@ function ArtistGame() {
                 </p>
 
                 <h2>
-                  {question.song.title}
+                  {
+                    question.song.title
+                  }
                 </h2>
               </>
             )}
@@ -797,7 +907,10 @@ function ArtistGame() {
               <audio
                 ref={audioRef}
                 key={question.id}
-                src={question.song.audioUrl}
+                src={
+                  question.song
+                    .audioUrl
+                }
                 preload="auto"
                 onEnded={
                   handleAudioEnded
@@ -805,6 +918,7 @@ function ArtistGame() {
               />
 
               <div className="artist-game__audio-top">
+
                 <span>
                   10 SECOND SNIPPET
                 </span>
@@ -817,8 +931,11 @@ function ArtistGame() {
                       : 'artist-game__timer'
                   }
                 >
-                  {timeRemaining.toFixed(1)}s
+                  {timeRemaining.toFixed(
+                    1,
+                  )}s
                 </strong>
+
               </div>
 
               <div className="artist-game__player">
@@ -829,7 +946,9 @@ function ArtistGame() {
                   onClick={
                     handlePlayPause
                   }
-                  disabled={isRevealed}
+                  disabled={
+                    isRevealed
+                  }
                   aria-label={
                     isPlaying
                       ? 'Pause song'
@@ -850,36 +969,43 @@ function ArtistGame() {
                 </button>
 
                 <div className="artist-game__wave">
+
                   {Array.from({
                     length: 32,
-                  }).map((_, index) => (
-                    <span
-                      key={index}
-                      className={
-                        isPlaying
-                          ? 'artist-game__wave-bar artist-game__wave-bar--playing'
-                          : 'artist-game__wave-bar'
-                      }
-                      style={{
-                        height: `${
-                          20 +
-                          ((index * 17) %
-                            45)
-                        }%`,
-                      }}
-                    />
-                  ))}
+                  }).map(
+                    (_, index) => (
+                      <span
+                        key={index}
+                        className={
+                          isPlaying
+                            ? 'artist-game__wave-bar artist-game__wave-bar--playing'
+                            : 'artist-game__wave-bar'
+                        }
+                        style={{
+                          height: `${
+                            20 +
+                            ((index *
+                              17) %
+                              45)
+                          }%`,
+                        }}
+                      />
+                    ),
+                  )}
+
                 </div>
 
               </div>
 
               <div className="artist-game__progress">
+
                 <div
                   className="artist-game__progress-fill"
                   style={{
                     width: `${progress}%`,
                   }}
                 />
+
               </div>
 
               <p className="artist-game__hint">
@@ -902,6 +1028,7 @@ function ArtistGame() {
               <section className="artist-game__answers">
 
                 <div className="artist-game__answers-header">
+
                   <span>
                     CHOOSE ONE
                   </span>
@@ -909,11 +1036,16 @@ function ArtistGame() {
                   <span>
                     4 OPTIONS
                   </span>
+
                 </div>
 
                 <div className="artist-game__answer-grid">
+
                   {question.answers.map(
-                    (answer, index) => (
+                    (
+                      answer,
+                      index,
+                    ) => (
                       <button
                         key={answer}
                         type="button"
@@ -927,7 +1059,10 @@ function ArtistGame() {
                         <span className="artist-game__answer-number">
                           {String(
                             index + 1,
-                          ).padStart(2, '0')}
+                          ).padStart(
+                            2,
+                            '0',
+                          )}
                         </span>
 
                         <span>
@@ -936,6 +1071,7 @@ function ArtistGame() {
                       </button>
                     ),
                   )}
+
                 </div>
 
               </section>
@@ -949,6 +1085,7 @@ function ArtistGame() {
                       : 'artist-game__result artist-game__result--incorrect'
                   }
                 >
+
                   <span>
                     {answerStatus ===
                     'timeout'
@@ -966,6 +1103,7 @@ function ArtistGame() {
                         ? 'You got it.'
                         : `The artist was ${question.correctAnswer}.`}
                   </strong>
+
                 </div>
 
                 <div className="artist-game__song-card">
@@ -973,7 +1111,8 @@ function ArtistGame() {
                   {question.song.artworkUrl ? (
                     <img
                       src={
-                        question.song.artworkUrl
+                        question.song
+                          .artworkUrl
                       }
                       alt={`${question.song.album} album cover`}
                       className="artist-game__artwork"
@@ -991,15 +1130,24 @@ function ArtistGame() {
                     </p>
 
                     <h3>
-                      {question.song.title}
+                      {
+                        question.song
+                          .title
+                      }
                     </h3>
 
                     <p className="artist-game__artist">
-                      {question.song.artist}
+                      {
+                        question.song
+                          .artist
+                      }
                     </p>
 
                     <p className="artist-game__album">
-                      {question.song.album}
+                      {
+                        question.song
+                          .album
+                      }
                     </p>
 
                   </div>
@@ -1012,13 +1160,16 @@ function ArtistGame() {
                   onClick={
                     handleNextSong
                   }
-                  disabled={isLoadingNext}
+                  disabled={
+                    isLoadingNext
+                  }
                 >
                   <span>
                     {isLoadingNext
                       ? 'LOADING...'
                       : currentQuestion >=
-                          TOTAL_QUESTIONS - 1
+                          TOTAL_QUESTIONS -
+                            1
                         ? 'SEE RESULTS'
                         : 'NEXT SONG'}
                   </span>
@@ -1028,6 +1179,7 @@ function ArtistGame() {
                       size={17}
                     />
                   )}
+
                 </button>
 
               </section>
@@ -1132,13 +1284,18 @@ function ArtistResultsScreen({
               key={index}
               className="artist-results__confetti-piece"
               style={{
-                left: `${(index * 29) % 100}%`,
+                left: `${
+                  (index * 29) %
+                  100
+                }%`,
                 animationDelay: `${
-                  (index % 12) * 0.08
+                  (index % 12) *
+                  0.08
                 }s`,
                 animationDuration: `${
                   2.4 +
-                  (index % 5) * 0.35
+                  (index % 5) *
+                    0.35
                 }s`,
                 transform: `rotate(${
                   index * 37
@@ -1186,6 +1343,7 @@ function ArtistResultsScreen({
         <section className="artist-results__hero">
 
           <div className="artist-results__hero-main">
+
             <span>
               FINAL SCORE
             </span>
@@ -1193,9 +1351,11 @@ function ArtistResultsScreen({
             <strong>
               {score}
             </strong>
+
           </div>
 
           <div className="artist-results__accuracy">
+
             <span>
               BEST STREAK
             </span>
@@ -1203,6 +1363,7 @@ function ArtistResultsScreen({
             <strong>
               {bestStreak}
             </strong>
+
           </div>
 
         </section>
@@ -1214,19 +1375,23 @@ function ArtistResultsScreen({
         <section className="artist-results__hero">
 
           <div className="artist-results__hero-main">
+
             <span>
               ARTISTS RECOGNIZED
             </span>
 
             <strong>
               {recognizedCount}
+
               <small>
                 /{results.length}
               </small>
             </strong>
+
           </div>
 
           <div className="artist-results__accuracy">
+
             <span>
               ACCURACY
             </span>
@@ -1234,6 +1399,7 @@ function ArtistResultsScreen({
             <strong>
               {accuracy}%
             </strong>
+
           </div>
 
         </section>
@@ -1245,6 +1411,7 @@ function ArtistResultsScreen({
         <section className="artist-results__speed">
 
           <div className="artist-results__section-heading">
+
             <p>
               RECOGNITION SPEED
             </p>
@@ -1252,6 +1419,7 @@ function ArtistResultsScreen({
             <h2>
               How fast did you know?
             </h2>
+
           </div>
 
           <div className="artist-results__speed-grid">
@@ -1264,7 +1432,9 @@ function ArtistResultsScreen({
 
               <strong>
                 {averageTime > 0
-                  ? `${averageTime.toFixed(1)}s`
+                  ? `${averageTime.toFixed(
+                      1,
+                    )}s`
                   : '—'}
               </strong>
 
@@ -1278,13 +1448,17 @@ function ArtistResultsScreen({
 
               <strong>
                 {fastestTime > 0
-                  ? `${fastestTime.toFixed(1)}s`
+                  ? `${fastestTime.toFixed(
+                      1,
+                    )}s`
                   : '—'}
               </strong>
 
               {fastestResult && (
                 <small>
-                  {fastestResult.artist}
+                  {
+                    fastestResult.artist
+                  }
                 </small>
               )}
 
@@ -1328,7 +1502,10 @@ function ArtistResultsScreen({
                   <div className="artist-results__number">
                     {String(
                       result.questionNumber,
-                    ).padStart(2, '0')}
+                    ).padStart(
+                      2,
+                      '0',
+                    )}
                   </div>
 
                   <div className="artist-results__artwork-wrapper">
@@ -1374,7 +1551,9 @@ function ArtistResultsScreen({
 
                         <Check
                           size={16}
-                          strokeWidth={2.5}
+                          strokeWidth={
+                            2.5
+                          }
                         />
                       </>
                     ) : (
@@ -1385,7 +1564,9 @@ function ArtistResultsScreen({
 
                         <X
                           size={16}
-                          strokeWidth={2.5}
+                          strokeWidth={
+                            2.5
+                          }
                         />
                       </>
                     )}
@@ -1420,7 +1601,9 @@ function ArtistResultsScreen({
               </span>
 
               <strong>
-                {fastestResult.artist}
+                {
+                  fastestResult.artist
+                }
               </strong>
 
               <p>
