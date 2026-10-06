@@ -9,6 +9,7 @@ import gameRoutes from './routes/gameRoutes.js'
 import eraRoutes from './routes/eraRoutes.js'
 import genreRoutes from './routes/genreRoutes.js'
 import loadingFactRoutes from './routes/loadingFactRoutes.js'
+import themeRoutes from './routes/themeRoutes.js'
 import dailyChallengeRoutes from './routes/dailyChallengeRoutes.js'
 import scoreRoutes from './routes/scoreRoutes.js'
 import leaderboardRoutes from './routes/leaderboardRoutes.js'
@@ -28,6 +29,10 @@ app.use('/api/game', gameRoutes)
 app.use('/api/eras', eraRoutes)
 app.use('/api/genres', genreRoutes)
 app.use('/api/loading-facts', loadingFactRoutes)
+app.use(
+  '/api/themes',
+  themeRoutes,
+)
 app.use('/api/daily-challenge', dailyChallengeRoutes)
 app.use('/api/scores', scoreRoutes)
 app.use('/api/leaderboard', leaderboardRoutes)

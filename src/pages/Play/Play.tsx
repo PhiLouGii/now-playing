@@ -138,8 +138,8 @@ const GENRES: Genre[] = [
 
 const THEMES: Theme[] = [
   {
-    label: 'Heartbreak Anthems',
-    description: 'Songs for shattered hearts',
+    label: 'The Breakup Department',
+    description: 'Songs for when the relationship is over, but the feelings linger',
   },
   {
     label: 'Songs of Yearning',
