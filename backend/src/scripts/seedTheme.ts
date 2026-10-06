@@ -129,13 +129,13 @@ async function seedTheme() {
             : []
 
         if (
-          existingThemes.includes(theme)
+          existingThemes.includes(
+            theme,
+          )
         ) {
           console.log(
             `  EXISTS: ${song.title}`,
           )
-
-          skipped++
         } else {
           await existingSong.ref.update({
             themes: [
