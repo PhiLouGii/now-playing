@@ -26,9 +26,11 @@ import {
   generateQuestion,
   generateEraRound,
   generateGenreRound,
+  generateThemeRound,
   getLoadingFacts,
   type EraKey,
   type GenreKey,
+  type ThemeKey,
   type LoadingFact,
 } from '../../services/gameService'
 
@@ -138,17 +140,25 @@ function Game() {
     setLoadingComplete,
   ] = useState(false)
 
-  const [isLoadingNext, setIsLoadingNext] =
-    useState(false)
+  const [
+    isLoadingNext,
+    setIsLoadingNext,
+  ] = useState(false)
 
-  const [currentQuestion, setCurrentQuestion] =
-    useState(0)
+  const [
+    currentQuestion,
+    setCurrentQuestion,
+  ] = useState(0)
 
-  const [selectedAnswer, setSelectedAnswer] =
-    useState<string | null>(null)
+  const [
+    selectedAnswer,
+    setSelectedAnswer,
+  ] = useState<string | null>(null)
 
-  const [answerStatus, setAnswerStatus] =
-    useState<AnswerStatus>('idle')
+  const [
+    answerStatus,
+    setAnswerStatus,
+  ] = useState<AnswerStatus>('idle')
 
   const [score, setScore] =
     useState(0)
@@ -159,31 +169,47 @@ function Game() {
   const [bestStreak, setBestStreak] =
     useState(0)
 
-  const [correctAnswers, setCorrectAnswers] =
-    useState(0)
+  const [
+    correctAnswers,
+    setCorrectAnswers,
+  ] = useState(0)
 
-  const [pointsEarned, setPointsEarned] =
-    useState(0)
+  const [
+    pointsEarned,
+    setPointsEarned,
+  ] = useState(0)
 
-  const [multiplierEarned, setMultiplierEarned] =
-    useState(1)
+  const [
+    multiplierEarned,
+    setMultiplierEarned,
+  ] = useState(1)
 
   const [
     recognitionResults,
     setRecognitionResults,
   ] = useState<RecognitionResult[]>([])
 
-  const [listeningStage, setListeningStage] =
-    useState(0)
+  const [
+    listeningStage,
+    setListeningStage,
+  ] = useState(0)
 
-  const [timeRemaining, setTimeRemaining] =
-    useState(LISTENING_STAGES[0])
+  const [
+    timeRemaining,
+    setTimeRemaining,
+  ] = useState(
+    LISTENING_STAGES[0],
+  )
 
-  const [previewComplete, setPreviewComplete] =
-    useState(false)
+  const [
+    previewComplete,
+    setPreviewComplete,
+  ] = useState(false)
 
-  const [isGameComplete, setIsGameComplete] =
-    useState(false)
+  const [
+    isGameComplete,
+    setIsGameComplete,
+  ] = useState(false)
 
   const scoreSubmitted =
     useRef(false)
@@ -201,9 +227,13 @@ function Game() {
   const isGenreRound =
     roundConfig.genre !== undefined
 
+  const isThemeRound =
+    roundConfig.theme !== undefined
+
   const isCuratedRound =
     isEraRound ||
-    isGenreRound
+    isGenreRound ||
+    isThemeRound
 
   /* =========================================================
      LOAD ROUND
@@ -216,12 +246,16 @@ function Game() {
       setIsLoading(true)
       setLoadingComplete(false)
 
+      setQuestions([])
+      setCurrentQuestion(0)
+      setIsGameComplete(false)
+      scoreSubmitted.current = false
+
       usedTrackIds.current.clear()
 
       /*
        * Loading facts are fetched independently from
-       * the game data so they do not become another
-       * unnecessary reason for the game to wait.
+       * the game data.
        */
       getLoadingFacts()
         .then(data => {
@@ -240,9 +274,11 @@ function Game() {
 
       try {
         /*
-         * Curated era rounds load the complete
-         * round from the Firestore era library.
+         * -------------------------------------------------------
+         * ERA ROUND
+         * -------------------------------------------------------
          */
+
         if (
           roundConfig.decade !==
           undefined
@@ -271,12 +307,7 @@ function Game() {
               eraQuestions,
             )
 
-            /*
-             * The actual game data has finished
-             * loading successfully.
-             */
             setLoadingComplete(true)
-
             setIsLoading(false)
           }
 
@@ -284,9 +315,11 @@ function Game() {
         }
 
         /*
-         * Curated genre rounds load the complete
-         * round from the Firestore genre library.
+         * -------------------------------------------------------
+         * GENRE ROUND
+         * -------------------------------------------------------
          */
+
         if (
           roundConfig.genre
         ) {
@@ -314,12 +347,7 @@ function Game() {
               genreQuestions,
             )
 
-            /*
-             * The actual game data has finished
-             * loading successfully.
-             */
             setLoadingComplete(true)
-
             setIsLoading(false)
           }
 
@@ -327,9 +355,51 @@ function Game() {
         }
 
         /*
-         * All other game modes continue
-         * using the existing generator.
+         * -------------------------------------------------------
+         * THEME ROUND
+         * -------------------------------------------------------
          */
+
+        if (
+          roundConfig.theme
+        ) {
+          const theme =
+            roundConfig.theme as ThemeKey
+
+          const themeQuestions =
+            await generateThemeRound(
+              theme,
+              roundConfig.questionCount,
+              roundConfig.questionTypes,
+              roundConfig.difficulty,
+            )
+
+          if (isMounted) {
+            themeQuestions.forEach(
+              question => {
+                usedTrackIds.current.add(
+                  question.song.id,
+                )
+              },
+            )
+
+            setQuestions(
+              themeQuestions,
+            )
+
+            setLoadingComplete(true)
+            setIsLoading(false)
+          }
+
+          return
+        }
+
+        /*
+         * -------------------------------------------------------
+         * NORMAL / OTHER GAME MODES
+         * -------------------------------------------------------
+         */
+
         const firstType =
           roundConfig.questionTypes[0]
 
@@ -351,12 +421,7 @@ function Game() {
             firstQuestion,
           ])
 
-          /*
-           * The actual game data has finished
-           * loading successfully.
-           */
           setLoadingComplete(true)
-
           setIsLoading(false)
         }
       } catch (error) {
@@ -376,7 +441,7 @@ function Game() {
     return () => {
       isMounted = false
     }
-  }, [roundConfig])
+  }, [roundConfig, categoryId])
 
   /* =========================================================
      PRELOAD NORMAL GAME QUESTIONS
@@ -384,8 +449,8 @@ function Game() {
 
   useEffect(() => {
     /*
-     * Curated era and genre rounds are
-     * already loaded completely.
+     * Era, genre, and theme rounds are
+     * already loaded as complete rounds.
      */
     if (isCuratedRound) {
       return
@@ -461,6 +526,7 @@ function Game() {
     questions.length,
     roundConfig,
     isCuratedRound,
+    categoryId,
   ])
 
   /* =========================================================
@@ -560,9 +626,7 @@ function Game() {
     return (
       <div className="game-page">
         <div className="game-page__container">
-
           <main className="game-content game-content--loading">
-
             <p className="game-content__category">
               {roundConfig.name.toUpperCase()}
             </p>
@@ -575,9 +639,7 @@ function Game() {
               We couldn't generate a
               round right now.
             </p>
-
           </main>
-
         </div>
       </div>
     )
@@ -873,8 +935,9 @@ function Game() {
       currentQuestion + 1
 
     /*
-     * Curated era and genre rounds
-     * have already loaded all questions.
+     * Curated rounds — era, genre,
+     * and theme — already have their
+     * complete question set.
      */
     if (questions[nextIndex]) {
       setCurrentQuestion(
@@ -950,7 +1013,6 @@ function Game() {
 
   return (
     <div className="game-page">
-
       <div className="game-page__container">
 
         <GameHeader
@@ -977,7 +1039,6 @@ function Game() {
           <div className="game-content__heading">
 
             <p className="game-content__category">
-
               {question.type ===
                 'name-the-song' &&
                 'NAME THAT SONG'}
@@ -1002,11 +1063,9 @@ function Game() {
                     )
                     .toUpperCase()
                 : roundConfig.name.toUpperCase()}
-
             </p>
 
             <h1>
-
               {question.type ===
                 'name-the-song' &&
                 'What song is this?'}
@@ -1022,7 +1081,6 @@ function Game() {
               {question.type ===
                 'guess-the-year' &&
                 'When was this song released?'}
-
             </h1>
 
           </div>
@@ -1244,7 +1302,6 @@ function Game() {
           <div className="game-status">
 
             <div className="game-streak">
-
               <span>
                 STREAK
               </span>
@@ -1252,11 +1309,9 @@ function Game() {
               <strong>
                 {streak}
               </strong>
-
             </div>
 
             <div className="game-listening-time">
-
               <span>
                 LISTEN TIME
               </span>
@@ -1270,7 +1325,6 @@ function Game() {
                       timeRemaining,
                     )}s`}
               </strong>
-
             </div>
 
           </div>
@@ -1311,7 +1365,6 @@ function Game() {
         </main>
 
       </div>
-
     </div>
   )
 }

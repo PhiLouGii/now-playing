@@ -16,6 +16,10 @@ import {
 import './Play.css'
 
 
+/* =========================================================
+   TYPES
+   ========================================================= */
+
 type FeaturedArtist = {
   id: string
   name: string
@@ -35,20 +39,41 @@ type Genre = {
 }
 
 type Theme = {
+  id: string
   label: string
   description: string
   image: string
 }
 
 
-const CUSTOM_ARTIST_IMAGES: Record<string, string> = {
-  Rihanna: '/artists/rihanna.png',
-  Madonna: '/artists/madonna.png',
-  'Billie Eilish': '/artists/billie-eilish.png',
-  'Lionel Richie': '/artists/lionel-richie.png',
-  'The Killers': '/artists/the-killers.png',
+/* =========================================================
+   ARTIST IMAGES
+   ========================================================= */
+
+const CUSTOM_ARTIST_IMAGES: Record<
+  string,
+  string
+> = {
+  Rihanna:
+    '/artists/rihanna.png',
+
+  Madonna:
+    '/artists/madonna.png',
+
+  'Billie Eilish':
+    '/artists/billie-eilish.png',
+
+  'Lionel Richie':
+    '/artists/lionel-richie.png',
+
+  'The Killers':
+    '/artists/the-killers.png',
 }
 
+
+/* =========================================================
+   ERAS
+   ========================================================= */
 
 const ERAS: Era[] = [
   {
@@ -88,6 +113,10 @@ const ERAS: Era[] = [
   },
 ]
 
+
+/* =========================================================
+   GENRES
+   ========================================================= */
 
 const GENRES: Genre[] = [
   {
@@ -138,57 +167,76 @@ const GENRES: Genre[] = [
 ]
 
 
+/* =========================================================
+   THEMES
+   ========================================================= */
+
 const THEMES: Theme[] = [
   {
+    id: 'the-breakup-department',
     label: 'The Breakup Department',
     description:
-      'Songs for when the relationship is over, but the feelings linger',
+      'Songs for when the relationship is over, but the feelings linger.',
     image:
       '/themes/the-breakup-department.png',
   },
+
   {
+    id: 'wish-you-were-here',
     label: 'Wish You Were Here',
     description:
-      'Songs for the people who aren\'t here anymore',
+      'Songs for the people who aren\'t here anymore.',
     image:
       '/themes/wish-you-were-here.png',
   },
+
   {
+    id: 'summer-nights',
     label: 'Summer Nights',
     description:
       'Songs for heatwaves, night drives, and nights that don\'t end.',
     image:
       '/themes/summer-nights.png',
   },
+
   {
+    id: 'main-character-energy',
     label: 'Main Character Energy',
     description:
       'Songs for moments that deserve their own soundtrack.',
     image:
       '/themes/main-character-energy.png',
   },
+
   {
+    id: 'bitter-and-better',
     label: 'Bitter & Better',
     description:
       'For getting even, getting loud, and getting the last word.',
     image:
       '/themes/bitter-and-better.png',
   },
+
   {
+    id: 'hits',
     label: 'HITS',
     description:
-      'Sadness in stereo',
+      'The songs everybody knows.',
     image:
       '/themes/hits.png',
   },
+
   {
+    id: 'move-your-body',
     label: 'Move Your Body',
     description:
       'For workouts, dance floors, and everything in between.',
     image:
       '/themes/move-your-body.png',
   },
+
   {
+    id: 'oops-i-like-you',
     label: 'Oops, I Like You',
     description:
       'For crushes, stolen glances, and catching feelings.',
@@ -198,8 +246,13 @@ const THEMES: Theme[] = [
 ]
 
 
+/* =========================================================
+   PLAY
+   ========================================================= */
+
 function Play() {
-  const navigate = useNavigate()
+  const navigate =
+    useNavigate()
 
   const [
     artists,
@@ -212,12 +265,17 @@ function Play() {
   ] = useState(true)
 
 
+  /* =========================================================
+     LOAD ARTISTS
+     ========================================================= */
+
   useEffect(() => {
     async function loadArtists() {
       try {
-        const response = await fetch(
-          '/api/music/artists',
-        )
+        const response =
+          await fetch(
+            '/api/music/artists',
+          )
 
         if (!response.ok) {
           throw new Error(
@@ -237,13 +295,19 @@ function Play() {
           error,
         )
       } finally {
-        setArtistsLoading(false)
+        setArtistsLoading(
+          false,
+        )
       }
     }
 
     loadArtists()
   }, [])
 
+
+  /* =========================================================
+     ARTIST
+     ========================================================= */
 
   function handleArtistSelect(
     artist: FeaturedArtist,
@@ -259,6 +323,10 @@ function Play() {
     )
   }
 
+
+  /* =========================================================
+     ERA
+     ========================================================= */
 
   function handleEraSelect(
     decade: number,
@@ -283,6 +351,10 @@ function Play() {
   }
 
 
+  /* =========================================================
+     GENRE
+     ========================================================= */
+
   function handleGenreSelect(
     genre: Genre,
   ) {
@@ -306,6 +378,10 @@ function Play() {
   }
 
 
+  /* =========================================================
+     THEME
+     ========================================================= */
+
   function handleThemeSelect(
     theme: Theme,
   ) {
@@ -314,19 +390,24 @@ function Play() {
       {
         state: {
           roundConfig: {
-            id: theme.label,
+            id: `theme-${theme.id}`,
             name: theme.label,
             questionCount: 10,
             questionTypes: [
               'name-the-song',
             ],
             difficulty: 'medium',
+            theme: theme.id,
           },
         },
       },
     )
   }
 
+
+  /* =========================================================
+     OTHER GAME MODES
+     ========================================================= */
 
   function handlePixelCover() {
     navigate(
@@ -347,11 +428,17 @@ function Play() {
   }
 
 
+  /* =========================================================
+     ARTIST IMAGE
+     ========================================================= */
+
   function getArtistImage(
     artist: FeaturedArtist,
   ) {
     return (
-      CUSTOM_ARTIST_IMAGES[artist.name] ??
+      CUSTOM_ARTIST_IMAGES[
+        artist.name
+      ] ??
       artist.image
     )
   }
@@ -360,6 +447,10 @@ function Play() {
   const featuredArtists =
     artists.slice(0, 5)
 
+
+  /* =========================================================
+     RENDER
+     ========================================================= */
 
   return (
     <div className="play-page">
@@ -387,7 +478,9 @@ function Play() {
 
         <main className="play-page__content">
 
-          {/* PLAY BY ARTIST */}
+          {/* =================================================
+              PLAY BY ARTIST
+              ================================================= */}
 
           <section className="play-section">
 
@@ -524,7 +617,9 @@ function Play() {
           </section>
 
 
-          {/* PLAY BY ERA */}
+          {/* =================================================
+              PLAY BY ERA
+              ================================================= */}
 
           <section className="play-section">
 
@@ -600,7 +695,9 @@ function Play() {
           </section>
 
 
-          {/* PLAY BY GENRE */}
+          {/* =================================================
+              PLAY BY GENRE
+              ================================================= */}
 
           <section className="play-section">
 
@@ -675,7 +772,9 @@ function Play() {
           </section>
 
 
-          {/* PLAY BY THEME */}
+          {/* =================================================
+              PLAY BY THEME
+              ================================================= */}
 
           <section className="play-section">
 
@@ -707,7 +806,7 @@ function Play() {
                 theme => (
 
                   <button
-                    key={theme.label}
+                    key={theme.id}
                     type="button"
                     className="theme-card"
                     onClick={() =>
@@ -764,7 +863,9 @@ function Play() {
           </section>
 
 
-          {/* MORE WAYS TO PLAY */}
+          {/* =================================================
+              MORE WAYS TO PLAY
+              ================================================= */}
 
           <section className="play-section play-section--pixel">
 
@@ -805,7 +906,9 @@ function Play() {
                 <button
                   type="button"
                   className="pixel-card__button"
-                  onClick={handlePixelCover}
+                  onClick={
+                    handlePixelCover
+                  }
                 >
                   Play
 
@@ -852,13 +955,16 @@ function Play() {
                 <button
                   type="button"
                   className="pixel-card__button"
-                  onClick={handleSoundtracks}
+                  onClick={
+                    handleSoundtracks
+                  }
                 >
                   Play
 
                   <ArrowRight
                     size={16}
                   />
+
                 </button>
 
               </div>
@@ -874,6 +980,5 @@ function Play() {
     </div>
   )
 }
-
 
 export default Play

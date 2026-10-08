@@ -279,6 +279,82 @@ export async function getGenreSongs(
 }
 
 /* =========================================================
+   THEME TYPES
+   ========================================================= */
+
+export type ThemeKey =
+  | 'the-breakup-department'
+  | 'wish-you-were-here'
+  | 'summer-nights'
+  | 'main-character-energy'
+  | 'bitter-and-better'
+  | 'hits'
+  | 'move-your-body'
+  | 'oops-i-like-you'
+
+export type ThemeSong = {
+  id: string
+  title: string
+  artist: string
+  album: string
+  year: number
+  era?: string
+  genres: string[]
+  provider: string
+  providerSongId: string
+  previewUrl?: string
+  artworkUrl?: string
+}
+
+export type ThemeSongsResponse = {
+  theme: string
+  count: number
+  songs: ThemeSong[]
+  playableSongs: ThemeSong[]
+}
+
+/* =========================================================
+   GET THEME SONGS
+   ========================================================= */
+
+export async function getThemeSongs(
+  theme: ThemeKey,
+  questionCount = 10,
+): Promise<ThemeSongsResponse> {
+  const response =
+    await fetch(
+      `${API_URL}/themes/${encodeURIComponent(
+        theme,
+      )}?limit=${questionCount}`,
+    )
+
+  if (!response.ok) {
+    let message =
+      `Failed to load ${theme} songs`
+
+    try {
+      const data =
+        (await response.json()) as {
+          message?: string
+          error?: string
+        }
+
+      if (data.message) {
+        message = data.message
+      } else if (data.error) {
+        message = data.error
+      }
+    } catch {
+      // Keep the default error message.
+    }
+
+    throw new Error(message)
+  }
+
+  return response.json()
+}
+
+/* =========================================================
    SHUFFLE
    ========================================================= */
 
@@ -342,6 +418,32 @@ function eraSongToSong(
 
 function genreSongToSong(
   song: GenreSong,
+): Song {
+  return {
+    id: song.id,
+    title: song.title,
+    artist: song.artist,
+    album: song.album,
+    releaseYear: song.year,
+    artworkUrl:
+      song.artworkUrl ?? '',
+    audioUrl:
+      song.previewUrl ?? '',
+    genres:
+      song.genres,
+    provider:
+      song.provider,
+    providerId:
+      song.providerSongId,
+  }
+}
+
+/* =========================================================
+   CONVERT THEME SONG TO NORMAL SONG
+   ========================================================= */
+
+function themeSongToSong(
+  song: ThemeSong,
 ): Song {
   return {
     id: song.id,
@@ -685,6 +787,172 @@ export async function generateGenreRound(
         ]
 
       return createGenreQuestion(
+        song,
+        data.songs,
+        type,
+        difficulty,
+      )
+    },
+  )
+}
+
+/* =========================================================
+   CREATE THEME QUESTION
+   ========================================================= */
+
+function createThemeQuestion(
+  song: ThemeSong,
+  allSongs: ThemeSong[],
+  type: Question['type'],
+  difficulty: Question['difficulty'],
+): Question {
+  const correctAnswer =
+    type === 'name-the-song'
+      ? song.title
+      : type ===
+          'name-the-artist'
+        ? song.artist
+        : type ===
+            'name-the-album'
+          ? song.album
+          : String(song.year)
+
+  let candidateAnswers: string[]
+
+  switch (type) {
+    case 'name-the-song':
+      candidateAnswers =
+        allSongs
+          .filter(
+            other =>
+              other.id !==
+              song.id,
+          )
+          .map(
+            other =>
+              other.title,
+          )
+      break
+
+    case 'name-the-artist':
+      candidateAnswers =
+        allSongs
+          .filter(
+            other =>
+              other.id !==
+              song.id,
+          )
+          .map(
+            other =>
+              other.artist,
+          )
+      break
+
+    case 'name-the-album':
+      candidateAnswers =
+        allSongs
+          .filter(
+            other =>
+              other.id !==
+              song.id,
+          )
+          .map(
+            other =>
+              other.album,
+          )
+      break
+
+    case 'guess-the-year':
+      candidateAnswers =
+        allSongs
+          .filter(
+            other =>
+              other.id !==
+              song.id,
+          )
+          .map(
+            other =>
+              String(
+                other.year,
+              ),
+          )
+      break
+
+    default:
+      candidateAnswers = []
+  }
+
+  const uniqueAnswers =
+    Array.from(
+      new Set(
+        candidateAnswers.filter(
+          answer =>
+            answer !==
+            correctAnswer,
+        ),
+      ),
+    )
+
+  const distractors =
+    shuffle(
+      uniqueAnswers,
+    ).slice(0, 3)
+
+  return {
+    id: `theme-${song.id}-${type}`,
+
+    type,
+
+    song:
+      themeSongToSong(song),
+
+    answers: shuffle([
+      correctAnswer,
+      ...distractors,
+    ]),
+
+    correctAnswer,
+
+    difficulty,
+  }
+}
+
+/* =========================================================
+   GENERATE THEME ROUND
+   ========================================================= */
+
+export async function generateThemeRound(
+  theme: ThemeKey,
+  questionCount: number,
+  questionTypes: Question['type'][],
+  difficulty: Question['difficulty'],
+): Promise<Question[]> {
+  const data =
+    await getThemeSongs(
+      theme,
+      questionCount,
+    )
+
+  const selectedSongs =
+    shuffle(
+      data.playableSongs,
+    ).slice(
+      0,
+      Math.min(
+        questionCount,
+        data.playableSongs.length,
+      ),
+    )
+
+  return selectedSongs.map(
+    (song, index) => {
+      const type =
+        questionTypes[
+          index %
+            questionTypes.length
+        ]
+
+      return createThemeQuestion(
         song,
         data.songs,
         type,
