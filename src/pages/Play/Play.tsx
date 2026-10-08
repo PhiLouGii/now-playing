@@ -170,7 +170,7 @@ const THEMES: Theme[] = [
   {
     label: 'Bitter & Better',
     description:
-      'Resentment remixed',
+      'For getting even, getting loud, and getting the last word.',
     image:
       '/themes/bitter-and-better.png',
   },
@@ -189,11 +189,11 @@ const THEMES: Theme[] = [
       '/themes/move-your-body.png',
   },
   {
-    label: 'Butterflies',
+    label: 'Oops, I Like You',
     description:
-      'Songs for stolen glances',
+      'For crushes, stolen glances, and catching feelings.',
     image:
-      '/themes/butterflies.png',
+      '/themes/oops-i-like-you.png',
   },
 ]
 
