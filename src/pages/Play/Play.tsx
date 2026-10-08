@@ -161,11 +161,11 @@ const THEMES: Theme[] = [
       '/themes/summer-nights.png',
   },
   {
-    label: 'Good Vibes Only',
+    label: 'Main Character Energy',
     description:
-      'Pure positivity playlist',
+      'Songs for moments that deserve their own soundtrack.',
     image:
-      '/themes/good-vibes-only.png',
+      '/themes/main-character-energy.png',
   },
   {
     label: 'Bitter & Better',
@@ -182,11 +182,11 @@ const THEMES: Theme[] = [
       '/themes/midnight-tears.png',
   },
   {
-    label: 'Wheel & Feel',
+    label: 'Move Your Body',
     description:
-      'Journey jams',
+      'For workouts, dance floors, and everything in between.',
     image:
-      '/themes/wheel-and-feel.png',
+      '/themes/move-your-body.png',
   },
   {
     label: 'Butterflies',

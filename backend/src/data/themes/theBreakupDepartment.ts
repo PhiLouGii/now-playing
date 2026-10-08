@@ -118,10 +118,6 @@ export const theBreakupDepartmentSongs = [
     artist: 'Mariah Carey',
   },
   {
-    title: 'I Remember',
-    artist: 'Keyshia Cole',
-  },
-  {
     title: 'Foolish',
     artist: 'Ashanti',
   },
@@ -365,10 +361,6 @@ export const theBreakupDepartmentSongs = [
     artist: 'Bruno Mars',
   },
   {
-    title: 'Talking to the Moon',
-    artist: 'Bruno Mars',
-  },
-  {
     title: 'Falling',
     artist: 'Harry Styles',
   },
@@ -494,7 +486,7 @@ export const theBreakupDepartmentSongs = [
     artist: 'Kanye West',
   },
   {
-    title: 'Crybaby',
+    title: 'Cry Baby',
     artist: 'Demi Lovato',
   },
   {
@@ -631,7 +623,7 @@ export const theBreakupDepartmentSongs = [
   },
   {
     title: 'Torn',
-    artist: 'Natalia Imbruglia',
+    artist: 'Natalie Imbruglia',
   },
   {
     title: 'Are We Still Friends?',
@@ -643,6 +635,6 @@ export const theBreakupDepartmentSongs = [
   },
   {
     title: 'I Want You Back',
-    artist: 'The Jackson 5',
+    artist: 'Jackson 5',
   },
 ] as const
