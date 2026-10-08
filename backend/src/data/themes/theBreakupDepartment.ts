@@ -489,4 +489,160 @@ export const theBreakupDepartmentSongs = [
     title: 'Young',
     artist: 'Vacations',
   },
+  {
+    title: 'Heartless',
+    artist: 'Kanye West',
+  },
+  {
+    title: 'Crybaby',
+    artist: 'Demi Lovato',
+  },
+  {
+    title: 'Where Do Broken Hearts Go',
+    artist: 'One Direction',
+  },
+  {
+    title: 'Same Mistakes',
+    artist: 'One Direction',
+  },
+  {
+    title: 'Love You Goodbye',
+    artist: 'One Direction',
+  },
+  {
+    title: 'Someone You Loved',
+    artist: 'Lewis Capaldi',
+  },
+  {
+    title: 'Heartbreak Anniversary',
+    artist: 'Giveon',
+  },
+  {
+    title: 'Back to Friends',
+    artist: 'Sombr',
+  },
+  {
+    title: 'Glimpse Of Us',
+    artist: 'Joji',
+  },
+  {
+    title: 'Marvins Room',
+    artist: 'Drake',
+  },
+  {
+    title: 'Always On My Mind',
+    artist: 'Elvis Presley',
+  },
+  {
+    title: 'wish u the best',
+    artist: 'blackbear',
+  },
+  {
+    title: 'Leave (Get Out)',
+    artist: 'Jojo',
+  },
+  {
+    title: 'ball w/o you',
+    artist: '21 Savage',
+  },
+  {
+    title: 'Better Than Me',
+    artist: 'Doja Cat',
+  },
+  {
+    title: 'Thru Your Phone',
+    artist: 'Cardi B',
+  },
+  {
+    title: 'You should be sad',
+    artist: 'Halsey',
+  },
+  {
+    title: 'Done for Me',
+    artist: 'Charlie Puth',
+  },
+  {
+    title: 'Better Now',
+    artist: 'Post Malone',
+  },
+  {
+    title: 'You Don\'t Own Me',
+    artist: 'SAYGRACE',
+  },
+  {
+    title: 'do re mi',
+    artist: 'blackbear',
+  },
+  {
+    title: '10 Things I Hate About You',
+    artist: 'Leah Kate',
+  },
+  {
+    title: 'I Don\'t Fuck With You',
+    artist: 'Big Sean',
+  },
+  {
+    title: 'Send My Love (To Your New Lover)',
+    artist: 'Adele',
+  },
+  {
+    title: 'Escapism.',
+    artist: 'RAYE',
+  },
+  {
+    title: 'because i liked a boy',
+    artist: 'Sabrina Carpenter',
+  },
+  {
+    title: 'No Caller ID',
+    artist: 'Megan Moroney',
+  },
+  {
+    title: 'All I Want',
+    artist: 'Kodaline',
+  },
+  {
+    title: 'All I Wanted',
+    artist: 'Paramore',
+  },
+  {
+    title: 'Kill Bill',
+    artist: 'SZA',
+  },
+  {
+    title: 'Brilliant Disguise',
+    artist: 'Bruce Springsteen',
+  },
+  {
+    title: 'Wrecking Ball',
+    artist: 'Miley Cyrus',
+  },
+  {
+    title: 'Thank U Next',
+    artist: 'Ariana Grande',
+  },
+  {
+    title: 'The One That Got Away',
+    artist: 'Katy Perry',
+  },
+  {
+    title: 'Truth Hurts',
+    artist: 'Lizzo',
+  },
+  {
+    title: 'Torn',
+    artist: 'Natalia Imbruglia',
+  },
+  {
+    title: 'Are We Still Friends?',
+    artist: 'Tyler, The Creator',
+  },
+  {
+    title: 'Back to Black',
+    artist: 'Amy Winehouse',
+  },
+  {
+    title: 'I Want You Back',
+    artist: 'The Jackson 5',
+  },
 ] as const
