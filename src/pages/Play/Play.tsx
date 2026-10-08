@@ -175,11 +175,11 @@ const THEMES: Theme[] = [
       '/themes/bitter-and-better.png',
   },
   {
-    label: 'Midnight Tears',
+    label: 'HITS',
     description:
       'Sadness in stereo',
     image:
-      '/themes/midnight-tears.png',
+      '/themes/hits.png',
   },
   {
     label: 'Move Your Body',
