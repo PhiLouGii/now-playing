@@ -27,10 +27,29 @@ if (!theme || !(theme in themeLibraries)) {
 const songs =
   themeLibraries[theme] as readonly SeedSong[]
 
+/*
+ * Normalizes text for matching.
+ *
+ * This removes punctuation, accents, and parenthetical
+ * version information such as:
+ *
+ * (2004 Remaster)
+ * (Remastered 2007)
+ * (Album Version)
+ * (Radio Edit)
+ * (feat. Chris Brown)
+ *
+ * This allows legitimate Deezer versions of a song
+ * to match the curated source title.
+ */
 function normalize(value: string): string {
   return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
+    .replace(/\([^)]*\)/g, '')
     .replace(/[^\w\s]/g, '')
+    .replace(/\s+/g, ' ')
     .trim()
 }
 
@@ -67,6 +86,7 @@ async function seedTheme() {
   let added = 0
   let updated = 0
   let skipped = 0
+  let errors = 0
 
   for (const song of songs) {
     try {
@@ -99,7 +119,7 @@ async function seedTheme() {
               normalizedTitle &&
             trackArtist ===
               normalizedArtist &&
-            track.previewUrl
+            Boolean(track.previewUrl)
           )
         })
 
@@ -107,6 +127,20 @@ async function seedTheme() {
         console.log(
           `  SKIPPED: No matching Deezer track with preview`,
         )
+
+        console.log(
+          '  Deezer results:',
+        )
+
+        results.forEach((track, index) => {
+          console.log(
+            `    ${index + 1}. ${track.title} — ${track.artist} | preview: ${
+              track.previewUrl
+                ? 'YES'
+                : 'NO'
+            }`,
+          )
+        })
 
         skipped++
         continue
@@ -170,7 +204,7 @@ async function seedTheme() {
           title: song.title,
           artist: song.artist,
           album: match.album,
-          year: match.releaseYear,
+          year: match.releaseYear ?? null,
           era: match.releaseYear
             ? `${Math.floor(
                 match.releaseYear / 10,
@@ -195,7 +229,7 @@ async function seedTheme() {
         error,
       )
 
-      skipped++
+      errors++
     }
   }
 
@@ -217,6 +251,10 @@ async function seedTheme() {
 
   console.log(
     `Skipped: ${skipped}`,
+  )
+
+  console.log(
+    `Errors: ${errors}`,
   )
 
   console.log(
