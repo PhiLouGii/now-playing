@@ -1,6 +1,7 @@
 import {
   ArrowRight,
   Disc3,
+  Film,
 } from 'lucide-react'
 
 import {
@@ -36,6 +37,7 @@ type Genre = {
 type Theme = {
   label: string
   description: string
+  image: string
 }
 
 
@@ -139,35 +141,59 @@ const GENRES: Genre[] = [
 const THEMES: Theme[] = [
   {
     label: 'The Breakup Department',
-    description: 'Songs for when the relationship is over, but the feelings linger',
+    description:
+      'Songs for when the relationship is over, but the feelings linger',
+    image:
+      '/themes/the-breakup-department.png',
   },
   {
-    label: 'Songs of Yearning',
-    description: 'Craving what is gone',
+    label: 'Wish You Were Here',
+    description:
+      'Songs for the people who aren\'t here anymore',
+    image:
+      '/themes/wish-you-were-here.png',
   },
   {
-    label: 'Endless Summer',
-    description: 'Sunshine on repeat',
+    label: 'Summer Nights',
+    description:
+      'Songs for heatwaves, night drives, and nights that don\'t end.',
+    image:
+      '/themes/summer-nights.png',
   },
   {
     label: 'Good Vibes Only',
-    description: 'Pure positivity playlist',
+    description:
+      'Pure positivity playlist',
+    image:
+      '/themes/good-vibes-only.png',
   },
   {
     label: 'Bitter & Better',
-    description: 'Resentment remixed',
+    description:
+      'Resentment remixed',
+    image:
+      '/themes/bitter-and-better.png',
   },
   {
     label: 'Midnight Tears',
-    description: 'Sadness in stereo',
+    description:
+      'Sadness in stereo',
+    image:
+      '/themes/midnight-tears.png',
   },
   {
     label: 'Wheel & Feel',
-    description: 'Journey jams',
+    description:
+      'Journey jams',
+    image:
+      '/themes/wheel-and-feel.png',
   },
   {
     label: 'Butterflies',
-    description: 'Songs for stolen glances',
+    description:
+      'Songs for stolen glances',
+    image:
+      '/themes/butterflies.png',
   },
 ]
 
@@ -314,6 +340,13 @@ function Play() {
   }
 
 
+  function handleSoundtracks() {
+    navigate(
+      '/soundtracks',
+    )
+  }
+
+
   function getArtistImage(
     artist: FeaturedArtist,
   ) {
@@ -353,6 +386,8 @@ function Play() {
 
 
         <main className="play-page__content">
+
+          {/* PLAY BY ARTIST */}
 
           <section className="play-section">
 
@@ -479,17 +514,17 @@ function Play() {
                 navigate('/artists')
               }
             >
-
               View more artists
 
               <ArrowRight
                 size={16}
               />
-
             </button>
 
           </section>
 
+
+          {/* PLAY BY ERA */}
 
           <section className="play-section">
 
@@ -565,6 +600,8 @@ function Play() {
           </section>
 
 
+          {/* PLAY BY GENRE */}
+
           <section className="play-section">
 
             <div className="play-section__heading">
@@ -638,6 +675,8 @@ function Play() {
           </section>
 
 
+          {/* PLAY BY THEME */}
+
           <section className="play-section">
 
             <div className="play-section__heading">
@@ -678,6 +717,17 @@ function Play() {
                     }
                   >
 
+                    <div className="theme-card__image-wrapper">
+
+                      <img
+                        src={theme.image}
+                        alt=""
+                        className="theme-card__image"
+                      />
+
+                    </div>
+
+
                     <div className="theme-card__content">
 
                       <span className="theme-card__label">
@@ -688,13 +738,21 @@ function Play() {
                         {theme.description}
                       </span>
 
+
+                      <div className="theme-card__footer">
+
+                        <span className="theme-card__play">
+                          Play
+                        </span>
+
+                        <ArrowRight
+                          size={15}
+                          className="theme-card__arrow"
+                        />
+
+                      </div>
+
                     </div>
-
-
-                    <ArrowRight
-                      size={15}
-                      className="theme-card__arrow"
-                    />
 
                   </button>
 
@@ -706,51 +764,104 @@ function Play() {
           </section>
 
 
+          {/* MORE WAYS TO PLAY */}
+
           <section className="play-section play-section--pixel">
 
-            <div className="pixel-card">
+            <div className="more-ways-grid">
 
-              <div className="pixel-card__icon">
+              {/* PIXEL COVER */}
 
-                <Disc3
-                  size={24}
-                  strokeWidth={1.7}
-                />
+              <div className="pixel-card pixel-card--cover">
+
+                <div className="pixel-card__icon">
+
+                  <Disc3
+                    size={24}
+                    strokeWidth={1.7}
+                  />
+
+                </div>
+
+
+                <div className="pixel-card__content">
+
+                  <p className="play-section__eyebrow">
+                    MORE WAYS TO PLAY
+                  </p>
+
+                  <h2>
+                    Pixel Cover
+                  </h2>
+
+                  <p>
+                    How little of an album cover
+                    do you need to recognize it?
+                  </p>
+
+                </div>
+
+
+                <button
+                  type="button"
+                  className="pixel-card__button"
+                  onClick={handlePixelCover}
+                >
+                  Play
+
+                  <ArrowRight
+                    size={16}
+                  />
+                </button>
 
               </div>
 
 
-              <div className="pixel-card__content">
+              {/* MOVIE & TV SOUNDTRACKS */}
 
-                <p className="play-section__eyebrow">
-                  MORE WAYS TO PLAY
-                </p>
+              <div className="pixel-card soundtrack-card">
 
-                <h2>
-                  Pixel Cover
-                </h2>
+                <div className="pixel-card__icon">
 
-                <p>
-                  How little of an album cover
-                  do you need to recognize it?
-                </p>
+                  <Film
+                    size={24}
+                    strokeWidth={1.7}
+                  />
+
+                </div>
+
+
+                <div className="pixel-card__content">
+
+                  <p className="play-section__eyebrow">
+                    MORE WAYS TO PLAY
+                  </p>
+
+                  <h2>
+                    Movie & TV Soundtracks
+                  </h2>
+
+                  <p>
+                    Test your knowledge of songs
+                    from movies and TV series.
+                  </p>
+
+                </div>
+
+
+                <button
+                  type="button"
+                  className="pixel-card__button"
+                  onClick={handleSoundtracks}
+                >
+                  Play
+
+                  <ArrowRight
+                    size={16}
+                  />
+                </button>
 
               </div>
-
-
-              <button
-                type="button"
-                className="pixel-card__button"
-                onClick={handlePixelCover}
-              >
-
-                Play
-
-                <ArrowRight
-                  size={16}
-                />
-
-              </button>
 
             </div>
 
@@ -766,4 +877,3 @@ function Play() {
 
 
 export default Play
-
