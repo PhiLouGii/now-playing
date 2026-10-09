@@ -12,6 +12,7 @@ import type {
   QuestionType,
 } from '../services/game/gameTypes.js'
 
+
 const VALID_QUESTION_TYPES:
   QuestionType[] = [
     'name-the-song',
@@ -20,12 +21,14 @@ const VALID_QUESTION_TYPES:
     'guess-the-year',
   ]
 
+
 const VALID_DIFFICULTIES:
   QuestionDifficulty[] = [
     'easy',
     'medium',
     'hard',
   ]
+
 
 export async function getGameQuestion(
   req: Request,
@@ -38,8 +41,7 @@ export async function getGameQuestion(
         : 'name-the-song'
 
     const difficulty =
-      typeof req.query.difficulty ===
-      'string'
+      typeof req.query.difficulty === 'string'
         ? req.query.difficulty
         : 'medium'
 
@@ -49,26 +51,27 @@ export async function getGameQuestion(
         : undefined
 
     const categoryId =
-      typeof req.query.category ===
-      'string'
+      typeof req.query.category === 'string'
         ? req.query.category.trim()
         : undefined
 
     const artist =
-      typeof req.query.artist ===
-      'string'
+      typeof req.query.artist === 'string'
         ? req.query.artist.trim()
         : undefined
 
     const artistId =
-      typeof req.query.artistId ===
-      'string'
+      typeof req.query.artistId === 'string'
         ? req.query.artistId.trim()
         : undefined
 
+    const theme =
+      typeof req.query.theme === 'string'
+        ? req.query.theme.trim()
+        : undefined
+
     const excludeParam =
-      typeof req.query.exclude ===
-      'string'
+      typeof req.query.exclude === 'string'
         ? req.query.exclude
         : ''
 
@@ -76,9 +79,18 @@ export async function getGameQuestion(
       excludeParam
         ? excludeParam
             .split(',')
-            .map(id => id.trim())
+            .map(
+              id => id.trim(),
+            )
             .filter(Boolean)
         : []
+
+
+    /*
+     * -----------------------------------------------------
+     * BASIC VALIDATION
+     * -----------------------------------------------------
+     */
 
     if (
       !VALID_QUESTION_TYPES.includes(
@@ -91,6 +103,7 @@ export async function getGameQuestion(
       })
     }
 
+
     if (
       !VALID_DIFFICULTIES.includes(
         difficulty as QuestionDifficulty,
@@ -101,6 +114,7 @@ export async function getGameQuestion(
           `Invalid difficulty: ${difficulty}`,
       })
     }
+
 
     if (
       decade !== undefined &&
@@ -117,6 +131,7 @@ export async function getGameQuestion(
       })
     }
 
+
     if (
       categoryId === ''
     ) {
@@ -125,6 +140,7 @@ export async function getGameQuestion(
           'Category cannot be empty.',
       })
     }
+
 
     if (
       artist === ''
@@ -135,6 +151,7 @@ export async function getGameQuestion(
       })
     }
 
+
     if (
       artistId === ''
     ) {
@@ -144,25 +161,53 @@ export async function getGameQuestion(
       })
     }
 
-    /*
-     * Category and artist are different
-     * source filters. They cannot be used
-     * together.
-     */
+
     if (
-      categoryId &&
-      (artist || artistId)
+      theme === ''
     ) {
       return res.status(400).json({
         error:
-          'Category and artist cannot be used together.',
+          'Theme cannot be empty.',
       })
     }
 
+
     /*
-     * Artist-filtered gameplay is always
-     * a name-the-song game.
+     * -----------------------------------------------------
+     * FILTER COMBINATIONS
+     * -----------------------------------------------------
+     *
+     * Category, artist, decade and theme represent
+     * different curated sources.
+     *
+     * Theme gameplay should therefore not be combined
+     * with another curated source.
      */
+
+    const activeFilters = [
+      Boolean(categoryId),
+      Boolean(artist || artistId),
+      decade !== undefined,
+      Boolean(theme),
+    ].filter(Boolean).length
+
+
+    if (
+      activeFilters > 1
+    ) {
+      return res.status(400).json({
+        error:
+          'Category, artist, decade and theme cannot be combined.',
+      })
+    }
+
+
+    /*
+     * -----------------------------------------------------
+     * ARTIST VALIDATION
+     * -----------------------------------------------------
+     */
+
     if (
       (artist || artistId) &&
       type !== 'name-the-song'
@@ -173,13 +218,7 @@ export async function getGameQuestion(
       })
     }
 
-    /*
-     * An artist ID is required for the
-     * Play by Artist flow.
-     *
-     * The ID comes from the Deezer artist
-     * selected on the Play page.
-     */
+
     if (
       artist &&
       !artistId
@@ -190,10 +229,7 @@ export async function getGameQuestion(
       })
     }
 
-    /*
-     * Do not allow an artist ID without
-     * its corresponding artist name.
-     */
+
     if (
       artistId &&
       !artist
@@ -204,19 +240,12 @@ export async function getGameQuestion(
       })
     }
 
+
     /*
-     * Decade is not needed for
-     * artist-filtered gameplay.
+     * -----------------------------------------------------
+     * GAME QUESTION
+     * -----------------------------------------------------
      */
-    if (
-      (artist || artistId) &&
-      decade !== undefined
-    ) {
-      return res.status(400).json({
-        error:
-          'Artist and decade cannot be used together.',
-      })
-    }
 
     const question =
       await generateGameQuestion(
@@ -227,7 +256,9 @@ export async function getGameQuestion(
         categoryId,
         artist,
         artistId,
+        theme,
       )
+
 
     return res.json({
       question,

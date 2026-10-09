@@ -31,6 +31,10 @@ import {
   getCategoryTracks,
 } from '../category/categoryMusicService.js'
 
+import {
+  db,
+} from '../../config/firebase.js'
+
 
 function normalizeArtistName(
   value: string,
@@ -59,15 +63,9 @@ function normalizeArtistName(
 
 
 /*
- * ---------------------------------------------------------
+ * =========================================================
  * ARTIST CATALOGUE CACHE
- * ---------------------------------------------------------
- *
- * The cache stores the result of the Deezer artist
- * catalogue lookup.
- *
- * Every caller receives a fresh array and fresh track
- * objects so filtering cannot mutate the cached catalogue.
+ * =========================================================
  */
 
 const artistCatalogueCache =
@@ -92,24 +90,9 @@ function cloneTracks(
 
 
 /*
- * ---------------------------------------------------------
+ * =========================================================
  * ARTIST CATALOGUE
- * ---------------------------------------------------------
- *
- * The artist catalogue is built from the artist's full
- * Deezer discography rather than only Deezer's top tracks.
- *
- * This is important for artists such as Sabrina Carpenter
- * where the top-tracks endpoint may only provide a small
- * subset of the artist's actual catalogue.
- *
- * If the discography has too few playable previews, we
- * expand it with:
- *
- *   1. Deezer top tracks
- *   2. Deezer artist track search
- *
- * All sources are merged and deduplicated.
+ * =========================================================
  */
 
 async function getArtistCatalogue(
@@ -153,14 +136,6 @@ async function getArtistCatalogue(
 
   const cataloguePromise =
     (async () => {
-      /*
-       * ---------------------------------------------------
-       * FIRST SOURCE: FULL ARTIST DISCOGRAPHY
-       * ---------------------------------------------------
-       *
-       * This walks the artist's albums and collects their
-       * tracks instead of relying only on top tracks.
-       */
       let tracks =
         await deezerMusicProvider.getArtistDiscography(
           artistId,
@@ -175,15 +150,7 @@ async function getArtistCatalogue(
         `Artist discography provided ${tracks.length} playable tracks for "${artist}".`,
       )
 
-      /*
-       * ---------------------------------------------------
-       * EXPANSION SOURCES
-       * ---------------------------------------------------
-       *
-       * If the discography contains too few playable
-       * previews, use top tracks and Deezer search to widen
-       * the catalogue.
-       */
+
       if (
         tracks.length < 10
       ) {
@@ -210,9 +177,7 @@ async function getArtistCatalogue(
               MusicTrack
             >()
 
-          /*
-           * Start with the full discography.
-           */
+
           for (
             const track of tracks
           ) {
@@ -222,10 +187,7 @@ async function getArtistCatalogue(
             )
           }
 
-          /*
-           * Add playable top tracks belonging to the
-           * selected artist.
-           */
+
           for (
             const track of additionalTracks
           ) {
@@ -250,10 +212,7 @@ async function getArtistCatalogue(
             }
           }
 
-          /*
-           * Add playable search results belonging to the
-           * selected artist.
-           */
+
           for (
             const track of searchedTracks
           ) {
@@ -278,6 +237,7 @@ async function getArtistCatalogue(
             }
           }
 
+
           tracks =
             Array.from(
               byId.values(),
@@ -287,10 +247,6 @@ async function getArtistCatalogue(
             `Expanded artist catalogue to ${tracks.length} playable tracks for "${artist}".`,
           )
         } catch (error) {
-          /*
-           * The full discography is still useful if one of
-           * the additional sources fails.
-           */
           console.warn(
             `Additional artist catalogue expansion failed for "${artist}". Using discography results.`,
             error,
@@ -298,14 +254,7 @@ async function getArtistCatalogue(
         }
       }
 
-      /*
-       * ---------------------------------------------------
-       * FINAL ARTIST VERIFICATION
-       * ---------------------------------------------------
-       *
-       * Only tracks actually credited to the selected
-       * artist are allowed into the artist game.
-       */
+
       const artistTracks =
         tracks.filter(
           track =>
@@ -314,20 +263,7 @@ async function getArtistCatalogue(
             ) === normalizedArtist,
         )
 
-      /*
-       * ---------------------------------------------------
-       * FINAL SONG DEDUPLICATION
-       * ---------------------------------------------------
-       *
-       * The same song can appear on:
-       *
-       *   - the original album
-       *   - deluxe editions
-       *   - compilations
-       *   - re-releases
-       *
-       * Keep only one copy of each title + artist pair.
-       */
+
       const seen =
         new Set<string>()
 
@@ -360,10 +296,7 @@ async function getArtistCatalogue(
       return uniqueTracks
     })()
 
-  /*
-   * Store the promise immediately so concurrent requests
-   * for the same artist share the same API work.
-   */
+
   artistCatalogueCache.set(
     artistId,
     cataloguePromise,
@@ -373,9 +306,6 @@ async function getArtistCatalogue(
     const tracks =
       await cataloguePromise
 
-    /*
-     * Never permanently cache an empty catalogue.
-     */
     if (
       tracks.length === 0
     ) {
@@ -388,9 +318,6 @@ async function getArtistCatalogue(
       tracks,
     )
   } catch (error) {
-    /*
-     * Allow a future request to retry if Deezer fails.
-     */
     artistCatalogueCache.delete(
       artistId,
     )
@@ -401,9 +328,9 @@ async function getArtistCatalogue(
 
 
 /*
- * ---------------------------------------------------------
+ * =========================================================
  * NORMAL TRACK HELPERS
- * ---------------------------------------------------------
+ * =========================================================
  */
 
 async function hydrateTrack(
@@ -438,9 +365,9 @@ async function enrichReleaseYear(
 
 
 /*
- * ---------------------------------------------------------
+ * =========================================================
  * NORMAL / DECADE GAME
- * ---------------------------------------------------------
+ * =========================================================
  */
 
 async function getEligibleTracks(
@@ -451,7 +378,9 @@ async function getEligibleTracks(
   const maxAttempts = 3
 
   const excludedIds =
-    new Set(excludedTrackIds)
+    new Set(
+      excludedTrackIds,
+    )
 
   for (
     let attempt = 1;
@@ -475,6 +404,7 @@ async function getEligibleTracks(
               track.id,
             ),
         )
+
 
     if (
       type !== 'guess-the-year'
@@ -513,6 +443,7 @@ async function getEligibleTracks(
       }
     }
 
+
     console.log(
       `No eligible tracks found for ${
         decade ?? 'any era'
@@ -525,9 +456,9 @@ async function getEligibleTracks(
 
 
 /*
- * ---------------------------------------------------------
+ * =========================================================
  * CATEGORY GAME
- * ---------------------------------------------------------
+ * =========================================================
  */
 
 async function getEligibleCategoryTracks(
@@ -544,7 +475,9 @@ async function getEligibleCategoryTracks(
   }
 
   const excludedIds =
-    new Set(excludedTrackIds)
+    new Set(
+      excludedTrackIds,
+    )
 
   const maxAttempts = 3
 
@@ -576,6 +509,7 @@ async function getEligibleCategoryTracks(
       return playableTracks
     }
 
+
     console.log(
       `No playable tracks found for category "${categoryId}". Retrying (${attempt}/${maxAttempts})...`,
     )
@@ -586,9 +520,190 @@ async function getEligibleCategoryTracks(
 
 
 /*
- * ---------------------------------------------------------
+ * =========================================================
+ * THEME GAME
+ * =========================================================
+ *
+ * Firestore:
+ *
+ * songs/{songId}
+ *
+ * themes: [
+ *   "the-breakup-department"
+ * ]
+ *
+ * We retrieve the songs belonging to the selected theme,
+ * then hydrate their Deezer track data so the game receives
+ * a playable preview.
+ */
+
+type ThemeSongDocument = {
+  title?: string
+  artist?: string
+  album?: string
+  year?: number | null
+  era?: string
+  genres?: string[]
+  themes?: string[]
+  provider?: string
+  providerSongId?: string
+}
+
+
+async function getEligibleThemeTracks(
+  theme: string,
+  type: QuestionType,
+  excludedTrackIds: string[] = [],
+): Promise<MusicTrack[]> {
+  if (
+    type !== 'name-the-song'
+  ) {
+    throw new Error(
+      'Theme games currently only support the "name-the-song" question type.',
+    )
+  }
+
+
+  const excludedIds =
+    new Set(
+      excludedTrackIds,
+    )
+
+
+  const snapshot =
+    await db
+      .collection('songs')
+      .where(
+        'themes',
+        'array-contains',
+        theme,
+      )
+      .get()
+
+
+  if (
+    snapshot.empty
+  ) {
+    console.log(
+      `No songs found in Firestore for theme "${theme}".`,
+    )
+
+    return []
+  }
+
+
+  const documents =
+    snapshot.docs
+      .map(
+        doc => ({
+          id: doc.id,
+          ...doc.data() as ThemeSongDocument,
+        }),
+      )
+      .filter(
+        song =>
+          Boolean(
+            song.providerSongId,
+          ),
+      )
+      .filter(
+        song =>
+          !excludedIds.has(
+            song.id,
+          ) &&
+          !excludedIds.has(
+            song.providerSongId!,
+          ),
+      )
+
+
+  /*
+   * Hydrate the Firestore songs through Deezer.
+   *
+   * This is important because the Firestore song document
+   * stores metadata/providerSongId, while the preview URL
+   * comes from Deezer.
+   */
+  const hydratedTracks =
+    await Promise.all(
+      documents.map(
+        async song => {
+          try {
+            const track =
+              await deezerMusicProvider.getTrackById(
+                song.providerSongId!,
+              )
+
+            if (
+              !track ||
+              !isPlayableMusicTrack(
+                track,
+              )
+            ) {
+              return null
+            }
+
+            return track
+          } catch (error) {
+            console.warn(
+              `Failed to hydrate theme song "${song.title}" (${song.providerSongId}).`,
+              error,
+            )
+
+            return null
+          }
+        },
+      ),
+    )
+
+
+  const playableTracks =
+    hydratedTracks.filter(
+      (
+        track,
+      ): track is MusicTrack =>
+        track !== null,
+    )
+
+
+  /*
+   * Deduplicate songs in case a provider catalogue or
+   * Firestore data contains the same song more than once.
+   */
+  const seen =
+    new Set<string>()
+
+  return playableTracks.filter(
+    track => {
+      const key =
+        `${normalizeArtistName(
+          track.title,
+        )}::${normalizeArtistName(
+          track.artist,
+        )}`
+
+      if (
+        seen.has(
+          key,
+        )
+      ) {
+        return false
+      }
+
+      seen.add(
+        key,
+      )
+
+      return true
+    },
+  )
+}
+
+
+/*
+ * =========================================================
  * PLAY BY ARTIST
- * ---------------------------------------------------------
+ * =========================================================
  */
 
 async function getEligibleArtistTracks(
@@ -611,7 +726,9 @@ async function getEligibleArtistTracks(
     )
 
   const excludedIds =
-    new Set(excludedTrackIds)
+    new Set(
+      excludedTrackIds,
+    )
 
   const numericArtistId =
     Number(artistId)
@@ -629,20 +746,18 @@ async function getEligibleArtistTracks(
     return []
   }
 
+
   try {
     console.log(
       `Loading Deezer artist "${artist}" using ID ${artistId}.`,
     )
 
-    /*
-     * The catalogue is cached, but every call receives a
-     * fresh copy.
-     */
     const tracks =
       await getArtistCatalogue(
         artist,
         artistId,
       )
+
 
     const artistTracks =
       tracks
@@ -659,10 +774,7 @@ async function getEligibleArtistTracks(
             ),
         )
 
-    /*
-     * Remove duplicate song titles caused by re-releases,
-     * deluxe editions, compilations, etc.
-     */
+
     const seen =
       new Set<string>()
 
@@ -692,6 +804,7 @@ async function getEligibleArtistTracks(
         },
       )
 
+
     console.log(
       `Found ${uniqueTracks.length} playable tracks for artist "${artist}" (ID ${artistId}).`,
     )
@@ -709,9 +822,9 @@ async function getEligibleArtistTracks(
 
 
 /*
- * ---------------------------------------------------------
+ * =========================================================
  * RANDOM TRACK
- * ---------------------------------------------------------
+ * =========================================================
  */
 
 function pickRandomTrack(
@@ -720,17 +833,19 @@ function pickRandomTrack(
   const randomIndex =
     Math.floor(
       Math.random() *
-        tracks.length,
+      tracks.length,
     )
 
-  return tracks[randomIndex]
+  return tracks[
+    randomIndex
+  ]
 }
 
 
 /*
- * ---------------------------------------------------------
+ * =========================================================
  * GAME QUESTION GENERATION
- * ---------------------------------------------------------
+ * =========================================================
  */
 
 export async function generateGameQuestion(
@@ -741,13 +856,33 @@ export async function generateGameQuestion(
   categoryId?: string,
   artist?: string,
   artistId?: string,
+  theme?: string,
 ) {
-  let eligibleTracks: MusicTrack[]
+  let eligibleTracks:
+    MusicTrack[]
+
+
+  /*
+   * THEME FILTER
+   */
+  if (
+    theme
+  ) {
+    eligibleTracks =
+      await getEligibleThemeTracks(
+        theme,
+        type,
+        excludedTrackIds,
+      )
+  }
+
 
   /*
    * CATEGORY FILTER
    */
-  if (categoryId) {
+  else if (
+    categoryId
+  ) {
     eligibleTracks =
       await getEligibleCategoryTracks(
         categoryId,
@@ -755,6 +890,7 @@ export async function generateGameQuestion(
         excludedTrackIds,
       )
   }
+
 
   /*
    * ARTIST FILTER
@@ -772,15 +908,18 @@ export async function generateGameQuestion(
       )
   }
 
+
   /*
-   * Artist name without ID should never reach
-   * the catalogue lookup.
+   * ARTIST NAME WITHOUT ID
    */
-  else if (artist) {
+  else if (
+    artist
+  ) {
     throw new Error(
       `Artist ID is required for artist game: ${artist}`,
     )
   }
+
 
   /*
    * NORMAL GAME
@@ -794,19 +933,32 @@ export async function generateGameQuestion(
       )
   }
 
+
   /*
-   * No valid track.
+   * NO VALID TRACK
    */
   if (
     eligibleTracks.length === 0
   ) {
-    if (artist) {
+    if (
+      theme
+    ) {
+      throw new Error(
+        `Could not find an eligible playable track for theme: ${theme}`,
+      )
+    }
+
+    if (
+      artist
+    ) {
       throw new Error(
         `Could not find an eligible track for artist: ${artist}`,
       )
     }
 
-    if (categoryId) {
+    if (
+      categoryId
+    ) {
       throw new Error(
         `Could not find an eligible track for category: ${categoryId}`,
       )
@@ -817,28 +969,18 @@ export async function generateGameQuestion(
     )
   }
 
+
   /*
-   * Choose the actual song.
+   * CHOOSE CORRECT SONG
    */
   const correctTrack =
     pickRandomTrack(
       eligibleTracks,
     )
 
+
   /*
-   * Artist mode uses the smart distractor system rather
-   * than restricting distractors to the selected artist.
-   *
-   * This means distractors can come from:
-   *
-   *   - the same artist
-   *   - similar artists
-   *   - similar tracks
-   *   - discovery candidates
-   *
-   * Previously-used correct tracks are also allowed to
-   * become distractors, while the current correct track
-   * is still excluded by the candidate service.
+   * Generate the actual question and distractors.
    */
   return generateQuestion(
     correctTrack,
@@ -852,4 +994,3 @@ export async function generateGameQuestion(
     ),
   )
 }
-
