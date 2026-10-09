@@ -7,6 +7,9 @@ import {
 import {
   summerNightsSongs,
 } from './summerNights.js'
+import {
+  bitterAndBetterSongs,
+} from './bitterAndBetter.js'
 
 export const themeLibraries = {
   'the-breakup-department':
@@ -15,6 +18,8 @@ export const themeLibraries = {
     wishYouWereHereSongs,
   'summer-nights':
     summerNightsSongs,
+  'bitter-and-better':
+    bitterAndBetterSongs
 } as const
 
 export type Theme =
