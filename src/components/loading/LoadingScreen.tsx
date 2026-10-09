@@ -16,11 +16,13 @@ export type LoadingFact = {
   relatedEra?: string
 }
 
+
 type LoadingScreenProps = {
-  facts: LoadingFact[]
+  facts?: LoadingFact[]
   message?: string
   isComplete?: boolean
 }
+
 
 function shuffle<T>(
   array: T[],
@@ -51,11 +53,13 @@ function shuffle<T>(
   return shuffled
 }
 
+
 export default function LoadingScreen({
-  facts,
+  facts = [],
   message = 'Loading your game...',
   isComplete = false,
 }: LoadingScreenProps) {
+
   const [
     shuffledFacts,
     setShuffledFacts,

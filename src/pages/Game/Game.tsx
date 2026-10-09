@@ -257,20 +257,20 @@ function Game() {
        * Loading facts are fetched independently from
        * the game data.
        */
-      getLoadingFacts()
-        .then(data => {
-          if (isMounted) {
-            setLoadingFacts(
-              data.facts,
-            )
-          }
-        })
-        .catch(error => {
-          console.error(
-            'Failed to load loading facts:',
-            error,
-          )
-        })
+      
+getLoadingFacts()
+  .then(data => {
+    if (isMounted) {
+      setLoadingFacts(data)
+    }
+  })
+  .catch(error => {
+    console.error(
+      'Failed to load loading facts:',
+      error
+    )
+  })
+
 
       try {
         /*
