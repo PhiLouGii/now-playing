@@ -3,7 +3,7 @@ export type Song = {
   title: string
   artist: string
   album: string
-  releaseYear: number
+  releaseYear?: number
   artworkUrl: string
   audioUrl?: string
   genres: string[]
@@ -37,6 +37,12 @@ export type RoundConfig = {
   questionCount: number
   questionTypes: QuestionType[]
   difficulty: QuestionDifficulty
+
+  // Optional filters used by different game modes.
   genre?: string
   decade?: number
+  theme?: string
+  categoryId?: string
+  artist?: string
+  artistId?: string
 }
