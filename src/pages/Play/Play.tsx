@@ -178,7 +178,7 @@ const THEMES: Theme[] = [
     description:
       'Songs for when the relationship is over, but the feelings linger.',
     image:
-      '/themes/the-breakup-department.png',
+      '/themes/the-breakup-department.jpg',
   },
 
   {
@@ -187,7 +187,7 @@ const THEMES: Theme[] = [
     description:
       'Songs for the people who aren\'t here anymore.',
     image:
-      '/themes/wish-you-were-here.png',
+      '/themes/wish-you-were-here.jpg',
   },
 
   {
@@ -196,7 +196,7 @@ const THEMES: Theme[] = [
     description:
       'Songs for heatwaves, night drives, and nights that don\'t end.',
     image:
-      '/themes/summer-nights.png',
+      '/themes/summer-nights.jpg',
   },
 
   {
@@ -214,7 +214,7 @@ const THEMES: Theme[] = [
     description:
       'For getting even, getting loud, and getting the last word.',
     image:
-      '/themes/bitter-and-better.png',
+      '/themes/bitter-and-better.jpg',
   },
 
   {
@@ -232,7 +232,7 @@ const THEMES: Theme[] = [
     description:
       'For workouts, dance floors, and everything in between.',
     image:
-      '/themes/move-your-body.png',
+      '/themes/move-your-body.jpg',
   },
 
   {
@@ -241,7 +241,7 @@ const THEMES: Theme[] = [
     description:
       'For crushes, stolen glances, and catching feelings.',
     image:
-      '/themes/oops-i-like-you.png',
+      '/themes/oops-i-like-you.jpg',
   },
 ]
 
