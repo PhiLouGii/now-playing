@@ -296,7 +296,7 @@ export const secretsAndMistressesSongs = [
   },
   {
     title: 'Hypnotized (feat. Akon)',
-    artist: 'Piles',
+    artist: 'Plies',
   },
   {
     title: 'Look Back at It',
@@ -719,7 +719,7 @@ export const secretsAndMistressesSongs = [
     artist: 'Silk',
   },
   {
-    title: 'I\'ll Make Love to You',
+    title: 'I\'ll Make Love To You',
     artist: 'Boys II Men',
   },
   {
@@ -760,7 +760,7 @@ export const secretsAndMistressesSongs = [
   },
   {
     title: 'My Humps',
-    artist: 'The Black Eyes Peas',
+    artist: 'The Black Eyed Peas',
   },
   {
     title: 'Gimme More',
