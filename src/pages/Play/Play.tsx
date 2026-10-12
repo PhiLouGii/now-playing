@@ -200,12 +200,12 @@ const THEMES: Theme[] = [
   },
 
   {
-    id: 'main-character-energy',
-    label: 'Main Character Energy',
+    id: 'secrets-and-mistresses',
+    label: 'S&M: Secrets & Mistresses',
     description:
-      'Songs for moments that deserve their own soundtrack.',
+      'For risky texts, secret lovers and after-hours.',
     image:
-      '/themes/main-character-energy.png',
+      '/themes/secrets-and-mistresses.jpg',
   },
 
   {
