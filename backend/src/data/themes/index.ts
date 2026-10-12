@@ -13,6 +13,7 @@ import {
 import { moveYourBodySongs } from './moveYourBody.js'
 import { oopsILikeYouSongs } from './oopsILikeYou.js'
 import { secretsAndMistressesSongs } from './secretsAndMistresses.js'
+import { thePeoplesPlaylistSongs } from './thePeoplesPlaylist.js'
 
 export const themeLibraries = {
   'the-breakup-department':
@@ -28,7 +29,9 @@ export const themeLibraries = {
   'oops-i-like-you':
     oopsILikeYouSongs,
   'secrets-and-mistresses':
-    secretsAndMistressesSongs
+    secretsAndMistressesSongs,
+  'the-peoples-playlist':
+    thePeoplesPlaylistSongs
 } as const
 
 export type Theme =
