@@ -218,12 +218,12 @@ const THEMES: Theme[] = [
   },
 
   {
-    id: 'hits',
-    label: 'HITS',
+    id: 'the-peoples-playlist',
+    label: 'The People\'s Playlist',
     description:
-      'The songs everybody knows.',
+      'For chart-toppers, certified bangers, and songs everyone knows.',
     image:
-      '/themes/hits.png',
+      '/themes/the-peoples-playlist.jpg',
   },
 
   {
