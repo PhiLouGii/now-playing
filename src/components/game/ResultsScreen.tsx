@@ -1,3 +1,4 @@
+
 import { useNavigate } from 'react-router-dom'
 import './ResultsScreen.css'
 
@@ -5,6 +6,7 @@ type RecognitionResult = {
   questionNumber: number
   title: string
   artist: string
+  albumArt?: string
   listenDuration: number
   points: number
   correct: boolean
@@ -29,9 +31,7 @@ function ResultsScreen({
 
   const accuracy =
     totalQuestions > 0
-      ? Math.round(
-          (correctAnswers / totalQuestions) * 100,
-        )
+      ? Math.round((correctAnswers / totalQuestions) * 100)
       : 0
 
   const recognizedResults = recognitionResults.filter(
@@ -50,8 +50,7 @@ function ResultsScreen({
   const averageRecognition =
     recognizedResults.length > 0
       ? recognizedResults.reduce(
-          (total, result) =>
-            total + result.listenDuration,
+          (total, result) => total + result.listenDuration,
           0,
         ) / recognizedResults.length
       : 0
@@ -64,61 +63,48 @@ function ResultsScreen({
     if (recognizedResults.length === 0) {
       return {
         label: 'THE MUSIC WON.',
-        description:
-          'Better luck on the next round.',
+        description: 'Better luck on the next round.',
       }
     }
 
-    if (
-      averageRecognition <= 0.5 &&
-      accuracy >= 80
-    ) {
+    if (averageRecognition <= 0.5 && accuracy >= 80) {
       return {
         label: 'INSTANT RECOGNITION.',
-        description:
-          'You barely needed the intros.',
+        description: 'You barely needed the intros.',
       }
     }
 
-    if (
-      averageRecognition <= 2 &&
-      accuracy >= 80
-    ) {
+    if (averageRecognition <= 2 && accuracy >= 80) {
       return {
         label: 'THAT WAS FAST.',
-        description:
-          'You really know your music.',
+        description: 'You really know your music.',
       }
     }
 
     if (accuracy >= 80) {
       return {
         label: 'YOU KNOW YOUR MUSIC.',
-        description:
-          'You got the songs. Speed comes next.',
+        description: 'You got the songs. Speed comes next.',
       }
     }
 
     if (averageRecognition <= 2) {
       return {
         label: 'QUICK ON THE DRAW.',
-        description:
-          'You recognized them fast.',
+        description: 'You recognized them fast.',
       }
     }
 
     if (accuracy >= 60) {
       return {
         label: 'SOLID RUN.',
-        description:
-          'A few tracks got away from you.',
+        description: 'A few tracks got away from you.',
       }
     }
 
     return {
       label: 'KEEP LISTENING.',
-      description:
-        'There is always another round.',
+      description: 'There is always another round.',
     }
   }
 
@@ -136,8 +122,6 @@ function ResultsScreen({
   return (
     <main className="results-page">
       <div className="results-page__container">
-
-        {/* HEADER */}
         <header className="results-header">
           <span className="results-page__eyebrow">
             ROUND COMPLETE
@@ -145,12 +129,10 @@ function ResultsScreen({
 
           <div className="results-performance">
             <h1>{performance.label}</h1>
-
             <p>{performance.description}</p>
           </div>
         </header>
 
-        {/* SCORE HERO */}
         <section className="results-score">
           <div className="results-score__label">
             FINAL SCORE
@@ -165,7 +147,6 @@ function ResultsScreen({
           </span>
         </section>
 
-        {/* RECOGNITION SPEED */}
         <section className="results-speed">
           <div className="results-speed__header">
             <div>
@@ -173,14 +154,8 @@ function ResultsScreen({
                 RECOGNITION SPEED
               </span>
 
-              <h2>
-                HOW FAST DID YOU KNOW?
-              </h2>
+              <h2>HOW FAST DID YOU KNOW?</h2>
             </div>
-
-            <span className="results-speed__icon">
-              ⚡
-            </span>
           </div>
 
           <div className="results-speed__main">
@@ -208,7 +183,6 @@ function ResultsScreen({
           </div>
         </section>
 
-        {/* CORE STATS */}
         <section className="results-stats">
           <div className="results-stat">
             <span>RECOGNIZED</span>
@@ -221,24 +195,20 @@ function ResultsScreen({
 
           <div className="results-stat">
             <span>ACCURACY</span>
-
             <strong>{accuracy}%</strong>
           </div>
 
           <div className="results-stat">
             <span>BEST STREAK</span>
-
             <strong>{bestStreak}</strong>
           </div>
 
           <div className="results-stat">
             <span>SONGS PLAYED</span>
-
             <strong>{totalQuestions}</strong>
           </div>
         </section>
 
-        {/* SONG BREAKDOWN */}
         <section className="results-breakdown">
           <div className="results-breakdown__header">
             <div>
@@ -266,25 +236,38 @@ function ResultsScreen({
                 key={result.questionNumber}
               >
                 <span className="results-breakdown__number">
-                  {String(result.questionNumber).padStart(
-                    2,
-                    '0',
-                  )}
+                  {String(result.questionNumber).padStart(2, '0')}
                 </span>
 
-                <div className="results-breakdown__song">
-                  <strong>{result.title}</strong>
+                <div className="results-breakdown__track">
+                  {result.albumArt ? (
+                    <img
+                      className="results-breakdown__cover"
+                      src={result.albumArt}
+                      alt={`${result.title} by ${result.artist} album artwork`}
+                      loading="lazy"
+                      onError={(event) => {
+                        event.currentTarget.style.display = 'none'
+                      }}
+                    />
+                  ) : (
+                    <div
+                      className="results-breakdown__cover results-breakdown__cover--empty"
+                      aria-hidden="true"
+                    />
+                  )}
 
-                  <span>{result.artist}</span>
+                  <div className="results-breakdown__song">
+                    <strong>{result.title}</strong>
+                    <span>{result.artist}</span>
+                  </div>
                 </div>
 
                 <div className="results-breakdown__result">
                   {result.correct ? (
                     <>
                       <div className="results-breakdown__time">
-                        {formatDuration(
-                          result.listenDuration,
-                        )}
+                        {formatDuration(result.listenDuration)}
                       </div>
 
                       <div className="results-breakdown__points">
@@ -302,7 +285,6 @@ function ResultsScreen({
           </div>
         </section>
 
-        {/* ACTIONS */}
         <footer className="results-actions">
           <button
             type="button"
@@ -320,7 +302,6 @@ function ResultsScreen({
             BACK TO PLAY
           </button>
         </footer>
-
       </div>
     </main>
   )

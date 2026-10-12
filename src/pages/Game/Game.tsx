@@ -1,3 +1,4 @@
+
 import {
   useEffect,
   useRef,
@@ -69,6 +70,7 @@ export type RecognitionResult = {
   questionNumber: number
   title: string
   artist: string
+  albumArt?: string
   listenDuration: number
   points: number
   correct: boolean
@@ -106,28 +108,23 @@ function getGameMode(
 function Game() {
   const location = useLocation()
 
-  const [searchParams] =
-    useSearchParams()
+  const [searchParams] = useSearchParams()
 
   const categoryId =
-    searchParams.get('category') ??
-    undefined
+    searchParams.get('category') ?? undefined
 
   const roundConfig =
     (
       location.state as {
         roundConfig?: RoundConfig
       } | null
-    )?.roundConfig ??
-    defaultRound
+    )?.roundConfig ?? defaultRound
 
   const [questions, setQuestions] =
     useState<Question[]>([])
 
   const usedTrackIds =
-    useRef<Set<string>>(
-      new Set(),
-    )
+    useRef<Set<string>>(new Set())
 
   const [isLoading, setIsLoading] =
     useState(true)
@@ -160,11 +157,9 @@ function Game() {
     setAnswerStatus,
   ] = useState<AnswerStatus>('idle')
 
-  const [score, setScore] =
-    useState(0)
+  const [score, setScore] = useState(0)
 
-  const [streak, setStreak] =
-    useState(0)
+  const [streak, setStreak] = useState(0)
 
   const [bestStreak, setBestStreak] =
     useState(0)
@@ -197,9 +192,7 @@ function Game() {
   const [
     timeRemaining,
     setTimeRemaining,
-  ] = useState(
-    LISTENING_STAGES[0],
-  )
+  ] = useState(LISTENING_STAGES[0])
 
   const [
     previewComplete,
@@ -211,8 +204,7 @@ function Game() {
     setIsGameComplete,
   ] = useState(false)
 
-  const scoreSubmitted =
-    useRef(false)
+  const scoreSubmitted = useRef(false)
 
   const audioPlayerRef =
     useRef<AudioPlayerHandle | null>(null)
@@ -231,9 +223,7 @@ function Game() {
     roundConfig.theme !== undefined
 
   const isCuratedRound =
-    isEraRound ||
-    isGenreRound ||
-    isThemeRound
+    isEraRound || isGenreRound || isThemeRound
 
   /* =========================================================
      LOAD ROUND
@@ -249,40 +239,35 @@ function Game() {
       setQuestions([])
       setCurrentQuestion(0)
       setIsGameComplete(false)
+      setRecognitionResults([])
+      setScore(0)
+      setStreak(0)
+      setBestStreak(0)
+      setCorrectAnswers(0)
       scoreSubmitted.current = false
 
       usedTrackIds.current.clear()
 
-      /*
-       * Loading facts are fetched independently from
-       * the game data.
-       */
-      
-getLoadingFacts()
-  .then(data => {
-    if (isMounted) {
-      setLoadingFacts(data)
-    }
-  })
-  .catch(error => {
-    console.error(
-      'Failed to load loading facts:',
-      error
-    )
-  })
-
+      // Load facts independently from the game data.
+      getLoadingFacts()
+        .then((data) => {
+          if (isMounted) {
+            setLoadingFacts(data)
+          }
+        })
+        .catch((error) => {
+          console.error(
+            'Failed to load loading facts:',
+            error,
+          )
+        })
 
       try {
-        /*
-         * -------------------------------------------------------
-         * ERA ROUND
-         * -------------------------------------------------------
-         */
+        /* -------------------------------------------------------
+           ERA ROUND
+           ------------------------------------------------------- */
 
-        if (
-          roundConfig.decade !==
-          undefined
-        ) {
+        if (roundConfig.decade !== undefined) {
           const era =
             `${roundConfig.decade}s` as EraKey
 
@@ -295,18 +280,13 @@ getLoadingFacts()
             )
 
           if (isMounted) {
-            eraQuestions.forEach(
-              question => {
-                usedTrackIds.current.add(
-                  question.song.id,
-                )
-              },
-            )
+            eraQuestions.forEach((question) => {
+              usedTrackIds.current.add(
+                question.song.id,
+              )
+            })
 
-            setQuestions(
-              eraQuestions,
-            )
-
+            setQuestions(eraQuestions)
             setLoadingComplete(true)
             setIsLoading(false)
           }
@@ -314,15 +294,11 @@ getLoadingFacts()
           return
         }
 
-        /*
-         * -------------------------------------------------------
-         * GENRE ROUND
-         * -------------------------------------------------------
-         */
+        /* -------------------------------------------------------
+           GENRE ROUND
+           ------------------------------------------------------- */
 
-        if (
-          roundConfig.genre
-        ) {
+        if (roundConfig.genre) {
           const genre =
             roundConfig.genre as GenreKey
 
@@ -335,18 +311,13 @@ getLoadingFacts()
             )
 
           if (isMounted) {
-            genreQuestions.forEach(
-              question => {
-                usedTrackIds.current.add(
-                  question.song.id,
-                )
-              },
-            )
+            genreQuestions.forEach((question) => {
+              usedTrackIds.current.add(
+                question.song.id,
+              )
+            })
 
-            setQuestions(
-              genreQuestions,
-            )
-
+            setQuestions(genreQuestions)
             setLoadingComplete(true)
             setIsLoading(false)
           }
@@ -354,15 +325,11 @@ getLoadingFacts()
           return
         }
 
-        /*
-         * -------------------------------------------------------
-         * THEME ROUND
-         * -------------------------------------------------------
-         */
+        /* -------------------------------------------------------
+           THEME ROUND
+           ------------------------------------------------------- */
 
-        if (
-          roundConfig.theme
-        ) {
+        if (roundConfig.theme) {
           const theme =
             roundConfig.theme as ThemeKey
 
@@ -375,18 +342,13 @@ getLoadingFacts()
             )
 
           if (isMounted) {
-            themeQuestions.forEach(
-              question => {
-                usedTrackIds.current.add(
-                  question.song.id,
-                )
-              },
-            )
+            themeQuestions.forEach((question) => {
+              usedTrackIds.current.add(
+                question.song.id,
+              )
+            })
 
-            setQuestions(
-              themeQuestions,
-            )
-
+            setQuestions(themeQuestions)
             setLoadingComplete(true)
             setIsLoading(false)
           }
@@ -394,11 +356,9 @@ getLoadingFacts()
           return
         }
 
-        /*
-         * -------------------------------------------------------
-         * NORMAL / OTHER GAME MODES
-         * -------------------------------------------------------
-         */
+        /* -------------------------------------------------------
+           NORMAL / OTHER GAME MODES
+           ------------------------------------------------------- */
 
         const firstType =
           roundConfig.questionTypes[0]
@@ -417,10 +377,7 @@ getLoadingFacts()
             firstQuestion.song.id,
           )
 
-          setQuestions([
-            firstQuestion,
-          ])
-
+          setQuestions([firstQuestion])
           setLoadingComplete(true)
           setIsLoading(false)
         }
@@ -448,24 +405,19 @@ getLoadingFacts()
      ========================================================= */
 
   useEffect(() => {
-    /*
-     * Era, genre, and theme rounds are
-     * already loaded as complete rounds.
-     */
+    // Curated rounds are loaded as complete rounds.
     if (isCuratedRound) {
       return
     }
 
     if (
       questions.length === 0 ||
-      questions.length >=
-        roundConfig.questionCount
+      questions.length >= roundConfig.questionCount
     ) {
       return
     }
 
-    const nextIndex =
-      questions.length
+    const nextIndex = questions.length
 
     let isMounted = true
 
@@ -473,8 +425,7 @@ getLoadingFacts()
       try {
         const nextType =
           roundConfig.questionTypes[
-            nextIndex %
-              roundConfig.questionTypes.length
+            nextIndex % roundConfig.questionTypes.length
           ]
 
         const nextQuestion =
@@ -482,32 +433,22 @@ getLoadingFacts()
             nextType,
             roundConfig.difficulty,
             roundConfig.decade,
-            Array.from(
-              usedTrackIds.current,
-            ),
+            Array.from(usedTrackIds.current),
             categoryId,
           )
 
         if (isMounted) {
-          setQuestions(
-            current => {
-              if (
-                current.length >
-                nextIndex
-              ) {
-                return current
-              }
+          setQuestions((current) => {
+            if (current.length > nextIndex) {
+              return current
+            }
 
-              usedTrackIds.current.add(
-                nextQuestion.song.id,
-              )
+            usedTrackIds.current.add(
+              nextQuestion.song.id,
+            )
 
-              return [
-                ...current,
-                nextQuestion,
-              ]
-            },
-          )
+            return [...current, nextQuestion]
+          })
         }
       } catch (error) {
         console.error(
@@ -546,8 +487,7 @@ getLoadingFacts()
     const totalListeningTime =
       recognitionResults.reduce(
         (total, result) =>
-          total +
-          result.listenDuration,
+          total + result.listenDuration,
         0,
       )
 
@@ -567,24 +507,19 @@ getLoadingFacts()
           score,
           accuracy,
           bestStreak,
-          questions:
-            roundConfig.questionCount,
+          questions: roundConfig.questionCount,
           correctAnswers,
           totalListeningTime,
         })
 
-        console.log(
-          'GAME SCORE SAVED:',
-          {
-            score,
-            accuracy,
-            bestStreak,
-            questions:
-              roundConfig.questionCount,
-            correctAnswers,
-            totalListeningTime,
-          },
-        )
+        console.log('GAME SCORE SAVED:', {
+          score,
+          accuracy,
+          bestStreak,
+          questions: roundConfig.questionCount,
+          correctAnswers,
+          totalListeningTime,
+        })
       } catch (error) {
         console.error(
           'FAILED TO SAVE GAME SCORE:',
@@ -631,13 +566,10 @@ getLoadingFacts()
               {roundConfig.name.toUpperCase()}
             </p>
 
-            <h1>
-              NO QUESTIONS AVAILABLE
-            </h1>
+            <h1>NO QUESTIONS AVAILABLE</h1>
 
             <p>
-              We couldn't generate a
-              round right now.
+              We couldn't generate a round right now.
             </p>
           </main>
         </div>
@@ -653,40 +585,26 @@ getLoadingFacts()
     return (
       <ResultsScreen
         score={score}
-        totalQuestions={
-          roundConfig.questionCount
-        }
-        correctAnswers={
-          correctAnswers
-        }
-        bestStreak={
-          bestStreak
-        }
-        recognitionResults={
-          recognitionResults
-        }
+        totalQuestions={roundConfig.questionCount}
+        correctAnswers={correctAnswers}
+        bestStreak={bestStreak}
+        recognitionResults={recognitionResults}
       />
     )
   }
 
-  const question =
-    questions[currentQuestion]
+  const question = questions[currentQuestion]
 
-  const isAnswered =
-    answerStatus !== 'idle'
+  const isAnswered = answerStatus !== 'idle'
 
   const maxListenDuration =
-    LISTENING_STAGES[
-      listeningStage
-    ]
+    LISTENING_STAGES[listeningStage]
 
   /* =========================================================
      AUDIO
      ========================================================= */
 
-  function handleTimeUpdate(
-    time: number,
-  ) {
+  function handleTimeUpdate(time: number) {
     if (!isAnswered) {
       setTimeRemaining(time)
     }
@@ -708,54 +626,42 @@ getLoadingFacts()
   function recordRecognition(
     result: RecognitionResult,
   ) {
-    setRecognitionResults(
-      current => [
-        ...current,
-        result,
-      ],
-    )
+    setRecognitionResults((current) => [
+      ...current,
+      result,
+    ])
   }
 
   /* =========================================================
      ANSWER
      ========================================================= */
 
-  function handleAnswer(
-    answer: string,
-  ) {
+  function handleAnswer(answer: string) {
     if (isAnswered) {
       return
     }
 
     const isCorrect =
-      answer ===
-      question.correctAnswer
+      answer === question.correctAnswer
 
     audioPlayerRef.current?.playPreview()
 
     setSelectedAnswer(answer)
 
     setAnswerStatus(
-      isCorrect
-        ? 'correct'
-        : 'incorrect',
+      isCorrect ? 'correct' : 'incorrect',
     )
 
     setPreviewComplete(false)
 
     if (isCorrect) {
-      const nextStreak =
-        streak + 1
+      const nextStreak = streak + 1
 
       const multiplier =
-        calculateStreakMultiplier(
-          nextStreak,
-        )
+        calculateStreakMultiplier(nextStreak)
 
       const basePoints =
-        calculatePoints(
-          maxListenDuration,
-        )
+        calculatePoints(maxListenDuration)
 
       const points =
         calculateFinalPoints(
@@ -763,45 +669,23 @@ getLoadingFacts()
           multiplier,
         )
 
-      setStreak(
-        nextStreak,
+      setStreak(nextStreak)
+
+      setBestStreak((previous) =>
+        Math.max(previous, nextStreak),
       )
 
-      setBestStreak(
-        previous =>
-          Math.max(
-            previous,
-            nextStreak,
-          ),
-      )
-
-      setScore(
-        previous =>
-          previous + points,
-      )
-
-      setCorrectAnswers(
-        previous =>
-          previous + 1,
-      )
-
-      setPointsEarned(
-        points,
-      )
-
-      setMultiplierEarned(
-        multiplier,
-      )
+      setScore((previous) => previous + points)
+      setCorrectAnswers((previous) => previous + 1)
+      setPointsEarned(points)
+      setMultiplierEarned(multiplier)
 
       recordRecognition({
-        questionNumber:
-          currentQuestion + 1,
-        title:
-          question.song.title,
-        artist:
-          question.song.artist,
-        listenDuration:
-          maxListenDuration,
+        questionNumber: currentQuestion + 1,
+        title: question.song.title,
+        artist: question.song.artist,
+        albumArt: question.song.artworkUrl,
+        listenDuration: maxListenDuration,
         points,
         correct: true,
       })
@@ -814,14 +698,11 @@ getLoadingFacts()
     setMultiplierEarned(1)
 
     recordRecognition({
-      questionNumber:
-        currentQuestion + 1,
-      title:
-        question.song.title,
-      artist:
-        question.song.artist,
-      listenDuration:
-        maxListenDuration,
+      questionNumber: currentQuestion + 1,
+      title: question.song.title,
+      artist: question.song.artist,
+      albumArt: question.song.artworkUrl,
+      listenDuration: maxListenDuration,
       points: 0,
       correct: false,
     })
@@ -843,17 +724,12 @@ getLoadingFacts()
       return
     }
 
-    const nextStage =
-      listeningStage + 1
+    const nextStage = listeningStage + 1
 
-    setListeningStage(
-      nextStage,
-    )
+    setListeningStage(nextStage)
 
     setTimeRemaining(
-      LISTENING_STAGES[
-        nextStage
-      ],
+      LISTENING_STAGES[nextStage],
     )
   }
 
@@ -868,10 +744,7 @@ getLoadingFacts()
 
     audioPlayerRef.current?.playPreview()
 
-    setAnswerStatus(
-      'revealed',
-    )
-
+    setAnswerStatus('revealed')
     setSelectedAnswer(null)
 
     setStreak(0)
@@ -881,14 +754,11 @@ getLoadingFacts()
     setPreviewComplete(false)
 
     recordRecognition({
-      questionNumber:
-        currentQuestion + 1,
-      title:
-        question.song.title,
-      artist:
-        question.song.artist,
-      listenDuration:
-        maxListenDuration,
+      questionNumber: currentQuestion + 1,
+      title: question.song.title,
+      artist: question.song.artist,
+      albumArt: question.song.artworkUrl,
+      listenDuration: maxListenDuration,
       points: 0,
       correct: false,
     })
@@ -900,22 +770,12 @@ getLoadingFacts()
 
   function resetQuestionState() {
     setSelectedAnswer(null)
-
-    setAnswerStatus(
-      'idle',
-    )
-
+    setAnswerStatus('idle')
     setListeningStage(0)
-
     setPointsEarned(0)
-
     setMultiplierEarned(1)
-
     setPreviewComplete(false)
-
-    setTimeRemaining(
-      LISTENING_STAGES[0],
-    )
+    setTimeRemaining(LISTENING_STAGES[0])
   }
 
   /* =========================================================
@@ -931,35 +791,22 @@ getLoadingFacts()
       return
     }
 
-    const nextIndex =
-      currentQuestion + 1
+    const nextIndex = currentQuestion + 1
 
-    /*
-     * Curated rounds — era, genre,
-     * and theme — already have their
-     * complete question set.
-     */
+    // Curated rounds already have their complete question set.
     if (questions[nextIndex]) {
-      setCurrentQuestion(
-        nextIndex,
-      )
-
+      setCurrentQuestion(nextIndex)
       resetQuestionState()
-
       return
     }
 
-    /*
-     * Fallback for normal game modes
-     * that load questions individually.
-     */
+    // Fallback for normal game modes that load questions individually.
     setIsLoadingNext(true)
 
     try {
       const nextType =
         roundConfig.questionTypes[
-          nextIndex %
-            roundConfig.questionTypes.length
+          nextIndex % roundConfig.questionTypes.length
         ]
 
       const nextQuestion =
@@ -967,35 +814,21 @@ getLoadingFacts()
           nextType,
           roundConfig.difficulty,
           roundConfig.decade,
-          Array.from(
-            usedTrackIds.current,
-          ),
+          Array.from(usedTrackIds.current),
           categoryId,
         )
 
-      usedTrackIds.current.add(
-        nextQuestion.song.id,
-      )
+      usedTrackIds.current.add(nextQuestion.song.id)
 
-      setQuestions(
-        current => {
-          if (
-            current[nextIndex]
-          ) {
-            return current
-          }
+      setQuestions((current) => {
+        if (current[nextIndex]) {
+          return current
+        }
 
-          return [
-            ...current,
-            nextQuestion,
-          ]
-        },
-      )
+        return [...current, nextQuestion]
+      })
 
-      setCurrentQuestion(
-        nextIndex,
-      )
-
+      setCurrentQuestion(nextIndex)
       resetQuestionState()
     } catch (error) {
       console.error(
@@ -1014,81 +847,56 @@ getLoadingFacts()
   return (
     <div className="game-page">
       <div className="game-page__container">
-
         <GameHeader
-          currentQuestion={
-            currentQuestion + 1
-          }
-          totalQuestions={
-            roundConfig.questionCount
-          }
+          currentQuestion={currentQuestion + 1}
+          totalQuestions={roundConfig.questionCount}
           score={score}
         />
 
         <GameProgress
-          current={
-            currentQuestion + 1
-          }
-          total={
-            roundConfig.questionCount
-          }
+          current={currentQuestion + 1}
+          total={roundConfig.questionCount}
         />
 
         <main className="game-content">
-
           <div className="game-content__heading">
-
             <p className="game-content__category">
-              {question.type ===
-                'name-the-song' &&
+              {question.type === 'name-the-song' &&
                 'NAME THAT SONG'}
 
-              {question.type ===
-                'name-the-artist' &&
+              {question.type === 'name-the-artist' &&
                 'NAME THAT ARTIST'}
 
-              {question.type ===
-                'name-the-album' &&
+              {question.type === 'name-the-album' &&
                 'NAME THAT ALBUM'}
 
-              {question.type ===
-                'guess-the-year' &&
+              {question.type === 'guess-the-year' &&
                 'GUESS THE YEAR'}
 
               {categoryId
                 ? categoryId
-                    .replace(
-                      /-/g,
-                      ' ',
-                    )
+                    .replace(/-/g, ' ')
                     .toUpperCase()
                 : roundConfig.name.toUpperCase()}
             </p>
 
             <h1>
-              {question.type ===
-                'name-the-song' &&
+              {question.type === 'name-the-song' &&
                 'What song is this?'}
 
-              {question.type ===
-                'name-the-artist' &&
+              {question.type === 'name-the-artist' &&
                 'Who performs this song?'}
 
-              {question.type ===
-                'name-the-album' &&
+              {question.type === 'name-the-album' &&
                 'Which album is this from?'}
 
-              {question.type ===
-                'guess-the-year' &&
+              {question.type === 'guess-the-year' &&
                 'When was this song released?'}
             </h1>
-
           </div>
 
           <div className="game-board">
-
             <section className="game-question">
-
               <div
                 className={`game-question__art ${
                   isAnswered
@@ -1096,12 +904,9 @@ getLoadingFacts()
                     : ''
                 }`}
               >
-                {isAnswered &&
-                question.song.artworkUrl ? (
+                {isAnswered && question.song.artworkUrl ? (
                   <img
-                    src={
-                      question.song.artworkUrl
-                    }
+                    src={question.song.artworkUrl}
                     alt={`${question.song.album} album artwork`}
                   />
                 ) : (
@@ -1110,116 +915,66 @@ getLoadingFacts()
               </div>
 
               <AudioPlayer
-                ref={
-                  audioPlayerRef
-                }
-                key={
-                  question.id
-                }
-                audioUrl={
-                  question.song
-                    .audioUrl ?? ''
-                }
-                maxListenDuration={
-                  maxListenDuration
-                }
-                onTimeUpdate={
-                  handleTimeUpdate
-                }
-                onStageComplete={
-                  handleStageComplete
-                }
-                onPreviewComplete={
-                  handlePreviewComplete
-                }
+                ref={audioPlayerRef}
+                key={question.id}
+                audioUrl={question.song.audioUrl ?? ''}
+                maxListenDuration={maxListenDuration}
+                onTimeUpdate={handleTimeUpdate}
+                onStageComplete={handleStageComplete}
+                onPreviewComplete={handlePreviewComplete}
                 disabled={false}
-                playFullSong={
-                  answerStatus ===
-                  'revealed'
-                }
+                playFullSong={answerStatus === 'revealed'}
               />
 
               {isAnswered && (
                 <div className="game-song-reveal">
-
                   <p className="game-song-reveal__title">
-                    {
-                      question.song.title
-                    }
+                    {question.song.title}
                   </p>
 
                   <p className="game-song-reveal__artist">
-                    {
-                      question.song.artist
-                    }
+                    {question.song.artist}
                   </p>
 
                   <p className="game-song-reveal__album">
-                    {
-                      question.song.album
-                    }
+                    {question.song.album}
                   </p>
 
-                  {question.type ===
-                    'guess-the-year' &&
-                    question.song
-                      .releaseYear !==
-                      undefined && (
+                  {question.type === 'guess-the-year' &&
+                    question.song.releaseYear !== undefined && (
                       <p className="game-song-reveal__year">
-                        {
-                          question.song
-                            .releaseYear
-                        }
+                        {question.song.releaseYear}
                       </p>
                     )}
-
                 </div>
               )}
-
             </section>
 
             <section className="game-play-panel">
-
               <AnswerGrid
-                answers={
-                  question.answers
-                }
-                selectedAnswer={
-                  selectedAnswer
-                }
-                correctAnswer={
-                  question.correctAnswer
-                }
-                isAnswered={
-                  isAnswered
-                }
-                onSelect={
-                  handleAnswer
-                }
+                answers={question.answers}
+                selectedAnswer={selectedAnswer}
+                correctAnswer={question.correctAnswer}
+                isAnswered={isAnswered}
+                onSelect={handleAnswer}
               />
 
               {!isAnswered && (
                 <div className="game-actions">
-
                   <button
                     type="button"
                     className="game-advance"
-                    onClick={
-                      handleAdvance
-                    }
+                    onClick={handleAdvance}
                     disabled={
                       listeningStage >=
-                      LISTENING_STAGES.length -
-                        1
+                      LISTENING_STAGES.length - 1
                     }
                   >
                     {listeningStage <
-                    LISTENING_STAGES.length -
-                      1
+                    LISTENING_STAGES.length - 1
                       ? `ADVANCE → ${
                           LISTENING_STAGES[
-                            listeningStage +
-                              1
+                            listeningStage + 1
                           ]
                         }s`
                       : 'MAX LISTEN TIME'}
@@ -1228,60 +983,41 @@ getLoadingFacts()
                   <button
                     type="button"
                     className="game-reveal"
-                    onClick={
-                      handleRevealAnswer
-                    }
+                    onClick={handleRevealAnswer}
                   >
                     REVEAL ANSWER
                   </button>
-
                 </div>
               )}
 
               {isAnswered && (
                 <div
                   className={`game-feedback ${
-                    answerStatus ===
-                    'revealed'
+                    answerStatus === 'revealed'
                       ? 'game-feedback--timeout'
-                      : answerStatus ===
-                          'correct'
+                      : answerStatus === 'correct'
                         ? 'game-feedback--correct'
                         : 'game-feedback--incorrect'
                   }`}
                 >
-
                   <div className="game-feedback__label">
-                    {answerStatus ===
-                    'revealed'
+                    {answerStatus === 'revealed'
                       ? 'ANSWER REVEALED'
-                      : answerStatus ===
-                          'correct'
+                      : answerStatus === 'correct'
                         ? 'CORRECT'
                         : 'INCORRECT'}
                   </div>
 
                   <div className="game-feedback__answer">
-                    {
-                      question.correctAnswer
-                    }
+                    {question.correctAnswer}
                   </div>
 
-                  {answerStatus ===
-                    'correct' && (
+                  {answerStatus === 'correct' && (
                     <div className="game-feedback__points">
-                      +
-                      {pointsEarned.toLocaleString()}{' '}
-                      POINTS
+                      +{pointsEarned.toLocaleString()} POINTS
 
-                      {multiplierEarned >
-                        1 && (
-                        <span>
-                          {' '}×
-                          {
-                            multiplierEarned
-                          }
-                        </span>
+                      {multiplierEarned > 1 && (
+                        <span> ×{multiplierEarned}</span>
                       )}
                     </div>
                   )}
@@ -1291,79 +1027,52 @@ getLoadingFacts()
                       ? 'PREVIEW COMPLETE'
                       : 'PREVIEW CONTINUES'}
                   </div>
-
                 </div>
               )}
-
             </section>
-
           </div>
 
           <div className="game-status">
-
             <div className="game-streak">
-              <span>
-                STREAK
-              </span>
-
-              <strong>
-                {streak}
-              </strong>
+              <span>STREAK</span>
+              <strong>{streak}</strong>
             </div>
 
             <div className="game-listening-time">
-              <span>
-                LISTEN TIME
-              </span>
+              <span>LISTEN TIME</span>
 
               <strong>
                 {timeRemaining < 1
-                  ? `${timeRemaining.toFixed(
-                      1,
-                    )}s`
-                  : `${Math.ceil(
-                      timeRemaining,
-                    )}s`}
+                  ? `${timeRemaining.toFixed(1)}s`
+                  : `${Math.ceil(timeRemaining)}s`}
               </strong>
             </div>
-
           </div>
 
           {isAnswered && (
             <div className="game-next-area">
-
               {!previewComplete && (
                 <div className="game-next-status">
-                  <span>
-                    PREVIEW PLAYING
-                  </span>
+                  <span>PREVIEW PLAYING</span>
                 </div>
               )}
 
               <button
                 type="button"
                 className="game-next"
-                onClick={
-                  handleNextSong
-                }
-                disabled={
-                  isLoadingNext
-                }
+                onClick={handleNextSong}
+                disabled={isLoadingNext}
               >
                 {isLoadingNext
                   ? 'LOADING...'
                   : currentQuestion >=
-                      roundConfig.questionCount -
-                        1
+                      roundConfig.questionCount - 1
                     ? 'SEE RESULTS'
                     : 'NEXT SONG →'}
               </button>
-
             </div>
           )}
-
         </main>
-
       </div>
     </div>
   )
