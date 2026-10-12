@@ -11,6 +11,7 @@ import {
   bitterAndBetterSongs,
 } from './bitterAndBetter.js'
 import { moveYourBodySongs } from './moveYourBody.js'
+import { oopsILikeYouSongs } from './oopsILikeYou.js'
 
 export const themeLibraries = {
   'the-breakup-department':
@@ -22,7 +23,9 @@ export const themeLibraries = {
   'bitter-and-better':
     bitterAndBetterSongs,
   'move-your-body':
-    moveYourBodySongs
+    moveYourBodySongs,
+  'oops-i-like-you':
+    oopsILikeYouSongs
 } as const
 
 export type Theme =
