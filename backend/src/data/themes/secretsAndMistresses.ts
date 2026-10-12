@@ -295,7 +295,7 @@ export const secretsAndMistressesSongs = [
     artist: 'Cheat Codes',
   },
   {
-    title: 'Hypnotized (feat Akon)',
+    title: 'Hypnotized (feat. Akon)',
     artist: 'Piles',
   },
   {
@@ -709,6 +709,102 @@ export const secretsAndMistressesSongs = [
   {
     title: 'Gone',
     artist: 'NGC Mekhai',
+  },
+  {
+    title: 'The Sweetest Taboo',
+    artist: 'Sade',
+  },
+  {
+    title: 'Freak Me',
+    artist: 'Silk',
+  },
+  {
+    title: 'I\'ll Make Love to You',
+    artist: 'Boys II Men',
+  },
+  {
+    title: 'Nice & Slow',
+    artist: 'Usher',
+  },
+  {
+    title: 'Freek\'n You',
+    artist: 'Jodeci',
+  },
+  {
+    title: 'So Anxious',
+    artist: 'Ginuwine',
+  },
+  {
+    title: 'Twisted',
+    artist: 'Keith Sweat',
+  },
+  {
+    title: 'Anywhere',
+    artist: '112',
+  },
+  {
+    title: 'Creep',
+    artist: 'TLC',
+  },
+  {
+    title: 'Can We Talk',
+    artist: 'Tevin Campbell',
+  },
+  {
+    title: 'Neighbors Know My Name',
+    artist: 'Trey Songz',
+  },
+  {
+    title: 'Touch My Body',
+    artist: 'Mariah Carey',
+  },
+  {
+    title: 'My Humps',
+    artist: 'The Black Eyes Peas',
+  },
+  {
+    title: 'Gimme More',
+    artist: 'Britney Spears',
+  },
+  {
+    title: 'Sexy Love',
+    artist: 'Ne-Yo',
+  },
+  {
+    title: 'Kiss It Better',
+    artist: 'Rihanna',
+  },
+  {
+    title: 'Partition',
+    artist: 'Beyonce',
+  },
+  {
+    title: 'Adorn',
+    artist: 'Miguel',
+  },
+  {
+    title: 'Love Me Harder',
+    artist: 'Ariana Grande',
+  },
+  {
+    title: 'Body Party',
+    artist: 'Ciara',
+  },
+  {
+    title: 'Love Galore',
+    artist: 'SZA',
+  },
+  {
+    title: 'Focus',
+    artist: 'H.E.R.',
+  },
+  {
+    title: 'The Weekend',
+    artist: 'SZA',
+  },
+  {
+    title: 'Don\'t',
+    artist: 'Bryson Tiller',
   },
 
 ] as const
