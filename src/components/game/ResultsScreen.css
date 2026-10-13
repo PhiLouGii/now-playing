@@ -1,8 +1,3 @@
-/* =========================================
-   NOW PLAYING — RESULTS SCREEN
-   Compact, readable, pastel-retro
-   ========================================= */
-
 .results-page {
   min-height: calc(100vh - var(--navbar-height, 64px));
   padding: 32px 24px 48px;
