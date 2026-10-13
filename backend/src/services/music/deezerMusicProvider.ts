@@ -21,6 +21,8 @@ type DeezerAlbum = {
   cover_big?: string
   cover_xl?: string
   release_date?: string
+  artist?: DeezerArtistRef
+  record_type?: string
 }
 
 
@@ -496,6 +498,48 @@ async function searchTracks(
       [],
   )
 }
+
+
+async function searchAlbums(
+  query: string,
+  limit = 10,
+): Promise<DeezerAlbum[]> {
+  const encoded = encodeURIComponent(query)
+
+  const safeLimit = Math.min(
+    Math.max(limit, 1),
+    25,
+  )
+
+  const response =
+    await fetchJsonWithQuotaRetry<DeezerAlbumListResponse>(
+      `/search/album?q=${encoded}&limit=${safeLimit}`,
+    )
+
+  if (response.error) {
+    throw new Error(
+      `Deezer album search error: ${
+        response.error.message ??
+        'Unknown error'
+      }`,
+    )
+  }
+
+  return (response.data ?? []).filter(
+    album =>
+      Boolean(
+        album.id &&
+        album.title?.trim() &&
+        (
+          album.cover_xl ||
+          album.cover_big ||
+          album.cover_medium ||
+          album.cover
+        ),
+      ),
+  )
+}
+
 
 
 /*
@@ -1052,6 +1096,7 @@ async function getArtistTracks(
 export const deezerMusicProvider =
   {
     searchTracks,
+    searchAlbums,
     getTrackById,
     getChartTracks,
     getGenres,

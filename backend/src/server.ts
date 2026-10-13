@@ -14,6 +14,7 @@ import dailyChallengeRoutes from './routes/dailyChallengeRoutes.js'
 import scoreRoutes from './routes/scoreRoutes.js'
 import leaderboardRoutes from './routes/leaderboardRoutes.js'
 import userRoutes from './routes/userRoutes'
+import pixelCoverRoutes from './routes/pixelCoverRoutes.js'
 
 dotenv.config()
 
@@ -37,6 +38,7 @@ app.use('/api/daily-challenge', dailyChallengeRoutes)
 app.use('/api/scores', scoreRoutes)
 app.use('/api/leaderboard', leaderboardRoutes)
 app.use('/api/users', userRoutes)
+app.use('/api/pixel-cover', pixelCoverRoutes)
 app.get('/api/health', async (_req, res) => {
   try {
     await db.listCollections()
