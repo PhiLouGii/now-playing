@@ -410,15 +410,8 @@ function Play() {
      ========================================================= */
 
   function handlePixelCover() {
-    navigate(
-      '/album-game',
-      {
-        state: {
-          mode: 'pixel-cover',
-        },
-      },
-    )
-  }
+  navigate('/pixel-cover')
+}
 
 
   function handleSoundtracks() {

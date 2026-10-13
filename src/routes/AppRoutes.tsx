@@ -8,6 +8,7 @@ import Profile from '../pages/Profile/Profile'
 import Game from '../pages/Game/Game'
 import ArtistGame from '../pages/ArtistGame/ArtistGame'
 import AlbumGame from '../pages/AlbumGame/AlbumGame'
+import PixelCover from '../pages/PixelCover/PixelCover'
 import YearGame from '../pages/YearGame/YearGame'
 import PlayByArtist from '../pages/PlayByArtist/PlayByArtist'
 import Artists from '../pages/Artists/Artists'
@@ -41,10 +42,14 @@ function AppRoutes() {
   path="/play-by-artist"
   element={<PlayByArtist />}
 />
-      <Route
-        path="/album-game"
-        element={<AlbumGame />}
-      />
+<Route
+  path="/album-game"
+  element={<AlbumGame />}
+/>
+<Route
+  path="/pixel-cover"
+  element={<PixelCover />}
+/>
       <Route path="/year-game" element={<YearGame />} />
       <Route
   path="/endless"

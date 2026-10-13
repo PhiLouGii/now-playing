@@ -1606,10 +1606,10 @@
     var(--radius-md);
 
   background:
-    var(--color-lilac);
+    #6e6189;
 
   color:
-    var(--color-text);
+    #cbc9cc;
 }
 
 .pixel-card__content
@@ -2076,7 +2076,7 @@
 .soundtrack-card
 .pixel-card__icon {
   background:
-    var(--color-periwinkle);
+    #6e6189;
 }
 
 
