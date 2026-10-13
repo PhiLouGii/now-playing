@@ -130,7 +130,7 @@ async function findCuratedAlbum(
   try {
     const results = await deezerMusicProvider.searchAlbums(
       curated.title,
-      25,
+      150,
     )
 
     const expectedArtist = normalize(curated.artist)

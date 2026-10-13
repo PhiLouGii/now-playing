@@ -37,16 +37,19 @@ type AlbumResponse = {
   requested?: number
   found?: number
 }
+
 type RoundResult = {
   album: PixelCoverAlbum
   correct: boolean
   points: number
 }
 
-const REVEAL_STAGES = [2, 4, 8, 0] as const
+/* =========================================================
+   GAME SETTINGS
+   ========================================================= */
 
+const REVEAL_STAGES = [0.125, 0.25, 0.375, 0] as const
 const STAGE_POINTS = [1000, 700, 400, 200]
-
 const TOTAL_ROUNDS = 10
 
 /* =========================================================
@@ -67,10 +70,7 @@ function shuffleAlbums(albums: PixelCoverAlbum[]) {
 
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
-    ;[shuffled[i], shuffled[j]] = [
-      shuffled[j],
-      shuffled[i],
-    ]
+    ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
   }
 
   return shuffled
@@ -121,8 +121,7 @@ function PixelatedArtwork({
   }, [album.id, resolution])
 
   const pixelSize = resolution === 0 ? displaySize : resolution
-  const scale =
-    resolution === 0 ? 1 : displaySize / resolution
+  const scale = resolution === 0 ? 1 : displaySize / resolution
 
   return (
     <div
@@ -148,9 +147,7 @@ function PixelatedArtwork({
             resolution === 0
               ? 'pixel-artwork__image--full'
               : 'pixel-artwork__image--pixelated',
-            imageLoaded
-              ? 'pixel-artwork__image--loaded'
-              : '',
+            imageLoaded ? 'pixel-artwork__image--loaded' : '',
           ].join(' ')}
           style={{
             width: pixelSize,
@@ -177,7 +174,7 @@ function PixelatedArtwork({
 }
 
 /* =========================================================
-   PIXEL COVER
+   PIXEL COVER GAME
    ========================================================= */
 
 function PixelCover() {
@@ -233,7 +230,9 @@ function PixelCover() {
         setAlbums(data.albums)
 
         const shuffled = shuffleAlbums(data.albums)
-        setRoundAlbums(shuffled.slice(0, Math.min(TOTAL_ROUNDS, shuffled.length)))
+        setRoundAlbums(
+          shuffled.slice(0, Math.min(TOTAL_ROUNDS, shuffled.length)),
+        )
       } catch (error) {
         if (cancelled) return
 
@@ -257,7 +256,7 @@ function PixelCover() {
   }, [])
 
   /* =========================================================
-     SUGGESTIONS
+     ALBUM TITLE SUGGESTIONS
      ========================================================= */
 
   const suggestions = useMemo(() => {
@@ -266,15 +265,12 @@ function PixelCover() {
     if (!query || answered || revealedAnswer) return []
 
     return albums
-      .filter(album => {
-        const titleMatches = normalizeText(album.title).includes(query)
-        return titleMatches
-      })
+      .filter(album => normalizeText(album.title).includes(query))
       .slice(0, 6)
   }, [albums, guess, answered, revealedAnswer])
 
   /* =========================================================
-     CURRENT STAGE
+     CURRENT REVEAL STAGE
      ========================================================= */
 
   const currentResolution = REVEAL_STAGES[revealStage]
@@ -300,37 +296,34 @@ function PixelCover() {
       }
 
       if (cleanedGuess === normalizeText(currentAlbum.title)) {
-  const earnedPoints = STAGE_POINTS[revealStage]
+        const earnedPoints = STAGE_POINTS[revealStage]
 
-  setScore(previous => previous + earnedPoints)
-  setCorrectAnswers(previous => previous + 1)
-  setRoundPoints(earnedPoints)
+        setScore(previous => previous + earnedPoints)
+        setCorrectAnswers(previous => previous + 1)
+        setRoundPoints(earnedPoints)
 
-  setRoundResults(previous => [
-    ...previous,
-    {
-      album: currentAlbum,
-      correct: true,
-      points: earnedPoints,
+        setRoundResults(previous => [
+          ...previous,
+          {
+            album: currentAlbum,
+            correct: true,
+            points: earnedPoints,
+          },
+        ])
+
+        setGuess(currentAlbum.title)
+        setAnswered(true)
+        setFeedback(`Correct! +${earnedPoints} points`)
+        return
+      }
+
+      setFeedback('Not quite. Try another title.')
     },
-  ])
-
-  setGuess(currentAlbum.title)
-  setAnswered(true)
-  setFeedback(`Correct! +${earnedPoints} points`)
-  return
-}
-    [
-      guess,
-      currentAlbum,
-      answered,
-      revealedAnswer,
-      revealStage,
-    ],
+    [guess, currentAlbum, answered, revealedAnswer, revealStage],
   )
 
   /* =========================================================
-     REVEAL COVER
+     REVEAL COVER / ANSWER
      ========================================================= */
 
   function handleReveal() {
@@ -344,6 +337,16 @@ function PixelCover() {
     }
 
     setRevealedAnswer(true)
+
+    setRoundResults(previous => [
+      ...previous,
+      {
+        album: currentAlbum,
+        correct: false,
+        points: 0,
+      },
+    ])
+
     setFeedback(`The album was ${currentAlbum.title}.`)
     setGuess('')
   }
@@ -385,6 +388,7 @@ function PixelCover() {
     setScore(0)
     setCorrectAnswers(0)
     setRoundPoints(0)
+    setRoundResults([])
     setAnswered(false)
     setRevealedAnswer(false)
     setFeedback('')
@@ -392,7 +396,7 @@ function PixelCover() {
   }
 
   /* =========================================================
-     LOADING / ERROR
+     LOADING / ERROR STATES
      ========================================================= */
 
   if (loading) {
@@ -413,6 +417,7 @@ function PixelCover() {
         <div className="pixel-cover-status">
           <h1>Pixel Cover</h1>
           <p>{loadError || 'No albums are available right now.'}</p>
+
           <button
             type="button"
             className="pixel-cover-button pixel-cover-button--primary"
@@ -420,6 +425,7 @@ function PixelCover() {
           >
             Try again
           </button>
+
           <button
             type="button"
             className="pixel-cover-back"
@@ -434,7 +440,7 @@ function PixelCover() {
   }
 
   /* =========================================================
-     GAME COMPLETE
+     GAME RESULTS
      ========================================================= */
 
   if (gameFinished) {
@@ -454,11 +460,60 @@ function PixelCover() {
               <strong>{correctAnswers}</strong>
               <span>Correct answers</span>
             </div>
+
             <div>
               <strong>{roundAlbums.length}</strong>
               <span>Albums played</span>
             </div>
           </div>
+
+          <section className="pixel-cover-review">
+            <div className="pixel-cover-review__heading">
+              <h2>Round review</h2>
+              <p>See which albums you recognised and which ones you missed.</p>
+            </div>
+
+            <div className="pixel-cover-review__list">
+              {roundResults.map((result, index) => (
+                <article
+                  key={`${result.album.id}-${index}`}
+                  className={[
+                    'pixel-cover-review__item',
+                    result.correct
+                      ? 'pixel-cover-review__item--correct'
+                      : 'pixel-cover-review__item--missed',
+                  ].join(' ')}
+                >
+                  <img
+                    className="pixel-cover-review__image"
+                    src={result.album.coverUrl}
+                    alt={`Cover of ${result.album.title}`}
+                    loading="lazy"
+                  />
+
+                  <div className="pixel-cover-review__details">
+                    <span className="pixel-cover-review__round">
+                      ALBUM {String(index + 1).padStart(2, '0')}
+                    </span>
+
+                    <h3>{result.album.title}</h3>
+
+                    <p>
+                      {result.album.artist}
+                      {result.album.year ? ` · ${result.album.year}` : ''}
+                    </p>
+                  </div>
+
+                  <div className="pixel-cover-review__outcome">
+                    <span>{result.correct ? 'Correct' : 'Missed'}</span>
+                    <strong>
+                      {result.correct ? `+${result.points}` : '0 pts'}
+                    </strong>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
 
           <div className="pixel-cover-results__actions">
             <button
@@ -522,12 +577,8 @@ function PixelCover() {
         {/* INTRO */}
 
         <section className="pixel-cover-intro">
-          <p className="pixel-cover-eyebrow">
-            ALBUM ART CHALLENGE
-          </p>
-
+          <p className="pixel-cover-eyebrow">ALBUM ART CHALLENGE</p>
           <h1>Recognise the cover.</h1>
-
           <p>
             The less you reveal, the more you score.
             How quickly can you name the album?
@@ -566,9 +617,7 @@ function PixelCover() {
           <div className="pixel-cover-art-column">
             <div className="pixel-cover-art-heading">
               <span>ALBUM ARTWORK</span>
-              <span className="pixel-cover-stage">
-                {stageLabel}
-              </span>
+              <span className="pixel-cover-stage">{stageLabel}</span>
             </div>
 
             <PixelatedArtwork
@@ -684,10 +733,10 @@ function PixelCover() {
               <p
                 className={[
                   'pixel-cover-feedback',
-                  answered
-                    ? 'pixel-cover-feedback--correct'
-                    : '',
-                  !answered && !revealedAnswer && feedback.startsWith('Not quite')
+                  answered ? 'pixel-cover-feedback--correct' : '',
+                  !answered &&
+                  !revealedAnswer &&
+                  feedback.startsWith('Not quite')
                     ? 'pixel-cover-feedback--incorrect'
                     : '',
                 ].join(' ')}
@@ -762,21 +811,19 @@ function PixelCover() {
         {/* SCORING GUIDE */}
 
         <footer className="pixel-cover-scoring">
-          <p className="pixel-cover-scoring__title">
-            HOW SCORING WORKS
-          </p>
+          <p className="pixel-cover-scoring__title">HOW SCORING WORKS</p>
 
           <div className="pixel-cover-scoring__items">
             <div>
-              <span>8 × 8</span>
+              <span>2 × 2</span>
               <strong>1,000 pts</strong>
             </div>
             <div>
-              <span>16 × 16</span>
+              <span>4 × 4</span>
               <strong>700 pts</strong>
             </div>
             <div>
-              <span>32 × 32</span>
+              <span>8 × 8</span>
               <strong>400 pts</strong>
             </div>
             <div>
