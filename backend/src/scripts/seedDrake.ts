@@ -2,9 +2,9 @@
 import { db } from '../config/firebase.js'
 import { deezerMusicProvider } from '../services/music/deezerMusicProvider.js'
 import { isPlayableMusicTrack } from '../services/music/musicTrackFilter.js'
-import type { MusicTrack } from '../services/music/musicProvider.js'
+import { drakeSongs } from '../data/artists/drake.js'
 
-const DRAKE_ARTIST_ID = '67927442'
+const DRAKE_ARTIST_ID = '246791'
 const DRAKE_ARTIST_NAME = 'Drake'
 
 function normalize(value: string): string {
@@ -37,104 +37,10 @@ async function findExistingSong(providerSongId: string) {
 
 async function seedDrake() {
   console.log('\n================================')
-  console.log('NOW PLAYING — DRAKE CATALOGUE SEED')
+  console.log('NOW PLAYING — CURATED DRAKE SEED')
   console.log(`Deezer artist ID: ${DRAKE_ARTIST_ID}`)
+  console.log(`Curated candidates: ${drakeSongs.length}`)
   console.log('================================\n')
-
-  /*
-   * Fetch top tracks and the album discography independently.
-   * One source can still succeed if the other fails.
-   */
-  const [discographyResult, topTracksResult] =
-    await Promise.allSettled([
-      deezerMusicProvider.getArtistDiscography(
-        DRAKE_ARTIST_ID,
-      ),
-      deezerMusicProvider.getArtistTopTracks(
-        DRAKE_ARTIST_ID,
-        100,
-      ),
-    ])
-
-  const discographyTracks =
-    discographyResult.status === 'fulfilled'
-      ? discographyResult.value
-      : []
-
-  const topTracks =
-    topTracksResult.status === 'fulfilled'
-      ? topTracksResult.value
-      : []
-
-  if (discographyResult.status === 'rejected') {
-    console.error(
-      'Could not load Drake discography:',
-      discographyResult.reason,
-    )
-  }
-
-  if (topTracksResult.status === 'rejected') {
-    console.error(
-      'Could not load Drake top tracks:',
-      topTracksResult.reason,
-    )
-  }
-
-  if (
-    discographyResult.status === 'rejected' &&
-    topTracksResult.status === 'rejected'
-  ) {
-    throw new Error(
-      'Both Deezer catalogue requests failed. Nothing was seeded.',
-    )
-  }
-
-  console.log(
-    `Discography results: ${discographyTracks.length}`,
-  )
-  console.log(
-    `Top-track results: ${topTracks.length}`,
-  )
-
-  /*
-   * Merge by provider track ID.
-   * Only Drake's own artist catalogue is eligible.
-   */
-  const tracksById = new Map<string, MusicTrack>()
-
-  for (const track of [
-    ...topTracks,
-    ...discographyTracks,
-  ]) {
-    if (!isPlayableMusicTrack(track)) {
-      continue
-    }
-
-    if (
-      normalize(track.artist) !==
-      normalize(DRAKE_ARTIST_NAME)
-    ) {
-      continue
-    }
-
-    const providerSongId = String(
-      track.providerId ?? track.id,
-    )
-
-    if (!providerSongId) {
-      continue
-    }
-
-    if (!tracksById.has(providerSongId)) {
-      tracksById.set(providerSongId, track)
-    }
-  }
-
-  const uniqueTracks = [...tracksById.values()]
-
-  console.log(
-    `Unique playable Drake tracks to process: ${uniqueTracks.length}\n`,
-  )
 
   let added = 0
   let updated = 0
@@ -142,53 +48,117 @@ async function seedDrake() {
   let skipped = 0
   let errors = 0
 
-  for (const track of uniqueTracks) {
+  for (const title of drakeSongs) {
     try {
+      console.log(`\nSearching Deezer: ${title}`)
+
+      const results = await deezerMusicProvider.searchTracks(
+        `${title} Drake`,
+        10,
+      )
+
+      const normalizedTitle = normalize(title)
+      const normalizedArtist = normalize(DRAKE_ARTIST_NAME)
+
+      const track = results.find(candidate => {
+        return (
+          normalize(candidate.title) === normalizedTitle &&
+          normalize(candidate.artist) === normalizedArtist &&
+          isPlayableMusicTrack(candidate)
+        )
+      })
+
+      // Print Deezer candidates when no exact playable match is found.
+      if (!track) {
+        console.log(
+          '  SKIPPED: No exact Drake match with a playable preview',
+        )
+        console.log('  Deezer results:')
+
+        if (results.length === 0) {
+          console.log('    No results returned.')
+        }
+
+        results.forEach((candidate, index) => {
+          const titleMatches =
+            normalize(candidate.title) === normalizedTitle
+
+          const artistMatches =
+            normalize(candidate.artist) === normalizedArtist
+
+          const playable = isPlayableMusicTrack(candidate)
+
+          console.log(
+            `    ${index + 1}. ${candidate.title} — ${candidate.artist}` +
+              ` | title match: ${titleMatches ? 'YES' : 'NO'}` +
+              ` | artist match: ${artistMatches ? 'YES' : 'NO'}` +
+              ` | preview: ${candidate.previewUrl ? 'YES' : 'NO'}` +
+              ` | playable: ${playable ? 'YES' : 'NO'}` +
+              ` | ID: ${candidate.providerId ?? candidate.id}`,
+          )
+        })
+
+        skipped++
+        continue
+      }
+
       const providerSongId = String(
         track.providerId ?? track.id,
       )
 
+      if (!providerSongId || providerSongId === 'undefined') {
+        console.log('  SKIPPED: Missing provider track ID')
+        skipped++
+        continue
+      }
+
       console.log(
-        `Processing: ${track.title} — ${track.artist}`,
+        `  MATCHED: ${track.title} — ${track.artist}` +
+          ` | preview: ${track.previewUrl ? 'YES' : 'NO'}` +
+          ` | ID: ${providerSongId}`,
       )
 
-      const existingSong =
-        await findExistingSong(providerSongId)
+      const existingSong = await findExistingSong(providerSongId)
 
       if (existingSong) {
         const data = existingSong.data()
 
-        /*
-         * Update only the Deezer artist identifier.
-         * Existing era, genre, theme and other metadata
-         * remain untouched.
-         */
+        // Don't associate a provider ID with a different song.
         if (
-          data.deezerArtistId !== DRAKE_ARTIST_ID
+          normalize(String(data.title ?? '')) !== normalize(track.title) ||
+          normalize(String(data.artist ?? '')) !==
+            normalize(DRAKE_ARTIST_NAME)
         ) {
-          await existingSong.ref.update({
-            deezerArtistId: DRAKE_ARTIST_ID,
-          })
-
           console.log(
-            `  UPDATED: linked existing song to Drake's Deezer ID`,
+            '  SKIPPED: Provider ID exists with different saved metadata',
           )
-          updated++
-        } else {
-          console.log('  EXISTS: already seeded')
-          existing++
+          skipped++
+          continue
         }
 
+        const needsUpdate =
+          data.artistKey !== 'drake' ||
+          String(data.deezerArtistId ?? '') !== DRAKE_ARTIST_ID
+
+        if (!needsUpdate) {
+          console.log('  EXISTS: Already linked to Drake catalogue')
+          existing++
+          continue
+        }
+
+        await existingSong.ref.update({
+          artistKey: 'drake',
+          deezerArtistId: DRAKE_ARTIST_ID,
+        })
+
+        console.log('  UPDATED: Linked existing song to Drake catalogue')
+        updated++
         continue
       }
 
-      const baseId = `drake_${slugify(track.title)}_${slugify(track.artist)}`
+      const baseId = `drake_${slugify(track.title)}`
       let documentId = baseId
 
-      /*
-       * Avoid overwriting another document if two different
-       * provider tracks produce the same slug.
-       */
       const slugDocument = await db
         .collection('songs')
         .doc(documentId)
@@ -198,46 +168,37 @@ async function seedDrake() {
         documentId = `${baseId}_${providerSongId}`
       }
 
-      const releaseYear = track.releaseYear ?? null
+      const year = track.releaseYear ?? null
 
-      await db
-        .collection('songs')
-        .doc(documentId)
-        .set({
-          title: track.title,
-          artist: DRAKE_ARTIST_NAME,
-          album: track.album ?? null,
-          year: releaseYear,
-          era: releaseYear
-            ? `${Math.floor(releaseYear / 10) * 10}s`
-            : null,
-          genres: Array.isArray(track.genres)
-            ? track.genres
-            : [],
-          themes: [],
-          provider: 'deezer',
-          providerSongId,
-          deezerArtistId: DRAKE_ARTIST_ID,
-          createdAt: new Date(),
-        })
+      await db.collection('songs').doc(documentId).set({
+        title: track.title,
+        artist: DRAKE_ARTIST_NAME,
+        artistKey: 'drake',
+        album: track.album ?? null,
+        year,
+        era: year ? `${Math.floor(year / 10) * 10}s` : null,
+        genres: Array.isArray(track.genres) ? track.genres : [],
+        themes: [],
+        provider: 'deezer',
+        providerSongId,
+        deezerArtistId: DRAKE_ARTIST_ID,
+        createdAt: new Date(),
+      })
 
-      console.log('  ADDED')
+      console.log(`  ADDED: ${track.title}`)
       added++
     } catch (error) {
-      console.error(
-        `  ERROR: ${track.title} — ${track.artist}`,
-        error,
-      )
+      console.error(`  ERROR: ${title}`, error)
       errors++
     }
   }
 
   console.log('\n================================')
   console.log('DRAKE SEED SUMMARY')
-  console.log(`Catalogue tracks: ${uniqueTracks.length}`)
+  console.log(`Candidates: ${drakeSongs.length}`)
   console.log(`Added: ${added}`)
   console.log(`Updated: ${updated}`)
-  console.log(`Already existed: ${existing}`)
+  console.log(`Already linked: ${existing}`)
   console.log(`Skipped: ${skipped}`)
   console.log(`Errors: ${errors}`)
   console.log('================================\n')
