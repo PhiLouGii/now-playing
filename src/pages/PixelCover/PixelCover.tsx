@@ -12,7 +12,6 @@ import {
   useCallback,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react'
 
@@ -48,8 +47,15 @@ type RoundResult = {
    GAME SETTINGS
    ========================================================= */
 
-const REVEAL_STAGES = [0.125, 0.25, 0.375, 0] as const
-const STAGE_POINTS = [1000, 700, 400, 200]
+const REVEAL_STAGES = [
+  { label: '144p', blur: 18 },
+  { label: '240p', blur: 12 },
+  { label: '360p', blur: 7 },
+  { label: '720p', blur: 2 },
+  { label: '1080p', blur: 0 },
+] as const
+
+const STAGE_POINTS = [1000, 800, 600, 400, 200]
 const TOTAL_ROUNDS = 10
 
 /* =========================================================
@@ -80,79 +86,45 @@ function shuffleAlbums(albums: PixelCoverAlbum[]) {
    PIXELATED ARTWORK
    ========================================================= */
 
+/* =========================================================
+   PROGRESSIVE-QUALITY ALBUM ARTWORK
+   ========================================================= */
+
 type PixelatedArtworkProps = {
   album: PixelCoverAlbum
-  resolution: number
+  resolution: (typeof REVEAL_STAGES)[number]
 }
 
 function PixelatedArtwork({
   album,
   resolution,
 }: PixelatedArtworkProps) {
-  const wrapperRef = useRef<HTMLDivElement>(null)
-  const [displaySize, setDisplaySize] = useState(320)
   const [imageLoaded, setImageLoaded] = useState(false)
   const [imageFailed, setImageFailed] = useState(false)
 
   useEffect(() => {
-    const wrapper = wrapperRef.current
-
-    if (!wrapper) return
-
-    const updateSize = () => {
-      const width = wrapper.getBoundingClientRect().width
-
-      if (width > 0) {
-        setDisplaySize(width)
-      }
-    }
-
-    updateSize()
-
-    const observer = new ResizeObserver(updateSize)
-    observer.observe(wrapper)
-
-    return () => observer.disconnect()
-  }, [])
-
-  useEffect(() => {
     setImageLoaded(false)
     setImageFailed(false)
-  }, [album.id, resolution])
-
-  const pixelSize = resolution === 0 ? displaySize : resolution
-  const scale = resolution === 0 ? 1 : displaySize / resolution
+  }, [album.id])
 
   return (
     <div
-      ref={wrapperRef}
       className="pixel-artwork"
-      aria-label={
-        resolution === 0
-          ? 'Fully revealed album cover'
-          : `Album cover revealed at ${resolution} by ${resolution} pixels`
-      }
+      aria-label={`Album cover at ${resolution.label} quality`}
     >
       {!imageFailed ? (
         <img
-          key={`${album.id}-${resolution}`}
+          key={album.id}
           src={album.coverUrl}
-          alt={
-            resolution === 0
-              ? `Album cover for ${album.title}`
-              : 'Pixelated album cover'
-          }
+          alt={`Album cover at ${resolution.label} quality`}
           className={[
             'pixel-artwork__image',
-            resolution === 0
-              ? 'pixel-artwork__image--full'
-              : 'pixel-artwork__image--pixelated',
             imageLoaded ? 'pixel-artwork__image--loaded' : '',
           ].join(' ')}
           style={{
-            width: pixelSize,
-            height: pixelSize,
-            transform: `scale(${scale})`,
+            filter: `blur(${resolution.blur}px)`,
+            transform: resolution.blur > 0 ? 'scale(1.08)' : 'scale(1)',
+            opacity: imageLoaded ? 1 : 0,
           }}
           onLoad={() => setImageLoaded(true)}
           onError={() => setImageFailed(true)}
@@ -275,10 +247,7 @@ function PixelCover() {
 
   const currentResolution = REVEAL_STAGES[revealStage]
 
-  const stageLabel =
-    currentResolution === 0
-      ? 'Full cover'
-      : `${currentResolution} × ${currentResolution}`
+const stageLabel = currentResolution.label
 
   /* =========================================================
      SUBMIT GUESS
@@ -626,28 +595,24 @@ function PixelCover() {
             />
 
             <div className="pixel-cover-stage-list">
-              {REVEAL_STAGES.map((resolution, index) => (
-                <div
-                  key={resolution}
-                  className={[
-                    'pixel-cover-stage-item',
-                    index <= revealStage
-                      ? 'pixel-cover-stage-item--active'
-                      : '',
-                    index === revealStage
-                      ? 'pixel-cover-stage-item--current'
-                      : '',
-                  ].join(' ')}
-                >
-                  <span className="pixel-cover-stage-item__dot" />
-                  <span>
-                    {resolution === 0
-                      ? 'Full cover'
-                      : `${resolution} × ${resolution}`}
-                  </span>
-                </div>
-              ))}
-            </div>
+  {REVEAL_STAGES.map((stage, index) => (
+    <div
+      key={stage.label}
+      className={[
+        'pixel-cover-stage-item',
+        index <= revealStage
+          ? 'pixel-cover-stage-item--active'
+          : '',
+        index === revealStage
+          ? 'pixel-cover-stage-item--current'
+          : '',
+      ].join(' ')}
+    >
+      <span className="pixel-cover-stage-item__dot" />
+      <span>{stage.label}</span>
+    </div>
+  ))}
+</div>
           </div>
 
           <div className="pixel-cover-answer-column">
@@ -811,27 +776,21 @@ function PixelCover() {
         {/* SCORING GUIDE */}
 
         <footer className="pixel-cover-scoring">
-          <p className="pixel-cover-scoring__title">HOW SCORING WORKS</p>
+  <p className="pixel-cover-scoring__title">
+    HOW SCORING WORKS
+  </p>
 
-          <div className="pixel-cover-scoring__items">
-            <div>
-              <span>2 × 2</span>
-              <strong>1,000 pts</strong>
-            </div>
-            <div>
-              <span>4 × 4</span>
-              <strong>700 pts</strong>
-            </div>
-            <div>
-              <span>8 × 8</span>
-              <strong>400 pts</strong>
-            </div>
-            <div>
-              <span>Full cover</span>
-              <strong>200 pts</strong>
-            </div>
-          </div>
-        </footer>
+  <div className="pixel-cover-scoring__items">
+    {REVEAL_STAGES.map((stage, index) => (
+      <div key={stage.label}>
+        <span>{stage.label}</span>
+        <strong>
+          {STAGE_POINTS[index].toLocaleString()} pts
+        </strong>
+      </div>
+    ))}
+  </div>
+</footer>
       </div>
     </main>
   )
