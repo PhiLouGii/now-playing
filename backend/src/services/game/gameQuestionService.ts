@@ -1,3 +1,4 @@
+
 import type {
   QuestionDifficulty,
   QuestionType,
@@ -72,10 +73,6 @@ function normalizeArtistName(
  * =========================================================
  * CATALOGUE CACHES
  * =========================================================
- *
- * Cache promises as well as results. This prevents multiple
- * questions requested at the same time from loading the
- * same catalogue repeatedly.
  */
 
 const artistCatalogueCache =
@@ -85,6 +82,12 @@ const artistCatalogueCache =
   >()
 
 const themeCatalogueCache =
+  new Map<
+    string,
+    Promise<MusicTrack[]>
+  >()
+
+const drakeCatalogueCache =
   new Map<
     string,
     Promise<MusicTrack[]>
@@ -107,8 +110,11 @@ function cloneTracks(
 
 /*
  * =========================================================
- * ARTIST CATALOGUE
+ * GENERAL ARTIST CATALOGUE
  * =========================================================
+ *
+ * This remains the existing Deezer catalogue for all
+ * artists other than Drake.
  */
 
 async function getArtistCatalogue(
@@ -488,16 +494,6 @@ type ThemeSongDocument = {
 }
 
 
-/*
- * Load the Firestore theme catalogue once, hydrate its
- * tracks through Deezer, and cache the resulting promise.
- *
- * Exclusions are deliberately applied AFTER loading the
- * catalogue. That means one cached catalogue can serve all
- * ten questions in a round without removing tracks from
- * the cache itself.
- */
-
 async function loadThemeCatalogue(
   theme: string,
 ): Promise<MusicTrack[]> {
@@ -523,7 +519,6 @@ async function loadThemeCatalogue(
     snapshot.docs
       .map(
         doc => ({
-          id: doc.id,
           ...doc.data() as ThemeSongDocument,
         }),
       )
@@ -626,10 +621,6 @@ async function getEligibleThemeTracks(
       cataloguePromise,
     )
 
-    /*
-     * Remove failed catalogue loads from the cache so
-     * a later request can retry.
-     */
     cataloguePromise.catch(() => {
       if (
         themeCatalogueCache.get(theme) ===
@@ -656,6 +647,179 @@ async function getEligibleThemeTracks(
           track.providerId ?? '',
         ),
       ),
+  )
+}
+
+
+/*
+ * =========================================================
+ * DRAKE FIRESTORE CATALOGUE
+ * =========================================================
+ *
+ * Drake uses only the curated songs stored in Firestore.
+ * Deezer supplies the playable previews and track metadata.
+ *
+ * This does not fall back to the full Deezer discography.
+ */
+
+type DrakeSongDocument = {
+  title?: string
+  artist?: string
+  provider?: string
+  providerSongId?: string
+  artistKey?: string
+}
+
+
+async function loadDrakeCatalogue(): Promise<MusicTrack[]> {
+  const snapshot =
+    await db
+      .collection('songs')
+      .where(
+        'artistKey',
+        '==',
+        'drake',
+      )
+      .get()
+
+  if (snapshot.empty) {
+    console.warn(
+      'No curated Drake songs found in Firestore. Run the Drake seeder first.',
+    )
+
+    return []
+  }
+
+  const documents =
+    snapshot.docs
+      .map(
+        doc => ({
+          ...doc.data() as DrakeSongDocument,
+        }),
+      )
+      .filter(
+        song =>
+          song.provider === 'deezer' &&
+          Boolean(song.providerSongId) &&
+          Boolean(song.title) &&
+          normalizeArtistName(
+            song.artist ?? '',
+          ) === 'drake',
+      )
+
+  console.log(
+    `Found ${documents.length} curated Drake songs in Firestore. Hydrating previews.`,
+  )
+
+  const hydratedTracks =
+    await Promise.all(
+      documents.map(
+        async song => {
+          try {
+            const track =
+              await deezerMusicProvider.getTrackById(
+                String(
+                  song.providerSongId,
+                ),
+              )
+
+            if (
+              !track ||
+              !isPlayableMusicTrack(track)
+            ) {
+              return null
+            }
+
+            // Confirm the Deezer ID resolves to the expected song.
+            if (
+              normalizeArtistName(
+                track.title,
+              ) !==
+                normalizeArtistName(
+                  song.title ?? '',
+                ) ||
+              normalizeArtistName(
+                track.artist,
+              ) !== 'drake'
+            ) {
+              console.warn(
+                `Skipped mismatched Drake record: "${song.title}" (${song.providerSongId}).`,
+              )
+
+              return null
+            }
+
+            return track
+          } catch (error) {
+            console.warn(
+              `Could not load Drake song "${song.title}" (${song.providerSongId}).`,
+              error,
+            )
+
+            return null
+          }
+        },
+      ),
+    )
+
+  const seen =
+    new Set<string>()
+
+  const playableTracks: MusicTrack[] = []
+
+  for (const track of hydratedTracks) {
+    if (!track) {
+      continue
+    }
+
+    const key =
+      `${normalizeArtistName(
+        track.title,
+      )}::${normalizeArtistName(
+        track.artist,
+      )}`
+
+    if (seen.has(key)) {
+      continue
+    }
+
+    seen.add(key)
+    playableTracks.push(track)
+  }
+
+  console.log(
+    `Drake Firestore catalogue loaded: ${playableTracks.length} playable unique tracks.`,
+  )
+
+  return playableTracks
+}
+
+
+async function getDrakeCatalogue(): Promise<MusicTrack[]> {
+  let cataloguePromise =
+    drakeCatalogueCache.get('drake')
+
+  if (!cataloguePromise) {
+    cataloguePromise =
+      loadDrakeCatalogue()
+
+    drakeCatalogueCache.set(
+      'drake',
+      cataloguePromise,
+    )
+
+    cataloguePromise.catch(() => {
+      if (
+        drakeCatalogueCache.get('drake') ===
+        cataloguePromise
+      ) {
+        drakeCatalogueCache.delete('drake')
+      }
+    })
+  }
+
+  return cloneTracks(
+    await cataloguePromise,
   )
 }
 
@@ -692,7 +856,9 @@ async function getEligibleArtistTracks(
     Number(artistId)
 
   if (
-    !Number.isInteger(numericArtistId) ||
+    !Number.isInteger(
+      numericArtistId,
+    ) ||
     numericArtistId <= 0
   ) {
     console.warn(
@@ -703,15 +869,26 @@ async function getEligibleArtistTracks(
   }
 
   try {
-    console.log(
-      `Loading Deezer artist "${artist}" using ID ${artistId}.`,
-    )
+    let tracks: MusicTrack[]
 
-    const tracks =
-      await getArtistCatalogue(
-        artist,
-        artistId,
+    if (normalizedArtist === 'drake') {
+      console.log(
+        'Loading Drake from the curated Firestore catalogue.',
       )
+
+      tracks =
+        await getDrakeCatalogue()
+    } else {
+      console.log(
+        `Loading Deezer artist "${artist}" using ID ${artistId}.`,
+      )
+
+      tracks =
+        await getArtistCatalogue(
+          artist,
+          artistId,
+        )
+    }
 
     const artistTracks =
       tracks
@@ -752,13 +929,13 @@ async function getEligibleArtistTracks(
       )
 
     console.log(
-      `Found ${uniqueTracks.length} playable tracks for artist "${artist}" (ID ${artistId}).`,
+      `Found ${uniqueTracks.length} playable tracks for artist "${artist}".`,
     )
 
     return uniqueTracks
   } catch (error) {
     console.error(
-      `Failed to fetch tracks for artist "${artist}" (ID ${artistId}):`,
+      `Failed to fetch tracks for artist "${artist}":`,
       error,
     )
 

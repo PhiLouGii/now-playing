@@ -11,6 +11,7 @@
     "seed:genre": "tsx src/scripts/seedGenre.ts",
     "seed:loading-facts": "tsx src/scripts/seedLoadingFacts.ts",
     "seed:theme": "tsx src/scripts/seedTheme.ts",
+    "seed:drake": "tsx src/scripts/seedDrake.ts",
     "start": "node dist/server.js"
   },
   "keywords": [],
