@@ -400,6 +400,63 @@
   color: #786d82;
 }
 
+
+/* Wrong answer */
+.pixel-cover-input-wrapper--error {
+  border-color: #dc2626;
+  background: #fef2f2;
+  box-shadow: 0 0 0 3px rgb(220 38 38 / 10%);
+}
+
+.pixel-cover-input-wrapper--error input {
+  background: transparent;
+}
+
+.pixel-cover-input-wrapper--error svg {
+  color: #dc2626;
+}
+
+/* Correct answer */
+.pixel-cover-input-wrapper--success {
+  border-color: #16a34a;
+  background: #f0fdf4;
+  box-shadow: 0 0 0 3px rgb(22 163 74 / 10%);
+}
+
+.pixel-cover-input-wrapper--success input {
+  background: transparent;
+}
+
+.pixel-cover-input-wrapper--success svg {
+  color: #16a34a;
+}
+
+/* Feedback message layout */
+.pixel-cover-feedback {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.pixel-cover-feedback--correct {
+  color: #15803d;
+}
+
+.pixel-cover-feedback--incorrect {
+  color: #dc2626;
+}
+
+.pixel-cover-feedback--revealed {
+  color: #6b5b7b;
+}
+
+/* Correct answer panel */
+.pixel-cover-answer-reveal--correct {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+
 /* =========================================================
    SUGGESTIONS
    ========================================================= */
@@ -527,6 +584,10 @@
 
 .pixel-cover-feedback--incorrect {
   color: #a56d75;
+}
+
+.pixel-cover-feedback--error {
+  color: #dc2626;
 }
 
 .pixel-cover-answer-reveal {

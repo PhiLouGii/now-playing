@@ -1,7 +1,10 @@
+
 import {
   ArrowLeft,
   ArrowRight,
   Check,
+  CircleCheck,
+  CircleX,
   Eye,
   LoaderCircle,
   RotateCcw,
@@ -81,10 +84,6 @@ function shuffleAlbums(albums: PixelCoverAlbum[]) {
 
   return shuffled
 }
-
-/* =========================================================
-   PIXELATED ARTWORK
-   ========================================================= */
 
 /* =========================================================
    PROGRESSIVE-QUALITY ALBUM ARTWORK
@@ -168,6 +167,7 @@ function PixelCover() {
 
   const [answered, setAnswered] = useState(false)
   const [revealedAnswer, setRevealedAnswer] = useState(false)
+  const [wrongGuess, setWrongGuess] = useState(false)
   const [feedback, setFeedback] = useState('')
   const [gameFinished, setGameFinished] = useState(false)
 
@@ -202,6 +202,7 @@ function PixelCover() {
         setAlbums(data.albums)
 
         const shuffled = shuffleAlbums(data.albums)
+
         setRoundAlbums(
           shuffled.slice(0, Math.min(TOTAL_ROUNDS, shuffled.length)),
         )
@@ -227,34 +228,29 @@ function PixelCover() {
     }
   }, [])
 
- 
   /* =========================================================
      ALBUM TITLE & ARTIST SUGGESTIONS
      ========================================================= */
 
-  
-const suggestions = useMemo(() => {
-  const query = normalizeText(guess)
+  const suggestions = useMemo(() => {
+    const query = normalizeText(guess)
 
-  if (!query || answered || revealedAnswer) return []
+    if (!query || answered || revealedAnswer || wrongGuess) return []
 
-  return albums
-    .filter(album =>
-      normalizeText(album.title).includes(query) ||
-      normalizeText(album.artist).includes(query),
-    )
-    .slice(0, 6)
-}, [albums, guess, answered, revealedAnswer])
-
-
+    return albums
+      .filter(album =>
+        normalizeText(album.title).includes(query) ||
+        normalizeText(album.artist).includes(query),
+      )
+      .slice(0, 6)
+  }, [albums, guess, answered, revealedAnswer, wrongGuess])
 
   /* =========================================================
      CURRENT REVEAL STAGE
      ========================================================= */
 
   const currentResolution = REVEAL_STAGES[revealStage]
-
-const stageLabel = currentResolution.label
+  const stageLabel = currentResolution.label
 
   /* =========================================================
      SUBMIT GUESS
@@ -267,6 +263,7 @@ const stageLabel = currentResolution.label
       const cleanedGuess = normalizeText(value)
 
       if (!cleanedGuess) {
+        setWrongGuess(false)
         setFeedback('Type an album title first.')
         return
       }
@@ -288,12 +285,14 @@ const stageLabel = currentResolution.label
         ])
 
         setGuess(currentAlbum.title)
+        setWrongGuess(false)
         setAnswered(true)
-        setFeedback(`Correct! +${earnedPoints} points`)
+        setFeedback(`Correct! You earned ${earnedPoints.toLocaleString()} points.`)
         return
       }
 
-      setFeedback('Not quite. Try another title.')
+      setWrongGuess(true)
+      setFeedback('Not quite! That is not the album. Try another guess.')
     },
     [guess, currentAlbum, answered, revealedAnswer, revealStage],
   )
@@ -307,12 +306,14 @@ const stageLabel = currentResolution.label
 
     if (revealStage < REVEAL_STAGES.length - 1) {
       setRevealStage(previous => previous + 1)
+      setWrongGuess(false)
       setFeedback('')
       setGuess('')
       return
     }
 
     setRevealedAnswer(true)
+    setWrongGuess(false)
 
     setRoundResults(previous => [
       ...previous,
@@ -323,7 +324,7 @@ const stageLabel = currentResolution.label
       },
     ])
 
-    setFeedback(`The album was ${currentAlbum.title}.`)
+    setFeedback(`The answer was ${currentAlbum.title}.`)
     setGuess('')
   }
 
@@ -345,6 +346,7 @@ const stageLabel = currentResolution.label
     setRoundPoints(0)
     setAnswered(false)
     setRevealedAnswer(false)
+    setWrongGuess(false)
     setFeedback('')
   }
 
@@ -367,6 +369,7 @@ const stageLabel = currentResolution.label
     setRoundResults([])
     setAnswered(false)
     setRevealedAnswer(false)
+    setWrongGuess(false)
     setFeedback('')
     setGameFinished(false)
   }
@@ -522,6 +525,14 @@ const stageLabel = currentResolution.label
   const canSubmit = guess.trim().length > 0 && !answered && !revealedAnswer
   const canContinue = answered || revealedAnswer
 
+  const feedbackType = answered
+    ? 'correct'
+    : wrongGuess
+      ? 'incorrect'
+      : revealedAnswer
+        ? 'revealed'
+        : ''
+
   return (
     <main className="pixel-cover-page">
       <div className="pixel-cover-container">
@@ -602,24 +613,24 @@ const stageLabel = currentResolution.label
             />
 
             <div className="pixel-cover-stage-list">
-  {REVEAL_STAGES.map((stage, index) => (
-    <div
-      key={stage.label}
-      className={[
-        'pixel-cover-stage-item',
-        index <= revealStage
-          ? 'pixel-cover-stage-item--active'
-          : '',
-        index === revealStage
-          ? 'pixel-cover-stage-item--current'
-          : '',
-      ].join(' ')}
-    >
-      <span className="pixel-cover-stage-item__dot" />
-      <span>{stage.label}</span>
-    </div>
-  ))}
-</div>
+              {REVEAL_STAGES.map((stage, index) => (
+                <div
+                  key={stage.label}
+                  className={[
+                    'pixel-cover-stage-item',
+                    index <= revealStage
+                      ? 'pixel-cover-stage-item--active'
+                      : '',
+                    index === revealStage
+                      ? 'pixel-cover-stage-item--current'
+                      : '',
+                  ].join(' ')}
+                >
+                  <span className="pixel-cover-stage-item__dot" />
+                  <span>{stage.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="pixel-cover-answer-column">
@@ -645,8 +656,20 @@ const stageLabel = currentResolution.label
                 ALBUM TITLE
               </label>
 
-              <div className="pixel-cover-input-wrapper">
-                <Search size={18} />
+              <div
+                className={[
+                  'pixel-cover-input-wrapper',
+                  wrongGuess ? 'pixel-cover-input-wrapper--error' : '',
+                  answered ? 'pixel-cover-input-wrapper--success' : '',
+                ].filter(Boolean).join(' ')}
+              >
+                {wrongGuess ? (
+                  <CircleX size={18} aria-hidden="true" />
+                ) : answered ? (
+                  <CircleCheck size={18} aria-hidden="true" />
+                ) : (
+                  <Search size={18} aria-hidden="true" />
+                )}
 
                 <input
                   id="pixel-cover-guess"
@@ -654,11 +677,14 @@ const stageLabel = currentResolution.label
                   value={guess}
                   onChange={event => {
                     setGuess(event.target.value)
+                    setWrongGuess(false)
                     setFeedback('')
                   }}
                   placeholder="Start typing an album…"
                   autoComplete="off"
                   disabled={answered || revealedAnswer}
+                  aria-invalid={wrongGuess}
+                  aria-describedby={feedback ? 'pixel-cover-feedback' : undefined}
                 />
               </div>
 
@@ -702,26 +728,40 @@ const stageLabel = currentResolution.label
             </form>
 
             {feedback && (
-              <p
+              <div
+                id="pixel-cover-feedback"
                 className={[
                   'pixel-cover-feedback',
-                  answered ? 'pixel-cover-feedback--correct' : '',
-                  !answered &&
-                  !revealedAnswer &&
-                  feedback.startsWith('Not quite')
-                    ? 'pixel-cover-feedback--incorrect'
-                    : '',
-                ].join(' ')}
+                  feedbackType ? `pixel-cover-feedback--${feedbackType}` : '',
+                ].filter(Boolean).join(' ')}
                 role="status"
+                aria-live="polite"
               >
-                {feedback}
-              </p>
+                {answered ? (
+                  <CircleCheck size={19} aria-hidden="true" />
+                ) : wrongGuess ? (
+                  <CircleX size={19} aria-hidden="true" />
+                ) : revealedAnswer ? (
+                  <Eye size={19} aria-hidden="true" />
+                ) : null}
+
+                <span>{feedback}</span>
+              </div>
             )}
 
             {(answered || revealedAnswer) && (
-              <div className="pixel-cover-answer-reveal">
+              <div
+                className={[
+                  'pixel-cover-answer-reveal',
+                  answered ? 'pixel-cover-answer-reveal--correct' : '',
+                ].filter(Boolean).join(' ')}
+              >
                 <div className="pixel-cover-answer-reveal__check">
-                  <Check size={18} />
+                  {answered ? (
+                    <Check size={18} />
+                  ) : (
+                    <Eye size={18} />
+                  )}
                 </div>
 
                 <div>
@@ -775,7 +815,9 @@ const stageLabel = currentResolution.label
                 ? 'Nice one. Ready for the next cover?'
                 : revealedAnswer
                   ? 'Keep going — there are more albums to identify.'
-                  : 'Stuck? Reveal another stage, but remember: fewer reveals mean more points.'}
+                  : wrongGuess
+                    ? 'No points lost. Correct answers still earn points based on the reveal stage.'
+                    : 'Stuck? Reveal another stage, but remember: fewer reveals mean more points.'}
             </p>
           </div>
         </section>
@@ -783,21 +825,21 @@ const stageLabel = currentResolution.label
         {/* SCORING GUIDE */}
 
         <footer className="pixel-cover-scoring">
-  <p className="pixel-cover-scoring__title">
-    HOW SCORING WORKS
-  </p>
+          <p className="pixel-cover-scoring__title">
+            HOW SCORING WORKS
+          </p>
 
-  <div className="pixel-cover-scoring__items">
-    {REVEAL_STAGES.map((stage, index) => (
-      <div key={stage.label}>
-        <span>{stage.label}</span>
-        <strong>
-          {STAGE_POINTS[index].toLocaleString()} pts
-        </strong>
-      </div>
-    ))}
-  </div>
-</footer>
+          <div className="pixel-cover-scoring__items">
+            {REVEAL_STAGES.map((stage, index) => (
+              <div key={stage.label}>
+                <span>{stage.label}</span>
+                <strong>
+                  {STAGE_POINTS[index].toLocaleString()} pts
+                </strong>
+              </div>
+            ))}
+          </div>
+        </footer>
       </div>
     </main>
   )
