@@ -343,13 +343,35 @@ export async function getPixelCoverAlbums(
     }
 
 
-    albumPoolCache.set(cacheKey, results)
+    // Cache and return the curated albums immediately.
+albumPoolCache.set(cacheKey, results)
 
-    res.json({
-      albums: results,
-      requested: CURATED_ALBUMS.length,
-      found: results.length,
-    })
+res.json({
+  albums: results,
+  requested: CURATED_ALBUMS.length,
+  found: results.length,
+})
+
+// Discover more albums in the background so the game
+// doesn't have to wait for every artist before loading.
+void (async () => {
+  for (const artistName of DISCOVERY_ARTISTS) {
+    const discoveredAlbums = await findArtistAlbums(artistName)
+
+    for (const album of discoveredAlbums) {
+      if (!seen.has(album.id)) {
+        seen.add(album.id)
+        results.push(album)
+      }
+    }
+  }
+
+  console.log(
+    `Pixel Cover discovery complete: ${results.length} albums loaded.`,
+  )
+})().catch(error => {
+  console.error('Pixel Cover artist discovery failed:', error)
+})
   } catch (error) {
     console.error('Pixel Cover album pool failed:', error)
     res.status(500).json({
