@@ -135,14 +135,10 @@ export const CATEGORY_ARTISTS = {
     'Little Mix',
     'Fifth Harmony',
     'The Saturdays',
+    'G.R.L.',
 
-    // K-Pop girl groups
-    'BLACKPINK',
-    'TWICE',
-    'Red Velvet',
-    'NewJeans',
-    'LE SSERAFIM',
-    'aespa',
+    // 2020s
+    'KATSEYE',
   ],
 
   // ─────────────────────────────
@@ -152,29 +148,31 @@ export const CATEGORY_ARTISTS = {
   'boy-bands': [
     // 90s
     'Backstreet Boys',
-    'NSYNC',
+    '*NSYNC',
     'Boyz II Men',
     'Westlife',
     '98 Degrees',
+    'Take That',
+    'All-4-One',
+    '5ive',
+    'New Kids on the Block',
 
     // 2000s
     'Jonas Brothers',
+    'B2K',
+    'Blue',
+    'O-Town',
 
     // 2010s
     'One Direction',
     '5 Seconds of Summer',
     'Why Don’t We',
     'The Wanted',
-
-    // K-Pop / newer
-    'BTS',
-    'EXO',
-    'GOT7',
-    'Stray Kids',
-    'SEVENTEEN',
-    'NCT',
-    'TXT',
-    'ENHYPEN',
+    'Big Time Rush',
+    'PRETTYMUCH',
+    'The Vamps',
+    'Mindless Behaviour',
+    'New District',
   ],
 
   // ─────────────────────────────
