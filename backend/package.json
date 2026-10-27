@@ -12,6 +12,7 @@
     "seed:loading-facts": "tsx src/scripts/seedLoadingFacts.ts",
     "seed:theme": "tsx src/scripts/seedTheme.ts",
     "seed:drake": "tsx src/scripts/seedDrake.ts",
+    "seed:chris-brown": "tsx src/scripts/seedChrisBrown.ts",
     "start": "node dist/server.js"
   },
   "keywords": [],

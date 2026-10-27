@@ -43,28 +43,14 @@ import {
  * =========================================================
  */
 
-function normalizeArtistName(
-  value: string,
-): string {
+function normalizeArtistName(value: string): string {
   return value
     .normalize('NFD')
-    .replace(
-      /[\u0300-\u036f]/g,
-      '',
-    )
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
-    .replace(
-      /[()[\]{}'’"`]/g,
-      ' ',
-    )
-    .replace(
-      /[^a-z0-9]+/g,
-      ' ',
-    )
-    .replace(
-      /\s+/g,
-      ' ',
-    )
+    .replace(/[()[\]{}'’"`]/g, ' ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
     .trim()
 }
 
@@ -76,35 +62,43 @@ function normalizeArtistName(
  */
 
 const artistCatalogueCache =
-  new Map<
-    string,
-    Promise<MusicTrack[]>
-  >()
+  new Map<string, Promise<MusicTrack[]>>()
 
 const themeCatalogueCache =
-  new Map<
-    string,
-    Promise<MusicTrack[]>
-  >()
+  new Map<string, Promise<MusicTrack[]>>()
 
-const drakeCatalogueCache =
-  new Map<
-    string,
-    Promise<MusicTrack[]>
-  >()
+const curatedArtistCatalogueCache =
+  new Map<string, Promise<MusicTrack[]>>()
 
 
-function cloneTracks(
+function cloneTracks(tracks: MusicTrack[]): MusicTrack[] {
+  return tracks.map(track => ({
+    ...track,
+    genres: [...track.genres],
+  }))
+}
+
+
+function getTrackKey(track: MusicTrack): string {
+  return `${normalizeArtistName(track.title)}::${normalizeArtistName(track.artist)}`
+}
+
+
+function deduplicateTracks(
   tracks: MusicTrack[],
 ): MusicTrack[] {
-  return tracks.map(
-    track => ({
-      ...track,
-      genres: [
-        ...track.genres,
-      ],
-    }),
-  )
+  const seen = new Set<string>()
+
+  return tracks.filter(track => {
+    const key = getTrackKey(track)
+
+    if (seen.has(key)) {
+      return false
+    }
+
+    seen.add(key)
+    return true
+  })
 }
 
 
@@ -113,32 +107,23 @@ function cloneTracks(
  * GENERAL ARTIST CATALOGUE
  * =========================================================
  *
- * This remains the existing Deezer catalogue for all
- * artists other than Drake.
+ * Used for artists without a curated Firestore catalogue.
  */
 
 async function getArtistCatalogue(
   artist: string,
   artistId: string,
 ): Promise<MusicTrack[]> {
-  const cached =
-    artistCatalogueCache.get(
-      artistId,
-    )
+  const cached = artistCatalogueCache.get(artistId)
 
   if (cached) {
-    return cloneTracks(
-      await cached,
-    )
+    return cloneTracks(await cached)
   }
 
-  const numericArtistId =
-    Number(artistId)
+  const numericArtistId = Number(artistId)
 
   if (
-    !Number.isInteger(
-      numericArtistId,
-    ) ||
+    !Number.isInteger(numericArtistId) ||
     numericArtistId <= 0
   ) {
     console.warn(
@@ -149,9 +134,7 @@ async function getArtistCatalogue(
   }
 
   const normalizedArtist =
-    normalizeArtistName(
-      artist,
-    )
+    normalizeArtistName(artist)
 
   const cataloguePromise =
     (async (): Promise<MusicTrack[]> => {
@@ -160,18 +143,13 @@ async function getArtistCatalogue(
           artistId,
         )
 
-      tracks =
-        tracks.filter(
-          isPlayableMusicTrack,
-        )
+      tracks = tracks.filter(isPlayableMusicTrack)
 
       console.log(
         `Artist discography provided ${tracks.length} playable tracks for "${artist}".`,
       )
 
-      if (
-        tracks.length < 10
-      ) {
+      if (tracks.length < 10) {
         try {
           console.log(
             `Expanding artist catalogue for "${artist}".`,
@@ -192,16 +170,10 @@ async function getArtistCatalogue(
           ])
 
           const byId =
-            new Map<
-              string,
-              MusicTrack
-            >()
+            new Map<string, MusicTrack>()
 
           for (const track of tracks) {
-            byId.set(
-              track.id,
-              track,
-            )
+            byId.set(track.id, track)
           }
 
           for (const track of [
@@ -210,22 +182,15 @@ async function getArtistCatalogue(
           ]) {
             if (
               isPlayableMusicTrack(track) &&
-              normalizeArtistName(
-                track.artist,
-              ) === normalizedArtist &&
+              normalizeArtistName(track.artist) ===
+                normalizedArtist &&
               !byId.has(track.id)
             ) {
-              byId.set(
-                track.id,
-                track,
-              )
+              byId.set(track.id, track)
             }
           }
 
-          tracks =
-            Array.from(
-              byId.values(),
-            )
+          tracks = Array.from(byId.values())
 
           console.log(
             `Expanded artist catalogue to ${tracks.length} playable tracks for "${artist}".`,
@@ -238,35 +203,13 @@ async function getArtistCatalogue(
         }
       }
 
-      const artistTracks =
-        tracks.filter(
-          track =>
-            normalizeArtistName(
-              track.artist,
-            ) === normalizedArtist,
-        )
-
-      const seen =
-        new Set<string>()
-
-      return artistTracks.filter(
-        track => {
-          const key =
-            `${normalizeArtistName(
-              track.title,
-            )}::${normalizeArtistName(
-              track.artist,
-            )}`
-
-          if (seen.has(key)) {
-            return false
-          }
-
-          seen.add(key)
-
-          return true
-        },
+      const artistTracks = tracks.filter(
+        track =>
+          normalizeArtistName(track.artist) ===
+          normalizedArtist,
       )
+
+      return deduplicateTracks(artistTracks)
     })()
 
   artistCatalogueCache.set(
@@ -275,23 +218,15 @@ async function getArtistCatalogue(
   )
 
   try {
-    const tracks =
-      await cataloguePromise
+    const tracks = await cataloguePromise
 
     if (tracks.length === 0) {
-      artistCatalogueCache.delete(
-        artistId,
-      )
+      artistCatalogueCache.delete(artistId)
     }
 
-    return cloneTracks(
-      tracks,
-    )
+    return cloneTracks(tracks)
   } catch (error) {
-    artistCatalogueCache.delete(
-      artistId,
-    )
-
+    artistCatalogueCache.delete(artistId)
     throw error
   }
 }
@@ -323,9 +258,7 @@ async function enrichReleaseYear(
   track: MusicTrack,
 ): Promise<MusicTrack> {
   const releaseYear =
-    await getReliableReleaseYear(
-      track,
-    )
+    await getReliableReleaseYear(track)
 
   return {
     ...track,
@@ -346,11 +279,7 @@ async function getEligibleTracks(
   excludedTrackIds: string[] = [],
 ): Promise<MusicTrack[]> {
   const maxAttempts = 3
-
-  const excludedIds =
-    new Set(
-      excludedTrackIds,
-    )
+  const excludedIds = new Set(excludedTrackIds)
 
   for (
     let attempt = 1;
@@ -358,49 +287,35 @@ async function getEligibleTracks(
     attempt++
   ) {
     const discoveredTracks =
-      await discoverTracks(
-        20,
-        decade,
-      )
+      await discoverTracks(20, decade)
 
     let eligibleTracks =
       discoveredTracks
-        .filter(
-          isPlayableMusicTrack,
-        )
+        .filter(isPlayableMusicTrack)
         .filter(
           track =>
+            !excludedIds.has(track.id) &&
             !excludedIds.has(
-              track.id,
+              String(track.providerId ?? ''),
             ),
         )
 
-    if (
-      type !== 'guess-the-year'
-    ) {
+    if (type !== 'guess-the-year') {
       if (eligibleTracks.length > 0) {
         return eligibleTracks
       }
     } else {
-      eligibleTracks =
-        await Promise.all(
-          eligibleTracks.map(
-            hydrateTrack,
-          ),
-        )
+      eligibleTracks = await Promise.all(
+        eligibleTracks.map(hydrateTrack),
+      )
 
-      eligibleTracks =
-        await Promise.all(
-          eligibleTracks.map(
-            enrichReleaseYear,
-          ),
-        )
+      eligibleTracks = await Promise.all(
+        eligibleTracks.map(enrichReleaseYear),
+      )
 
-      eligibleTracks =
-        eligibleTracks.filter(
-          track =>
-            track.releaseYear !== undefined,
-        )
+      eligibleTracks = eligibleTracks.filter(
+        track => track.releaseYear !== undefined,
+      )
 
       if (eligibleTracks.length > 0) {
         return eligibleTracks
@@ -435,11 +350,7 @@ async function getEligibleCategoryTracks(
     )
   }
 
-  const excludedIds =
-    new Set(
-      excludedTrackIds,
-    )
-
+  const excludedIds = new Set(excludedTrackIds)
   const maxAttempts = 3
 
   for (
@@ -447,19 +358,23 @@ async function getEligibleCategoryTracks(
     attempt <= maxAttempts;
     attempt++
   ) {
-    const tracks =
-      await getCategoryTracks(
-        categoryId,
-        {
-          questionType: 'name-the-song',
-          limit: 40,
-          excludedTrackIds: excludedIds,
-        },
-      )
+    const tracks = await getCategoryTracks(
+      categoryId,
+      {
+        questionType: 'name-the-song',
+        limit: 40,
+        excludedTrackIds: excludedIds,
+      },
+    )
 
-    const playableTracks =
-      tracks.filter(
-        isPlayableMusicTrack,
+    const playableTracks = tracks
+      .filter(isPlayableMusicTrack)
+      .filter(
+        track =>
+          !excludedIds.has(track.id) &&
+          !excludedIds.has(
+            String(track.providerId ?? ''),
+          ),
       )
 
     if (playableTracks.length > 0) {
@@ -477,11 +392,11 @@ async function getEligibleCategoryTracks(
 
 /*
  * =========================================================
- * THEME CATALOGUE
+ * FIRESTORE SONG DOCUMENT
  * =========================================================
  */
 
-type ThemeSongDocument = {
+type CatalogueSongDocument = {
   title?: string
   artist?: string
   album?: string
@@ -491,21 +406,176 @@ type ThemeSongDocument = {
   themes?: string[]
   provider?: string
   providerSongId?: string
+  artistKey?: string
 }
 
+
+/*
+ * =========================================================
+ * SHARED FIRESTORE CATALOGUE LOADER
+ * =========================================================
+ *
+ * Used by curated artist catalogues.
+ *
+ * Firestore stores the selected tracks.
+ * Deezer supplies the actual playable track data.
+ *
+ * No artist discography fallback is performed here.
+ */
+
+async function loadCuratedArtistCatalogue(
+  artistKey: string,
+  expectedArtist: string,
+): Promise<MusicTrack[]> {
+  const snapshot = await db
+    .collection('songs')
+    .where('artistKey', '==', artistKey)
+    .get()
+
+  if (snapshot.empty) {
+    console.warn(
+      `No curated songs found for "${expectedArtist}". Run its seeder first.`,
+    )
+
+    return []
+  }
+
+  const documents = snapshot.docs
+    .map(doc => doc.data() as CatalogueSongDocument)
+    .filter(song => {
+      return (
+        song.artistKey === artistKey &&
+        song.provider === 'deezer' &&
+        Boolean(song.providerSongId) &&
+        Boolean(song.title) &&
+        normalizeArtistName(song.artist ?? '') ===
+          normalizeArtistName(expectedArtist)
+      )
+    })
+
+  console.log(
+    `Found ${documents.length} curated ${expectedArtist} songs in Firestore. Hydrating previews.`,
+  )
+
+  const hydratedTracks = await Promise.all(
+    documents.map(async song => {
+      try {
+        const track =
+          await deezerMusicProvider.getTrackById(
+            String(song.providerSongId),
+          )
+
+        if (!track) {
+          return null
+        }
+
+        if (
+          !isPlayableMusicTrack(track) ||
+          normalizeArtistName(track.title) !==
+            normalizeArtistName(song.title ?? '') ||
+          normalizeArtistName(track.artist) !==
+            normalizeArtistName(expectedArtist)
+        ) {
+          console.warn(
+            `Skipped mismatched ${expectedArtist} record: "${song.title}" (${song.providerSongId}).`,
+          )
+
+          return null
+        }
+
+        return track
+      } catch (error) {
+        console.warn(
+          `Could not load ${expectedArtist} song "${song.title}" (${song.providerSongId}).`,
+          error,
+        )
+
+        return null
+      }
+    }),
+  )
+
+  const playableTracks = deduplicateTracks(
+    hydratedTracks.filter(
+      (track): track is MusicTrack => track !== null,
+    ),
+  )
+
+  console.log(
+    `${expectedArtist} curated catalogue loaded: ${playableTracks.length} playable unique tracks.`,
+  )
+
+  return playableTracks
+}
+
+
+/*
+ * =========================================================
+ * CURATED ARTIST CATALOGUES
+ * =========================================================
+ */
+
+function getCuratedArtistCatalogue(
+  artistKey: string,
+  expectedArtist: string,
+): Promise<MusicTrack[]> {
+  let cataloguePromise =
+    curatedArtistCatalogueCache.get(artistKey)
+
+  if (!cataloguePromise) {
+    cataloguePromise = loadCuratedArtistCatalogue(
+      artistKey,
+      expectedArtist,
+    )
+
+    curatedArtistCatalogueCache.set(
+      artistKey,
+      cataloguePromise,
+    )
+
+    cataloguePromise.catch(() => {
+      if (
+        curatedArtistCatalogueCache.get(artistKey) ===
+        cataloguePromise
+      ) {
+        curatedArtistCatalogueCache.delete(artistKey)
+      }
+    })
+  }
+
+  return cataloguePromise
+}
+
+
+function getDrakeCatalogue(): Promise<MusicTrack[]> {
+  return getCuratedArtistCatalogue(
+    'drake',
+    'Drake',
+  )
+}
+
+
+function getChrisBrownCatalogue(): Promise<MusicTrack[]> {
+  return getCuratedArtistCatalogue(
+    'chrisbrown',
+    'Chris Brown',
+  )
+}
+
+
+/*
+ * =========================================================
+ * THEME CATALOGUE
+ * =========================================================
+ */
 
 async function loadThemeCatalogue(
   theme: string,
 ): Promise<MusicTrack[]> {
-  const snapshot =
-    await db
-      .collection('songs')
-      .where(
-        'themes',
-        'array-contains',
-        theme,
-      )
-      .get()
+  const snapshot = await db
+    .collection('songs')
+    .where('themes', 'array-contains', theme)
+    .get()
 
   if (snapshot.empty) {
     console.warn(
@@ -515,80 +585,50 @@ async function loadThemeCatalogue(
     return []
   }
 
-  const documents =
-    snapshot.docs
-      .map(
-        doc => ({
-          ...doc.data() as ThemeSongDocument,
-        }),
-      )
-      .filter(
-        song =>
-          Boolean(
-            song.providerSongId,
-          ),
-      )
+  const documents = snapshot.docs
+    .map(doc => doc.data() as CatalogueSongDocument)
+    .filter(
+      song =>
+        song.provider === 'deezer' &&
+        Boolean(song.providerSongId),
+    )
 
   console.log(
     `Found ${documents.length} Firestore songs for theme "${theme}". Hydrating catalogue.`,
   )
 
-  const hydratedTracks =
-    await Promise.all(
-      documents.map(
-        async song => {
-          try {
-            const track =
-              await deezerMusicProvider.getTrackById(
-                String(
-                  song.providerSongId,
-                ),
-              )
+  const hydratedTracks = await Promise.all(
+    documents.map(async song => {
+      try {
+        const track =
+          await deezerMusicProvider.getTrackById(
+            String(song.providerSongId),
+          )
 
-            if (
-              !track ||
-              !isPlayableMusicTrack(track)
-            ) {
-              return null
-            }
+        if (
+          !track ||
+          !isPlayableMusicTrack(track)
+        ) {
+          return null
+        }
 
-            return track
-          } catch (error) {
-            console.warn(
-              `Failed to hydrate theme song "${song.title}" (${song.providerSongId}).`,
-              error,
-            )
+        return track
+      } catch (error) {
+        console.warn(
+          `Failed to hydrate theme song "${song.title}" (${song.providerSongId}).`,
+          error,
+        )
 
-            return null
-          }
-        },
-      ),
-    )
+        return null
+      }
+    }),
+  )
 
-  const seen =
-    new Set<string>()
-
-  const playableTracks: MusicTrack[] = []
-
-  for (const track of hydratedTracks) {
-    if (!track) {
-      continue
-    }
-
-    const key =
-      `${normalizeArtistName(
-        track.title,
-      )}::${normalizeArtistName(
-        track.artist,
-      )}`
-
-    if (seen.has(key)) {
-      continue
-    }
-
-    seen.add(key)
-    playableTracks.push(track)
-  }
+  const playableTracks = deduplicateTracks(
+    hydratedTracks.filter(
+      (track): track is MusicTrack => track !== null,
+    ),
+  )
 
   console.log(
     `Theme "${theme}" catalogue loaded: ${playableTracks.length} playable unique tracks.`,
@@ -613,8 +653,7 @@ async function getEligibleThemeTracks(
     themeCatalogueCache.get(theme)
 
   if (!cataloguePromise) {
-    cataloguePromise =
-      loadThemeCatalogue(theme)
+    cataloguePromise = loadThemeCatalogue(theme)
 
     themeCatalogueCache.set(
       theme,
@@ -631,195 +670,15 @@ async function getEligibleThemeTracks(
     })
   }
 
-  const catalogue =
-    await cataloguePromise
-
-  const excludedIds =
-    new Set(
-      excludedTrackIds,
-    )
+  const catalogue = await cataloguePromise
+  const excludedIds = new Set(excludedTrackIds)
 
   return catalogue.filter(
     track =>
       !excludedIds.has(track.id) &&
       !excludedIds.has(
-        String(
-          track.providerId ?? '',
-        ),
+        String(track.providerId ?? ''),
       ),
-  )
-}
-
-
-/*
- * =========================================================
- * DRAKE FIRESTORE CATALOGUE
- * =========================================================
- *
- * Drake uses only the curated songs stored in Firestore.
- * Deezer supplies the playable previews and track metadata.
- *
- * This does not fall back to the full Deezer discography.
- */
-
-type DrakeSongDocument = {
-  title?: string
-  artist?: string
-  provider?: string
-  providerSongId?: string
-  artistKey?: string
-}
-
-
-async function loadDrakeCatalogue(): Promise<MusicTrack[]> {
-  const snapshot =
-    await db
-      .collection('songs')
-      .where(
-        'artistKey',
-        '==',
-        'drake',
-      )
-      .get()
-
-  if (snapshot.empty) {
-    console.warn(
-      'No curated Drake songs found in Firestore. Run the Drake seeder first.',
-    )
-
-    return []
-  }
-
-  const documents =
-    snapshot.docs
-      .map(
-        doc => ({
-          ...doc.data() as DrakeSongDocument,
-        }),
-      )
-      .filter(
-        song =>
-          song.provider === 'deezer' &&
-          Boolean(song.providerSongId) &&
-          Boolean(song.title) &&
-          normalizeArtistName(
-            song.artist ?? '',
-          ) === 'drake',
-      )
-
-  console.log(
-    `Found ${documents.length} curated Drake songs in Firestore. Hydrating previews.`,
-  )
-
-  const hydratedTracks =
-    await Promise.all(
-      documents.map(
-        async song => {
-          try {
-            const track =
-              await deezerMusicProvider.getTrackById(
-                String(
-                  song.providerSongId,
-                ),
-              )
-
-            if (
-              !track ||
-              !isPlayableMusicTrack(track)
-            ) {
-              return null
-            }
-
-            // Confirm the Deezer ID resolves to the expected song.
-            if (
-              normalizeArtistName(
-                track.title,
-              ) !==
-                normalizeArtistName(
-                  song.title ?? '',
-                ) ||
-              normalizeArtistName(
-                track.artist,
-              ) !== 'drake'
-            ) {
-              console.warn(
-                `Skipped mismatched Drake record: "${song.title}" (${song.providerSongId}).`,
-              )
-
-              return null
-            }
-
-            return track
-          } catch (error) {
-            console.warn(
-              `Could not load Drake song "${song.title}" (${song.providerSongId}).`,
-              error,
-            )
-
-            return null
-          }
-        },
-      ),
-    )
-
-  const seen =
-    new Set<string>()
-
-  const playableTracks: MusicTrack[] = []
-
-  for (const track of hydratedTracks) {
-    if (!track) {
-      continue
-    }
-
-    const key =
-      `${normalizeArtistName(
-        track.title,
-      )}::${normalizeArtistName(
-        track.artist,
-      )}`
-
-    if (seen.has(key)) {
-      continue
-    }
-
-    seen.add(key)
-    playableTracks.push(track)
-  }
-
-  console.log(
-    `Drake Firestore catalogue loaded: ${playableTracks.length} playable unique tracks.`,
-  )
-
-  return playableTracks
-}
-
-
-async function getDrakeCatalogue(): Promise<MusicTrack[]> {
-  let cataloguePromise =
-    drakeCatalogueCache.get('drake')
-
-  if (!cataloguePromise) {
-    cataloguePromise =
-      loadDrakeCatalogue()
-
-    drakeCatalogueCache.set(
-      'drake',
-      cataloguePromise,
-    )
-
-    cataloguePromise.catch(() => {
-      if (
-        drakeCatalogueCache.get('drake') ===
-        cataloguePromise
-      ) {
-        drakeCatalogueCache.delete('drake')
-      }
-    })
-  }
-
-  return cloneTracks(
-    await cataloguePromise,
   )
 }
 
@@ -832,7 +691,7 @@ async function getDrakeCatalogue(): Promise<MusicTrack[]> {
 
 async function getEligibleArtistTracks(
   artist: string,
-  artistId: string,
+  artistId: string | undefined,
   type: QuestionType,
   excludedTrackIds: string[] = [],
 ): Promise<MusicTrack[]> {
@@ -843,90 +702,74 @@ async function getEligibleArtistTracks(
   }
 
   const normalizedArtist =
-    normalizeArtistName(
-      artist,
-    )
+    normalizeArtistName(artist)
 
-  const excludedIds =
-    new Set(
-      excludedTrackIds,
-    )
-
-  const numericArtistId =
-    Number(artistId)
-
-  if (
-    !Number.isInteger(
-      numericArtistId,
-    ) ||
-    numericArtistId <= 0
-  ) {
-    console.warn(
-      `Invalid Deezer artist ID "${artistId}" for artist "${artist}".`,
-    )
-
-    return []
-  }
+  const excludedIds = new Set(excludedTrackIds)
 
   try {
     let tracks: MusicTrack[]
+
+    /*
+     * CURATED ARTIST CATALOGUES
+     *
+     * These do not depend on Deezer artist IDs.
+     */
 
     if (normalizedArtist === 'drake') {
       console.log(
         'Loading Drake from the curated Firestore catalogue.',
       )
 
-      tracks =
-        await getDrakeCatalogue()
+      tracks = await getDrakeCatalogue()
+    } else if (normalizedArtist === 'chris brown') {
+      console.log(
+        'Loading Chris Brown from the curated Firestore catalogue.',
+      )
+
+      tracks = await getChrisBrownCatalogue()
     } else {
+      /*
+       * GENERAL ARTIST CATALOGUE
+       */
+
+      if (
+        !artistId ||
+        !/^\d+$/.test(artistId) ||
+        Number(artistId) <= 0
+      ) {
+        console.warn(
+          `Invalid or missing Deezer artist ID "${artistId}" for artist "${artist}".`,
+        )
+
+        return []
+      }
+
       console.log(
         `Loading Deezer artist "${artist}" using ID ${artistId}.`,
       )
 
-      tracks =
-        await getArtistCatalogue(
-          artist,
-          artistId,
-        )
+      tracks = await getArtistCatalogue(
+        artist,
+        artistId,
+      )
     }
 
-    const artistTracks =
-      tracks
-        .filter(
-          track =>
-            normalizeArtistName(
-              track.artist,
-            ) === normalizedArtist,
-        )
-        .filter(
-          track =>
-            !excludedIds.has(
-              track.id,
-            ),
-        )
-
-    const seen =
-      new Set<string>()
+    const artistTracks = tracks
+      .filter(
+        track =>
+          normalizeArtistName(track.artist) ===
+          normalizedArtist,
+      )
+      .filter(
+        track =>
+          !excludedIds.has(track.id) &&
+          !excludedIds.has(
+            String(track.providerId ?? ''),
+          ),
+      )
 
     const uniqueTracks =
-      artistTracks.filter(
-        track => {
-          const key =
-            `${normalizeArtistName(
-              track.title,
-            )}::${normalizeArtistName(
-              track.artist,
-            )}`
-
-          if (seen.has(key)) {
-            return false
-          }
-
-          seen.add(key)
-
-          return true
-        },
-      )
+      deduplicateTracks(artistTracks)
 
     console.log(
       `Found ${uniqueTracks.length} playable tracks for artist "${artist}".`,
@@ -953,10 +796,9 @@ async function getEligibleArtistTracks(
 function pickRandomTrack(
   tracks: MusicTrack[],
 ): MusicTrack {
-  const randomIndex =
-    Math.floor(
-      Math.random() * tracks.length,
-    )
+  const randomIndex = Math.floor(
+    Math.random() * tracks.length,
+  )
 
   return tracks[randomIndex]
 }
@@ -983,64 +825,56 @@ export async function generateGameQuestion(
   /*
    * THEME FILTER
    */
+
   if (theme) {
-    eligibleTracks =
-      await getEligibleThemeTracks(
-        theme,
-        type,
-        excludedTrackIds,
-      )
+    eligibleTracks = await getEligibleThemeTracks(
+      theme,
+      type,
+      excludedTrackIds,
+    )
   }
 
   /*
    * CATEGORY FILTER
    */
+
   else if (categoryId) {
-    eligibleTracks =
-      await getEligibleCategoryTracks(
-        categoryId,
-        type,
-        excludedTrackIds,
-      )
+    eligibleTracks = await getEligibleCategoryTracks(
+      categoryId,
+      type,
+      excludedTrackIds,
+    )
   }
 
   /*
    * ARTIST FILTER
    */
-  else if (artist && artistId) {
-    eligibleTracks =
-      await getEligibleArtistTracks(
-        artist,
-        artistId,
-        type,
-        excludedTrackIds,
-      )
-  }
 
-  /*
-   * ARTIST NAME WITHOUT ID
-   */
   else if (artist) {
-    throw new Error(
-      `Artist ID is required for artist game: ${artist}`,
+    eligibleTracks = await getEligibleArtistTracks(
+      artist,
+      artistId,
+      type,
+      excludedTrackIds,
     )
   }
 
   /*
    * NORMAL GAME
    */
+
   else {
-    eligibleTracks =
-      await getEligibleTracks(
-        type,
-        decade,
-        excludedTrackIds,
-      )
+    eligibleTracks = await getEligibleTracks(
+      type,
+      decade,
+      excludedTrackIds,
+    )
   }
 
   /*
    * NO VALID TRACK
    */
+
   if (eligibleTracks.length === 0) {
     if (theme) {
       throw new Error(
@@ -1048,15 +882,15 @@ export async function generateGameQuestion(
       )
     }
 
-    if (artist) {
+    if (categoryId) {
       throw new Error(
-        `Could not find an eligible track for artist: ${artist}`,
+        `Could not find an eligible playable track for category: ${categoryId}`,
       )
     }
 
-    if (categoryId) {
+    if (artist) {
       throw new Error(
-        `Could not find an eligible track for category: ${categoryId}`,
+        `Could not find an eligible track for artist: ${artist}`,
       )
     }
 
@@ -1068,15 +902,15 @@ export async function generateGameQuestion(
   /*
    * CHOOSE CORRECT SONG
    */
-  const correctTrack =
-    pickRandomTrack(
-      eligibleTracks,
-    )
+
+  const correctTrack = pickRandomTrack(
+    eligibleTracks,
+  )
 
   /*
-   * Generate the actual question and distractors using
-   * the existing question-generation service.
+   * GENERATE QUESTION
    */
+
   return generateQuestion(
     correctTrack,
     type,
