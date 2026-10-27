@@ -310,7 +310,7 @@ export async function generateQuestion(
   }
 
   if (categoryId) {
-    params.set('categoryId', categoryId)
+    params.set('category', categoryId)
   }
 
   if (artist) {
