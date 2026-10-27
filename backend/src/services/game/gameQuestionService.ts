@@ -562,6 +562,10 @@ function getChrisBrownCatalogue(): Promise<MusicTrack[]> {
   )
 }
 
+function getAdeleCatalogue(): Promise<MusicTrack[]> {
+  return getCuratedArtistCatalogue('adele', 'Adele')
+}
+
 
 /*
  * =========================================================
@@ -689,6 +693,7 @@ async function getEligibleThemeTracks(
  * =========================================================
  */
 
+
 async function getEligibleArtistTracks(
   artist: string,
   artistId: string | undefined,
@@ -701,19 +706,14 @@ async function getEligibleArtistTracks(
     )
   }
 
-  const normalizedArtist =
-    normalizeArtistName(artist)
-
+  const normalizedArtist = normalizeArtistName(artist)
   const excludedIds = new Set(excludedTrackIds)
 
   try {
-    let tracks: MusicTrack[]
+    let tracks: MusicTrack[] = []
 
-    /*
-     * CURATED ARTIST CATALOGUES
-     *
-     * These do not depend on Deezer artist IDs.
-     */
+    // CURATED ARTIST CATALOGUES
+    // These artists load from Firestore, not Deezer discographies.
 
     if (normalizedArtist === 'drake') {
       console.log(
@@ -727,10 +727,15 @@ async function getEligibleArtistTracks(
       )
 
       tracks = await getChrisBrownCatalogue()
+    } else if (normalizedArtist === 'adele') {
+      console.log(
+        'Loading Adele from the curated Firestore catalogue.',
+      )
+
+      tracks = await getAdeleCatalogue()
     } else {
-      /*
-       * GENERAL ARTIST CATALOGUE
-       */
+      // GENERAL ARTIST FALLBACK
+      // Only non-curated artists require a valid Deezer artist ID.
 
       if (
         !artistId ||
@@ -748,28 +753,23 @@ async function getEligibleArtistTracks(
         `Loading Deezer artist "${artist}" using ID ${artistId}.`,
       )
 
-      tracks = await getArtistCatalogue(
-        artist,
-        artistId,
-      )
+      tracks = await getArtistCatalogue(artist, artistId)
     }
+
+    // FILTER TO THE REQUESTED ARTIST AND EXCLUDE PREVIOUS TRACKS.
 
     const artistTracks = tracks
       .filter(
         track =>
-          normalizeArtistName(track.artist) ===
-          normalizedArtist,
+          normalizeArtistName(track.artist) === normalizedArtist,
       )
       .filter(
         track =>
           !excludedIds.has(track.id) &&
-          !excludedIds.has(
-            String(track.providerId ?? ''),
-          ),
+          !excludedIds.has(String(track.providerId ?? '')),
       )
 
-    const uniqueTracks =
-      deduplicateTracks(artistTracks)
+    const uniqueTracks = deduplicateTracks(artistTracks)
 
     console.log(
       `Found ${uniqueTracks.length} playable tracks for artist "${artist}".`,
@@ -785,6 +785,7 @@ async function getEligibleArtistTracks(
     return []
   }
 }
+
 
 
 /*
