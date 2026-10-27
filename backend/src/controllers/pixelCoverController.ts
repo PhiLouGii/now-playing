@@ -81,6 +81,57 @@ const CURATED_ALBUMS: CuratedAlbum[] = [
   { title: 'News of the World', artist: 'Queen', year: 1977 },
 ]
 
+
+const DISCOVERY_ARTISTS = [
+  'Ariana Grande',
+  'BTS',
+  'Taylor Swift',
+  'Beyoncé',
+  'Rihanna',
+  'Drake',
+  'Kendrick Lamar',
+  'The Weeknd',
+  'Sabrina Carpenter',
+  'Chappell Roan',
+  'Lana Del Rey',
+  'Lorde',
+  'Harry Styles',
+  'One Direction',
+  'Bruno Mars',
+  'Doja Cat',
+  'Tyler, The Creator',
+  'Frank Ocean',
+  'Travis Scott',
+  'J. Cole',
+  'SZA',
+  'Billie Eilish',
+  'Adele',
+  'Lady Gaga',
+  'Katy Perry',
+  'Justin Bieber',
+  'Demi Lovato',
+  'Selena Gomez',
+  'Miley Cyrus',
+  'Paramore',
+  'Arctic Monkeys',
+  'Radiohead',
+  'The Strokes',
+  'Oasis',
+  'The Cure',
+  'David Bowie',
+  'ABBA',
+  'Queen',
+  'Metallica',
+  'Linkin Park',
+  'Eminem',
+  'Jay-Z',
+  'Nas',
+  'Bob Marley',
+  'Burning Spear',
+  'Fela Kuti',
+]
+
+
 const albumPoolCache = new Map<string, PixelCoverAlbum[]>()
 
 function normalize(value: string): string {
@@ -169,6 +220,64 @@ async function findCuratedAlbum(
   }
 }
 
+
+async function findArtistAlbums(
+  artistName: string,
+): Promise<PixelCoverAlbum[]> {
+  try {
+    const artists = await deezerMusicProvider.searchArtists(
+      artistName,
+      5,
+    )
+
+    const expectedArtist = normalize(artistName)
+
+    const artist = artists.find(
+      item => normalize(item.name) === expectedArtist,
+    )
+
+    if (!artist) return []
+
+    const albums = await deezerMusicProvider.getArtistAlbums(
+      String(artist.id),
+      25,
+    )
+
+    return albums.flatMap(album => {
+      const coverUrl =
+        album.cover_xl ??
+        album.cover_big ??
+        album.cover_medium ??
+        album.cover ??
+        ''
+
+      if (!album.id || !album.title?.trim() || !coverUrl) {
+        return []
+      }
+
+      const parsedYear = album.release_date
+        ? Number(album.release_date.slice(0, 4))
+        : NaN
+
+      return [{
+        id: String(album.id),
+        title: album.title,
+        artist: album.artist?.name ?? artist.name,
+        year: Number.isFinite(parsedYear) ? parsedYear : null,
+        coverUrl,
+      }]
+    })
+  } catch (error) {
+    console.warn(
+      `Could not discover albums by ${artistName}:`,
+      error,
+    )
+
+    return []
+  }
+}
+
+
 export async function getPixelCoverAlbums(
   _req: Request,
   res: Response,
@@ -195,6 +304,20 @@ export async function getPixelCoverAlbums(
         results.push(album)
       }
     }
+
+    
+    // Discover additional albums from a broader set of artists.
+    for (const artistName of DISCOVERY_ARTISTS) {
+      const discoveredAlbums = await findArtistAlbums(artistName)
+
+      for (const album of discoveredAlbums) {
+        if (!seen.has(album.id)) {
+          seen.add(album.id)
+          results.push(album)
+        }
+      }
+    }
+
 
     albumPoolCache.set(cacheKey, results)
 
@@ -253,13 +376,16 @@ export async function searchPixelCoverAlbums(
       albumPoolCache.set('curated-albums', pool)
     }
 
+    
     const albums = pool
       .filter(album =>
-        normalize(album.title).includes(normalizedQuery),
+        normalize(album.title).includes(normalizedQuery) ||
+        normalize(album.artist).includes(normalizedQuery),
       )
       .slice(0, 10)
 
     res.json({ albums })
+
   } catch (error) {
     console.error('Pixel Cover album search failed:', error)
     res.status(500).json({

@@ -227,19 +227,26 @@ function PixelCover() {
     }
   }, [])
 
+ 
   /* =========================================================
-     ALBUM TITLE SUGGESTIONS
+     ALBUM TITLE & ARTIST SUGGESTIONS
      ========================================================= */
 
-  const suggestions = useMemo(() => {
-    const query = normalizeText(guess)
+  
+const suggestions = useMemo(() => {
+  const query = normalizeText(guess)
 
-    if (!query || answered || revealedAnswer) return []
+  if (!query || answered || revealedAnswer) return []
 
-    return albums
-      .filter(album => normalizeText(album.title).includes(query))
-      .slice(0, 6)
-  }, [albums, guess, answered, revealedAnswer])
+  return albums
+    .filter(album =>
+      normalizeText(album.title).includes(query) ||
+      normalizeText(album.artist).includes(query),
+    )
+    .slice(0, 6)
+}, [albums, guess, answered, revealedAnswer])
+
+
 
   /* =========================================================
      CURRENT REVEAL STAGE
