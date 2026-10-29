@@ -1,4 +1,4 @@
-import { ArrowUpRight, Disc3, Layers3, Scan, UserRoundSearch } from 'lucide-react'
+import { ArrowUpRight, Disc3, Library, Scan, UserRoundSearch } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import Hero from '../../components/home/Hero'
 import GameModes from '../../components/home/GameModes'
@@ -14,16 +14,16 @@ const otherModes = [
     tag: 'VISUAL ROUND',
   },
   {
-    title: 'Build a Game',
-    description: 'Create a music quiz of your own.',
-    path: '/build-game',
-    icon: Layers3,
-    tag: 'MAKE IT YOURS',
+    title: 'Play By Genre',
+    description: 'Test your ear by guessing songs through their genre.',
+    path: '/play',
+    icon: Library,
+    tag: 'GENRE RUN',
   },
   {
     title: 'Play by Artist',
     description: 'Stay in the world of one artist.',
-    path: '/play-by-artist',
+    path: '/play',
     icon: UserRoundSearch,
     tag: 'ARTIST RUN',
   },

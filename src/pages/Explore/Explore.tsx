@@ -14,7 +14,7 @@ function Explore() {
         A new way to test your music knowledge is in the works. For now, there are plenty of tracks to recognise.
       </p>
       <div className="trivia-placeholder__status"><Sparkles size={15} /> CURRENTLY IN THE MIX</div>
-      <Link to="/" className="trivia-placeholder__link">Back to the dashboard</Link>
+      <Link to="/" className="trivia-placeholder__link">Back to home page</Link>
     </main>
   )
 }
