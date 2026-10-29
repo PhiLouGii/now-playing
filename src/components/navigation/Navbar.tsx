@@ -4,11 +4,14 @@ import {
   Trophy,
   Compass,
   User,
+  House,
+  Gamepad2,
 } from 'lucide-react'
 import {
   Link,
   NavLink,
   useNavigate,
+  useLocation,
 } from 'react-router-dom'
 
 import { useAuth } from '../../context/AuthContext'
@@ -16,6 +19,8 @@ import './Navbar.css'
 
 function Navbar() {
   const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const isHome = pathname === '/'
 
   const {
     user,
@@ -39,7 +44,7 @@ function Navbar() {
     'Player'
 
   return (
-    <nav className="navbar">
+    <nav className={`navbar${isHome ? ' navbar--home' : ''}`}>
       <div className="navbar-inner">
         <NavLink
   to="/"
@@ -54,10 +59,22 @@ function Navbar() {
 </NavLink>
 
         <div className="navbar__links">
+          {isHome && (
+            <NavLink
+              to="/"
+              end
+              className="navbar__link navbar__home-link"
+            >
+              <House size={17} />
+              Home
+            </NavLink>
+          )}
+
           <NavLink
             to="/play"
             className="navbar__link"
           >
+            <Gamepad2 size={17} />
             Play
           </NavLink>
 
@@ -66,7 +83,7 @@ function Navbar() {
             className="navbar__link"
           >
             <Compass size={17} />
-            Explore
+            Trivia
           </NavLink>
 
           <NavLink
