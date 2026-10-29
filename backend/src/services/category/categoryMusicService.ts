@@ -144,6 +144,7 @@ async function searchAlbumTracks(
   return []
 }
 
+
 async function getArtistCategoryTracks(
   categoryId: string,
   limit: number,
@@ -157,19 +158,20 @@ async function getArtistCategoryTracks(
     )
   }
 
+  // Search artists concurrently instead of waiting for each one.
   const selectedArtists = shuffle(artists).slice(0, 16)
 
-  const trackGroups: MusicTrack[][] = []
+  const results = await Promise.allSettled(
+    selectedArtists.map((artist) => searchArtistTracks(artist, 10)),
+  )
 
-  for (const artist of selectedArtists) {
-    const tracks = await searchArtistTracks(artist, 10)
-
-    if (tracks.length > 0) {
-      trackGroups.push(tracks)
-    }
-
-    await sleep(150)
-  }
+  const trackGroups = results
+    .filter(
+      (result): result is PromiseFulfilledResult<MusicTrack[]> =>
+        result.status === 'fulfilled',
+    )
+    .map((result) => result.value)
+    .filter((tracks) => tracks.length > 0)
 
   return buildUniqueTrackPool(
     trackGroups,
@@ -177,6 +179,7 @@ async function getArtistCategoryTracks(
     excludedTrackIds,
   )
 }
+
 
 async function getFranchiseCategoryTracks(
   categoryId: string,

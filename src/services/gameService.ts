@@ -7,7 +7,7 @@ import type {
 } from '../types/game'
 
 const API_URL = 'http://localhost:3000/api'
-const REQUEST_TIMEOUT_MS = 15_000
+const REQUEST_TIMEOUT_MS = 30_000
 
 export type EraKey =
   | '1960s'
