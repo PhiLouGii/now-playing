@@ -494,3 +494,11 @@
     grid-template-columns: 1fr 1fr;
   }
 }
+.trivia-placeholder { min-height:calc(100vh - var(--navbar-height)); padding:70px 24px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+.trivia-placeholder__art { width:100px; height:100px; margin-bottom:28px; display:grid; place-items:center; color:#78617d; background:#eadfeb; border:1px solid var(--border-strong); border-radius:28px; box-shadow:var(--shadow-md); }
+.trivia-placeholder > .label { color:#8b718e; }
+.trivia-placeholder h1 { margin-top:12px; font-family:var(--font-display); font-size:clamp(38px,6vw,64px); line-height:.98; letter-spacing:-.06em; }
+.trivia-placeholder__copy { max-width:440px; margin-top:18px; color:var(--color-muted); font-size:14px; line-height:1.7; }
+.trivia-placeholder__status { margin-top:25px; display:flex; align-items:center; gap:8px; color:#8b718e; font-size:9px; font-weight:800; letter-spacing:.14em; }
+.trivia-placeholder__link { margin-top:30px; padding:12px 17px; color:var(--color-text); background:var(--color-lilac); border:1px solid #b98eb9; border-radius:var(--radius-md); font-size:12px; font-weight:700; }
+.trivia-placeholder__link:hover { background:var(--color-mauve); }
