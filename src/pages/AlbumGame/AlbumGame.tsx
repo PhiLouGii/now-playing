@@ -1,4 +1,6 @@
+
 import {
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -24,10 +26,7 @@ import {
 } from '../../services/gameService'
 
 import { submitScore } from '../../services/scoreService'
-
-import {
-  calculateFinalPoints,
-} from '../../lib/gameScoring'
+import { calculateFinalPoints } from '../../lib/gameScoring'
 
 import type { Question } from '../../types/game'
 
@@ -35,6 +34,7 @@ import './AlbumGame.css'
 
 const ROUND_LENGTH = 10
 const TOTAL_QUESTIONS = 10
+const QUESTION_ATTEMPTS = 3
 
 type AlbumRecognitionResult = {
   questionNumber: number
@@ -47,251 +47,299 @@ type AlbumRecognitionResult = {
   points: number
 }
 
+type AlbumResultsScreenProps = {
+  results: AlbumRecognitionResult[]
+  score: number
+  bestStreak: number
+  onPlayAgain: () => void
+  onBack: () => void
+}
+
+/*
+ * Request a playable question.
+ *
+ * Failed requests are retried. Previously used tracks and
+ * duplicate tracks returned by the API are excluded.
+ */
+async function requestAlbumQuestion(
+  previouslyUsedIds: string[],
+): Promise<Question> {
+  const excludedIds = new Set(previouslyUsedIds)
+  let lastError: unknown
+
+  for (let attempt = 0; attempt < QUESTION_ATTEMPTS; attempt += 1) {
+    try {
+      const question = await generateQuestion(
+        'name-the-album',
+        'medium',
+        undefined,
+        [...excludedIds],
+      )
+
+      if (
+        !question ||
+        !question.song ||
+        !question.song.id ||
+        !question.song.title ||
+        !question.song.artist ||
+        !question.song.album ||
+        !question.song.audioUrl ||
+        !Array.isArray(question.answers) ||
+        question.answers.length !== 4 ||
+        !question.correctAnswer ||
+        !question.answers.includes(question.correctAnswer)
+      ) {
+        if (question?.song?.id) {
+          excludedIds.add(question.song.id)
+        }
+
+        throw new Error(
+          'The server returned an incomplete album question.',
+        )
+      }
+
+      if (excludedIds.has(question.song.id)) {
+        excludedIds.add(question.song.id)
+
+        throw new Error(
+          'The server returned a song that was already used.',
+        )
+      }
+
+      return question
+    } catch (error) {
+      lastError = error
+    }
+  }
+
+  throw lastError instanceof Error
+    ? lastError
+    : new Error('Unable to prepare an album question.')
+}
+
 function AlbumGame() {
   const navigate = useNavigate()
 
-  const [question, setQuestion] =
-    useState<Question | null>(null)
+  const [question, setQuestion] = useState<Question | null>(null)
+  const [questionDeck, setQuestionDeck] = useState<Question[]>([])
+  const [questionNumber, setQuestionNumber] = useState(1)
 
-  // Prepare the full round once so question changes are instant.
-  const [questionDeck, setQuestionDeck] =
-    useState<Question[]>([])
+  const [timeRemaining, setTimeRemaining] = useState(ROUND_LENGTH)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
+  const [hasAnswered, setHasAnswered] = useState(false)
+  const [isTimeUp, setIsTimeUp] = useState(false)
 
-  const [questionNumber, setQuestionNumber] =
-    useState(1)
+  const [results, setResults] = useState<AlbumRecognitionResult[]>([])
+  const [showResults, setShowResults] = useState(false)
 
-  const [timeRemaining, setTimeRemaining] =
-    useState(ROUND_LENGTH)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isAdvancing, setIsAdvancing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const [isPlaying, setIsPlaying] =
-    useState(false)
+  const [loadingFacts, setLoadingFacts] = useState<LoadingFact[]>([])
+  const [loadingComplete, setLoadingComplete] = useState(false)
 
-  const [selectedAnswer, setSelectedAnswer] =
-    useState<string | null>(null)
+  const [score, setScore] = useState(0)
+  const [streak, setStreak] = useState(0)
+  const [bestStreak, setBestStreak] = useState(0)
 
-  const [hasAnswered, setHasAnswered] =
-    useState(false)
+  const scoreSubmitted = useRef(false)
+  const isMountedRef = useRef(false)
+  const isAdvancingRef = useRef(false)
 
-  const [isTimeUp, setIsTimeUp] =
-    useState(false)
-
-  const [results, setResults] =
-    useState<AlbumRecognitionResult[]>([])
-
-  const [showResults, setShowResults] =
-    useState(false)
-
-  const [isLoading, setIsLoading] =
-    useState(true)
-
-  const [error, setError] =
-    useState<string | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const timerRef = useRef<number | null>(null)
 
   /*
-   * LOADING SCREEN
+   * Initial setup.
+   *
+   * Load the first question only. The rest of the round is
+   * generated as the player progresses, so one failed request
+   * cannot prevent all ten questions from loading.
    */
+  const initializeGame = useCallback(async () => {
+    setIsLoading(true)
+    setLoadingComplete(false)
+    setError(null)
 
-  const [loadingFacts, setLoadingFacts] =
-    useState<LoadingFact[]>([])
+    try {
+      const firstQuestion = await requestAlbumQuestion([])
 
-  const [
-    loadingComplete,
-    setLoadingComplete,
-  ] = useState(false)
+      if (!isMountedRef.current) return
 
-  /*
-   * SCORE
-   */
+      setQuestionDeck([firstQuestion])
+      setQuestion(firstQuestion)
+      setQuestionNumber(1)
+      setTimeRemaining(ROUND_LENGTH)
 
-  const [score, setScore] =
-    useState(0)
+      setSelectedAnswer(null)
+      setHasAnswered(false)
+      setIsTimeUp(false)
+      setIsPlaying(false)
 
-  const [streak, setStreak] =
-    useState(0)
+      setResults([])
+      setShowResults(false)
 
-  const [bestStreak, setBestStreak] =
-    useState(0)
+      setScore(0)
+      setStreak(0)
+      setBestStreak(0)
 
-  /*
-   * SCORE SUBMISSION
-   */
-
-  const scoreSubmitted =
-    useRef(false)
-
-  const audioRef =
-    useRef<HTMLAudioElement | null>(null)
-
-  const timerRef =
-    useRef<number | null>(null)
-
-  /*
-   * Prepare all questions before the round begins.
-   * This keeps loading on the initial round entry only.
-   */
-
-  useEffect(() => {
-    let isMounted = true
-
-    async function initializeGame() {
-      setIsLoading(true)
-      setLoadingComplete(false)
-      setError(null)
-
-      getLoadingFacts()
-  .then((facts) => {
-    if (isMounted) {
-      setLoadingFacts(facts)
-    }
-  })
-  .catch(() => {
-    // Loading facts are optional.
-    // A failure must not prevent the game from starting.
-  })
-
-      try {
-        const questions: Question[] = []
-
-        for (let index = 0; index < TOTAL_QUESTIONS; index += 1) {
-          const generatedQuestion = await generateQuestion(
-            'name-the-album',
-            'medium',
-          )
-          questions.push(generatedQuestion)
-        }
-
-        if (!isMounted) return
-
-        setQuestionDeck(questions)
-        setQuestion(questions[0])
-        setLoadingComplete(true)
-      } catch (error) {
-        console.error(
-          'Failed to prepare album round:',
-          error,
+      scoreSubmitted.current = false
+      setLoadingComplete(true)
+    } catch {
+      if (isMountedRef.current) {
+        setError(
+          'We could not load an album question. Please try again.',
         )
-
-        if (isMounted) {
-          setError('We could not prepare your round. Please try again.')
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false)
-        }
       }
-    }
-
-    initializeGame()
-
-    return () => {
-      isMounted = false
+    } finally {
+      if (isMountedRef.current) {
+        setIsLoading(false)
+      }
     }
   }, [])
 
-  /*
-   * Clean up timer and audio.
-   */
-
   useEffect(() => {
+    isMountedRef.current = true
+
+    void initializeGame()
+
+    getLoadingFacts()
+      .then((facts) => {
+        if (isMountedRef.current) {
+          setLoadingFacts(facts)
+        }
+      })
+      .catch(() => {
+        // Facts are optional and must never block gameplay.
+      })
+
     return () => {
+      isMountedRef.current = false
+
       if (timerRef.current !== null) {
-        window.clearInterval(
-          timerRef.current,
-        )
+        window.clearInterval(timerRef.current)
+        timerRef.current = null
       }
 
       audioRef.current?.pause()
     }
+  }, [initializeGame])
+
+  /*
+   * Timer cleanup.
+   */
+  const clearGameTimer = useCallback(() => {
+    if (timerRef.current !== null) {
+      window.clearInterval(timerRef.current)
+      timerRef.current = null
+    }
   }, [])
 
   /*
-   * Countdown.
+   * Record a failed or completed question exactly once.
    */
+  const handleTimeUp = useCallback(() => {
+    if (hasAnswered || isTimeUp || !question) return
 
+    clearGameTimer()
+
+    setIsTimeUp(true)
+    setIsPlaying(false)
+    setStreak(0)
+
+    audioRef.current?.pause()
+
+    setResults((previous) => {
+      if (
+        previous.some(
+          (result) => result.questionNumber === questionNumber,
+        )
+      ) {
+        return previous
+      }
+
+      return [
+        ...previous,
+        {
+          questionNumber,
+          title: question.song.title,
+          artist: question.song.artist,
+          album: question.song.album,
+          artworkUrl: question.song.artworkUrl ?? '',
+          recognitionTime: ROUND_LENGTH,
+          correct: false,
+          points: 0,
+        },
+      ]
+    })
+  }, [
+    hasAnswered,
+    isTimeUp,
+    question,
+    questionNumber,
+    clearGameTimer,
+  ])
+
+  /*
+   * Countdown only runs while the audio is playing.
+   */
   useEffect(() => {
-    if (
-      !isPlaying ||
-      hasAnswered ||
-      isTimeUp
-    ) {
+    if (!isPlaying || hasAnswered || isTimeUp) {
+      clearGameTimer()
       return
     }
 
-    timerRef.current =
-      window.setInterval(() => {
-        setTimeRemaining((previous) => {
-          if (previous <= 0.1) {
-            if (
-              timerRef.current !== null
-            ) {
-              window.clearInterval(
-                timerRef.current,
-              )
-            }
+    timerRef.current = window.setInterval(() => {
+      setTimeRemaining((previous) => {
+        if (previous <= 0.1) {
+          clearGameTimer()
+          return 0
+        }
 
-            handleTimeUp()
+        return Math.max(0, Number((previous - 0.1).toFixed(1)))
+      })
+    }, 100)
 
-            return 0
-          }
-
-          return Number(
-            (previous - 0.1).toFixed(1),
-          )
-        })
-      }, 100)
-
-    return () => {
-      if (timerRef.current !== null) {
-        window.clearInterval(
-          timerRef.current,
-        )
-      }
-    }
+    return clearGameTimer
   }, [
     isPlaying,
     hasAnswered,
     isTimeUp,
+    clearGameTimer,
   ])
 
-  /*
-   * SAVE SCORE WHEN RESULTS ARE SHOWN.
-   */
+  useEffect(() => {
+    if (timeRemaining === 0 && isPlaying) {
+      handleTimeUp()
+    }
+  }, [timeRemaining, isPlaying, handleTimeUp])
 
+  /*
+   * Save the completed round once.
+   */
   useEffect(() => {
     if (
       !showResults ||
-      scoreSubmitted.current
-    ) {
-      return
-    }
-
-    if (
-      results.length <
-      TOTAL_QUESTIONS
+      scoreSubmitted.current ||
+      results.length < TOTAL_QUESTIONS
     ) {
       return
     }
 
     scoreSubmitted.current = true
 
-    const correctAnswers =
-      results.filter(
-        (result) => result.correct,
-      ).length
+    const correctAnswers = results.filter(
+      (result) => result.correct,
+    ).length
 
-    const accuracy =
-      TOTAL_QUESTIONS > 0
-        ? (correctAnswers /
-            TOTAL_QUESTIONS) *
-          100
-        : 0
+    const accuracy = (correctAnswers / results.length) * 100
 
-    const totalListeningTime =
-      results.reduce(
-        (total, result) =>
-          total + result.recognitionTime,
-        0,
-      )
+    const totalListeningTime = results.reduce(
+      (total, result) => total + result.recognitionTime,
+      0,
+    )
 
     async function saveScore() {
       try {
@@ -300,47 +348,26 @@ function AlbumGame() {
           score,
           accuracy,
           bestStreak,
-          questions: TOTAL_QUESTIONS,
+          questions: results.length,
           correctAnswers,
           totalListeningTime,
         })
-
-        console.log(
-          'ALBUM GAME SCORE SAVED:',
-          {
-            score,
-            accuracy,
-            bestStreak,
-            questions: TOTAL_QUESTIONS,
-            correctAnswers,
-            totalListeningTime,
-          },
-        )
-      } catch (error) {
-        console.error(
-          'FAILED TO SAVE ALBUM GAME SCORE:',
-          error,
-        )
+      } catch (saveError) {
+        // A leaderboard failure should not interrupt the results screen.
+        console.error('Could not save album game score:', saveError)
       }
     }
 
-    saveScore()
-  }, [
-    showResults,
-    results,
-    score,
-    bestStreak,
-  ])
+    void saveScore()
+  }, [showResults, results, score, bestStreak])
 
   /*
-   * Start / pause the preview.
+   * Play or pause the current preview.
    */
-
   function togglePlayback() {
-    const audio =
-      audioRef.current
+    const audio = audioRef.current
 
-    if (!audio || !question) {
+    if (!audio || !question || hasAnswered || isTimeUp) {
       return
     }
 
@@ -350,26 +377,22 @@ function AlbumGame() {
       return
     }
 
-    audio
-      .play()
+    audio.play()
       .then(() => {
         setIsPlaying(true)
       })
-      .catch((err) => {
-        console.error(
-          'Unable to play preview:',
-          err,
+      .catch(() => {
+        setIsPlaying(false)
+        setError(
+          'This preview could not be played. Try another question.',
         )
       })
   }
 
   /*
-   * Submit an album answer.
+   * Submit an answer.
    */
-
-  function handleAnswer(
-    answer: string,
-  ) {
+  function handleAnswer(answer: string) {
     if (
       hasAnswered ||
       isTimeUp ||
@@ -380,164 +403,160 @@ function AlbumGame() {
 
     const recognitionTime = Math.min(
       ROUND_LENGTH,
-      Math.max(
-        0,
-        ROUND_LENGTH - timeRemaining,
-      ),
+      Math.max(0, ROUND_LENGTH - timeRemaining),
     )
 
-    const correct =
-      answer ===
-      question.correctAnswer
+    const correct = answer === question.correctAnswer
+    const nextStreak = correct ? streak + 1 : 0
 
-    const nextStreak =
-      correct
-        ? streak + 1
-        : 0
+    const earnedPoints = correct
+      ? calculateFinalPoints(recognitionTime, nextStreak)
+      : 0
 
-    const earnedPoints =
-      correct
-        ? calculateFinalPoints(
-            recognitionTime,
-            nextStreak,
-          )
-        : 0
+    clearGameTimer()
+    audioRef.current?.pause()
 
     setSelectedAnswer(answer)
     setHasAnswered(true)
     setIsPlaying(false)
-
     setStreak(nextStreak)
 
     if (correct) {
-      setBestStreak(
-        (currentBest) =>
-          Math.max(
-            currentBest,
-            nextStreak,
-          ),
+      setBestStreak((currentBest) =>
+        Math.max(currentBest, nextStreak),
       )
     }
 
-    setScore(
-      (currentScore) =>
-        currentScore + earnedPoints,
-    )
+    setScore((currentScore) => currentScore + earnedPoints)
 
-    if (timerRef.current !== null) {
-      window.clearInterval(
-        timerRef.current,
-      )
-    }
+    setResults((previous) => {
+      if (
+        previous.some(
+          (result) => result.questionNumber === questionNumber,
+        )
+      ) {
+        return previous
+      }
 
-    audioRef.current?.pause()
-
-    setResults((previous) => [
-      ...previous,
-      {
-        questionNumber,
-        title: question.song.title,
-        artist: question.song.artist,
-        album: question.song.album,
-        artworkUrl:
-          question.song.artworkUrl,
-        recognitionTime,
-        correct,
-        points: earnedPoints,
-      },
-    ])
+      return [
+        ...previous,
+        {
+          questionNumber,
+          title: question.song.title,
+          artist: question.song.artist,
+          album: question.song.album,
+          artworkUrl: question.song.artworkUrl ?? '',
+          recognitionTime,
+          correct,
+          points: earnedPoints,
+        },
+      ]
+    })
   }
 
   /*
-   * Handle the player reaching 10 seconds.
+   * Load the next question only when the player is ready.
+   *
+   * If generation fails, the current answer and score are kept.
+   * The player can retry without losing progress.
    */
-
-  function handleTimeUp() {
+  async function handleNext() {
     if (
-      hasAnswered ||
-      isTimeUp ||
-      !question
+      isAdvancingRef.current ||
+      isAdvancing
     ) {
       return
     }
 
-    setIsTimeUp(true)
-    setIsPlaying(false)
-    setStreak(0)
-
-    audioRef.current?.pause()
-
-    if (timerRef.current !== null) {
-      window.clearInterval(
-        timerRef.current,
-      )
-    }
-
-    setResults((previous) => [
-      ...previous,
-      {
-        questionNumber,
-        title: question.song.title,
-        artist: question.song.artist,
-        album: question.song.album,
-        artworkUrl:
-          question.song.artworkUrl,
-        recognitionTime: ROUND_LENGTH,
-        correct: false,
-        points: 0,
-      },
-    ])
-  }
-
-  /*
-   * Move to the next preloaded question.
-   */
-
-  function handleNext() {
     if (questionNumber >= TOTAL_QUESTIONS) {
       setShowResults(true)
       return
     }
 
-    const nextQuestionNumber = questionNumber + 1
-    const nextQuestion = questionDeck[nextQuestionNumber - 1]
+    const nextIndex = questionNumber
 
-    if (!nextQuestion) {
-      setError('We could not load the next question.')
+    const existingQuestion = questionDeck[nextIndex]
+
+    if (existingQuestion) {
+      clearGameTimer()
+      audioRef.current?.pause()
+
+      setQuestionNumber(nextIndex + 1)
+      setQuestion(existingQuestion)
+      setSelectedAnswer(null)
+      setHasAnswered(false)
+      setIsTimeUp(false)
+      setIsPlaying(false)
+      setTimeRemaining(ROUND_LENGTH)
+      setError(null)
+
       return
     }
 
-    audioRef.current?.pause()
-    setQuestionNumber(nextQuestionNumber)
-    setQuestion(nextQuestion)
-    setSelectedAnswer(null)
-    setHasAnswered(false)
-    setIsTimeUp(false)
-    setIsPlaying(false)
-    setTimeRemaining(ROUND_LENGTH)
+    isAdvancingRef.current = true
+    setIsAdvancing(true)
     setError(null)
+
+    try {
+      const usedIds = questionDeck.map(
+        (deckQuestion) => deckQuestion.song.id,
+      )
+
+      const nextQuestion = await requestAlbumQuestion(usedIds)
+
+      if (!isMountedRef.current) return
+
+      clearGameTimer()
+      audioRef.current?.pause()
+
+      setQuestionDeck((previous) => [
+        ...previous,
+        nextQuestion,
+      ])
+
+      setQuestionNumber(nextIndex + 1)
+      setQuestion(nextQuestion)
+      setSelectedAnswer(null)
+      setHasAnswered(false)
+      setIsTimeUp(false)
+      setIsPlaying(false)
+      setTimeRemaining(ROUND_LENGTH)
+      setError(null)
+    } catch {
+      if (isMountedRef.current) {
+        setError(
+          'We could not load the next album question. Your progress is safe. Try again.',
+        )
+      }
+    } finally {
+      isAdvancingRef.current = false
+
+      if (isMountedRef.current) {
+        setIsAdvancing(false)
+      }
+    }
   }
 
   /*
-   * Retry by restarting preparation for the round.
+   * Retry the first question or the next question.
    */
-
   function handleRetry() {
-    window.location.reload()
-  }
+    if (!question) {
+      void initializeGame()
+      return
+    }
 
-  /*
-   * Restart the complete round.
-   */
+    setError(null)
+    void handleNext()
+  }
 
   function handlePlayAgain() {
-    window.location.reload()
+    void initializeGame()
   }
 
   /*
-   * SHARED LOADING SCREEN
+   * Initial loading screen.
    */
-
   if (isLoading && !question) {
     return (
       <LoadingScreen
@@ -548,21 +567,66 @@ function AlbumGame() {
     )
   }
 
+  /*
+   * First-question failure.
+   */
+  if (!question && error) {
+    return (
+      <div className="album-game">
+        <div className="album-game__container">
+          <header className="album-game__header">
+            <div>
+              <p className="album-game__eyebrow">
+                GUESS THE ALBUM
+              </p>
+              <h1 className="album-game__title">
+                Which album is it?
+              </h1>
+            </div>
+          </header>
+
+          <div className="album-game__error-state">
+            <p>{error}</p>
+
+            <button
+              className="album-game__retry"
+              onClick={handleRetry}
+              disabled={isLoading}
+            >
+              <RotateCcw size={18} />
+              TRY AGAIN
+            </button>
+
+            <button
+              className="album-game__retry"
+              onClick={() => navigate('/play')}
+            >
+              BACK TO PLAY
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   if (showResults) {
     return (
       <AlbumResultsScreen
         results={results}
         score={score}
         bestStreak={bestStreak}
-        onPlayAgain={
-          handlePlayAgain
-        }
-        onBack={() =>
-          navigate('/play')
-        }
+        onPlayAgain={handlePlayAgain}
+        onBack={() => navigate('/play')}
       />
     )
   }
+
+  if (!question) {
+    return null
+  }
+
+  const isCorrect = selectedAnswer === question.correctAnswer
+  const questionFinished = hasAnswered || isTimeUp
 
   return (
     <div className="album-game">
@@ -580,305 +644,207 @@ function AlbumGame() {
 
           <div className="album-game__progress">
             <span>
-              {String(
-                questionNumber,
-              ).padStart(2, '0')}
+              {String(questionNumber).padStart(2, '0')}
             </span>
-
             <span>
-              / {String(
-                TOTAL_QUESTIONS,
-              ).padStart(2, '0')}
+              / {String(TOTAL_QUESTIONS).padStart(2, '0')}
             </span>
           </div>
         </header>
 
-        {isLoading && !question && (
-          <div className="album-game__loading">
-            <div className="album-game__loading-spinner" />
-
-            <p>
-              Finding your next song...
-            </p>
-          </div>
-        )}
-
-        {error && !isLoading && (
-          <div className="album-game__error-state">
+        {error && (
+          <div className="album-game__error-state" role="alert">
             <p>{error}</p>
 
             <button
               className="album-game__retry"
-              onClick={
-                handleRetry
-              }
+              onClick={handleRetry}
+              disabled={isAdvancing}
             >
-              <RotateCcw
-                size={18}
-              />
-
+              <RotateCcw size={18} />
               TRY AGAIN
             </button>
           </div>
         )}
 
-        {question &&
-          !error && (
-            <>
-              <section className="album-game__player-card">
-                <div className="album-game__timer">
-                  <span>
-                    {isTimeUp
-                      ? "TIME'S UP"
-                      : hasAnswered
-                        ? 'ANSWER LOCKED'
-                        : 'LISTEN'}
-                  </span>
+        <section className="album-game__player-card">
+          <div className="album-game__timer">
+            <span>
+              {isTimeUp
+                ? "TIME'S UP"
+                : hasAnswered
+                  ? 'ANSWER LOCKED'
+                  : 'LISTEN'}
+            </span>
 
-                  <strong
-                    className={
-                      timeRemaining <= 3 &&
-                      !hasAnswered &&
-                      !isTimeUp
-                        ? 'album-game__timer--urgent'
-                        : ''
-                    }
-                  >
-                    {timeRemaining.toFixed(
-                      1,
-                    )}
-                    s
-                  </strong>
-                </div>
+            <strong
+              className={
+                timeRemaining <= 3 && !questionFinished
+                  ? 'album-game__timer--urgent'
+                  : ''
+              }
+            >
+              {timeRemaining.toFixed(1)}s
+            </strong>
+          </div>
 
-                <div className="album-game__wave">
-                  {Array.from(
-                    { length: 32 },
-                    (_, index) => (
-                      <span
-                        key={index}
-                        className={
-                          isPlaying
-                            ? 'album-game__wave-bar album-game__wave-bar--active'
-                            : 'album-game__wave-bar'
-                        }
-                      />
-                    ),
-                  )}
-                </div>
+          <div className="album-game__wave">
+            {Array.from({ length: 32 }, (_, index) => (
+              <span
+                key={index}
+                className={
+                  isPlaying
+                    ? 'album-game__wave-bar album-game__wave-bar--active'
+                    : 'album-game__wave-bar'
+                }
+              />
+            ))}
+          </div>
 
-                <button
-                  className="album-game__play"
-                  onClick={
-                    togglePlayback
-                  }
-                  disabled={
-                    hasAnswered ||
-                    isTimeUp
-                  }
-                  aria-label={
-                    isPlaying
-                      ? 'Pause song'
-                      : 'Play song'
-                  }
-                >
-                  {isPlaying ? (
-                    <Pause
-                      size={30}
-                      fill="currentColor"
-                    />
-                  ) : (
-                    <Play
-                      size={30}
-                      fill="currentColor"
-                    />
-                  )}
-                </button>
+          <button
+            className="album-game__play"
+            onClick={togglePlayback}
+            disabled={questionFinished}
+            aria-label={isPlaying ? 'Pause song' : 'Play song'}
+          >
+            {isPlaying ? (
+              <Pause size={30} fill="currentColor" />
+            ) : (
+              <Play size={30} fill="currentColor" />
+            )}
+          </button>
 
-                <div className="album-game__player-bottom">
-                  <Volume2
-                    size={15}
-                  />
+          <div className="album-game__player-bottom">
+            <Volume2 size={15} />
 
-                  <div className="album-game__progress-track">
-                    <div
-                      className="album-game__progress-fill"
-                      style={{
-                        width: `${
-                          ((ROUND_LENGTH -
-                            timeRemaining) /
-                            ROUND_LENGTH) *
-                          100
-                        }%`,
-                      }}
-                    />
-                  </div>
+            <div className="album-game__progress-track">
+              <div
+                className="album-game__progress-fill"
+                style={{
+                  width: `${
+                    ((ROUND_LENGTH - timeRemaining) / ROUND_LENGTH) * 100
+                  }%`,
+                }}
+              />
+            </div>
 
-                  <span>
-                    10s
-                  </span>
-                </div>
+            <span>10s</span>
+          </div>
 
-                <audio
-                  ref={audioRef}
-                  src={
-                    question.song.audioUrl
-                  }
-                  preload="auto"
-                  onEnded={() =>
-                    setIsPlaying(false)
-                  }
+          <audio
+            key={question.song.id}
+            ref={audioRef}
+            src={question.song.audioUrl}
+            preload="auto"
+            onEnded={() => setIsPlaying(false)}
+            onError={() => {
+              if (!questionFinished) {
+                setIsPlaying(false)
+              }
+            }}
+          />
+        </section>
+
+        {questionFinished ? (
+          <section className="album-game__reveal">
+            <div className="album-game__reveal-art">
+              {question.song.artworkUrl ? (
+                <img
+                  src={question.song.artworkUrl}
+                  alt={`${question.song.album} album artwork`}
                 />
-              </section>
-
-              {hasAnswered ||
-              isTimeUp ? (
-                <section className="album-game__reveal">
-                  <div className="album-game__reveal-art">
-                    {question.song
-                      .artworkUrl ? (
-                      <img
-                        src={
-                          question.song
-                            .artworkUrl
-                        }
-                        alt={`${question.song.album} album artwork`}
-                      />
-                    ) : (
-                      <div className="album-game__reveal-art-placeholder">
-                        ?
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="album-game__reveal-content">
-                    <p className="album-game__reveal-label">
-                      {isTimeUp
-                        ? "TIME'S UP"
-                        : selectedAnswer ===
-                            question.correctAnswer
-                          ? 'CORRECT'
-                          : 'NOT QUITE'}
-                    </p>
-
-                    <h2>
-                      {
-                        question.song
-                          .album
-                      }
-                    </h2>
-
-                    <p>
-                      {
-                        question.song
-                          .artist
-                      }
-                      {' · '}
-                      {
-                        question.song
-                          .title
-                      }
-                    </p>
-                  </div>
-
-                  <div
-                    className={`album-game__result ${
-                      selectedAnswer ===
-                      question.correctAnswer
-                        ? 'album-game__result--correct'
-                        : 'album-game__result--wrong'
-                    }`}
-                  >
-                    {selectedAnswer ===
-                    question.correctAnswer
-                      ? '✓'
-                      : '×'}
-                  </div>
-                </section>
               ) : (
-                <section className="album-game__answers">
-                  <div className="album-game__answers-header">
-                    <p>
-                      SELECT THE ALBUM
-                    </p>
-
-                    <span>
-                      4 CHOICES
-                    </span>
-                  </div>
-
-                  <div className="album-game__answer-grid">
-                    {question.answers.map(
-                      (
-                        answer,
-                        index,
-                      ) => (
-                        <button
-                          key={answer}
-                          className="album-game__answer"
-                          onClick={() =>
-                            handleAnswer(
-                              answer,
-                            )
-                          }
-                        >
-                          <span className="album-game__answer-number">
-                            {String(
-                              index + 1,
-                            ).padStart(
-                              2,
-                              '0',
-                            )}
-                          </span>
-
-                          <span className="album-game__answer-text">
-                            {answer}
-                          </span>
-
-                          <ArrowRight
-                            size={18}
-                            className="album-game__answer-arrow"
-                          />
-                        </button>
-                      ),
-                    )}
-                  </div>
-                </section>
+                <div className="album-game__reveal-art-placeholder">
+                  ?
+                </div>
               )}
+            </div>
 
-              {(hasAnswered ||
-                isTimeUp) && (
+            <div className="album-game__reveal-content">
+              <p className="album-game__reveal-label">
+                {isTimeUp
+                  ? "TIME'S UP"
+                  : isCorrect
+                    ? 'CORRECT'
+                    : 'NOT QUITE'}
+              </p>
+
+              <h2>{question.song.album}</h2>
+
+              <p>
+                {question.song.artist}
+                {' · '}
+                {question.song.title}
+              </p>
+            </div>
+
+            <div
+              className={`album-game__result ${
+                isCorrect
+                  ? 'album-game__result--correct'
+                  : 'album-game__result--wrong'
+              }`}
+            >
+              {isCorrect ? '✓' : '×'}
+            </div>
+          </section>
+        ) : (
+          <section className="album-game__answers">
+            <div className="album-game__answers-header">
+              <p>SELECT THE ALBUM</p>
+              <span>4 CHOICES</span>
+            </div>
+
+            <div className="album-game__answer-grid">
+              {question.answers.map((answer, index) => (
                 <button
-                  className="album-game__next"
-                  onClick={
-                    handleNext
-                  }
+                  key={`${question.id}-${answer}`}
+                  className="album-game__answer"
+                  onClick={() => handleAnswer(answer)}
+                  disabled={isAdvancing}
                 >
-                  <span>
-                    {questionNumber >=
-                    TOTAL_QUESTIONS
-                      ? 'SEE RESULTS'
-                      : 'NEXT SONG'}
+                  <span className="album-game__answer-number">
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+
+                  <span className="album-game__answer-text">
+                    {answer}
                   </span>
 
                   <ArrowRight
-                    size={19}
+                    size={18}
+                    className="album-game__answer-arrow"
                   />
                 </button>
-              )}
-            </>
-          )}
+              ))}
+            </div>
+          </section>
+        )}
+
+        {questionFinished && (
+          <button
+            className="album-game__next"
+            onClick={() => void handleNext()}
+            disabled={isAdvancing}
+          >
+            <span>
+              {isAdvancing
+                ? 'LOADING NEXT QUESTION...'
+                : questionNumber >= TOTAL_QUESTIONS
+                  ? 'SEE RESULTS'
+                  : 'NEXT SONG'}
+            </span>
+
+            {isAdvancing ? (
+              <span aria-hidden="true">…</span>
+            ) : (
+              <ArrowRight size={19} />
+            )}
+          </button>
+        )}
       </div>
     </div>
   )
-}
-
-type AlbumResultsScreenProps = {
-  results: AlbumRecognitionResult[]
-  score: number
-  bestStreak: number
-  onPlayAgain: () => void
-  onBack: () => void
 }
 
 function AlbumResultsScreen({
@@ -888,65 +854,42 @@ function AlbumResultsScreen({
   onPlayAgain,
   onBack,
 }: AlbumResultsScreenProps) {
-  const correctResults =
-    results.filter(
-      (result) => result.correct,
-    )
+  const correctResults = results.filter(
+    (result) => result.correct,
+  )
 
-  const recognizedCount =
-    correctResults.length
+  const recognizedCount = correctResults.length
 
-  const accuracy =
-    results.length > 0
-      ? Math.round(
-          (recognizedCount /
-            results.length) *
-            100,
-        )
-      : 0
+  const accuracy = results.length > 0
+    ? Math.round((recognizedCount / results.length) * 100)
+    : 0
 
-  const recognitionTimes =
-    correctResults.map(
-      (result) =>
-        result.recognitionTime,
-    )
+  const recognitionTimes = correctResults.map(
+    (result) => result.recognitionTime,
+  )
 
-  const averageTime =
-    recognitionTimes.length > 0
-      ? recognitionTimes.reduce(
-          (total, time) =>
-            total + time,
-          0,
-        ) /
-        recognitionTimes.length
-      : 0
+  const averageTime = recognitionTimes.length > 0
+    ? recognitionTimes.reduce((total, time) => total + time, 0) /
+      recognitionTimes.length
+    : 0
 
-  const fastestTime =
-    recognitionTimes.length > 0
-      ? Math.min(
-          ...recognitionTimes,
-        )
-      : 0
+  const fastestTime = recognitionTimes.length > 0
+    ? Math.min(...recognitionTimes)
+    : 0
 
-  const fastestResult =
-    correctResults.find(
-      (result) =>
-        result.recognitionTime ===
-        fastestTime,
-    )
+  const fastestResult = correctResults.find(
+    (result) => result.recognitionTime === fastestTime,
+  )
 
   return (
     <div className="album-results">
       <div className="album-results__confetti">
-        {Array.from(
-          { length: 36 },
-          (_, index) => (
-            <span
-              key={index}
-              className="album-results__confetti-piece"
-            />
-          ),
-        )}
+        {Array.from({ length: 36 }, (_, index) => (
+          <span
+            key={index}
+            className="album-results__confetti-piece"
+          />
+        ))}
       </div>
 
       <div className="album-results__container">
@@ -959,106 +902,65 @@ function AlbumResultsScreen({
             ROUND COMPLETE
           </p>
 
-          <h1>
-            You know your albums.
-          </h1>
+          <h1>You know your albums.</h1>
 
           <p>
-            You recognized{' '}
-            <strong>
-              {recognizedCount}
-            </strong>{' '}
+            You recognized <strong>{recognizedCount}</strong>{' '}
             out of {results.length}.
           </p>
         </header>
 
         <section className="album-results__score">
           <div>
-            <span>
-              FINAL SCORE
-            </span>
-
-            <strong>
-              {score}
-            </strong>
+            <span>FINAL SCORE</span>
+            <strong>{score}</strong>
           </div>
 
           <div>
-            <span>
-              BEST STREAK
-            </span>
-
-            <strong>
-              {bestStreak}
-            </strong>
+            <span>BEST STREAK</span>
+            <strong>{bestStreak}</strong>
           </div>
         </section>
 
         <section className="album-results__score">
           <div>
-            <span>
-              ALBUMS RECOGNIZED
-            </span>
-
+            <span>ALBUMS RECOGNIZED</span>
             <strong>
               {recognizedCount}
-              <small>
-                /{results.length}
-              </small>
+              <small>/{results.length}</small>
             </strong>
           </div>
 
           <div>
-            <span>
-              ACCURACY
-            </span>
-
-            <strong>
-              {accuracy}%
-            </strong>
+            <span>ACCURACY</span>
+            <strong>{accuracy}%</strong>
           </div>
         </section>
 
         <section className="album-results__speed">
           <div className="album-results__section-heading">
             <p>ALBUM RECOGNITION SPEED</p>
-
-            <span>
-              HOW FAST DID YOU KNOW?
-            </span>
+            <span>HOW FAST DID YOU KNOW?</span>
           </div>
 
           <div className="album-results__speed-grid">
             <div>
               <span>AVERAGE</span>
-
-              <strong>
-                {averageTime.toFixed(
-                  1,
-                )}
-                s
-              </strong>
+              <strong>{averageTime.toFixed(1)}s</strong>
             </div>
 
             <div>
               <span>FASTEST</span>
-
               <strong>
                 {fastestTime > 0
-                  ? `${fastestTime.toFixed(
-                      1,
-                    )}s`
+                  ? `${fastestTime.toFixed(1)}s`
                   : '—'}
               </strong>
             </div>
 
             <div>
               <span>FASTEST ALBUM</span>
-
-              <strong>
-                {fastestResult
-                  ?.album ?? '—'}
-              </strong>
+              <strong>{fastestResult?.album ?? '—'}</strong>
             </div>
           </div>
         </section>
@@ -1066,71 +968,47 @@ function AlbumResultsScreen({
         <section className="album-results__breakdown">
           <div className="album-results__section-heading">
             <p>YOUR ALBUMS</p>
-
-            <span>
-              {results.length} SONGS
-            </span>
+            <span>{results.length} SONGS</span>
           </div>
 
           <div className="album-results__list">
-            {results.map(
-              (result) => (
-                <div
-                  className="album-results__item"
-                  key={
-                    result.questionNumber
-                  }
-                >
-                  <span className="album-results__number">
-                    {String(
-                      result.questionNumber,
-                    ).padStart(
-                      2,
-                      '0',
-                    )}
-                  </span>
+            {results.map((result) => (
+              <div
+                className="album-results__item"
+                key={result.questionNumber}
+              >
+                <span className="album-results__number">
+                  {String(result.questionNumber).padStart(2, '0')}
+                </span>
 
-                  <div className="album-results__art">
-                    {result.artworkUrl ? (
-                      <img
-                        src={
-                          result.artworkUrl
-                        }
-                        alt=""
-                      />
-                    ) : (
-                      <span>?</span>
-                    )}
-                  </div>
+                <div className="album-results__art">
+                  {result.artworkUrl ? (
+                    <img src={result.artworkUrl} alt="" />
+                  ) : (
+                    <span>?</span>
+                  )}
+                </div>
 
-                  <div className="album-results__info">
-                    <strong>
-                      {result.album}
-                    </strong>
-
-                    <span>
-                      {result.artist}
-                      {' · '}
-                      {result.title}
-                    </span>
-                  </div>
-
-                  <span
-                    className={
-                      result.correct
-                        ? 'album-results__time'
-                        : 'album-results__missed'
-                    }
-                  >
-                    {result.correct
-                      ? `+${result.points} · ${result.recognitionTime.toFixed(
-                          1,
-                        )}s ✓`
-                      : 'MISSED ×'}
+                <div className="album-results__info">
+                  <strong>{result.album}</strong>
+                  <span>
+                    {result.artist} · {result.title}
                   </span>
                 </div>
-              ),
-            )}
+
+                <span
+                  className={
+                    result.correct
+                      ? 'album-results__time'
+                      : 'album-results__missed'
+                  }
+                >
+                  {result.correct
+                    ? `+${result.points} · ${result.recognitionTime.toFixed(1)}s ✓`
+                    : 'MISSED ×'}
+                </span>
+              </div>
+            ))}
           </div>
         </section>
 
@@ -1139,20 +1017,10 @@ function AlbumResultsScreen({
             <span>⚡</span>
 
             <div>
-              <p>
-                FASTEST RECOGNITION
-              </p>
-
-              <strong>
-                {fastestResult.album}
-              </strong>
-
+              <p>FASTEST RECOGNITION</p>
+              <strong>{fastestResult.album}</strong>
               <small>
-                Recognized in{' '}
-                {fastestResult.recognitionTime.toFixed(
-                  1,
-                )}
-                s
+                Recognized in {fastestResult.recognitionTime.toFixed(1)}s
               </small>
             </div>
           </section>
@@ -1161,9 +1029,7 @@ function AlbumResultsScreen({
         <div className="album-results__actions">
           <button
             className="album-results__primary"
-            onClick={
-              onPlayAgain
-            }
+            onClick={onPlayAgain}
           >
             <RotateCcw size={18} />
             PLAY AGAIN
