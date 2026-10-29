@@ -183,39 +183,34 @@ export async function generateQuestion(
    * -------------------------------------------------------
    */
 
-  const candidates =
-  categoryId
-    ? await getCategoryCandidatePool(
-        categoryId,
-        correctTrack,
-        type,
-        excludedIds,
-      )
-    : await getCandidatePool(
-        correctTrack,
-        {
-          requireReleaseYear:
-            type ===
-            'guess-the-year',
-          decade,
-          questionType:
-            type,
+  console.time('[Game] getCandidatePool')
 
-          /*
-           * Artist mode is different:
-           *
-           * Previously used correct songs are allowed
-           * to appear as distractors.
-           *
-           * The correctTrack itself is already excluded
-           * by getCandidatePool's same-track checks.
-           */
-          excludedTrackIds:
-            artistMode
-              ? new Set<string>()
-              : excludedIds,
-        },
-      )
+const candidates = categoryId
+  ? await getCategoryCandidatePool(
+      categoryId,
+      correctTrack,
+      type,
+      excludedIds,
+    )
+  : await getCandidatePool(
+      correctTrack,
+      {
+        requireReleaseYear:
+          type === 'guess-the-year',
+        decade,
+        questionType: type,
+        excludedTrackIds: artistMode
+          ? new Set<string>()
+          : excludedIds,
+      },
+    )
+
+console.timeEnd('[Game] getCandidatePool')
+
+console.log(
+  '[Game] Candidate count:',
+  candidates.length,
+)
 
   const distractors =
     selectDistractors(
@@ -224,6 +219,22 @@ export async function generateQuestion(
       type,
       3,
     )
+
+    console.log('[Game] Correct track:', {
+  title: correctTrack.title,
+  artist: correctTrack.artist,
+})
+
+console.log('[Game] Distractors selected:', distractors.length)
+
+console.log(
+  '[Game] Candidate tracks:',
+  candidates.map(candidate => ({
+    title: candidate.track.title,
+    artist: candidate.track.artist,
+    source: candidate.source,
+  })),
+)
 
   if (
     distractors.length !== 3

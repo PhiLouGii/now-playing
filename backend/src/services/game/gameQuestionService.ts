@@ -286,8 +286,17 @@ async function getEligibleTracks(
     attempt <= maxAttempts;
     attempt++
   ) {
-    const discoveredTracks =
-      await discoverTracks(20, decade)
+    console.time('[Game] discoverTracks')
+
+const discoveredTracks =
+  await discoverTracks(20, decade)
+
+console.timeEnd('[Game] discoverTracks')
+
+console.log(
+  '[Game] Discovered tracks:',
+  discoveredTracks.length,
+)
 
     let eligibleTracks =
       discoveredTracks
