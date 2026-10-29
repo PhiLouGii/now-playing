@@ -265,6 +265,13 @@ console.log(
       ...distractorAnswers,
     ])
 
+console.log('[Game] Question generated successfully:', {
+  type,
+  correctAnswer,
+  answerCount: answers.length,
+  categoryId,
+})
+
   return {
     id: createQuestionId(),
     type,

@@ -2,7 +2,7 @@ import {
   LogIn,
   LogOut,
   Trophy,
-  Compass,
+  BadgeQuestionMark,
   User,
   House,
   Gamepad2,
@@ -82,7 +82,7 @@ function Navbar() {
             to="/explore"
             className="navbar__link"
           >
-            <Compass size={17} />
+            <BadgeQuestionMark size={17} />
             Trivia
           </NavLink>
 
