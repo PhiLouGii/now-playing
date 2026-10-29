@@ -7,6 +7,7 @@ import type {
 } from '../types/game'
 
 const API_URL = 'http://localhost:3000/api'
+const REQUEST_TIMEOUT_MS = 15_000
 
 export type EraKey =
   | '1960s'
@@ -40,8 +41,15 @@ export type ThemeKey =
   | 'oops-i-like-you'
 
 export type LoadingFact = {
+  id?: string
   text?: string
   fact?: string
+  category?: string
+  relatedArtist?: string
+  relatedSong?: string
+  relatedAlbum?: string
+  relatedGenre?: string
+  relatedEra?: string
   [key: string]: unknown
 }
 
@@ -61,9 +69,10 @@ type CuratedSong = {
 }
 
 type ApiQuestionResponse = {
-  question: Question
+  question?: Question
+  error?: string
+  message?: string
 }
-
 
 type ApiSongsResponse = {
   songs?: CuratedSong[]
@@ -71,35 +80,68 @@ type ApiSongsResponse = {
   playableSongs?: CuratedSong[]
 }
 
+type ApiLoadingFactsResponse = {
+  facts?: LoadingFact[]
+  error?: string
+  message?: string
+}
 
-async function fetchJson<T>(
-  url: string,
-): Promise<T> {
-  const response = await fetch(url)
+async function fetchJson<T>(url: string): Promise<T> {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(
+    () => controller.abort(),
+    REQUEST_TIMEOUT_MS,
+  )
 
-  if (!response.ok) {
-    let message = `Request failed (${response.status})`
+  try {
+    const response = await fetch(url, {
+      signal: controller.signal,
+    })
 
-    try {
-      const data = await response.json()
-      message = data.error ?? data.message ?? message
-    } catch {
-      // Keep the HTTP error message if the response isn't JSON.
+    if (!response.ok) {
+      let message = `Request failed (${response.status})`
+
+      try {
+        const data = (await response.json()) as {
+          error?: string
+          message?: string
+        }
+
+        message = data.error ?? data.message ?? message
+      } catch {
+        // The response may not contain JSON.
+      }
+
+      throw new Error(message)
     }
 
-    throw new Error(message)
-  }
+    try {
+      return (await response.json()) as T
+    } catch {
+      throw new Error('The server returned an invalid response.')
+    }
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Request timed out. Please try again.')
+    }
 
-  return response.json() as Promise<T>
+    if (error instanceof TypeError) {
+      throw new Error(
+        'Unable to connect to the server. Check your connection and try again.',
+      )
+    }
+
+    throw error
+  } finally {
+    clearTimeout(timeoutId)
+  }
 }
 
 function shuffle<T>(items: T[]): T[] {
   const result = [...items]
 
-  for (let index = result.length - 1; index > 0; index--) {
-    const swapIndex = Math.floor(
-      Math.random() * (index + 1),
-    )
+  for (let index = result.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1))
 
     ;[result[index], result[swapIndex]] = [
       result[swapIndex],
@@ -125,9 +167,10 @@ function answerFor(
       return song.album.trim() || null
 
     case 'guess-the-year':
-      return song.year == null
-        ? null
-        : String(song.year)
+      return song.year == null ? null : String(song.year)
+
+    default:
+      return null
   }
 }
 
@@ -192,41 +235,45 @@ function createCuratedQuestion(
     id: `question-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
     type,
     song: toSong(correctSong),
-    answers: shuffle([
-      correctAnswer,
-      ...distractors,
-    ]),
+    answers: shuffle([correctAnswer, ...distractors]),
     correctAnswer,
     difficulty,
   }
 }
 
+function validateQuestionCount(questionCount: number): void {
+  if (!Number.isInteger(questionCount) || questionCount < 1) {
+    throw new Error('Question count must be a positive whole number.')
+  }
+}
 
-async function fetchCuratedSongs(
-  path: string,
-): Promise<CuratedSong[]> {
-  const data = await fetchJson<ApiSongsResponse>(
-    `${API_URL}${path}`,
-  )
+function validateQuestionTypes(questionTypes: QuestionType[]): void {
+  if (questionTypes.length === 0) {
+    throw new Error('At least one question type is required.')
+  }
+}
 
-  // Prefer songs with verified Deezer preview URLs.
-  const songs =
-    data.playableSongs ??
-    data.songs ??
-    data.tracks ??
-    []
+async function fetchCuratedSongs(path: string): Promise<CuratedSong[]> {
+  const data = await fetchJson<ApiSongsResponse>(`${API_URL}${path}`)
+
+  // Prefer songs with verified preview URLs.
+  const songs = data.playableSongs ?? data.songs ?? data.tracks ?? []
 
   return songs.filter(
-    song =>
+    (song): song is CuratedSong =>
       Boolean(
-        song.id &&
-        song.title?.trim() &&
-        song.artist?.trim() &&
-        song.previewUrl?.trim(),
+        song &&
+          typeof song.id === 'string' &&
+          song.id.trim() &&
+          typeof song.title === 'string' &&
+          song.title.trim() &&
+          typeof song.artist === 'string' &&
+          song.artist.trim() &&
+          typeof song.previewUrl === 'string' &&
+          song.previewUrl.trim(),
       ),
   )
 }
-
 
 async function generateCuratedRound(
   songs: CuratedSong[],
@@ -234,15 +281,12 @@ async function generateCuratedRound(
   questionTypes: QuestionType[],
   difficulty: QuestionDifficulty,
 ): Promise<Question[]> {
+  validateQuestionCount(questionCount)
+  validateQuestionTypes(questionTypes)
+
   if (songs.length < 4) {
     throw new Error(
       'This collection needs at least four eligible songs to make a round.',
-    )
-  }
-
-  if (questionTypes.length === 0) {
-    throw new Error(
-      'At least one question type is required.',
     )
   }
 
@@ -250,19 +294,17 @@ async function generateCuratedRound(
   const questions: Question[] = []
   const usedTrackIds = new Set<string>()
 
-  for (let index = 0; index < questionCount; index++) {
+  for (let index = 0; index < questionCount; index += 1) {
     const type = questionTypes[index % questionTypes.length]
 
-    const correctIndex = remaining.findIndex(song => {
-      return (
-        !usedTrackIds.has(song.id) &&
-        answerFor(song, type) !== null
-      )
-    })
+    const correctIndex = remaining.findIndex(
+      (song) =>
+        !usedTrackIds.has(song.id) && answerFor(song, type) !== null,
+    )
 
     if (correctIndex === -1) {
       throw new Error(
-        `Not enough unused songs to complete this ${questionCount}-question round.`,
+        `Not enough unused songs with valid answers to complete this ${questionCount}-question round.`,
       )
     }
 
@@ -329,20 +371,29 @@ export async function generateQuestion(
     `${API_URL}/game/question?${params.toString()}`,
   )
 
+  if (!data.question) {
+    throw new Error(
+      data.error ??
+        data.message ??
+        'The server did not return a question. Please try again.',
+    )
+  }
+
   return data.question
 }
 
 export async function generateRound(
   config: RoundConfig,
 ): Promise<Question[]> {
+  validateQuestionCount(config.questionCount)
+  validateQuestionTypes(config.questionTypes)
+
   const questions: Question[] = []
   const usedTrackIds: string[] = []
 
-  for (let index = 0; index < config.questionCount; index++) {
+  for (let index = 0; index < config.questionCount; index += 1) {
     const type =
-      config.questionTypes[
-        index % config.questionTypes.length
-      ]
+      config.questionTypes[index % config.questionTypes.length]
 
     const question = await generateQuestion(
       type,
@@ -366,12 +417,8 @@ export async function generateRound(
    ERA QUESTIONS
    ========================================================= */
 
-export async function getEraSongs(
-  era: EraKey,
-): Promise<CuratedSong[]> {
-  return fetchCuratedSongs(
-    `/eras/${encodeURIComponent(era)}`,
-  )
+export async function getEraSongs(era: EraKey): Promise<CuratedSong[]> {
+  return fetchCuratedSongs(`/eras/${encodeURIComponent(era)}`)
 }
 
 export async function generateEraRound(
@@ -397,9 +444,7 @@ export async function generateEraRound(
 export async function getGenreSongs(
   genre: GenreKey,
 ): Promise<CuratedSong[]> {
-  return fetchCuratedSongs(
-    `/genres/${encodeURIComponent(genre)}`,
-  )
+  return fetchCuratedSongs(`/genres/${encodeURIComponent(genre)}`)
 }
 
 export async function generateGenreRound(
@@ -428,18 +473,14 @@ export async function generateThemeRound(
   questionTypes: QuestionType[],
   difficulty: QuestionDifficulty,
 ): Promise<Question[]> {
+  validateQuestionCount(questionCount)
+  validateQuestionTypes(questionTypes)
+
   const questions: Question[] = []
   const usedTrackIds: string[] = []
 
-  if (questionTypes.length === 0) {
-    throw new Error(
-      'At least one question type is required.',
-    )
-  }
-
-  for (let index = 0; index < questionCount; index++) {
-    const type =
-      questionTypes[index % questionTypes.length]
+  for (let index = 0; index < questionCount; index += 1) {
+    const type = questionTypes[index % questionTypes.length]
 
     const question = await generateQuestion(
       type,
@@ -466,15 +507,28 @@ export async function generateThemeRound(
 export async function getLoadingFacts(
   count = 5,
 ): Promise<LoadingFact[]> {
+  if (!Number.isInteger(count) || count < 1) {
+    throw new Error('Loading fact count must be a positive whole number.')
+  }
+
   const params = new URLSearchParams({
     count: String(count),
   })
 
-  const data = await fetchJson<{
-    facts?: LoadingFact[]
-  }>(
+  const data = await fetchJson<ApiLoadingFactsResponse>(
     `${API_URL}/loading-facts?${params.toString()}`,
   )
 
-  return data.facts ?? []
+  if (!Array.isArray(data.facts)) {
+    return []
+  }
+
+  return data.facts.filter(
+    (fact): fact is LoadingFact =>
+      Boolean(
+        fact &&
+          typeof fact === 'object' &&
+          (typeof fact.text === 'string' || typeof fact.fact === 'string'),
+      ),
+  )
 }

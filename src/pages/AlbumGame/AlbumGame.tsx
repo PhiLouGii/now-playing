@@ -53,6 +53,10 @@ function AlbumGame() {
   const [question, setQuestion] =
     useState<Question | null>(null)
 
+  // Prepare the full round once so question changes are instant.
+  const [questionDeck, setQuestionDeck] =
+    useState<Question[]>([])
+
   const [questionNumber, setQuestionNumber] =
     useState(1)
 
@@ -122,7 +126,8 @@ function AlbumGame() {
     useRef<number | null>(null)
 
   /*
-   * Generate the first question.
+   * Prepare all questions before the round begins.
+   * This keeps loading on the initial round entry only.
    */
 
   useEffect(() => {
@@ -131,29 +136,49 @@ function AlbumGame() {
     async function initializeGame() {
       setIsLoading(true)
       setLoadingComplete(false)
+      setError(null)
 
-      /*
-       * Load the shared music facts independently
-       * from the question itself.
-       */
       getLoadingFacts()
-        .then((data) => {
-          if (isMounted) {
-            setLoadingFacts(
-              data.facts,
-            )
-          }
-        })
-        .catch((error) => {
-          console.error(
-            'Failed to load loading facts:',
-            error,
-          )
-        })
+  .then((facts) => {
+    if (isMounted) {
+      setLoadingFacts(facts)
+    }
+  })
+  .catch(() => {
+    // Loading facts are optional.
+    // A failure must not prevent the game from starting.
+  })
 
-      await loadQuestion(
-        isMounted,
-      )
+      try {
+        const questions: Question[] = []
+
+        for (let index = 0; index < TOTAL_QUESTIONS; index += 1) {
+          const generatedQuestion = await generateQuestion(
+            'name-the-album',
+            'medium',
+          )
+          questions.push(generatedQuestion)
+        }
+
+        if (!isMounted) return
+
+        setQuestionDeck(questions)
+        setQuestion(questions[0])
+        setLoadingComplete(true)
+      } catch (error) {
+        console.error(
+          'Failed to prepare album round:',
+          error,
+        )
+
+        if (isMounted) {
+          setError('We could not prepare your round. Please try again.')
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false)
+        }
+      }
     }
 
     initializeGame()
@@ -306,55 +331,6 @@ function AlbumGame() {
     score,
     bestStreak,
   ])
-
-  /*
-   * Generate a new album question.
-   */
-
-  async function loadQuestion(
-    isInitialLoad = false,
-  ) {
-    setIsLoading(true)
-    setError(null)
-
-    setQuestion(null)
-    setSelectedAnswer(null)
-    setHasAnswered(false)
-    setIsTimeUp(false)
-    setIsPlaying(false)
-    setTimeRemaining(ROUND_LENGTH)
-
-    try {
-      const generatedQuestion =
-        await generateQuestion(
-          'name-the-album',
-          'medium',
-        )
-
-      setQuestion(
-        generatedQuestion,
-      )
-
-      /*
-       * Only the initial question controls
-       * the shared full-screen loading state.
-       */
-      if (isInitialLoad) {
-        setLoadingComplete(true)
-      }
-    } catch (err) {
-      console.error(
-        'Failed to generate album question:',
-        err,
-      )
-
-      setError(
-        'We could not load the next song. Please try again.',
-      )
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   /*
    * Start / pause the preview.
@@ -514,30 +490,40 @@ function AlbumGame() {
   }
 
   /*
-   * Move to the next question.
+   * Move to the next preloaded question.
    */
 
-  async function handleNext() {
-    if (
-      questionNumber >= TOTAL_QUESTIONS
-    ) {
+  function handleNext() {
+    if (questionNumber >= TOTAL_QUESTIONS) {
       setShowResults(true)
       return
     }
 
-    setQuestionNumber(
-      (previous) => previous + 1,
-    )
+    const nextQuestionNumber = questionNumber + 1
+    const nextQuestion = questionDeck[nextQuestionNumber - 1]
 
-    await loadQuestion()
+    if (!nextQuestion) {
+      setError('We could not load the next question.')
+      return
+    }
+
+    audioRef.current?.pause()
+    setQuestionNumber(nextQuestionNumber)
+    setQuestion(nextQuestion)
+    setSelectedAnswer(null)
+    setHasAnswered(false)
+    setIsTimeUp(false)
+    setIsPlaying(false)
+    setTimeRemaining(ROUND_LENGTH)
+    setError(null)
   }
 
   /*
-   * Retry if question generation fails.
+   * Retry by restarting preparation for the round.
    */
 
   function handleRetry() {
-    loadQuestion()
+    window.location.reload()
   }
 
   /*
@@ -607,7 +593,7 @@ function AlbumGame() {
           </div>
         </header>
 
-        {isLoading && (
+        {isLoading && !question && (
           <div className="album-game__loading">
             <div className="album-game__loading-spinner" />
 
@@ -637,7 +623,6 @@ function AlbumGame() {
         )}
 
         {question &&
-          !isLoading &&
           !error && (
             <>
               <section className="album-game__player-card">

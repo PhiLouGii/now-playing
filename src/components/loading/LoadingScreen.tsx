@@ -6,9 +6,10 @@ import {
 import './LoadingScreen.css'
 
 export type LoadingFact = {
-  id: string
-  text: string
-  category: string
+  id?: string
+  text?: string
+  fact?: string
+  category?: string
   relatedArtist?: string
   relatedSong?: string
   relatedAlbum?: string
@@ -215,8 +216,10 @@ export default function LoadingScreen({
             {currentFact ? (
               <>
                 <p>
-                  {currentFact.text}
-                </p>
+  {currentFact.text ??
+    currentFact.fact ??
+    'Discover something new while your game loads.'}
+</p>
 
                 {currentFact.relatedArtist && (
                   <span className="loading-screen__fact-context">
