@@ -8,6 +8,7 @@ import {
 } from '../../data/categories/categoryFranchises.js'
 import { CATEGORY_CONFIG } from '../../data/categories/categoryConfig.js'
 import type { QuestionType } from '../game/gameTypes.js'
+import { db } from '../../config/firebase.js'
 
 type GetCategoryTracksOptions = {
   questionType?: QuestionType
@@ -263,6 +264,41 @@ function buildUniqueTrackPool(
   return shuffle(uniqueTracks).slice(0, limit)
 }
 
+async function getDisneyNickTracksFromFirebase(
+  limit: number,
+  excludedTrackIds: Set<string>,
+): Promise<MusicTrack[]> {
+  const snapshot = await db
+    .collection('songs')
+    .where('themes', 'array-contains', 'disney-nick')
+    .get()
+
+  const tracks: MusicTrack[] = snapshot.docs.map((doc) => {
+    const data = doc.data()
+
+    return {
+      id: doc.id,
+      title: data.title ?? '',
+      artist: data.artist ?? '',
+      album: data.album ?? '',
+      releaseYear: data.year ?? undefined,
+      genres: Array.isArray(data.genres) ? data.genres : [],
+      provider: data.provider ?? 'deezer',
+      providerId: data.providerSongId ?? doc.id,
+      previewUrl: data.previewUrl ?? undefined,
+      artworkUrl: data.artworkUrl ?? undefined,
+    }
+  })
+
+  const filteredTracks = filterGameTracks(tracks)
+
+  return buildUniqueTrackPool(
+    [filteredTracks],
+    limit,
+    excludedTrackIds,
+  )
+}
+
 export async function getCategoryTracks(
   categoryId: string,
   options: GetCategoryTracksOptions = {},
@@ -284,17 +320,16 @@ export async function getCategoryTracks(
   }
 
   const tracks =
-    categoryId === 'disney-nick'
-      ? await getFranchiseCategoryTracks(
-          categoryId,
-          limit,
-          excludedTrackIds,
-        )
-      : await getArtistCategoryTracks(
-          categoryId,
-          limit,
-          excludedTrackIds,
-        )
+  categoryId === 'disney-nick'
+    ? await getDisneyNickTracksFromFirebase(
+        limit,
+        excludedTrackIds,
+      )
+    : await getArtistCategoryTracks(
+        categoryId,
+        limit,
+        excludedTrackIds,
+      )
 
   if (tracks.length < 4) {
     console.warn(

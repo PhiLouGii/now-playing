@@ -155,46 +155,75 @@ if (playableMatches.length === 0) {
       const existing = await findExistingSong(providerSongId)
 
       if (existing) {
-        const existingData = existing.data()
-        const themes = Array.isArray(existingData.themes)
-          ? existingData.themes
-          : []
+  const existingData = existing.data()
 
-        if (!themes.includes(CATEGORY_THEME)) {
-          await existing.ref.update({
-            themes: [...themes, CATEGORY_THEME],
-          })
-        }
+  const themes = Array.isArray(existingData.themes)
+    ? existingData.themes
+    : []
 
-        report.push({
-          title: song.title,
-          artist: song.artist,
-          status: 'ALREADY_EXISTS',
-          reason: 'Track already exists; Disney/Nick theme ensured.',
-          deezerMatches: [{
-            title: track.title,
-            artist: track.artist,
-            album: track.album ?? null,
-            providerSongId,
-            playable: true,
-          }],
-        })
+  await existing.ref.update({
+    themes: themes.includes(CATEGORY_THEME)
+      ? themes
+      : [...themes, CATEGORY_THEME],
 
-        console.log(`[SKIPPED] ${song.artist} — ${song.title}`)
-        continue
-      }
+    title: existingData.title || track.title,
+    artist: existingData.artist || track.artist,
+    artistKey:
+      existingData.artistKey ||
+      normalize(track.artist).replace(/\s+/g, '-'),
+    album: existingData.album || track.album || null,
+
+    year: existingData.year ?? track.releaseYear ?? null,
+
+    genres:
+      Array.isArray(existingData.genres) &&
+      existingData.genres.length > 0
+        ? existingData.genres
+        : Array.isArray(track.genres)
+          ? track.genres
+          : [],
+
+    provider: existingData.provider || 'deezer',
+    providerSongId,
+
+    previewUrl:
+      existingData.previewUrl || track.previewUrl || null,
+
+    artworkUrl:
+      existingData.artworkUrl || track.artworkUrl || null,
+  })
+
+  report.push({
+    title: song.title,
+    artist: song.artist,
+    status: 'ALREADY_EXISTS',
+    reason: 'Existing track updated; Disney/Nick theme and metadata ensured.',
+    deezerMatches: [{
+      title: track.title,
+      artist: track.artist,
+      album: track.album ?? null,
+      providerSongId,
+      playable: true,
+    }],
+  })
+
+  console.log(`[UPDATED] ${song.artist} — ${song.title}`)
+  continue
+}
 
       await db.collection(COLLECTION).add({
         title: track.title,
         artist: track.artist,
         artistKey: normalize(track.artist).replace(/\s+/g, '-'),
         album: track.album ?? null,
-        year: null,
+        year: track.releaseYear ?? null,
         era: null,
         genres: Array.isArray(track.genres) ? track.genres : [],
         themes: [CATEGORY_THEME],
         provider: 'deezer',
         providerSongId,
+        previewUrl: track.previewUrl ?? null,
+        artworkUrl: track.artworkUrl ?? null,
         createdAt: new Date(),
       })
 

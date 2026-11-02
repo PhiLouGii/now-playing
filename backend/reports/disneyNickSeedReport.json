@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-02T13:05:41.818Z",
+  "generatedAt": "2026-11-02T15:39:28.139Z",
   "summary": {
     "added": 0,
     "skipped": 61,
@@ -11,7 +11,7 @@
       "title": "The Best of Both Worlds",
       "artist": "Hannah Montana",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "The Best of Both Worlds",
@@ -26,7 +26,7 @@
       "title": "Who Said",
       "artist": "Hannah Montana",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Who Said",
@@ -41,7 +41,7 @@
       "title": "Just Like You",
       "artist": "Hannah Montana",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Just Like You",
@@ -56,7 +56,7 @@
       "title": "Rock Star",
       "artist": "Hannah Montana",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Rock Star",
@@ -71,7 +71,7 @@
       "title": "Nobody's Perfect",
       "artist": "Hannah Montana",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Nobody's Perfect",
@@ -86,7 +86,7 @@
       "title": "We Got The Party",
       "artist": "Hannah Montana",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "We Got The Party",
@@ -101,7 +101,7 @@
       "title": "Old Blue Jeans",
       "artist": "Hannah Montana",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Old Blue Jeans",
@@ -116,7 +116,7 @@
       "title": "Ordinary Girl",
       "artist": "Hannah Montana",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Ordinary Girl",
@@ -131,7 +131,7 @@
       "title": "Breaking Free",
       "artist": "Troy",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Breaking Free",
@@ -175,7 +175,7 @@
       "title": "Get'cha Head in the Game",
       "artist": "Troy",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Get'cha Head In The Game",
@@ -190,7 +190,7 @@
       "title": "Start of Something New",
       "artist": "Troy",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Start of Something New",
@@ -205,7 +205,7 @@
       "title": "What I've Been Looking For",
       "artist": "Lucas Grabeel",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "What I've Been Looking For",
@@ -318,7 +318,7 @@
       "title": "Now Or Never",
       "artist": "High School Musical Cast",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Now Or Never",
@@ -333,7 +333,7 @@
       "title": "A Night to Remember",
       "artist": "High School Musical Cast",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "A Night to Remember",
@@ -348,7 +348,7 @@
       "title": "This Is Me",
       "artist": "Demi Lovato",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "This Is Me",
@@ -387,7 +387,7 @@
       "title": "Fire (From \"Camp Rock 2: The Final Jam\")",
       "artist": "Matthew \"Mdot\" Finley",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Fire (From \"Camp Rock 2: The Final Jam\")",
@@ -402,7 +402,7 @@
       "title": "Joyful Noise",
       "artist": "Cast of Let It Shine",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Joyful Noise",
@@ -417,7 +417,7 @@
       "title": "Don't Run Away",
       "artist": "Tyler James Williams",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Don't Run Away",
@@ -432,7 +432,7 @@
       "title": "Guardian Angel",
       "artist": "Coco Jones",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Guardian Angel",
@@ -447,7 +447,7 @@
       "title": "Good To Be Home",
       "artist": "Coco Jones",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Good To Be Home",
@@ -462,7 +462,7 @@
       "title": "Me And You",
       "artist": "Coco Jones",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Me And You",
@@ -477,7 +477,7 @@
       "title": "Let It Shine",
       "artist": "Coco Jones",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Let It Shine",
@@ -564,7 +564,7 @@
       "title": "Right Where I Wanna Be",
       "artist": "Garrett Clayton",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Right Where I Wanna Be",
@@ -579,7 +579,7 @@
       "title": "Falling for Ya",
       "artist": "Jordan Fisher",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Falling for Ya",
@@ -594,7 +594,7 @@
       "title": "Twist Your Frown Upside Down",
       "artist": "Brady",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Twist Your Frown Upside Down",
@@ -609,7 +609,7 @@
       "title": "Everything Is Not As It Seems (Series Theme Song)",
       "artist": "Selena Gomez",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Everything Is Not As It Seems (Series Theme Song)",
@@ -648,7 +648,7 @@
       "title": "Can't Do It Without You (Duet)",
       "artist": "Austin Moon",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Can’t Do It Without You (Duet)",
@@ -663,7 +663,7 @@
       "title": "No Place Like Home",
       "artist": "Ally Dawson",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "No Place Like Home",
@@ -678,7 +678,7 @@
       "title": "Ways to Be Wicked",
       "artist": "Dove Cameron",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Ways to Be Wicked",
@@ -693,7 +693,7 @@
       "title": "What's My Name",
       "artist": "China Anne McClain",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "What's My Name",
@@ -708,7 +708,7 @@
       "title": "It's Goin' Down",
       "artist": "Dove Cameron",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "It's Goin' Down",
@@ -723,7 +723,7 @@
       "title": "Poor Unfortunate Souls",
       "artist": "China Anne McClain",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Poor Unfortunate Souls",
@@ -738,7 +738,7 @@
       "title": "One Kiss",
       "artist": "Sofia Carson",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "One Kiss",
@@ -753,7 +753,7 @@
       "title": "Good to Be Bad",
       "artist": "Dove Cameron",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Good to Be Bad",
@@ -768,7 +768,7 @@
       "title": "Queen of Mean",
       "artist": "Sarah Jeffery",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Queen of Mean",
@@ -783,7 +783,7 @@
       "title": "Do What You Gotta Do",
       "artist": "Dove Cameron",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Do What You Gotta Do",
@@ -798,7 +798,7 @@
       "title": "Better in Stereo",
       "artist": "Cast - Liv and Maddie",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Better in Stereo",
@@ -813,7 +813,7 @@
       "title": "Count Me In",
       "artist": "Cast - Liv and Maddie",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Count Me In",
@@ -828,7 +828,7 @@
       "title": "Somebody",
       "artist": "Bridgit Mendler",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Somebody",
@@ -843,7 +843,7 @@
       "title": "She's So Gone",
       "artist": "Naomi Scott",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "She's So Gone",
@@ -858,7 +858,7 @@
       "title": "Turn Up the Music",
       "artist": "Adam Hicks",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Turn Up the Music",
@@ -873,7 +873,7 @@
       "title": "Determinate",
       "artist": "Adam Hicks",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Determinate (From \"Lemonade Mouth\")",
@@ -888,7 +888,7 @@
       "title": "Breakthrough",
       "artist": "Adam Hicks",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Breakthrough",
@@ -975,7 +975,7 @@
       "title": "Summer Belongs to You",
       "artist": "Candace",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Summer Belongs to You",
@@ -990,7 +990,7 @@
       "title": "Platypus Walk",
       "artist": "Swampy and the Marsh-mellows",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Platypus Walk",
@@ -1005,7 +1005,7 @@
       "title": "Rubber Bands, Rubber Balls",
       "artist": "Uncle Sabu & Co.",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Rubber Bands, Rubber Balls",
@@ -1020,7 +1020,7 @@
       "title": "City of Love",
       "artist": "Isabella",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "City of Love",
@@ -1083,7 +1083,7 @@
       "title": "We Are the Moms",
       "artist": "Jen Hirsh",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "We Are the Moms",
@@ -1098,7 +1098,7 @@
       "title": "Ferb Latin",
       "artist": "Phineas and Friends",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Ferb Latin",
@@ -1113,7 +1113,7 @@
       "title": "Funhouse",
       "artist": "Aaron Daniel Jacob",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Funhouse",
@@ -1128,7 +1128,7 @@
       "title": "Izzy's Got the Frizzies",
       "artist": "Carmen Carter",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Izzy’s Got the Frizzies",
@@ -1143,7 +1143,7 @@
       "title": "Lots of Me",
       "artist": "Dr. Doofenshmirtz",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Lots of Me",
@@ -1158,7 +1158,7 @@
       "title": "Army of Me",
       "artist": "Dr. Doofenshmirtz",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Army of Me",
@@ -1173,7 +1173,7 @@
       "title": "Starstruck",
       "artist": "Christopher Wilde",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Starstruck",
@@ -1188,7 +1188,7 @@
       "title": "Hang In There Baby (From \"Good Luck Charlie\")",
       "artist": "Bridgit Mendler",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Hang In There Baby (From \"Good Luck Charlie\")",
@@ -1203,7 +1203,7 @@
       "title": "Hey Jessie (From \"Jessie\")",
       "artist": "Debby Ryan",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Hey Jessie (From \"Jessie\")",
@@ -1330,7 +1330,7 @@
       "title": "You Don't Know Me",
       "artist": "Victorious Cast",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "You Don't Know Me",
@@ -1361,7 +1361,7 @@
       "title": "Give It Up",
       "artist": "Victorious Cast",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Give It Up",
@@ -1376,7 +1376,7 @@
       "title": "All I Want Is Everything",
       "artist": "Victorious Cast",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "All I Want Is Everything",
@@ -1391,7 +1391,7 @@
       "title": "You're the Reason",
       "artist": "Victorious Cast",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "You're the Reason",
@@ -1406,7 +1406,7 @@
       "title": "Zoey 101 (From \"Zoey 101\")",
       "artist": "Geek Music",
       "status": "ALREADY_EXISTS",
-      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "reason": "Existing track updated; Disney/Nick theme and metadata ensured.",
       "deezerMatches": [
         {
           "title": "Zoey 101 (From \"Zoey 101\")",
