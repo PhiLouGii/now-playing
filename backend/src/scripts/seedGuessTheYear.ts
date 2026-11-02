@@ -50,12 +50,23 @@ async function seedGuessTheYear() {
   )
 }
 
-      const matches = results.filter((track) => (
-        normalize(track.title) === expectedTitle &&
-        normalize(track.artist) === expectedArtist &&
-        Boolean(track.previewUrl) &&
-        Boolean(track.providerId)
-      ))
+      const matches = results.filter((track) => {
+  const actualTitle = normalize(track.title)
+  const actualArtist = normalize(track.artist)
+
+  const titleMatches =
+    actualTitle === expectedTitle ||
+    actualTitle.startsWith(`${expectedTitle} `)
+
+  const artistMatches = actualArtist === expectedArtist
+
+  return (
+    titleMatches &&
+    artistMatches &&
+    Boolean(track.previewUrl) &&
+    Boolean(track.providerId)
+  )
+})
 
       if (matches.length === 0) {
         console.log('  SKIPPED: No matching playable track.')
@@ -69,7 +80,22 @@ async function seedGuessTheYear() {
         )
       }
 
-      const match = matches[0]
+      const preferredTrackIds: Record<string, string> = {
+  'Running Up That Hill': '2173954687',
+  Dreams: '63480987',
+}
+
+const preferredId = preferredTrackIds[song.title]
+
+const match = preferredId
+  ? matches.find((track) => track.providerId === preferredId)
+  : matches[0]
+
+if (!match) {
+  console.log('  SKIPPED: Preferred recording was not found.')
+  skipped++
+  continue
+}
 
       const documentId =
         `guess_the_year_${song.title}_${song.artist}`

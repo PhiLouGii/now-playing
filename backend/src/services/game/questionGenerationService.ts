@@ -29,37 +29,21 @@ function createQuestionId(): string {
 }
 
 
-function shuffle<T>(
-  items: T[],
-): T[] {
-  const result = [
-    ...items,
-  ]
+function shuffle<T>(items: T[]): T[] {
+  const result = [...items]
 
-  /*
-   * Fisher-Yates avoids the biased random-sort
-   * approach and guarantees we only shuffle this
-   * question's own array.
-   */
   for (
     let index = result.length - 1;
     index > 0;
     index -= 1
   ) {
-    const randomIndex =
-      Math.floor(
-        Math.random() *
-          (index + 1),
-      )
+    const randomIndex = Math.floor(
+      Math.random() * (index + 1),
+    )
 
-    const temporary =
-      result[index]
-
-    result[index] =
-      result[randomIndex]
-
-    result[randomIndex] =
-      temporary
+    const temporary = result[index]
+    result[index] = result[randomIndex]
+    result[randomIndex] = temporary
   }
 
   return result
@@ -81,18 +65,13 @@ function getCorrectAnswer(
       return track.album
 
     case 'guess-the-year':
-      if (
-        track.releaseYear ===
-        undefined
-      ) {
+      if (track.releaseYear === undefined) {
         throw new Error(
           'Correct track does not have a release year',
         )
       }
 
-      return String(
-        track.releaseYear,
-      )
+      return String(track.releaseYear)
 
     default:
       throw new Error(
@@ -117,18 +96,13 @@ function getDistractorAnswer(
       return track.album
 
     case 'guess-the-year':
-      if (
-        track.releaseYear ===
-        undefined
-      ) {
+      if (track.releaseYear === undefined) {
         throw new Error(
           'Distractor does not have a release year',
         )
       }
 
-      return String(
-        track.releaseYear,
-      )
+      return String(track.releaseYear)
 
     default:
       throw new Error(
@@ -146,21 +120,64 @@ function toGeneratedSong(
     title: track.title,
     artist: track.artist,
     album: track.album,
-    releaseYear:
-      track.releaseYear,
-    artworkUrl:
-      track.artworkUrl ?? '',
-    audioUrl:
-      track.previewUrl,
-    genres: [
-      ...track.genres,
-    ],
-    provider:
-      track.provider,
-    providerId:
-      track.providerId,
+    releaseYear: track.releaseYear,
+    artworkUrl: track.artworkUrl ?? '',
+    audioUrl: track.previewUrl,
+    genres: [...track.genres],
+    provider: track.provider,
+    providerId: track.providerId,
   }
 }
+
+
+/*
+ * =========================================================
+ * GUESS THE YEAR DISTRACTORS
+ * =========================================================
+ */
+
+function getGuessTheYearDistractors(
+  correctTrack: MusicTrack,
+  catalogue: MusicTrack[],
+): string[] {
+  if (correctTrack.releaseYear === undefined) {
+    throw new Error(
+      'Correct Guess the Year track has no release year.',
+    )
+  }
+
+  const correctYear = correctTrack.releaseYear
+
+  const availableYears = [
+    ...new Set(
+      catalogue
+        .map(track => track.releaseYear)
+        .filter(
+          (year): year is number =>
+            year !== undefined &&
+            Number.isInteger(year) &&
+            year !== correctYear,
+        ),
+    ),
+  ]
+
+  if (availableYears.length < 3) {
+    throw new Error(
+      `Guess the Year needs at least 3 distinct incorrect years. Found ${availableYears.length}. Expand the curated catalogue.`,
+    )
+  }
+
+  return shuffle(availableYears)
+    .slice(0, 3)
+    .map(String)
+}
+
+
+/*
+ * =========================================================
+ * QUESTION GENERATION
+ * =========================================================
+ */
 
 export async function generateQuestion(
   correctTrack: MusicTrack,
@@ -170,115 +187,97 @@ export async function generateQuestion(
   excludedTrackIds: string[] = [],
   categoryId?: string,
   artistMode = false,
+  curatedCatalogue: MusicTrack[] = [],
 ): Promise<GeneratedQuestion> {
-  const excludedIds =
-    new Set(
-      excludedTrackIds,
+  let distractorAnswers: string[]
+
+  if (type === 'guess-the-year') {
+    console.log(
+      '[Game] Generating Guess the Year options from curated catalogue.',
     )
 
+    distractorAnswers =
+      getGuessTheYearDistractors(
+        correctTrack,
+        curatedCatalogue,
+      )
+  } else {
+    const excludedIds = new Set(excludedTrackIds)
 
-  /*
-   * -------------------------------------------------------
-   * GENERAL / CATEGORY QUESTION
-   * -------------------------------------------------------
-   */
+    console.time('[Game] getCandidatePool')
 
-  console.time('[Game] getCandidatePool')
+    const candidates = categoryId
+      ? await getCategoryCandidatePool(
+          categoryId,
+          correctTrack,
+          type,
+          excludedIds,
+        )
+      : await getCandidatePool(
+          correctTrack,
+          {
+            requireReleaseYear: false,
+            decade,
+            questionType: type,
+            excludedTrackIds: artistMode
+              ? new Set<string>()
+              : excludedIds,
+          },
+        )
 
-const candidates = categoryId
-  ? await getCategoryCandidatePool(
-      categoryId,
-      correctTrack,
-      type,
-      excludedIds,
+    console.timeEnd('[Game] getCandidatePool')
+
+    console.log(
+      '[Game] Candidate count:',
+      candidates.length,
     )
-  : await getCandidatePool(
-      correctTrack,
-      {
-        requireReleaseYear:
-          type === 'guess-the-year',
-        decade,
-        questionType: type,
-        excludedTrackIds: artistMode
-          ? new Set<string>()
-          : excludedIds,
-      },
-    )
 
-console.timeEnd('[Game] getCandidatePool')
-
-console.log(
-  '[Game] Candidate count:',
-  candidates.length,
-)
-
-  const distractors =
-    selectDistractors(
+    const distractors = selectDistractors(
       candidates,
       correctTrack,
       type,
       3,
     )
 
-    console.log('[Game] Correct track:', {
-  title: correctTrack.title,
-  artist: correctTrack.artist,
-})
+    if (distractors.length !== 3) {
+      throw new Error(
+        `Could not generate exactly 3 distractors. Found ${distractors.length}.`,
+      )
+    }
 
-console.log('[Game] Distractors selected:', distractors.length)
-
-console.log(
-  '[Game] Candidate tracks:',
-  candidates.map(candidate => ({
-    title: candidate.track.title,
-    artist: candidate.track.artist,
-    source: candidate.source,
-  })),
-)
-
-  if (
-    distractors.length !== 3
-  ) {
-    throw new Error(
-      `Could not generate exactly 3 distractors. Found ${distractors.length}.`,
-    )
-  }
-
-  const correctAnswer =
-    getCorrectAnswer(
-      correctTrack,
-      type,
-    )
-
-  const distractorAnswers =
-    distractors.map(
+    distractorAnswers = distractors.map(
       distractor =>
         getDistractorAnswer(
           distractor.track,
           type,
         ),
     )
+  }
 
-  const answers =
-    shuffle([
+  const correctAnswer = getCorrectAnswer(
+    correctTrack,
+    type,
+  )
+
+  const answers = shuffle([
+    correctAnswer,
+    ...distractorAnswers,
+  ])
+
+  console.log(
+    '[Game] Question generated successfully:',
+    {
+      type,
       correctAnswer,
-      ...distractorAnswers,
-    ])
-
-console.log('[Game] Question generated successfully:', {
-  type,
-  correctAnswer,
-  answerCount: answers.length,
-  categoryId,
-})
+      answerCount: answers.length,
+      categoryId,
+    },
+  )
 
   return {
     id: createQuestionId(),
     type,
-    song:
-      toGeneratedSong(
-        correctTrack,
-      ),
+    song: toGeneratedSong(correctTrack),
     answers,
     correctAnswer,
     difficulty,
