@@ -50,6 +50,7 @@ function YearGame() {
   const [playbackProgress, setPlaybackProgress] = useState(0)
   const [answerInput, setAnswerInput] = useState('')
   const [attemptStatuses, setAttemptStatuses] = useState<AttemptStatus[]>([])
+  const [guessedYears, setGuessedYears] = useState<string[]>([])
   const [hasAnswered, setHasAnswered] = useState(false)
 
   const [results, setResults] = useState<YearRecognitionResult[]>([])
@@ -134,6 +135,7 @@ function YearGame() {
     setQuestion(null)
     setAnswerInput('')
     setAttemptStatuses([])
+    setGuessedYears([])
     setHasAnswered(false)
     setIsPlaying(false)
     setPlaybackProgress(0)
@@ -186,7 +188,11 @@ function YearGame() {
     ]
 
     setAttemptStatuses(nextStatuses)
-    setAnswerInput('')
+setGuessedYears((previous) => [
+  ...previous,
+  answer,
+])
+setAnswerInput('')
 
     // A wrong first or second guess uses an attempt but does not end the question.
     if (!correct && attemptNumber < MAX_ATTEMPTS) return
@@ -373,30 +379,57 @@ function YearGame() {
                   <span>{attemptStatuses.length}/{MAX_ATTEMPTS} ATTEMPTS</span>
                 </div>
 
-                <div className="year-game__attempts" aria-label={`${attemptStatuses.length} of 3 attempts used`}>
-                  {Array.from({ length: MAX_ATTEMPTS }, (_, index) => {
-                    const status = attemptStatuses[index]
-                    return (
-                      <span
-                        key={index}
-                        className={`year-game__attempt-slot${status ? ` year-game__attempt-slot--${status}` : ''}`}
-                      />
-                    )
-                  })}
-                </div>
+                <div
+  className="year-game__attempts"
+  aria-label={`${attemptStatuses.length} of 3 attempts used`}
+>
+  {Array.from({ length: MAX_ATTEMPTS }, (_, index) => {
+    const status = attemptStatuses[index]
+    const guessedYear = guessedYears[index]
+
+    return (
+      <div
+        key={index}
+        className="year-game__attempt"
+      >
+        <span
+          className={`year-game__attempt-slot${
+            status
+              ? ` year-game__attempt-slot--${status}`
+              : ''
+          }`}
+        >
+          {index + 1}
+        </span>
+
+        <span
+          className={`year-game__attempt-year${
+            status
+              ? ` year-game__attempt-year--${status}`
+              : ''
+          }`}
+        >
+          {guessedYear || '—'}
+        </span>
+      </div>
+    )
+  })}
+</div>
 
                 {!hasAnswered ? (
                   <>
                     <form className="year-game__input-form" onSubmit={handleAnswer}>
                       <input
                         className="year-game__input"
-                        type="number"
+                        type="text"
                         inputMode="numeric"
+                        maxLength={4}
                         placeholder="Enter release year"
-                        min="1900"
-                        max="2099"
                         value={answerInput}
-                        onChange={(event) => setAnswerInput(event.target.value)}
+                        onChange={(event) => {
+                          const value = event.target.value.replace(/\D/g, '')
+                          setAnswerInput(value)
+                        }}
                         aria-label="Enter release year"
                       />
                       <button

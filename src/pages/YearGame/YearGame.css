@@ -1096,6 +1096,33 @@
   color: #e9677d;
 }
 
+.year-game__attempts {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.year-game__attempt {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.year-game__attempt-year {
+  min-width: 3.2rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.year-game__attempt-year--wrong {
+  color: #e05252;
+}
+
+.year-game__attempt-year--correct {
+  color: #36a879;
+}
+
 /* =========================================
    FASTEST
 ========================================= */
