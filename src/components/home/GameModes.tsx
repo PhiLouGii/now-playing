@@ -4,6 +4,7 @@ import {
   Mic2,
   Radio,
   Sparkles,
+  Ban,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
@@ -81,42 +82,58 @@ function GameModes() {
 
             return (
               <button
-                key={mode.title}
-                type="button"
-                className={`game-mode ${mode.className}`}
-                onClick={() => navigate(mode.path)}
-              >
-                <div
-                  className="game-mode__artwork"
-                  style={{
-                    backgroundImage: `url("${mode.artwork}")`,
-                  }}
-                  aria-hidden="true"
-                />
+  key={mode.title}
+  type="button"
+  className={`game-mode ${mode.className} ${
+    mode.title === 'Endless' ? 'game-mode--coming-soon' : ''
+  }`}
+  onClick={() => {
+    if (mode.title !== 'Endless') {
+      navigate(mode.path)
+    }
+  }}
+  aria-disabled={mode.title === 'Endless'}
+>
+  <div
+    className="game-mode__artwork"
+    style={{
+      backgroundImage: `url("${mode.artwork}")`,
+    }}
+    aria-hidden="true"
+  />
 
-                <div
-                  className="game-mode__overlay"
-                  aria-hidden="true"
-                />
+  <div
+    className="game-mode__overlay"
+    aria-hidden="true"
+  />
 
-                <div className="game-mode__top">
-                  <span className="game-mode__number">
-                    {mode.number}
-                  </span>
+  <div className="game-mode__top">
+    <span className="game-mode__number">
+      {mode.number}
+    </span>
 
-                  <span className="game-mode__icon">
-                    <Icon
-                      size={19}
-                      strokeWidth={1.8}
-                    />
-                  </span>
-                </div>
+    <span className="game-mode__icon">
+      <Icon size={19} strokeWidth={1.8} />
+    </span>
+  </div>
 
-                <div className="game-mode__info">
-                  <h3>{mode.title}</h3>
-                  <p>{mode.description}</p>
-                </div>
-              </button>
+  {mode.title === 'Endless' && (
+    <span className="game-mode__coming-soon">
+      Coming soon
+    </span>
+  )}
+
+  <div className="game-mode__info">
+    <h3>{mode.title}</h3>
+    <p>{mode.description}</p>
+  </div>
+
+  {mode.title === 'Endless' && (
+    <span className="game-mode__disabled-icon">
+      <Ban size={25} strokeWidth={1.8} />
+    </span>
+  )}
+</button>
             )
           })}
         </div>
