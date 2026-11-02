@@ -1,0 +1,1421 @@
+{
+  "generatedAt": "2026-11-02T13:05:41.818Z",
+  "summary": {
+    "added": 0,
+    "skipped": 61,
+    "notFound": 22,
+    "errors": 0
+  },
+  "results": [
+    {
+      "title": "The Best of Both Worlds",
+      "artist": "Hannah Montana",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "The Best of Both Worlds",
+          "artist": "Hannah Montana",
+          "album": "Best Of Hannah Montana",
+          "providerSongId": "13275871",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Who Said",
+      "artist": "Hannah Montana",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Who Said",
+          "artist": "Hannah Montana",
+          "album": "Hannah Montana",
+          "providerSongId": "3058836",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Just Like You",
+      "artist": "Hannah Montana",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Just Like You",
+          "artist": "Hannah Montana",
+          "album": "Hannah Montana",
+          "providerSongId": "3058837",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Rock Star",
+      "artist": "Hannah Montana",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Rock Star",
+          "artist": "Hannah Montana",
+          "album": "Best Of Hannah Montana",
+          "providerSongId": "13275874",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Nobody's Perfect",
+      "artist": "Hannah Montana",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Nobody's Perfect",
+          "artist": "Hannah Montana",
+          "album": "Best Of Hannah Montana",
+          "providerSongId": "13275875",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "We Got The Party",
+      "artist": "Hannah Montana",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "We Got The Party",
+          "artist": "Hannah Montana",
+          "album": "Hannah Montana 2 (Original Soundtrack)",
+          "providerSongId": "1215765142",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Old Blue Jeans",
+      "artist": "Hannah Montana",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Old Blue Jeans",
+          "artist": "Hannah Montana",
+          "album": "Hannah Montana 2 (Original Soundtrack)",
+          "providerSongId": "1215765182",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Ordinary Girl",
+      "artist": "Hannah Montana",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Ordinary Girl",
+          "artist": "Hannah Montana",
+          "album": "Hannah Montana Forever",
+          "providerSongId": "7226756",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Breaking Free",
+      "artist": "Troy",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Breaking Free",
+          "artist": "Troy",
+          "album": "High School Musical",
+          "providerSongId": "4242713",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "We're All in This Together",
+      "artist": "High School Musical Cast",
+      "status": "NOT_FOUND",
+      "reason": "Multiple playable exact matches; needs manual review.",
+      "deezerMatches": [
+        {
+          "title": "We're All In This Together",
+          "artist": "High School Musical Cast",
+          "album": "High School Musical",
+          "providerSongId": "4242714",
+          "playable": true
+        },
+        {
+          "title": "We're All In This Together (Graduation Mix)",
+          "artist": "High School Musical Cast",
+          "album": "High School Musical 3: Senior Year",
+          "providerSongId": "3070721",
+          "playable": true
+        },
+        {
+          "title": "We're All In This Together",
+          "artist": "High School Musical Cast",
+          "album": "High School Musical The Concert",
+          "providerSongId": "3576935",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Get'cha Head in the Game",
+      "artist": "Troy",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Get'cha Head In The Game",
+          "artist": "Troy",
+          "album": "High School Musical",
+          "providerSongId": "4242707",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Start of Something New",
+      "artist": "Troy",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Start of Something New",
+          "artist": "Troy",
+          "album": "High School Musical",
+          "providerSongId": "4242706",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "What I've Been Looking For",
+      "artist": "Lucas Grabeel",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "What I've Been Looking For",
+          "artist": "Lucas Grabeel",
+          "album": "High School Musical",
+          "providerSongId": "4242708",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Stick to the Status Quo",
+      "artist": "High School Musical Cast",
+      "status": "NOT_FOUND",
+      "reason": "Multiple playable exact matches; needs manual review.",
+      "deezerMatches": [
+        {
+          "title": "Stick to the Status Quo",
+          "artist": "High School Musical Cast",
+          "album": "High School Musical",
+          "providerSongId": "4242710",
+          "playable": true
+        },
+        {
+          "title": "Stick to the Status Quo",
+          "artist": "High School Musical Cast",
+          "album": "High School Musical The Concert",
+          "providerSongId": "3576927",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "What Time Is It",
+      "artist": "Zac Efron, Vanessa Hudgesn, Lucas Grabeel, Corbin Bleu, Ashley Tisdale, Monique Coleman, Disney",
+      "status": "NOT_FOUND",
+      "reason": "No exact title and artist match found on Deezer.",
+      "deezerMatches": [],
+      "deezerSuggestions": []
+    },
+    {
+      "title": "Fabulous (From \"High School Musical 2\"/Soundtrack Version)",
+      "artist": "Sharpay",
+      "status": "NOT_FOUND",
+      "reason": "Exact title and artist found, but no playable track.",
+      "deezerMatches": [
+        {
+          "title": "Fabulous (From \"High School Musical 2\"/Soundtrack Version)",
+          "artist": "Sharpay",
+          "album": "High School Musical: Sharpay's Greatest Hits",
+          "providerSongId": "3770337772",
+          "playable": false
+        }
+      ],
+      "deezerSuggestions": [
+        {
+          "title": "Fabulous (From \"High School Musical 2\"/Soundtrack Version)",
+          "artist": "Sharpay",
+          "album": "High School Musical: Sharpay's Greatest Hits",
+          "providerSongId": "3770337772",
+          "playable": false
+        }
+      ]
+    },
+    {
+      "title": "Bet On It",
+      "artist": "Troy",
+      "status": "NOT_FOUND",
+      "reason": "Multiple playable exact matches; needs manual review.",
+      "deezerMatches": [
+        {
+          "title": "Bet On It",
+          "artist": "Troy",
+          "album": "High School Musical 2 (Original Soundtrack)",
+          "providerSongId": "3058868",
+          "playable": true
+        },
+        {
+          "title": "Bet On It",
+          "artist": "Troy",
+          "album": "High School Musical 2: Non-Stop Dance Party",
+          "providerSongId": "120917216",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "All For One",
+      "artist": "High School Musical Cast",
+      "status": "NOT_FOUND",
+      "reason": "Multiple playable exact matches; needs manual review.",
+      "deezerMatches": [
+        {
+          "title": "All For One",
+          "artist": "High School Musical Cast",
+          "album": "High School Musical 2 (Original Soundtrack)",
+          "providerSongId": "3058870",
+          "playable": true
+        },
+        {
+          "title": "All For One",
+          "artist": "High School Musical Cast",
+          "album": "High School Musical 2: Non-Stop Dance Party",
+          "providerSongId": "120917218",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Now Or Never",
+      "artist": "High School Musical Cast",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Now Or Never",
+          "artist": "High School Musical Cast",
+          "album": "High School Musical 3: Senior Year",
+          "providerSongId": "3070711",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "A Night to Remember",
+      "artist": "High School Musical Cast",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "A Night to Remember",
+          "artist": "High School Musical Cast",
+          "album": "High School Musical 3: Senior Year",
+          "providerSongId": "3070715",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "This Is Me",
+      "artist": "Demi Lovato",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "This Is Me",
+          "artist": "Demi Lovato",
+          "album": "Camp Rock",
+          "providerSongId": "24394231",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Start the Party Remix",
+      "artist": "Jordan Francis",
+      "status": "NOT_FOUND",
+      "reason": "Exact title and artist found, but no playable track.",
+      "deezerMatches": [
+        {
+          "title": "Start the Party Remix",
+          "artist": "Jordan Francis",
+          "album": "Disney Channel Playlist",
+          "providerSongId": "5323469",
+          "playable": false
+        }
+      ],
+      "deezerSuggestions": [
+        {
+          "title": "Start the Party Remix",
+          "artist": "Jordan Francis",
+          "album": "Disney Channel Playlist",
+          "providerSongId": "5323469",
+          "playable": false
+        }
+      ]
+    },
+    {
+      "title": "Fire (From \"Camp Rock 2: The Final Jam\")",
+      "artist": "Matthew \"Mdot\" Finley",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Fire (From \"Camp Rock 2: The Final Jam\")",
+          "artist": "Matthew \"Mdot\" Finley",
+          "album": "Camp Rock 2: The Final Jam",
+          "providerSongId": "6970225",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Joyful Noise",
+      "artist": "Cast of Let It Shine",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Joyful Noise",
+          "artist": "Cast of Let It Shine",
+          "album": "Let It Shine (Original Soundtrack)",
+          "providerSongId": "60727012",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Don't Run Away",
+      "artist": "Tyler James Williams",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Don't Run Away",
+          "artist": "Tyler James Williams",
+          "album": "Let It Shine (Original Soundtrack)",
+          "providerSongId": "60727003",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Guardian Angel",
+      "artist": "Coco Jones",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Guardian Angel",
+          "artist": "Coco Jones",
+          "album": "Let It Shine (Original Soundtrack)",
+          "providerSongId": "60727004",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Good To Be Home",
+      "artist": "Coco Jones",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Good To Be Home",
+          "artist": "Coco Jones",
+          "album": "Let It Shine (Original Soundtrack)",
+          "providerSongId": "60727013",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Me And You",
+      "artist": "Coco Jones",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Me And You",
+          "artist": "Coco Jones",
+          "album": "Let It Shine (Original Soundtrack)",
+          "providerSongId": "60727005",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Let It Shine",
+      "artist": "Coco Jones",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Let It Shine",
+          "artist": "Coco Jones",
+          "album": "Let It Shine (Original Soundtrack)",
+          "providerSongId": "60727014",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Cruisin' for a Bruisin' (From \"Teen Beach Movie\"/Soundtrack Version)",
+      "artist": "Brady",
+      "status": "NOT_FOUND",
+      "reason": "Exact title and artist found, but no playable track.",
+      "deezerMatches": [
+        {
+          "title": "Cruisin' for a Bruisin' (From \"Teen Beach Movie\"/Soundtrack Version)",
+          "artist": "Brady",
+          "album": "Teen Beach Movie",
+          "providerSongId": "68426078",
+          "playable": false
+        }
+      ],
+      "deezerSuggestions": [
+        {
+          "title": "Cruisin' for a Bruisin' (From \"Teen Beach Movie\"/Soundtrack Version)",
+          "artist": "Brady",
+          "album": "Teen Beach Movie",
+          "providerSongId": "68426078",
+          "playable": false
+        }
+      ]
+    },
+    {
+      "title": "Falling for Ya (From \"Teen Beach Movie\"/Soundtrack Version)",
+      "artist": "Grace Phipps",
+      "status": "NOT_FOUND",
+      "reason": "Exact title and artist found, but no playable track.",
+      "deezerMatches": [
+        {
+          "title": "Falling for Ya (From \"Teen Beach Movie\"/Soundtrack Version)",
+          "artist": "Grace Phipps",
+          "album": "Teen Beach Movie",
+          "providerSongId": "68426079",
+          "playable": false
+        }
+      ],
+      "deezerSuggestions": [
+        {
+          "title": "Falling for Ya (From \"Teen Beach Movie\"/Soundtrack Version)",
+          "artist": "Grace Phipps",
+          "album": "Teen Beach Movie",
+          "providerSongId": "68426079",
+          "playable": false
+        }
+      ]
+    },
+    {
+      "title": "Meant to Be (From \"Teen Beach Movie\"/Soundtrack Version)",
+      "artist": "Brady",
+      "status": "NOT_FOUND",
+      "reason": "Exact title and artist found, but no playable track.",
+      "deezerMatches": [
+        {
+          "title": "Meant to Be (From \"Teen Beach Movie\"/Soundtrack Version)",
+          "artist": "Brady",
+          "album": "Teen Beach Movie",
+          "providerSongId": "68426080",
+          "playable": false
+        }
+      ],
+      "deezerSuggestions": [
+        {
+          "title": "Meant to Be (From \"Teen Beach Movie\"/Soundtrack Version)",
+          "artist": "Brady",
+          "album": "Teen Beach Movie",
+          "providerSongId": "68426080",
+          "playable": false
+        }
+      ]
+    },
+    {
+      "title": "Right Where I Wanna Be",
+      "artist": "Garrett Clayton",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Right Where I Wanna Be",
+          "artist": "Garrett Clayton",
+          "album": "Teen Beach 2 (Original TV Movie Soundtrack)",
+          "providerSongId": "101295384",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Falling for Ya",
+      "artist": "Jordan Fisher",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Falling for Ya",
+          "artist": "Jordan Fisher",
+          "album": "Teen Beach 2 (Original TV Movie Soundtrack)",
+          "providerSongId": "101295386",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Twist Your Frown Upside Down",
+      "artist": "Brady",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Twist Your Frown Upside Down",
+          "artist": "Brady",
+          "album": "Teen Beach 2 (Original TV Movie Soundtrack)",
+          "providerSongId": "101295390",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Everything Is Not As It Seems (Series Theme Song)",
+      "artist": "Selena Gomez",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Everything Is Not As It Seems (Series Theme Song)",
+          "artist": "Selena Gomez",
+          "album": "Wizards of Waverly Place",
+          "providerSongId": "4232501",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Do You Believe In Magic (Single Version)",
+      "artist": "Aly & AJ",
+      "status": "NOT_FOUND",
+      "reason": "Exact title and artist found, but no playable track.",
+      "deezerMatches": [
+        {
+          "title": "Do You Believe In Magic (Single Version)",
+          "artist": "Aly & AJ",
+          "album": "Wizards of Waverly Place",
+          "providerSongId": "4232500",
+          "playable": false
+        }
+      ],
+      "deezerSuggestions": [
+        {
+          "title": "Do You Believe In Magic (Single Version)",
+          "artist": "Aly & AJ",
+          "album": "Wizards of Waverly Place",
+          "providerSongId": "4232500",
+          "playable": false
+        }
+      ]
+    },
+    {
+      "title": "Can't Do It Without You (Duet)",
+      "artist": "Austin Moon",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Can’t Do It Without You (Duet)",
+          "artist": "Austin Moon",
+          "album": "Austin & Ally: Take It from the Top (Music from the TV Series)",
+          "providerSongId": "97088944",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "No Place Like Home",
+      "artist": "Ally Dawson",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "No Place Like Home",
+          "artist": "Ally Dawson",
+          "album": "Austin & Ally: Take It from the Top (Music from the TV Series)",
+          "providerSongId": "97088948",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Ways to Be Wicked",
+      "artist": "Dove Cameron",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Ways to Be Wicked",
+          "artist": "Dove Cameron",
+          "album": "Descendants 2 (Original TV Movie Soundtrack)",
+          "providerSongId": "383803921",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "What's My Name",
+      "artist": "China Anne McClain",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "What's My Name",
+          "artist": "China Anne McClain",
+          "album": "Descendants 2 (Original TV Movie Soundtrack)",
+          "providerSongId": "383803931",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "It's Goin' Down",
+      "artist": "Dove Cameron",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "It's Goin' Down",
+          "artist": "Dove Cameron",
+          "album": "Descendants 2 (Original TV Movie Soundtrack)",
+          "providerSongId": "383803961",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Poor Unfortunate Souls",
+      "artist": "China Anne McClain",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Poor Unfortunate Souls",
+          "artist": "China Anne McClain",
+          "album": "Descendants 2 (Original TV Movie Soundtrack)",
+          "providerSongId": "383803991",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "One Kiss",
+      "artist": "Sofia Carson",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "One Kiss",
+          "artist": "Sofia Carson",
+          "album": "Descendants 3 (Original TV Movie Soundtrack)",
+          "providerSongId": "720599012",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Good to Be Bad",
+      "artist": "Dove Cameron",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Good to Be Bad",
+          "artist": "Dove Cameron",
+          "album": "Descendants 3 (Original TV Movie Soundtrack)",
+          "providerSongId": "720598972",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Queen of Mean",
+      "artist": "Sarah Jeffery",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Queen of Mean",
+          "artist": "Sarah Jeffery",
+          "album": "Descendants 3 (Original TV Movie Soundtrack)",
+          "providerSongId": "720598982",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Do What You Gotta Do",
+      "artist": "Dove Cameron",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Do What You Gotta Do",
+          "artist": "Dove Cameron",
+          "album": "Descendants 3 (Original TV Movie Soundtrack)",
+          "providerSongId": "720598992",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Better in Stereo",
+      "artist": "Cast - Liv and Maddie",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Better in Stereo",
+          "artist": "Cast - Liv and Maddie",
+          "album": "Liv and Maddie (Music from the TV Series)",
+          "providerSongId": "95678348",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Count Me In",
+      "artist": "Cast - Liv and Maddie",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Count Me In",
+          "artist": "Cast - Liv and Maddie",
+          "album": "Liv and Maddie (Music from the TV Series)",
+          "providerSongId": "95678342",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Somebody",
+      "artist": "Bridgit Mendler",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Somebody",
+          "artist": "Bridgit Mendler",
+          "album": "Lemonade Mouth",
+          "providerSongId": "10506132",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "She's So Gone",
+      "artist": "Naomi Scott",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "She's So Gone",
+          "artist": "Naomi Scott",
+          "album": "Lemonade Mouth",
+          "providerSongId": "10506136",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Turn Up the Music",
+      "artist": "Adam Hicks",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Turn Up the Music",
+          "artist": "Adam Hicks",
+          "album": "Lemonade Mouth",
+          "providerSongId": "10506131",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Determinate",
+      "artist": "Adam Hicks",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Determinate (From \"Lemonade Mouth\")",
+          "artist": "Adam Hicks",
+          "album": "Lemonade Mouth",
+          "providerSongId": "10506134",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Breakthrough",
+      "artist": "Adam Hicks",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Breakthrough",
+          "artist": "Adam Hicks",
+          "album": "Lemonade Mouth",
+          "providerSongId": "10506139",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Backyard Beach (Vocal)",
+      "artist": "Ferb",
+      "status": "NOT_FOUND",
+      "reason": "Exact title and artist found, but no playable track.",
+      "deezerMatches": [
+        {
+          "title": "Backyard Beach (Vocal)",
+          "artist": "Ferb",
+          "album": "Disney Karaoke Series: Phineas and Ferb",
+          "providerSongId": "643015952",
+          "playable": false
+        }
+      ],
+      "deezerSuggestions": [
+        {
+          "title": "Backyard Beach (Vocal)",
+          "artist": "Ferb",
+          "album": "Disney Karaoke Series: Phineas and Ferb",
+          "providerSongId": "643015952",
+          "playable": false
+        }
+      ]
+    },
+    {
+      "title": "S.I.M.P. (Squirrels in My Pants) (Vocal)",
+      "artist": "2 Guys n the Parque",
+      "status": "NOT_FOUND",
+      "reason": "Exact title and artist found, but no playable track.",
+      "deezerMatches": [
+        {
+          "title": "S.I.M.P. (Squirrels in My Pants) (Vocal)",
+          "artist": "2 Guys n the Parque",
+          "album": "Disney Karaoke Series: Phineas and Ferb",
+          "providerSongId": "643015962",
+          "playable": false
+        }
+      ],
+      "deezerSuggestions": [
+        {
+          "title": "S.I.M.P. (Squirrels in My Pants) (Vocal)",
+          "artist": "2 Guys n the Parque",
+          "album": "Disney Karaoke Series: Phineas and Ferb",
+          "providerSongId": "643015962",
+          "playable": false
+        }
+      ]
+    },
+    {
+      "title": "Ain't Got Rhythm (Vocal)",
+      "artist": "Phineas",
+      "status": "NOT_FOUND",
+      "reason": "Exact title and artist found, but no playable track.",
+      "deezerMatches": [
+        {
+          "title": "Ain't Got Rhythm (Vocal)",
+          "artist": "Phineas",
+          "album": "Disney Karaoke Series: Phineas and Ferb",
+          "providerSongId": "643015992",
+          "playable": false
+        }
+      ],
+      "deezerSuggestions": [
+        {
+          "title": "Ain't Got Rhythm (Vocal)",
+          "artist": "Phineas",
+          "album": "Disney Karaoke Series: Phineas and Ferb",
+          "providerSongId": "643015992",
+          "playable": false
+        }
+      ]
+    },
+    {
+      "title": "Summer Belongs to You",
+      "artist": "Candace",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Summer Belongs to You",
+          "artist": "Candace",
+          "album": "Phineas and Ferb Summer Belongs to You",
+          "providerSongId": "122039654",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Platypus Walk",
+      "artist": "Swampy and the Marsh-mellows",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Platypus Walk",
+          "artist": "Swampy and the Marsh-mellows",
+          "album": "Phineas and Ferb: Rockin' and Rollin'",
+          "providerSongId": "69953948",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Rubber Bands, Rubber Balls",
+      "artist": "Uncle Sabu & Co.",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Rubber Bands, Rubber Balls",
+          "artist": "Uncle Sabu & Co.",
+          "album": "Phineas and Ferb Summer Belongs to You",
+          "providerSongId": "122039648",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "City of Love",
+      "artist": "Isabella",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "City of Love",
+          "artist": "Isabella",
+          "album": "Phineas and Ferb Summer Belongs to You",
+          "providerSongId": "122039652",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "E.V.I.L. B.O.Y.S. (Vocal)",
+      "artist": "Candace",
+      "status": "NOT_FOUND",
+      "reason": "Exact title and artist found, but no playable track.",
+      "deezerMatches": [
+        {
+          "title": "E.V.I.L. B.O.Y.S. (Vocal)",
+          "artist": "Candace",
+          "album": "Disney Karaoke Series: Phineas and Ferb",
+          "providerSongId": "643015982",
+          "playable": false
+        }
+      ],
+      "deezerSuggestions": [
+        {
+          "title": "E.V.I.L. B.O.Y.S. (Vocal)",
+          "artist": "Candace",
+          "album": "Disney Karaoke Series: Phineas and Ferb",
+          "providerSongId": "643015982",
+          "playable": false
+        }
+      ]
+    },
+    {
+      "title": "Little Brothers (Vocal)",
+      "artist": "Stacy",
+      "status": "NOT_FOUND",
+      "reason": "Exact title and artist found, but no playable track.",
+      "deezerMatches": [
+        {
+          "title": "Little Brothers (Vocal)",
+          "artist": "Stacy",
+          "album": "Disney Karaoke Series: Phineas and Ferb",
+          "providerSongId": "643015972",
+          "playable": false
+        }
+      ],
+      "deezerSuggestions": [
+        {
+          "title": "Little Brothers (Vocal)",
+          "artist": "Stacy",
+          "album": "Disney Karaoke Series: Phineas and Ferb",
+          "providerSongId": "643015972",
+          "playable": false
+        }
+      ]
+    },
+    {
+      "title": "We Are the Moms",
+      "artist": "Jen Hirsh",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "We Are the Moms",
+          "artist": "Jen Hirsh",
+          "album": "Phineas and Ferb: Rockin' and Rollin'",
+          "providerSongId": "69953955",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Ferb Latin",
+      "artist": "Phineas and Friends",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Ferb Latin",
+          "artist": "Phineas and Friends",
+          "album": "Phineas and Ferb: Rockin' and Rollin'",
+          "providerSongId": "69953958",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Funhouse",
+      "artist": "Aaron Daniel Jacob",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Funhouse",
+          "artist": "Aaron Daniel Jacob",
+          "album": "Phineas and Ferb: Rockin' and Rollin'",
+          "providerSongId": "69953961",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Izzy's Got the Frizzies",
+      "artist": "Carmen Carter",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Izzy’s Got the Frizzies",
+          "artist": "Carmen Carter",
+          "album": "Phineas and Ferb: Rockin' and Rollin'",
+          "providerSongId": "69953971",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Lots of Me",
+      "artist": "Dr. Doofenshmirtz",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Lots of Me",
+          "artist": "Dr. Doofenshmirtz",
+          "album": "Phineas and Ferb: Last Day of Summer (Original Soundtrack)",
+          "providerSongId": "106758208",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Army of Me",
+      "artist": "Dr. Doofenshmirtz",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Army of Me",
+          "artist": "Dr. Doofenshmirtz",
+          "album": "Phineas and Ferb: Last Day of Summer (Original Soundtrack)",
+          "providerSongId": "106758216",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Starstruck",
+      "artist": "Christopher Wilde",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Starstruck",
+          "artist": "Christopher Wilde",
+          "album": "StarStruck",
+          "providerSongId": "6575923",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Hang In There Baby (From \"Good Luck Charlie\")",
+      "artist": "Bridgit Mendler",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Hang In There Baby (From \"Good Luck Charlie\")",
+          "artist": "Bridgit Mendler",
+          "album": "Disney 2000s, Vol. 3: Disney Channel Theme Songs",
+          "providerSongId": "3033500311",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Hey Jessie (From \"Jessie\")",
+      "artist": "Debby Ryan",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Hey Jessie (From \"Jessie\")",
+          "artist": "Debby Ryan",
+          "album": "Make Your Mark: Ultimate Playlist",
+          "providerSongId": "61002697",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "What Dreams Are Made Of (Mine)",
+      "artist": "Hillary Duff",
+      "status": "NOT_FOUND",
+      "reason": "No exact title and artist match found on Deezer.",
+      "deezerMatches": [],
+      "deezerSuggestions": [
+        {
+          "title": "What Dreams Are Made Of (Mine)",
+          "artist": "Hilary Duff",
+          "album": "(Mine)",
+          "providerSongId": "4018482771",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Leave It All To Me (Theme from iCarly) (feat. Drake Bell) (Album Version)",
+      "artist": "Miranda Cosgrove",
+      "status": "NOT_FOUND",
+      "reason": "Exact title and artist found, but no playable track.",
+      "deezerMatches": [
+        {
+          "title": "Leave It All To Me (Theme from iCarly) (feat. Drake Bell) (Album Version)",
+          "artist": "Miranda Cosgrove",
+          "album": "iCarly - Music From and Inspired by the Hit TV Show",
+          "providerSongId": "13161512",
+          "playable": false
+        }
+      ],
+      "deezerSuggestions": [
+        {
+          "title": "Leave It All To Me (Theme from iCarly) (feat. Drake Bell) (Album Version)",
+          "artist": "Miranda Cosgrove",
+          "album": "iCarly - Music From and Inspired by the Hit TV Show",
+          "providerSongId": "13161512",
+          "playable": false
+        }
+      ]
+    },
+    {
+      "title": "Stay My Baby (Album Version)",
+      "artist": "Miranda Cosgrove",
+      "status": "NOT_FOUND",
+      "reason": "Exact title and artist found, but no playable track.",
+      "deezerMatches": [
+        {
+          "title": "Stay My Baby (Album Version)",
+          "artist": "Miranda Cosgrove",
+          "album": "iCarly - Music From and Inspired by the Hit TV Show",
+          "providerSongId": "13161514",
+          "playable": false
+        }
+      ],
+      "deezerSuggestions": [
+        {
+          "title": "Stay My Baby (Album Version)",
+          "artist": "Miranda Cosgrove",
+          "album": "iCarly - Music From and Inspired by the Hit TV Show",
+          "providerSongId": "13161514",
+          "playable": false
+        }
+      ]
+    },
+    {
+      "title": "About You Now (Album Version)",
+      "artist": "Miranda Cosgrove",
+      "status": "NOT_FOUND",
+      "reason": "Exact title and artist found, but no playable track.",
+      "deezerMatches": [
+        {
+          "title": "About You Now (Album Version)",
+          "artist": "Miranda Cosgrove",
+          "album": "iCarly - Music From and Inspired by the Hit TV Show",
+          "providerSongId": "13161516",
+          "playable": false
+        }
+      ],
+      "deezerSuggestions": [
+        {
+          "title": "About You Now (Album Version)",
+          "artist": "Miranda Cosgrove",
+          "album": "iCarly - Music From and Inspired by the Hit TV Show",
+          "providerSongId": "13161516",
+          "playable": false
+        }
+      ]
+    },
+    {
+      "title": "Headphones On (Album Version)",
+      "artist": "Miranda Cosgrove",
+      "status": "NOT_FOUND",
+      "reason": "Exact title and artist found, but no playable track.",
+      "deezerMatches": [
+        {
+          "title": "Headphones On (Album Version)",
+          "artist": "Miranda Cosgrove",
+          "album": "iCarly - Music From and Inspired by the Hit TV Show",
+          "providerSongId": "13161533",
+          "playable": false
+        }
+      ],
+      "deezerSuggestions": [
+        {
+          "title": "Headphones On (Album Version)",
+          "artist": "Miranda Cosgrove",
+          "album": "iCarly - Music From and Inspired by the Hit TV Show",
+          "providerSongId": "13161533",
+          "playable": false
+        }
+      ]
+    },
+    {
+      "title": "You Don't Know Me",
+      "artist": "Victorious Cast",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "You Don't Know Me",
+          "artist": "Victorious Cast",
+          "album": "Victorious 3.0 (Even More Music from the Hit TV Show)",
+          "providerSongId": "4121603031",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Song 2 You",
+      "artist": "Victoria Justice",
+      "status": "NOT_FOUND",
+      "reason": "No exact title and artist match found on Deezer.",
+      "deezerMatches": [],
+      "deezerSuggestions": [
+        {
+          "title": "Song 2 You",
+          "artist": "Victorious Cast",
+          "album": "Victorious (Music from the TV Show \"Victorious\")",
+          "providerSongId": "4069964271",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Give It Up",
+      "artist": "Victorious Cast",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Give It Up",
+          "artist": "Victorious Cast",
+          "album": "Victorious (Music from the TV Show \"Victorious\")",
+          "providerSongId": "4069964251",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "All I Want Is Everything",
+      "artist": "Victorious Cast",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "All I Want Is Everything",
+          "artist": "Victorious Cast",
+          "album": "Victorious (Music from the TV Show \"Victorious\")",
+          "providerSongId": "4069964231",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "You're the Reason",
+      "artist": "Victorious Cast",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "You're the Reason",
+          "artist": "Victorious Cast",
+          "album": "Victorious (Music from the TV Show \"Victorious\")",
+          "providerSongId": "4069964241",
+          "playable": true
+        }
+      ]
+    },
+    {
+      "title": "Zoey 101 (From \"Zoey 101\")",
+      "artist": "Geek Music",
+      "status": "ALREADY_EXISTS",
+      "reason": "Track already exists; Disney/Nick theme ensured.",
+      "deezerMatches": [
+        {
+          "title": "Zoey 101 (From \"Zoey 101\")",
+          "artist": "Geek Music",
+          "album": "Zoey 101 (From \"Zoey 101\")",
+          "providerSongId": "1005983432",
+          "playable": true
+        }
+      ]
+    }
+  ]
+}
