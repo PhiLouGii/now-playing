@@ -1,8 +1,4 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-} from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ArrowRight,
@@ -14,21 +10,19 @@ import {
 } from 'lucide-react'
 
 import LoadingScreen from '../../components/loading/LoadingScreen'
-
 import {
   generateQuestion,
   getLoadingFacts,
   type LoadingFact,
 } from '../../services/gameService'
-
 import { submitScore } from '../../services/scoreService'
-import { calculateFinalPoints } from '../../lib/gameScoring'
 import type { Question } from '../../types/game'
 
 import './YearGame.css'
 
-const ROUND_LENGTH = 10
 const TOTAL_QUESTIONS = 10
+const MAX_ATTEMPTS = 3
+const ATTEMPT_POINTS = [1000, 700, 400]
 
 type YearRecognitionResult = {
   questionNumber: number
@@ -38,83 +32,37 @@ type YearRecognitionResult = {
   artworkUrl: string
   releaseYear: number
   recognitionTime: number
+  attempts: number
   correct: boolean
   points: number
 }
 
+type AttemptStatus = 'wrong' | 'correct'
+
 function YearGame() {
   const navigate = useNavigate()
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const scoreSubmitted = useRef(false)
 
-  const [question, setQuestion] =
-    useState<Question | null>(null)
+  const [question, setQuestion] = useState<Question | null>(null)
+  const [questionNumber, setQuestionNumber] = useState(1)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [playbackProgress, setPlaybackProgress] = useState(0)
+  const [answerInput, setAnswerInput] = useState('')
+  const [attemptStatuses, setAttemptStatuses] = useState<AttemptStatus[]>([])
+  const [hasAnswered, setHasAnswered] = useState(false)
 
-  const [questionNumber, setQuestionNumber] =
-    useState(1)
+  const [results, setResults] = useState<YearRecognitionResult[]>([])
+  const [showResults, setShowResults] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const [timeRemaining, setTimeRemaining] =
-    useState(ROUND_LENGTH)
+  const [loadingFacts, setLoadingFacts] = useState<LoadingFact[]>([])
+  const [loadingComplete, setLoadingComplete] = useState(false)
 
-  const [isPlaying, setIsPlaying] =
-    useState(false)
-
-  const [selectedAnswer, setSelectedAnswer] =
-    useState<string | null>(null)
-
-  const [hasAnswered, setHasAnswered] =
-    useState(false)
-
-  const [isTimeUp, setIsTimeUp] =
-    useState(false)
-
-  const [results, setResults] =
-    useState<YearRecognitionResult[]>([])
-
-  const [showResults, setShowResults] =
-    useState(false)
-
-  const [isLoading, setIsLoading] =
-    useState(true)
-
-  const [error, setError] =
-    useState<string | null>(null)
-
-  /*
-   * LOADING SCREEN
-   */
-
-  const [loadingFacts, setLoadingFacts] =
-    useState<LoadingFact[]>([])
-
-  const [
-    loadingComplete,
-    setLoadingComplete,
-  ] = useState(false)
-
-  /*
-   * SCORE
-   */
-
-  const [score, setScore] =
-    useState(0)
-
-  const [streak, setStreak] =
-    useState(0)
-
-  const [bestStreak, setBestStreak] =
-    useState(0)
-
-  const scoreSubmitted =
-    useRef(false)
-
-  const audioRef =
-    useRef<HTMLAudioElement | null>(null)
-
-  const timerRef =
-    useRef<number | null>(null)
-
-  /*
-   * Generate the first question.
-   */
+  const [score, setScore] = useState(0)
+  const [streak, setStreak] = useState(0)
+  const [bestStreak, setBestStreak] = useState(0)
 
   useEffect(() => {
     let isMounted = true
@@ -123,133 +71,43 @@ function YearGame() {
       setIsLoading(true)
       setLoadingComplete(false)
 
-      /*
-       * Load the shared music facts independently.
-       */
       getLoadingFacts()
         .then((data) => {
-          if (isMounted) {
-            setLoadingFacts(
-              data.facts,
-            )
-          }
+          if (isMounted) setLoadingFacts(data.facts)
         })
-        .catch((error) => {
-          console.error(
-            'Failed to load loading facts:',
-            error,
-          )
+        .catch((err) => {
+          console.error('Failed to load loading facts:', err)
         })
 
-      await loadQuestion(
-        isMounted,
-        true,
-      )
+      await loadQuestion(isMounted, true)
     }
 
-    initializeGame()
+    void initializeGame()
 
     return () => {
       isMounted = false
     }
   }, [])
 
-  /*
-   * Clean up timer and audio.
-   */
-
   useEffect(() => {
     return () => {
-      if (timerRef.current !== null) {
-        window.clearInterval(
-          timerRef.current,
-        )
-      }
-
       audioRef.current?.pause()
     }
   }, [])
 
-  /*
-   * Countdown.
-   */
-
   useEffect(() => {
-    if (
-      !isPlaying ||
-      hasAnswered ||
-      isTimeUp
-    ) {
-      return
-    }
-
-    timerRef.current =
-      window.setInterval(() => {
-        setTimeRemaining((previous) => {
-          if (previous <= 0.1) {
-            if (timerRef.current !== null) {
-              window.clearInterval(
-                timerRef.current,
-              )
-            }
-
-            handleTimeUp()
-
-            return 0
-          }
-
-          return Number(
-            (previous - 0.1).toFixed(1),
-          )
-        })
-      }, 100)
-
-    return () => {
-      if (timerRef.current !== null) {
-        window.clearInterval(
-          timerRef.current,
-        )
-      }
-    }
-  }, [
-    isPlaying,
-    hasAnswered,
-    isTimeUp,
-  ])
-
-  /*
-   * Save score when results are shown.
-   */
-
-  useEffect(() => {
-    if (
-      !showResults ||
-      scoreSubmitted.current ||
-      results.length < TOTAL_QUESTIONS
-    ) {
+    if (!showResults || scoreSubmitted.current || results.length < TOTAL_QUESTIONS) {
       return
     }
 
     scoreSubmitted.current = true
 
-    const correctAnswers =
-      results.filter(
-        (result) => result.correct,
-      ).length
-
-    const accuracy =
-      TOTAL_QUESTIONS > 0
-        ? (correctAnswers /
-            TOTAL_QUESTIONS) *
-          100
-        : 0
-
-    const totalListeningTime =
-      results.reduce(
-        (total, result) =>
-          total + result.recognitionTime,
-        0,
-      )
+    const correctAnswers = results.filter((result) => result.correct).length
+    const accuracy = (correctAnswers / TOTAL_QUESTIONS) * 100
+    const totalListeningTime = results.reduce(
+      (total, result) => total + result.recognitionTime,
+      0,
+    )
 
     async function saveScore() {
       try {
@@ -262,99 +120,45 @@ function YearGame() {
           correctAnswers,
           totalListeningTime,
         })
-
-        console.log(
-          'YEAR GAME SCORE SAVED:',
-          {
-            score,
-            accuracy,
-            bestStreak,
-            questions: TOTAL_QUESTIONS,
-            correctAnswers,
-            totalListeningTime,
-          },
-        )
-      } catch (error) {
-        console.error(
-          'FAILED TO SAVE YEAR GAME SCORE:',
-          error,
-        )
+      } catch (err) {
+        console.error('Failed to save year game score:', err)
       }
     }
 
-    saveScore()
-  }, [
-    showResults,
-    results,
-    score,
-    bestStreak,
-  ])
+    void saveScore()
+  }, [showResults, results, score, bestStreak])
 
-  /*
-   * Generate a new year question.
-   */
-
-  async function loadQuestion(
-    isMounted = true,
-    isInitialLoad = false,
-  ) {
+  async function loadQuestion(isMounted = true, isInitialLoad = false) {
     setIsLoading(true)
     setError(null)
-
     setQuestion(null)
-    setSelectedAnswer(null)
+    setAnswerInput('')
+    setAttemptStatuses([])
     setHasAnswered(false)
-    setIsTimeUp(false)
     setIsPlaying(false)
-    setTimeRemaining(ROUND_LENGTH)
+    setPlaybackProgress(0)
+    audioRef.current?.pause()
 
     try {
-      const generatedQuestion =
-        await generateQuestion(
-          'guess-the-year',
-          'medium',
-        )
+      const generatedQuestion = await generateQuestion('guess-the-year', 'medium')
 
-      if (!isMounted) {
-        return
-      }
+      if (!isMounted) return
 
-      setQuestion(
-        generatedQuestion,
-      )
-
-      if (isInitialLoad) {
-        setLoadingComplete(true)
-      }
+      setQuestion(generatedQuestion)
+      if (isInitialLoad) setLoadingComplete(true)
     } catch (err) {
-      console.error(
-        'Failed to generate year question:',
-        err,
-      )
-
+      console.error('Failed to generate year question:', err)
       if (isMounted) {
-        setError(
-          'We could not load the next song. Please try again.',
-        )
+        setError('We could not load the next song. Please try again.')
       }
     } finally {
-      if (isMounted) {
-        setIsLoading(false)
-      }
+      if (isMounted) setIsLoading(false)
     }
   }
 
-  /*
-   * Start / pause the preview.
-   */
-
   function togglePlayback() {
-    const audio =
-      audioRef.current
-
-    if (!audio || !question) {
-      return
-    }
+    const audio = audioRef.current
+    if (!audio || !question || hasAnswered) return
 
     if (isPlaying) {
       audio.pause()
@@ -362,86 +166,44 @@ function YearGame() {
       return
     }
 
-    audio
-      .play()
-      .then(() => {
-        setIsPlaying(true)
-      })
-      .catch((err) => {
-        console.error(
-          'Unable to play preview:',
-          err,
-        )
-      })
+    audio.play()
+      .then(() => setIsPlaying(true))
+      .catch((err) => console.error('Unable to play preview:', err))
   }
 
-  /*
-   * Submit an answer.
-   */
+  function handleAnswer(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (hasAnswered || !question) return
 
-  function handleAnswer(
-    answer: string,
-  ) {
-    if (
-      hasAnswered ||
-      isTimeUp ||
-      !question
-    ) {
-      return
-    }
+    const answer = answerInput.trim()
+    if (!/^\d{4}$/.test(answer)) return
 
-    const recognitionTime = Math.min(
-      ROUND_LENGTH,
-      Math.max(
-        0,
-        ROUND_LENGTH - timeRemaining,
-      ),
-    )
+    const attemptNumber = attemptStatuses.length + 1
+    const correct = answer === String(question.correctAnswer)
+    const nextStatuses: AttemptStatus[] = [
+      ...attemptStatuses,
+      correct ? 'correct' : 'wrong',
+    ]
 
-    const correct =
-      answer ===
-      question.correctAnswer
+    setAttemptStatuses(nextStatuses)
+    setAnswerInput('')
 
-    const nextStreak =
-      correct
-        ? streak + 1
-        : 0
+    // A wrong first or second guess uses an attempt but does not end the question.
+    if (!correct && attemptNumber < MAX_ATTEMPTS) return
 
-    const earnedPoints =
-      correct
-        ? calculateFinalPoints(
-            recognitionTime,
-            nextStreak,
-          )
-        : 0
+    const earnedPoints = correct ? ATTEMPT_POINTS[attemptNumber - 1] : 0
+    const nextStreak = correct ? streak + 1 : 0
+    const recognitionTime = audioRef.current?.currentTime ?? 0
 
-    setSelectedAnswer(answer)
     setHasAnswered(true)
     setIsPlaying(false)
-
     setStreak(nextStreak)
 
     if (correct) {
-      setBestStreak(
-        (currentBest) =>
-          Math.max(
-            currentBest,
-            nextStreak,
-          ),
-      )
+      setBestStreak((currentBest) => Math.max(currentBest, nextStreak))
     }
 
-    setScore(
-      (currentScore) =>
-        currentScore + earnedPoints,
-    )
-
-    if (timerRef.current !== null) {
-      window.clearInterval(
-        timerRef.current,
-      )
-    }
-
+    setScore((currentScore) => currentScore + earnedPoints)
     audioRef.current?.pause()
 
     setResults((previous) => [
@@ -451,98 +213,33 @@ function YearGame() {
         title: question.song.title,
         artist: question.song.artist,
         album: question.song.album,
-        artworkUrl:
-          question.song.artworkUrl,
-        releaseYear:
-          question.song.releaseYear!,
+        artworkUrl: question.song.artworkUrl,
+        releaseYear: question.song.releaseYear!,
         recognitionTime,
+        attempts: attemptNumber,
         correct,
         points: earnedPoints,
       },
     ])
   }
 
-  /*
-   * Handle the player reaching 10 seconds.
-   */
-
-  function handleTimeUp() {
-    if (
-      hasAnswered ||
-      isTimeUp ||
-      !question
-    ) {
-      return
-    }
-
-    setIsTimeUp(true)
-    setIsPlaying(false)
-    setStreak(0)
-
-    audioRef.current?.pause()
-
-    if (timerRef.current !== null) {
-      window.clearInterval(
-        timerRef.current,
-      )
-    }
-
-    setResults((previous) => [
-      ...previous,
-      {
-        questionNumber,
-        title: question.song.title,
-        artist: question.song.artist,
-        album: question.song.album,
-        artworkUrl:
-          question.song.artworkUrl,
-        releaseYear:
-          question.song.releaseYear!,
-        recognitionTime: ROUND_LENGTH,
-        correct: false,
-        points: 0,
-      },
-    ])
-  }
-
-  /*
-   * Move to the next question.
-   */
-
   async function handleNext() {
-    if (
-      questionNumber >= TOTAL_QUESTIONS
-    ) {
+    if (questionNumber >= TOTAL_QUESTIONS) {
       setShowResults(true)
       return
     }
 
-    setQuestionNumber(
-      (previous) => previous + 1,
-    )
-
+    setQuestionNumber((current) => current + 1)
     await loadQuestion()
   }
 
-  /*
-   * Retry if question generation fails.
-   */
-
   function handleRetry() {
-    loadQuestion()
+    void loadQuestion()
   }
-
-  /*
-   * Restart the complete round.
-   */
 
   function handlePlayAgain() {
     window.location.reload()
   }
-
-  /*
-   * SHARED LOADING SCREEN
-   */
 
   if (isLoading && !question) {
     return (
@@ -561,9 +258,7 @@ function YearGame() {
         score={score}
         bestStreak={bestStreak}
         onPlayAgain={handlePlayAgain}
-        onBack={() =>
-          navigate('/play')
-        }
+        onBack={() => navigate('/play')}
       />
     )
   }
@@ -573,315 +268,210 @@ function YearGame() {
       <div className="year-game__container">
         <header className="year-game__header">
           <div>
-            <p className="year-game__eyebrow">
-              GUESS THE YEAR
-            </p>
-
-            <h1 className="year-game__title">
-              When was it released?
-            </h1>
+            <p className="year-game__eyebrow">GUESS THE YEAR</p>
+            <h1 className="year-game__title">When was it released?</h1>
           </div>
 
           <div className="year-game__progress">
-            <span>
-              {String(
-                questionNumber,
-              ).padStart(2, '0')}
-            </span>
-
-            <span>
-              /{' '}
-              {String(
-                TOTAL_QUESTIONS,
-              ).padStart(2, '0')}
-            </span>
+            <span>{String(questionNumber).padStart(2, '0')}</span>
+            <span>/ {String(TOTAL_QUESTIONS).padStart(2, '0')}</span>
           </div>
         </header>
 
         {isLoading && (
           <div className="year-game__loading">
             <div className="year-game__loading-spinner" />
-
-            <p>
-              Finding your next song...
-            </p>
+            <p>Finding your next song...</p>
           </div>
         )}
 
         {error && !isLoading && (
           <div className="year-game__error-state">
             <p>{error}</p>
-
-            <button
-              className="year-game__retry"
-              onClick={handleRetry}
-            >
-              <RotateCcw size={16} />
-              TRY AGAIN
+            <button className="year-game__retry" onClick={handleRetry}>
+              <RotateCcw size={16} /> TRY AGAIN
             </button>
           </div>
         )}
 
-        {question &&
-          !isLoading &&
-          !error && (
-            <main className="year-game__board">
-              <section className="year-game__question">
-                <div className="year-game__artwork">
-                  <div className="year-game__artwork-placeholder">
-                    <span>?</span>
-                  </div>
+        {question && !isLoading && !error && (
+          <main className="year-game__board">
+            <section className="year-game__question">
+              <div className="year-game__artwork">
+                <div className="year-game__artwork-placeholder">
+                  <span>?</span>
+                </div>
+              </div>
+
+              <div className="year-game__audio">
+                <div className="year-game__audio-top">
+                  <span>{hasAnswered ? 'ANSWER LOCKED' : 'LISTEN'}</span>
+                  <strong>UP TO 30 SECONDS</strong>
                 </div>
 
-                <div className="year-game__audio">
-                  <div className="year-game__audio-top">
-                    <span>
-                      {isTimeUp
-                        ? "TIME'S UP"
-                        : hasAnswered
-                          ? 'ANSWER LOCKED'
-                          : 'LISTEN'}
-                    </span>
-
-                    <strong
+                <div className="year-game__wave">
+                  {Array.from({ length: 28 }, (_, index) => (
+                    <span
+                      key={index}
                       className={
-                        timeRemaining <= 3 &&
-                        !hasAnswered &&
-                        !isTimeUp
-                          ? 'year-game__timer--urgent'
-                          : ''
+                        isPlaying
+                          ? 'year-game__wave-bar year-game__wave-bar--active'
+                          : 'year-game__wave-bar'
                       }
-                    >
-                      {timeRemaining.toFixed(1)}s
-                    </strong>
-                  </div>
-
-                  <div className="year-game__wave">
-                    {Array.from(
-                      { length: 28 },
-                      (_, index) => (
-                        <span
-                          key={index}
-                          className={
-                            isPlaying
-                              ? 'year-game__wave-bar year-game__wave-bar--active'
-                              : 'year-game__wave-bar'
-                          }
-                        />
-                      ),
-                    )}
-                  </div>
-
-                  <button
-                    className="year-game__play"
-                    onClick={
-                      togglePlayback
-                    }
-                    disabled={
-                      hasAnswered ||
-                      isTimeUp
-                    }
-                    aria-label={
-                      isPlaying
-                        ? 'Pause song'
-                        : 'Play song'
-                    }
-                  >
-                    {isPlaying ? (
-                      <Pause
-                        size={20}
-                        fill="currentColor"
-                      />
-                    ) : (
-                      <Play
-                        size={20}
-                        fill="currentColor"
-                      />
-                    )}
-                  </button>
-
-                  <div className="year-game__player-bottom">
-                    <Volume2 size={14} />
-
-                    <div className="year-game__progress-track">
-                      <div
-                        className="year-game__progress-fill"
-                        style={{
-                          width: `${
-                            ((ROUND_LENGTH -
-                              timeRemaining) /
-                              ROUND_LENGTH) *
-                            100
-                          }%`,
-                        }}
-                      />
-                    </div>
-
-                    <span>10s</span>
-                  </div>
-
-                  <audio
-                    ref={audioRef}
-                    src={
-                      question.song.audioUrl
-                    }
-                    preload="auto"
-                    onEnded={() =>
-                      setIsPlaying(false)
-                    }
-                  />
+                    />
+                  ))}
                 </div>
-              </section>
 
-              <section className="year-game__play-panel">
-                {!hasAnswered &&
-                !isTimeUp ? (
-                  <section className="year-game__answers">
-                    <div className="year-game__answers-header">
-                      <div>
-                        <p>
-                          WHEN WAS IT RELEASED?
-                        </p>
+                <button
+                  className="year-game__play"
+                  onClick={togglePlayback}
+                  disabled={hasAnswered}
+                  aria-label={isPlaying ? 'Pause song' : 'Play song'}
+                >
+                  {isPlaying ? (
+                    <Pause size={20} fill="currentColor" />
+                  ) : (
+                    <Play size={20} fill="currentColor" />
+                  )}
+                </button>
 
-                        <span>
-                          TRUST YOUR INSTINCT
-                        </span>
-                      </div>
+                <div className="year-game__player-bottom">
+                  <Volume2 size={14} />
+                  <div className="year-game__progress-track">
+                    <div
+                      className="year-game__progress-fill"
+                      style={{ width: `${playbackProgress}%` }}
+                    />
+                  </div>
+                  <span>30s</span>
+                </div>
 
-                      <span>
-                        4 CHOICES
-                      </span>
-                    </div>
+                <audio
+                  ref={audioRef}
+                  src={question.song.audioUrl}
+                  preload="auto"
+                  onTimeUpdate={(event) => {
+                    const audio = event.currentTarget
+                    setPlaybackProgress(
+                      audio.duration
+                        ? (audio.currentTime / audio.duration) * 100
+                        : 0,
+                    )
+                  }}
+                  onEnded={() => setIsPlaying(false)}
+                />
+              </div>
+            </section>
 
-                    <div className="year-game__answer-grid">
-                      {question.answers.map(
-                        (
-                          answer,
-                          index,
-                        ) => (
-                          <button
-                            key={answer}
-                            className="year-game__answer"
-                            onClick={() =>
-                              handleAnswer(
-                                answer,
-                              )
-                            }
-                          >
-                            <span className="year-game__answer-number">
-                              {String(
-                                index + 1,
-                              ).padStart(
-                                2,
-                                '0',
-                              )}
-                            </span>
+            <section className="year-game__play-panel">
+              <section className="year-game__answers">
+                <div className="year-game__answers-header">
+                  <div>
+                    <p>WHEN WAS IT RELEASED?</p>
+                    <span>THREE CHANCES. TRUST YOUR INSTINCT.</span>
+                  </div>
+                  <span>{attemptStatuses.length}/{MAX_ATTEMPTS} ATTEMPTS</span>
+                </div>
 
-                            <strong className="year-game__answer-year">
-                              {answer}
-                            </strong>
+                <div className="year-game__attempts" aria-label={`${attemptStatuses.length} of 3 attempts used`}>
+                  {Array.from({ length: MAX_ATTEMPTS }, (_, index) => {
+                    const status = attemptStatuses[index]
+                    return (
+                      <span
+                        key={index}
+                        className={`year-game__attempt-slot${status ? ` year-game__attempt-slot--${status}` : ''}`}
+                      />
+                    )
+                  })}
+                </div>
 
-                            <ArrowRight
-                              size={16}
-                              className="year-game__answer-arrow"
-                            />
-                          </button>
-                        ),
-                      )}
-                    </div>
-                  </section>
+                {!hasAnswered ? (
+                  <>
+                    <form className="year-game__input-form" onSubmit={handleAnswer}>
+                      <input
+                        className="year-game__input"
+                        type="number"
+                        inputMode="numeric"
+                        placeholder="Enter release year"
+                        min="1900"
+                        max="2099"
+                        value={answerInput}
+                        onChange={(event) => setAnswerInput(event.target.value)}
+                        aria-label="Enter release year"
+                      />
+                      <button
+                        className="year-game__submit"
+                        type="submit"
+                        disabled={!/^\d{4}$/.test(answerInput.trim())}
+                      >
+                        SUBMIT
+                      </button>
+                    </form>
+
+                    <p
+                      className={`year-game__input-feedback${
+                        attemptStatuses.length ? ' year-game__input-feedback--wrong' : ''
+                      }`}
+                      aria-live="polite"
+                    >
+                      {attemptStatuses.length
+                        ? 'Not quite. Give it another shot!'
+                        : 'Enter the year you think this song was released.'}
+                    </p>
+                  </>
                 ) : (
                   <section className="year-game__reveal">
                     <div className="year-game__reveal-heading">
                       <span
                         className={
-                          selectedAnswer ===
-                          question.correctAnswer
+                          results[results.length - 1]?.correct
                             ? 'year-game__reveal-status year-game__reveal-status--correct'
                             : 'year-game__reveal-status year-game__reveal-status--wrong'
                         }
                       >
-                        {isTimeUp
-                          ? "TIME'S UP"
-                          : selectedAnswer ===
-                              question.correctAnswer
-                            ? 'CORRECT'
-                            : 'NOT QUITE'}
+                        {results[results.length - 1]?.correct
+                          ? 'CORRECT'
+                          : 'OUT OF ATTEMPTS'}
                       </span>
-
-                      <span className="year-game__reveal-label">
-                        RELEASE YEAR
-                      </span>
+                      <span className="year-game__reveal-label">RELEASE YEAR</span>
                     </div>
 
                     <div className="year-game__reveal-card">
                       <div className="year-game__reveal-art">
-                        {question.song
-                          .artworkUrl ? (
+                        {question.song.artworkUrl ? (
                           <img
-                            src={
-                              question.song
-                                .artworkUrl
-                            }
+                            src={question.song.artworkUrl}
                             alt={`${question.song.album} album artwork`}
                           />
                         ) : (
-                          <div className="year-game__reveal-art-placeholder">
-                            ?
-                          </div>
+                          <div className="year-game__reveal-art-placeholder">?</div>
                         )}
                       </div>
 
                       <div className="year-game__reveal-content">
                         <strong className="year-game__correct-year">
-                          {
-                            question.song
-                              .releaseYear
-                          }
+                          {question.song.releaseYear}
                         </strong>
-
-                        <h2>
-                          {
-                            question.song
-                              .title
-                          }
-                        </h2>
-
-                        <p>
-                          {
-                            question.song
-                              .artist
-                          }
-                          {' · '}
-                          {
-                            question.song
-                              .album
-                          }
-                        </p>
+                        <h2>{question.song.title}</h2>
+                        <p>{question.song.artist} · {question.song.album}</p>
+                        <p>{results[results.length - 1]?.points.toLocaleString()} POINTS</p>
                       </div>
                     </div>
                   </section>
                 )}
-
-                {(hasAnswered ||
-                  isTimeUp) && (
-                  <button
-                    className="year-game__next"
-                    onClick={handleNext}
-                  >
-                    <span>
-                      {questionNumber >=
-                      TOTAL_QUESTIONS
-                        ? 'SEE RESULTS'
-                        : 'NEXT SONG'}
-                    </span>
-
-                    <ArrowRight size={17} />
-                  </button>
-                )}
               </section>
-            </main>
-          )}
+
+              {hasAnswered && (
+                <button className="year-game__next" onClick={handleNext}>
+                  <span>
+                    {questionNumber >= TOTAL_QUESTIONS ? 'SEE RESULTS' : 'NEXT SONG'}
+                  </span>
+                  <ArrowRight size={17} />
+                </button>
+              )}
+            </section>
+          </main>
+        )}
       </div>
     </div>
   )
@@ -902,102 +492,43 @@ function YearResultsScreen({
   onPlayAgain,
   onBack,
 }: YearResultsScreenProps) {
-  const correctResults =
-    results.filter(
-      (result) => result.correct,
-    )
+  const correctResults = results.filter((result) => result.correct)
+  const recognizedCount = correctResults.length
+  const accuracy = results.length
+    ? Math.round((recognizedCount / results.length) * 100)
+    : 0
 
-  const recognizedCount =
-    correctResults.length
-
-  const accuracy =
-    results.length > 0
-      ? Math.round(
-          (recognizedCount /
-            results.length) *
-            100,
-        )
-      : 0
-
-  const recognitionTimes =
-    correctResults.map(
-      (result) =>
-        result.recognitionTime,
-    )
-
-  const averageTime =
-    recognitionTimes.length > 0
-      ? recognitionTimes.reduce(
-          (total, time) =>
-            total + time,
-          0,
-        ) /
-        recognitionTimes.length
-      : 0
-
-  const fastestTime =
-    recognitionTimes.length > 0
-      ? Math.min(
-          ...recognitionTimes,
-        )
-      : 0
-
-  const fastestResult =
-    correctResults.find(
-      (result) =>
-        result.recognitionTime ===
-        fastestTime,
-    )
+  const firstTryCount = correctResults.filter((result) => result.attempts === 1).length
+  const secondTryCount = correctResults.filter((result) => result.attempts === 2).length
+  const thirdTryCount = correctResults.filter((result) => result.attempts === 3).length
 
   return (
     <div className="year-results">
       <div className="year-results__confetti">
-        {Array.from(
-          { length: 36 },
-          (_, index) => (
-            <span
-              key={index}
-              className="year-results__confetti-piece"
-              style={
-                {
-                  '--i': index,
-                } as React.CSSProperties
-              }
-            />
-          ),
-        )}
+        {Array.from({ length: 36 }, (_, index) => (
+          <span
+            key={index}
+            className="year-results__confetti-piece"
+            style={{ '--i': index } as React.CSSProperties}
+          />
+        ))}
       </div>
 
       <div className="year-results__container">
         <header className="year-results__header">
-          <div className="year-results__trophy">
-            <Trophy size={25} />
-          </div>
-
-          <p className="year-results__eyebrow">
-            ROUND COMPLETE
-          </p>
-
-          <h1>
-            You know your music history.
-          </h1>
-
+          <div className="year-results__trophy"><Trophy size={25} /></div>
+          <p className="year-results__eyebrow">ROUND COMPLETE</p>
+          <h1>You know your music history.</h1>
           <p>
-            You dated{' '}
-            <strong>
-              {recognizedCount}
-            </strong>{' '}
-            out of {results.length}{' '}
-            songs correctly.
+            You dated <strong>{recognizedCount}</strong> out of {results.length} songs correctly.
           </p>
         </header>
 
         <section className="year-results__score">
           <div>
             <span>FINAL SCORE</span>
-            <strong>{score}</strong>
+            <strong>{score.toLocaleString()}</strong>
           </div>
-
           <div>
             <span>BEST STREAK</span>
             <strong>{bestStreak}</strong>
@@ -1007,15 +538,8 @@ function YearResultsScreen({
         <section className="year-results__score">
           <div>
             <span>YEARS GUESSED</span>
-
-            <strong>
-              {recognizedCount}
-              <small>
-                /{results.length}
-              </small>
-            </strong>
+            <strong>{recognizedCount}<small>/{results.length}</small></strong>
           </div>
-
           <div>
             <span>ACCURACY</span>
             <strong>{accuracy}%</strong>
@@ -1024,166 +548,63 @@ function YearResultsScreen({
 
         <section className="year-results__speed">
           <div className="year-results__section-heading">
-            <p>YEAR RECOGNITION SPEED</p>
-
-            <span>
-              HOW FAST DID YOU KNOW?
-            </span>
+            <p>ATTEMPT BREAKDOWN</p>
+            <span>HOW QUICKLY DID YOU KNOW?</span>
           </div>
-
           <div className="year-results__speed-grid">
-            <div>
-              <span>AVERAGE</span>
-
-              <strong>
-                {recognitionTimes.length > 0
-                  ? `${averageTime.toFixed(1)}s`
-                  : '—'}
-              </strong>
-            </div>
-
-            <div>
-              <span>FASTEST</span>
-
-              <strong>
-                {fastestTime > 0
-                  ? `${fastestTime.toFixed(1)}s`
-                  : '—'}
-              </strong>
-            </div>
-
-            <div>
-              <span>FASTEST YEAR</span>
-
-              <strong>
-                {fastestResult
-                  ?.releaseYear ?? '—'}
-              </strong>
-            </div>
+            <div><span>FIRST TRY</span><strong>{firstTryCount}</strong></div>
+            <div><span>SECOND TRY</span><strong>{secondTryCount}</strong></div>
+            <div><span>THIRD TRY</span><strong>{thirdTryCount}</strong></div>
           </div>
         </section>
 
         <section className="year-results__breakdown">
           <div className="year-results__section-heading">
             <p>YOUR TIMELINE</p>
-
-            <span>
-              {results.length} SONGS
-            </span>
+            <span>{results.length} SONGS</span>
           </div>
 
           <div className="year-results__list">
-            {results.map(
-              (result) => (
-                <div
-                  className={`year-results__item ${
-                    result.correct
-                      ? 'year-results__item--correct'
-                      : 'year-results__item--missed'
-                  }`}
-                  key={
-                    result.questionNumber
-                  }
-                >
-                  <span className="year-results__number">
-                    {String(
-                      result.questionNumber,
-                    ).padStart(
-                      2,
-                      '0',
-                    )}
-                  </span>
+            {results.map((result) => (
+              <div
+                className={`year-results__item ${
+                  result.correct
+                    ? 'year-results__item--correct'
+                    : 'year-results__item--missed'
+                }`}
+                key={result.questionNumber}
+              >
+                <span className="year-results__number">
+                  {String(result.questionNumber).padStart(2, '0')}
+                </span>
 
-                  <div className="year-results__art">
-                    {result.artworkUrl ? (
-                      <img
-                        src={
-                          result.artworkUrl
-                        }
-                        alt=""
-                      />
-                    ) : (
-                      <span>?</span>
-                    )}
-                  </div>
-
-                  <div className="year-results__info">
-                    <strong>
-                      {result.title}
-                    </strong>
-
-                    <span>
-                      {result.artist}
-                      {' · '}
-                      {result.album}
-                    </span>
-                  </div>
-
-                  <div className="year-results__year">
-                    <strong>
-                      {result.releaseYear}
-                    </strong>
-
-                    <span
-                      className={
-                        result.correct
-                          ? 'year-results__time'
-                          : 'year-results__missed'
-                      }
-                    >
-                      {result.correct
-                        ? `+${result.points} · ${result.recognitionTime.toFixed(
-                            1,
-                          )}s ✓`
-                        : 'MISSED ×'}
-                    </span>
-                  </div>
+                <div className="year-results__art">
+                  {result.artworkUrl ? <img src={result.artworkUrl} alt="" /> : <span>?</span>}
                 </div>
-              ),
-            )}
+
+                <div className="year-results__info">
+                  <strong>{result.title}</strong>
+                  <span>{result.artist} · {result.album}</span>
+                </div>
+
+                <div className="year-results__year">
+                  <strong>{result.releaseYear}</strong>
+                  <span className={result.correct ? 'year-results__time' : 'year-results__missed'}>
+                    {result.correct
+                      ? `${result.attempts} ${result.attempts === 1 ? 'ATTEMPT' : 'ATTEMPTS'} · +${result.points.toLocaleString()} ✓`
+                      : 'THREE ATTEMPTS USED · 0 POINTS'}
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
         </section>
 
-        {fastestResult && (
-          <section className="year-results__fastest">
-            <span>⚡</span>
-
-            <div>
-              <p>
-                FASTEST RECOGNITION
-              </p>
-
-              <strong>
-                {fastestResult.releaseYear}
-              </strong>
-
-              <small>
-                {fastestResult.title} ·{' '}
-                {fastestResult.artist}
-                {' — '}
-                recognized in{' '}
-                {fastestResult.recognitionTime.toFixed(
-                  1,
-                )}
-                s
-              </small>
-            </div>
-          </section>
-        )}
-
         <div className="year-results__actions">
-          <button
-            className="year-results__primary"
-            onClick={onPlayAgain}
-          >
-            <RotateCcw size={17} />
-            PLAY AGAIN
+          <button className="year-results__primary" onClick={onPlayAgain}>
+            <RotateCcw size={17} /> PLAY AGAIN
           </button>
-
-          <button
-            className="year-results__secondary"
-            onClick={onBack}
-          >
+          <button className="year-results__secondary" onClick={onBack}>
             BACK TO PLAY
           </button>
         </div>

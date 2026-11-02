@@ -6,22 +6,20 @@ import {
 export async function getReliableReleaseYear(
   track: MusicTrack,
 ): Promise<number | undefined> {
-  if (track.isrc) {
-    try {
-      const musicBrainzYear =
-        await musicBrainzProvider.getFirstReleaseYear(
-          track.isrc,
-        )
-
-      if (
-        musicBrainzYear !== undefined
-      ) {
-        return musicBrainzYear
-      }
-    } catch {
-      // Fall through to Deezer's value.
-    }
+  // Use Deezer's release year first when available.
+  if (track.releaseYear !== undefined) {
+    return track.releaseYear
   }
 
-  return track.releaseYear
+  if (!track.isrc) {
+    return undefined
+  }
+
+  try {
+    return await musicBrainzProvider.getFirstReleaseYear(
+      track.isrc,
+    )
+  } catch {
+    return undefined
+  }
 }

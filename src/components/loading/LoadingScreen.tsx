@@ -54,9 +54,10 @@ function shuffle<T>(
   return shuffled
 }
 
+const EMPTY_FACTS: LoadingFact[] = []
 
 export default function LoadingScreen({
-  facts = [],
+  facts = EMPTY_FACTS,
   message = 'Loading your game...',
   isComplete = false,
 }: LoadingScreenProps) {
