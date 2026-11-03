@@ -874,6 +874,35 @@ function pickRandomTrack(
   return tracks[randomIndex]
 }
 
+async function refreshDisneyNickPreview(
+  track: MusicTrack,
+): Promise<MusicTrack | null> {
+  try {
+    const freshTrack =
+      await deezerMusicProvider.getTrackById(
+        track.providerId,
+      )
+
+    if (!freshTrack?.previewUrl) {
+      console.warn(
+        `No fresh preview available for "${track.title}".`,
+      )
+      return null
+    }
+
+    return {
+      ...track,
+      previewUrl: freshTrack.previewUrl,
+    }
+  } catch (error) {
+    console.warn(
+      `Could not refresh preview for "${track.title}".`,
+      error,
+    )
+
+    return null
+  }
+}
 
 /*
  * =========================================================
@@ -944,9 +973,40 @@ export async function generateGameQuestion(
     )
   }
 
-  const correctTrack = pickRandomTrack(eligibleTracks)
+  let correctTrack = pickRandomTrack(eligibleTracks)
 
-  return generateQuestion(
+if (categoryId === 'disney-nick') {
+  const refreshedTrack =
+    await refreshDisneyNickPreview(correctTrack)
+
+  if (!refreshedTrack) {
+    const remainingTracks = eligibleTracks.filter(
+      track => track.id !== correctTrack.id,
+    )
+
+    let foundTrack: MusicTrack | null = null
+
+    for (const track of remainingTracks) {
+      foundTrack = await refreshDisneyNickPreview(track)
+
+      if (foundTrack) {
+        break
+      }
+    }
+
+    if (!foundTrack) {
+      throw new Error(
+        'Could not find a Disney/Nick song with an available audio preview.',
+      )
+    }
+
+    correctTrack = foundTrack
+  } else {
+    correctTrack = refreshedTrack
+  }
+}
+
+return generateQuestion(
   correctTrack,
   type,
   difficulty,
