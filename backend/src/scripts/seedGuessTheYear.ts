@@ -14,6 +14,12 @@ function normalize(value: string): string {
     .trim()
 }
 
+// Verified Deezer recording IDs for songs with multiple search results.
+const preferredTrackIds: Record<string, string> = {
+  'Running Up That Hill': '2173954687',
+  Dreams: '63480987',
+}
+
 async function seedGuessTheYear() {
   console.log('\nSeeding Guess the Year...')
   console.log(`Songs in source list: ${guessTheYearSongs.length}\n`)
@@ -33,40 +39,23 @@ async function seedGuessTheYear() {
       const expectedTitle = normalize(song.title)
       const expectedArtist = normalize(song.artist)
 
-      if (
-  song.title === 'Running Up That Hill' ||
-  song.title === 'Dreams'
-) {
-  console.log(
-    '\nDEBUG SEARCH RESULTS:',
-    results.map(track => ({
-      id: track.id,
-      providerId: track.providerId,
-      title: track.title,
-      artist: track.artist,
-      album: track.album,
-      preview: Boolean(track.previewUrl),
-    })),
-  )
-}
-
       const matches = results.filter((track) => {
-  const actualTitle = normalize(track.title)
-  const actualArtist = normalize(track.artist)
+        const actualTitle = normalize(track.title)
+        const actualArtist = normalize(track.artist)
 
-  const titleMatches =
-    actualTitle === expectedTitle ||
-    actualTitle.startsWith(`${expectedTitle} `)
+        const titleMatches =
+          actualTitle === expectedTitle ||
+          actualTitle.startsWith(`${expectedTitle} `)
 
-  const artistMatches = actualArtist === expectedArtist
+        const artistMatches = actualArtist === expectedArtist
 
-  return (
-    titleMatches &&
-    artistMatches &&
-    Boolean(track.previewUrl) &&
-    Boolean(track.providerId)
-  )
-})
+        return (
+          titleMatches &&
+          artistMatches &&
+          Boolean(track.previewUrl) &&
+          Boolean(track.providerId)
+        )
+      })
 
       if (matches.length === 0) {
         console.log('  SKIPPED: No matching playable track.')
@@ -74,28 +63,38 @@ async function seedGuessTheYear() {
         continue
       }
 
-      if (matches.length > 1) {
-        console.warn(
-          `  WARNING: Multiple matches found for "${song.title}".`,
+      const preferredId = preferredTrackIds[song.title]
+
+      let match = undefined
+
+      if (preferredId) {
+        match = matches.find(
+          (track) => track.providerId === preferredId,
         )
+
+        if (!match) {
+          console.log(
+            '  SKIPPED: Preferred recording was not found.',
+          )
+          skipped++
+          continue
+        }
+      } else if (matches.length === 1) {
+        match = matches[0]
+      } else {
+        console.warn(
+          `  SKIPPED: ${matches.length} possible recordings found. Verify before seeding:`,
+        )
+
+        matches.forEach((track) => {
+          console.log(
+            `    ${track.providerId} | ${track.title} | ${track.album}`,
+          )
+        })
+
+        skipped++
+        continue
       }
-
-      const preferredTrackIds: Record<string, string> = {
-  'Running Up That Hill': '2173954687',
-  Dreams: '63480987',
-}
-
-const preferredId = preferredTrackIds[song.title]
-
-const match = preferredId
-  ? matches.find((track) => track.providerId === preferredId)
-  : matches[0]
-
-if (!match) {
-  console.log('  SKIPPED: Preferred recording was not found.')
-  skipped++
-  continue
-}
 
       const documentId =
         `guess_the_year_${song.title}_${song.artist}`
@@ -118,10 +117,7 @@ if (!match) {
           createdAt: new Date(),
         })
 
-      console.log(
-        `  ADDED: ${song.title} (${song.year})`,
-      )
-
+      console.log(`  ADDED: ${song.title} (${song.year})`)
       added++
     } catch (error) {
       console.error(`  ERROR: ${song.title}`, error)
