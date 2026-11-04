@@ -1,81 +1,84 @@
 .app {
   min-height: 100vh;
+  position: relative;
+  overflow: hidden;
 
   color: var(--color-white);
   background: var(--color-bg);
-
-  position: relative;
-  overflow: hidden;
 }
+
+/* Background effects */
 
 .app::before {
   content: '';
-
   position: fixed;
-
   width: 700px;
   height: 700px;
-
   top: -350px;
   left: 50%;
-
   transform: translateX(-50%);
-
   background: rgba(139, 92, 246, 0.08);
-
   filter: blur(120px);
-
   pointer-events: none;
 }
 
 .app::after {
   content: '';
-
   position: fixed;
-
   width: 500px;
   height: 500px;
-
   right: -250px;
   bottom: -250px;
-
   background: rgba(34, 211, 238, 0.05);
-
   filter: blur(100px);
-
   pointer-events: none;
 }
-/* Home and Play sidebar layouts */
-:is(.app--home, .app--play) {
+
+/* ========================================
+   SIDEBAR PAGE LAYOUT
+   ======================================== */
+
+:is(.app--home, .app--play, .app--leaderboard) {
   display: grid;
   grid-template-columns: 248px minmax(0, 1fr);
   align-items: start;
   overflow: visible;
 }
 
-:is(.app--home, .app--play) > .home,
-:is(.app--home, .app--play) > .play-page {
+/* Main content */
+
+:is(.app--home, .app--play, .app--leaderboard) > .home,
+:is(.app--home, .app--play, .app--leaderboard) > .play-page,
+:is(.app--home, .app--play, .app--leaderboard) > .leaderboard-page {
   grid-column: 2;
+  grid-row: 1;
   min-width: 0;
   min-height: 100vh;
   padding: 28px clamp(22px, 3vw, 48px) 52px;
 }
 
-.app--home::before,
-.app--play::before {
+/* Background positioning */
+
+:is(.app--home, .app--play, .app--leaderboard)::before {
   left: auto;
   right: 12%;
   top: -380px;
   transform: none;
 }
 
+/* ========================================
+   MOBILE LAYOUT
+   ======================================== */
+
 @media (max-width: 760px) {
-  :is(.app--home, .app--play) {
+  :is(.app--home, .app--play, .app--leaderboard) {
     display: block;
   }
 
-  :is(.app--home, .app--play) > .home,
-  :is(.app--home, .app--play) > .play-page {
+  :is(.app--home, .app--play, .app--leaderboard) > .home,
+  :is(.app--home, .app--play, .app--leaderboard) > .play-page,
+  :is(.app--home, .app--play, .app--leaderboard) > .leaderboard-page {
+    min-height: auto;
     padding: 24px 18px 42px;
   }
 }

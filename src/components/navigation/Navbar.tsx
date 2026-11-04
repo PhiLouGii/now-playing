@@ -22,7 +22,9 @@ function Navbar() {
   const { pathname } = useLocation()
   const isHome = pathname === '/'
   const isPlay = pathname === '/play'
-  const isSidebarPage = isHome || isPlay
+  const isLeaderboard = pathname === '/leaderboard'
+
+  const isSidebarPage = isHome || isPlay || isLeaderboard
 
   const {
     user,

@@ -1,20 +1,18 @@
+/* ========================================
+   DEFAULT NAVBAR
+   ======================================== */
+
 .navbar {
   position: sticky;
   top: 0;
   z-index: 100;
-
   height: var(--navbar-height);
-
   background: var(--color-bg);
   border-bottom: 1px solid var(--border-medium);
 }
 
 .navbar-inner {
-  width: min(
-    calc(100% - 48px),
-    var(--max-width)
-  );
-
+  width: min(calc(100% - 48px), var(--max-width));
   height: 100%;
   margin: 0 auto;
 
@@ -32,9 +30,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-
   width: fit-content;
-
   color: var(--color-text);
 }
 
@@ -49,7 +45,6 @@
   background: var(--color-lilac);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
-
   box-shadow: var(--shadow-sm);
 
   font-family: var(--font-display);
@@ -75,7 +70,7 @@
 }
 
 /* ========================================
-   NAVIGATION
+   NAVIGATION LINKS
    ======================================== */
 
 .navbar__links {
@@ -83,7 +78,6 @@
   align-items: center;
   justify-content: center;
   gap: 26px;
-
   height: 100%;
 }
 
@@ -95,35 +89,27 @@
   gap: 6px;
 
   height: 100%;
-
   padding: 0;
 
   color: var(--color-muted);
-
   font-size: 13px;
   font-weight: 600;
 
   transition: color var(--transition-fast);
 }
 
-.navbar__link:hover {
-  color: var(--color-text);
-}
-
+.navbar__link:hover,
 .navbar__link.active {
   color: var(--color-text);
 }
 
 .navbar__link.active::after {
   content: '';
-
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-
   height: 3px;
-
   background: var(--color-lilac);
 }
 
@@ -144,7 +130,6 @@
   gap: 8px;
 
   color: var(--color-text-secondary);
-
   font-size: 13px;
   font-weight: 600;
 
@@ -170,7 +155,6 @@
 
 .navbar__username {
   max-width: 120px;
-
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -189,7 +173,6 @@
   gap: 7px;
 
   min-height: 34px;
-
   border-radius: var(--radius-md);
 
   font-size: 12px;
@@ -202,14 +185,10 @@
     transform var(--transition-fast);
 }
 
-/* Log in */
-
 .navbar__login {
   padding: 0 10px;
-
   background: transparent;
   border: 1px solid transparent;
-
   color: var(--color-text-secondary);
 }
 
@@ -219,16 +198,11 @@
   color: var(--color-text);
 }
 
-/* Sign up */
-
 .navbar__signup {
   padding: 0 14px;
-
   background: var(--color-lilac);
   border: 1px solid var(--color-lilac);
-
   color: var(--color-text);
-
   box-shadow: var(--shadow-sm);
 }
 
@@ -237,15 +211,11 @@
   border-color: var(--color-mauve);
 }
 
-/* Log out */
-
 .navbar__logout {
   width: 34px;
   padding: 0;
-
   background: transparent;
   border: 1px solid var(--border-medium);
-
   color: var(--color-muted);
 }
 
@@ -262,7 +232,7 @@
 }
 
 /* ========================================
-   RESPONSIVE
+   STANDARD NAVBAR RESPONSIVE
    ======================================== */
 
 @media (max-width: 900px) {
@@ -356,54 +326,70 @@
 }
 
 /* ========================================
-   SIDEBAR NAVIGATION — HOME AND PLAY
+   SIDEBAR NAVIGATION
+   HOME, PLAY AND LEADERBOARD
    ======================================== */
 
-:is(.app--home, .app--play) > .navbar--home {
+:is(.app--home, .app--play, .app--leaderboard) > .navbar--home {
   position: sticky;
   top: 0;
+  z-index: 100;
+
   grid-column: 1;
   grid-row: 1;
+
   width: 248px;
   height: 100vh;
   min-height: 620px;
+
   padding: 24px 16px 18px;
+
   display: flex;
   flex-direction: column;
+
   background: rgba(251, 248, 250, .88);
   border: 0;
   border-right: 1px solid var(--border-medium);
+
   backdrop-filter: blur(16px);
 }
 
-:is(.app--home, .app--play) .navbar--home .navbar-inner {
+:is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar-inner {
   width: 100%;
   height: 100%;
   margin: 0;
+
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 28px;
 }
 
-:is(.app--home, .app--play) .navbar--home .navbar__brand {
+/* Sidebar brand */
+
+:is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__brand {
   width: 100%;
   padding: 2px 4px 22px;
   border-bottom: 1px solid var(--border-medium);
 }
 
-:is(.app--home, .app--play) .navbar--home .navbar__logo {
+:is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__logo {
   width: 100%;
   height: 55px;
+
   object-fit: contain;
+
   background: transparent;
   border: 0;
   border-radius: 0;
   box-shadow: none;
 }
 
-:is(.app--home, .app--play) .navbar--home .navbar__links {
+/* Sidebar links */
+
+:is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__links {
   height: auto;
+
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -411,56 +397,62 @@
   gap: 7px;
 }
 
-:is(.app--home, .app--play) .navbar--home .navbar__link {
+:is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__link {
   height: 44px;
   padding: 0 13px;
+
   gap: 12px;
   border-radius: 9px;
+
   font-size: 12px;
   color: var(--color-muted);
 }
 
-:is(.app--home, .app--play) .navbar--home .navbar__link svg {
+:is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__link svg {
   display: block;
 }
 
-:is(.app--home, .app--play) .navbar--home .navbar__link:hover {
+:is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__link:hover {
   background: var(--color-surface-alt);
   color: var(--color-text);
 }
 
-:is(.app--home, .app--play) .navbar--home .navbar__link.active {
+:is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__link.active {
   color: var(--color-text);
   background: #eadfeb;
 }
 
-:is(.app--home, .app--play) .navbar--home .navbar__link.active::after {
+:is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__link.active::after {
   display: none;
 }
 
-:is(.app--home, .app--play) .navbar--home .navbar__account {
+/* Sidebar account */
+
+:is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__account {
   margin-top: auto;
   padding-top: 17px;
+
   border-top: 1px solid var(--border-medium);
+
   justify-content: flex-start;
   flex-wrap: wrap;
 }
 
-:is(.app--home, .app--play) .navbar--home .navbar__user {
+:is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__user {
   min-width: 0;
   flex: 1;
 }
 
-:is(.app--home, .app--play) .navbar--home .navbar__username {
+:is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__username {
   display: block;
   max-width: 120px;
 }
 
-:is(.app--home, .app--play) .navbar--home .navbar__login span {
+:is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__login span {
   display: inline;
 }
 
-:is(.app--home, .app--play) .navbar--home .navbar__signup {
+:is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__signup {
   display: inline-flex;
 }
 
@@ -469,42 +461,45 @@
    ======================================== */
 
 @media (max-width: 760px) {
-  :is(.app--home, .app--play) > .navbar--home {
+  :is(.app--home, .app--play, .app--leaderboard) > .navbar--home {
     position: relative;
+
     width: 100%;
     height: auto;
     min-height: 0;
+
     padding: 10px 16px;
+
     border-right: 0;
     border-bottom: 1px solid var(--border-medium);
   }
 
-  :is(.app--home, .app--play) .navbar--home .navbar-inner {
+  :is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar-inner {
     flex-direction: row;
     align-items: center;
     gap: 12px;
   }
 
-  :is(.app--home, .app--play) .navbar--home .navbar__brand {
+  :is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__brand {
     width: auto;
     padding: 0;
     border: 0;
     flex-shrink: 0;
   }
 
-  :is(.app--home, .app--play) .navbar--home .navbar__logo {
+  :is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__logo {
     width: 116px;
     height: 34px;
   }
 
-  :is(.app--home, .app--play) .navbar--home .navbar__links {
+  :is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__links {
     flex: 1;
     flex-direction: row;
     justify-content: flex-end;
     gap: 3px;
   }
 
-  :is(.app--home, .app--play) .navbar--home .navbar__link {
+  :is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__link {
     width: 38px;
     height: 38px;
     justify-content: center;
@@ -512,23 +507,23 @@
     font-size: 0;
   }
 
-  :is(.app--home, .app--play) .navbar--home .navbar__link svg {
+  :is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__link svg {
     width: 17px;
     height: 17px;
   }
 
-  :is(.app--home, .app--play) .navbar--home .navbar__account {
+  :is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__account {
     margin: 0;
     padding: 0;
     border: 0;
     flex-wrap: nowrap;
   }
 
-  :is(.app--home, .app--play) .navbar--home .navbar__user {
+  :is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__user {
     display: none;
   }
 
-  :is(.app--home, .app--play) .navbar--home .navbar__signup {
+  :is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__signup {
     display: none;
   }
 }
