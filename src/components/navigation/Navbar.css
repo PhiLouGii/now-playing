@@ -1,3 +1,4 @@
+
 /* ========================================
    DEFAULT NAVBAR
    ======================================== */
@@ -37,7 +38,6 @@
 .navbar__logo {
   width: 200px;
   height: 60px;
-
   display: flex;
   align-items: center;
   justify-content: center;
@@ -83,11 +83,9 @@
 
 .navbar__link {
   position: relative;
-
   display: flex;
   align-items: center;
   gap: 6px;
-
   height: 100%;
   padding: 0;
 
@@ -121,7 +119,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 8px;
 }
 
 .navbar__user {
@@ -143,7 +141,6 @@
 .navbar__user-icon {
   width: 30px;
   height: 30px;
-
   display: flex;
   align-items: center;
   justify-content: center;
@@ -172,7 +169,7 @@
   justify-content: center;
   gap: 7px;
 
-  min-height: 34px;
+  min-height: 40px;
   border-radius: var(--radius-md);
 
   font-size: 12px;
@@ -186,9 +183,9 @@
 }
 
 .navbar__login {
-  padding: 0 10px;
+  padding: 0 15px;
   background: transparent;
-  border: 1px solid transparent;
+  border: 1px solid var(--border-medium);
   color: var(--color-text-secondary);
 }
 
@@ -199,7 +196,7 @@
 }
 
 .navbar__signup {
-  padding: 0 14px;
+  padding: 0 17px;
   background: var(--color-lilac);
   border: 1px solid var(--color-lilac);
   color: var(--color-text);
@@ -213,6 +210,7 @@
 
 .navbar__logout {
   width: 34px;
+  min-height: 34px;
   padding: 0;
   background: transparent;
   border: 1px solid var(--border-medium);
@@ -229,6 +227,323 @@
 .navbar__signup:active,
 .navbar__logout:active {
   transform: translateY(1px);
+}
+
+/* ========================================
+   NAVIGATION GROUPS
+   ======================================== */
+
+.navbar__navigation {
+  display: contents;
+}
+
+.navbar__group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.navbar__group-label {
+  padding: 0 13px;
+  margin: 0 0 3px;
+
+  color: var(--color-subtle);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.navbar__link--disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.navbar__coming-soon {
+  margin-left: auto;
+  padding: 3px 6px;
+
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-alt);
+  color: var(--color-muted);
+
+  font-size: 9px;
+  font-weight: 800;
+}
+
+/* ========================================
+   MOBILE CONTROLS
+   ======================================== */
+
+.navbar__quick-account,
+.navbar__mobile-toggle {
+  display: none;
+}
+
+/* ========================================
+   SIDEBAR LAYOUT
+   HOME, PLAY, LEADERBOARD, PROFILE
+   ======================================== */
+
+:is(
+  .app--home,
+  .app--play,
+  .app--leaderboard,
+  .app--profile
+) {
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  grid-template-rows: minmax(100vh, auto);
+  min-height: 100vh;
+}
+
+:is(
+  .app--home,
+  .app--play,
+  .app--leaderboard,
+  .app--profile
+) > .navbar--home {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  grid-column: 1;
+  grid-row: 1;
+
+  width: 248px;
+  height: 100vh;
+  min-height: 620px;
+
+  padding: 24px 16px 18px;
+
+  display: flex;
+  flex-direction: column;
+
+  background: rgba(251, 248, 250, 0.88);
+  border: 0;
+  border-right: 1px solid var(--border-medium);
+
+  backdrop-filter: blur(16px);
+}
+
+:is(
+  .app--home,
+  .app--play,
+  .app--leaderboard,
+  .app--profile
+) > :not(.navbar) {
+  grid-column: 2;
+  min-width: 0;
+}
+
+/* Sidebar inner layout */
+
+:is(
+  .app--home,
+  .app--play,
+  .app--leaderboard,
+  .app--profile
+) .navbar--home .navbar-inner {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 17px;
+}
+
+/* Sidebar brand */
+
+:is(
+  .app--home,
+  .app--play,
+  .app--leaderboard,
+  .app--profile
+) .navbar--home .navbar__brand {
+  width: 100%;
+  padding: 2px 4px 15px;
+  border-bottom: 1px solid var(--border-medium);
+  flex-shrink: 0;
+}
+
+:is(
+  .app--home,
+  .app--play,
+  .app--leaderboard,
+  .app--profile
+) .navbar--home .navbar__logo {
+  width: 100%;
+  height: 55px;
+  object-fit: contain;
+
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Sidebar navigation */
+
+:is(
+  .app--home,
+  .app--play,
+  .app--leaderboard,
+  .app--profile
+) .navbar--home .navbar__navigation {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+:is(
+  .app--home,
+  .app--play,
+  .app--leaderboard,
+  .app--profile
+) .navbar--home .navbar__links {
+  height: auto;
+
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 15px;
+}
+
+:is(
+  .app--home,
+  .app--play,
+  .app--leaderboard,
+  .app--profile
+) .navbar--home .navbar__group {
+  gap: 5px;
+}
+
+:is(
+  .app--home,
+  .app--play,
+  .app--leaderboard,
+  .app--profile
+) .navbar--home .navbar__link {
+  width: 100%;
+  height: 38px;
+  flex-shrink: 0;
+
+  padding: 0 13px;
+  gap: 12px;
+
+  border-radius: 9px;
+
+  color: var(--color-muted);
+  font-size: 12px;
+
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+
+:is(
+  .app--home,
+  .app--play,
+  .app--leaderboard,
+  .app--profile
+) .navbar--home .navbar__link svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+:is(
+  .app--home,
+  .app--play,
+  .app--leaderboard,
+  .app--profile
+) .navbar--home .navbar__link:hover {
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+}
+
+:is(
+  .app--home,
+  .app--play,
+  .app--leaderboard,
+  .app--profile
+) .navbar--home .navbar__link.active {
+  color: var(--color-text);
+  background: #eadfeb;
+}
+
+:is(
+  .app--home,
+  .app--play,
+  .app--leaderboard,
+  .app--profile
+) .navbar--home .navbar__link.active::after {
+  display: none;
+}
+
+/* Sidebar account */
+
+:is(
+  .app--home,
+  .app--play,
+  .app--leaderboard,
+  .app--profile
+) .navbar--home .navbar__account {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+
+  margin-top: auto;
+  padding: 16px 0 8px;
+
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 8px;
+
+  background: rgba(251, 248, 250, 0.96);
+  border-top: 1px solid var(--border-medium);
+}
+
+:is(
+  .app--home,
+  .app--play,
+  .app--leaderboard,
+  .app--profile
+) .navbar--home .navbar__user {
+  min-width: 0;
+  flex: 1;
+  justify-content: flex-start;
+}
+
+:is(
+  .app--home,
+  .app--play,
+  .app--leaderboard,
+  .app--profile
+) .navbar--home .navbar__username {
+  display: block;
+  max-width: 120px;
+}
+
+:is(
+  .app--home,
+  .app--play,
+  .app--leaderboard,
+  .app--profile
+) .navbar--home .navbar__login,
+:is(
+  .app--home,
+  .app--play,
+  .app--leaderboard,
+  .app--profile
+) .navbar--home .navbar__signup {
+  display: inline-flex;
+  flex: 1;
+  min-height: 42px;
+  justify-content: center;
 }
 
 /* ========================================
@@ -258,50 +573,237 @@
   }
 }
 
-@media (max-width: 680px) {
-  .navbar {
-    min-height: var(--navbar-height);
+/* ========================================
+   TABLET SIDEBAR WIDTH
+   ======================================== */
+
+@media (max-width: 1100px) and (min-width: 761px) {
+  :is(
+    .app--home,
+    .app--play,
+    .app--leaderboard,
+    .app--profile
+  ) {
+    grid-template-columns: 220px minmax(0, 1fr);
   }
 
-  .navbar-inner {
-    width: calc(100% - 32px);
-    gap: 12px;
+  :is(
+    .app--home,
+    .app--play,
+    .app--leaderboard,
+    .app--profile
+  ) > .navbar--home {
+    width: 220px;
   }
 
-  .navbar__title {
-    font-size: 15px;
-  }
-
-  .navbar__logo {
-    width: 96px;
-    height: 32px;
-  }
-
-  .navbar__links {
-    gap: 14px;
-  }
-
-  .navbar__link {
+  :is(
+    .app--home,
+    .app--play,
+    .app--leaderboard,
+    .app--profile
+  ) .navbar--home .navbar__link {
     font-size: 11px;
   }
+}
 
-  .navbar__link.active::after {
-    height: 2px;
+/* ========================================
+   MOBILE NAVIGATION
+   ======================================== */
+
+@media (max-width: 760px) {
+  :is(
+    .app--home,
+    .app--play,
+    .app--leaderboard,
+    .app--profile
+  ) {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
   }
 
-  .navbar__login span {
+  :is(
+    .app--home,
+    .app--play,
+    .app--leaderboard,
+    .app--profile
+  ) > .navbar--home {
+    position: sticky;
+    top: 0;
+    z-index: 200;
+
+    width: 100%;
+    height: auto;
+    min-height: 0;
+
+    padding: 10px 16px;
+
+    border: 0;
+    border-bottom: 1px solid var(--border-medium);
+  }
+
+  :is(
+    .app--home,
+    .app--play,
+    .app--leaderboard,
+    .app--profile
+  ) .navbar--home .navbar-inner {
+    width: 100%;
+    height: auto;
+    margin: 0;
+
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  :is(
+    .app--home,
+    .app--play,
+    .app--leaderboard,
+    .app--profile
+  ) .navbar--home .navbar__brand {
+    width: auto;
+    padding: 0;
+    border: 0;
+    flex-shrink: 0;
+  }
+
+  :is(
+    .app--home,
+    .app--play,
+    .app--leaderboard,
+    .app--profile
+  ) .navbar--home .navbar__logo {
+    width: 116px;
+    height: 34px;
+  }
+
+  .navbar__mobile-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 40px;
+    height: 40px;
+    margin-left: auto;
+
+    border: 1px solid var(--border-medium);
+    border-radius: var(--radius-md);
+
+    background: var(--color-surface);
+    color: var(--color-text);
+
+    cursor: pointer;
+  }
+
+  /* Quick account actions */
+
+  .navbar__quick-account {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    order: 3;
+  }
+
+  .navbar__quick-account .navbar__login,
+  .navbar__quick-account .navbar__signup {
+    min-height: 36px;
+    padding: 0 11px;
+  }
+
+  /* Collapsible navigation */
+
+  .navbar--home .navbar__navigation {
+    display: none;
+    width: 100%;
+    flex-basis: 100%;
+    flex: none;
+    order: 4;
+  }
+
+  .navbar--home.navbar--open .navbar__navigation {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 14px 0 4px;
+  }
+
+  .navbar--home .navbar__navigation .navbar__links {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    height: auto;
+  }
+
+  .navbar--home .navbar__navigation .navbar__group {
+    gap: 4px;
+  }
+
+  .navbar--home .navbar__navigation .navbar__group-label {
+    padding: 6px 10px;
+  }
+
+  .navbar--home .navbar__navigation .navbar__link {
+    width: 100%;
+    height: 42px;
+    box-sizing: border-box;
+
+    justify-content: flex-start;
+    padding: 0 12px;
+
+    font-size: 12px;
+  }
+
+  .navbar--home .navbar__navigation .navbar__link svg {
+    display: block;
+  }
+
+  .navbar--home .navbar__navigation .navbar__link.active::after {
     display: none;
   }
 
-  .navbar__login {
-    width: 34px;
-    padding: 0;
+  /* Account section inside expanded menu */
+
+  .navbar--home .navbar__navigation .navbar__account {
+    position: static;
+    display: flex;
+
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+
+    margin: 0;
+    padding-top: 12px;
+
+    border-top: 1px solid var(--border-medium);
+    background: transparent;
   }
 
-  .navbar__signup {
-    padding: 0 10px;
+  .navbar--home .navbar__navigation .navbar__user {
+    display: flex;
+  }
+
+  .navbar--home .navbar__navigation .navbar__username {
+    display: block;
+  }
+
+  .navbar--home .navbar__navigation .navbar__account .navbar__login,
+  .navbar--home .navbar__navigation .navbar__account .navbar__signup {
+    display: none;
+  }
+
+  .navbar__quick-account:empty {
+    display: none;
   }
 }
+
+/* ========================================
+   SMALL MOBILE
+   ======================================== */
 
 @media (max-width: 480px) {
   .navbar-inner {
@@ -312,505 +814,12 @@
     display: none;
   }
 
-  .navbar__links {
-    gap: 10px;
-  }
-
-  .navbar__link {
-    font-size: 10px;
-  }
-
   .navbar__signup {
     display: none;
   }
-}
-
-/* ========================================
-   SIDEBAR NAVIGATION
-   HOME, PLAY AND LEADERBOARD
-   ======================================== */
-
-:is(.app--home, .app--play, .app--leaderboard) > .navbar--home {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-
-  grid-column: 1;
-  grid-row: 1;
-
-  width: 248px;
-  height: 100vh;
-  min-height: 620px;
-
-  padding: 24px 16px 18px;
-
-  display: flex;
-  flex-direction: column;
-
-  background: rgba(251, 248, 250, .88);
-  border: 0;
-  border-right: 1px solid var(--border-medium);
-
-  backdrop-filter: blur(16px);
-}
-
-:is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar-inner {
-  width: 100%;
-  height: 100%;
-  margin: 0;
-
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 28px;
-}
-
-/* Sidebar brand */
-
-:is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__brand {
-  width: 100%;
-  padding: 2px 4px 22px;
-  border-bottom: 1px solid var(--border-medium);
-}
-
-:is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__logo {
-  width: 100%;
-  height: 55px;
-
-  object-fit: contain;
-
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-}
-
-/* Sidebar links */
-
-:is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__links {
-  height: auto;
-
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: flex-start;
-  gap: 7px;
-}
-
-:is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__link {
-  height: 44px;
-  padding: 0 13px;
-
-  gap: 12px;
-  border-radius: 9px;
-
-  font-size: 12px;
-  color: var(--color-muted);
-}
-
-:is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__link svg {
-  display: block;
-}
-
-:is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__link:hover {
-  background: var(--color-surface-alt);
-  color: var(--color-text);
-}
-
-:is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__link.active {
-  color: var(--color-text);
-  background: #eadfeb;
-}
-
-:is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__link.active::after {
-  display: none;
-}
-
-/* Sidebar account */
-
-:is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__account {
-  margin-top: auto;
-  padding-top: 17px;
-
-  border-top: 1px solid var(--border-medium);
-
-  justify-content: flex-start;
-  flex-wrap: wrap;
-}
-
-:is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__user {
-  min-width: 0;
-  flex: 1;
-}
-
-:is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__username {
-  display: block;
-  max-width: 120px;
-}
-
-:is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__login span {
-  display: inline;
-}
-
-:is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__signup {
-  display: inline-flex;
-}
-
-/* ========================================
-   MOBILE SIDEBAR
-   ======================================== */
-
-@media (max-width: 760px) {
-  :is(.app--home, .app--play, .app--leaderboard) > .navbar--home {
-    position: relative;
-
-    width: 100%;
-    height: auto;
-    min-height: 0;
-
-    padding: 10px 16px;
-
-    border-right: 0;
-    border-bottom: 1px solid var(--border-medium);
-  }
-
-  :is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar-inner {
-    flex-direction: row;
-    align-items: center;
-    gap: 12px;
-  }
-
-  :is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__brand {
-    width: auto;
-    padding: 0;
-    border: 0;
-    flex-shrink: 0;
-  }
-
-  :is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__logo {
-    width: 116px;
-    height: 34px;
-  }
-
-  :is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__links {
-    flex: 1;
-    flex-direction: row;
-    justify-content: flex-end;
-    gap: 3px;
-  }
-
-  :is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__link {
-    width: 38px;
-    height: 38px;
-    justify-content: center;
-    padding: 0;
-    font-size: 0;
-  }
-
-  :is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__link svg {
-    width: 17px;
-    height: 17px;
-  }
-
-  :is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__account {
-    margin: 0;
-    padding: 0;
-    border: 0;
-    flex-wrap: nowrap;
-  }
-
-  :is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__user {
-    display: none;
-  }
-
-  :is(.app--home, .app--play, .app--leaderboard) .navbar--home .navbar__signup {
-    display: none;
-  }
-}
-
-
-/* ========================================
-   NAVIGATION GROUPS
-   ======================================== */
-
-.navbar__navigation {
-  display: contents;
-}
-
-.navbar__group {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.navbar__group-label {
-  padding: 0 13px;
-  margin: 0 0 3px;
-  color: var(--color-subtle);
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-}
-
-.navbar__link--disabled {
-  cursor: default;
-  opacity: 0.58;
-}
-
-.navbar__coming-soon {
-  margin-left: auto;
-  padding: 3px 6px;
-  border-radius: var(--radius-sm);
-  background: var(--color-surface-alt);
-  color: var(--color-muted);
-  font-size: 9px;
-  font-weight: 800;
-}
-
-/* ========================================
-   ACCOUNT VISIBILITY
-   ======================================== */
-
-.navbar__quick-account {
-  display: none;
-}
-
-.navbar__mobile-toggle {
-  display: none;
-}
-
-.navbar__account {
-  gap: 8px;
-}
-
-.navbar__login {
-  min-height: 40px;
-  padding: 0 15px;
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-md);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.navbar__signup {
-  min-height: 40px;
-  padding: 0 17px;
-  border-radius: var(--radius-md);
-  font-size: 12px;
-  font-weight: 800;
-  box-shadow: var(--shadow-sm);
-}
-
-/* ========================================
-   SIDEBAR SPACING
-   ======================================== */
-
-:is(.app--home, .app--play, .app--leaderboard)
-  .navbar--home .navbar-inner {
-  gap: 17px;
-}
-
-:is(.app--home, .app--play, .app--leaderboard)
-  .navbar--home .navbar__links {
-  gap: 15px;
-}
-
-:is(.app--home, .app--play, .app--leaderboard)
-  .navbar--home .navbar__link {
-  height: 38px;
-  flex-shrink: 0;
-}
-
-:is(.app--home, .app--play, .app--leaderboard)
-  .navbar--home .navbar__brand {
-  padding-bottom: 15px;
-}
-
-:is(.app--home, .app--play, .app--leaderboard)
-  .navbar--home .navbar__account {
-  gap: 8px;
-}
-
-:is(.app--home, .app--play, .app--leaderboard)
-  .navbar--home .navbar__signup {
-  flex: 1;
-}
-
-:is(.app--home, .app--play, .app--leaderboard)
-  .navbar--home .navbar__login {
-  flex: 1;
-}
-
-/* ========================================
-   RESPONSIVE NAVIGATION
-   ======================================== */
-
-@media (max-width: 1100px) {
-  :is(.app--home, .app--play, .app--leaderboard)
-    > .navbar--home {
-    width: 220px;
-  }
-
-  :is(.app--home, .app--play, .app--leaderboard)
-    .navbar--home .navbar__link {
-    font-size: 11px;
-  }
-}
-
-@media (max-width: 760px) {
-  :is(.app--home, .app--play, .app--leaderboard)
-    > .navbar--home {
-    position: sticky;
-    top: 0;
-    z-index: 200;
-    width: 100%;
-    height: auto;
-    min-height: 0;
-    padding: 10px 16px;
-    border-bottom: 1px solid var(--border-medium);
-  }
-
-  :is(.app--home, .app--play, .app--leaderboard)
-    .navbar--home .navbar-inner {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  :is(.app--home, .app--play, .app--leaderboard)
-    .navbar--home .navbar__brand {
-    width: auto;
-    padding: 0;
-    border: 0;
-  }
-
-  :is(.app--home, .app--play, .app--leaderboard)
-    .navbar--home .navbar__logo {
-    width: 116px;
-    height: 34px;
-  }
-
-  .navbar__mobile-toggle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    margin-left: auto;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--radius-md);
-    background: var(--color-surface);
-    color: var(--color-text);
-    cursor: pointer;
-  }
-
-  /* Auth actions stay visible in the top bar */
-
-  .navbar__quick-account {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    order: 3;
-  }
-
-  .navbar__quick-account .navbar__login {
-    min-height: 36px;
-    padding: 0 10px;
-  }
 
   .navbar__quick-account .navbar__signup {
-    min-height: 36px;
-    padding: 0 11px;
-  }
-
-  .navbar__navigation {
-    display: none;
-    width: 100%;
-    flex-basis: 100%;
-    order: 4;
-  }
-
-  .navbar--open .navbar__navigation {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    padding: 14px 0 4px;
-  }
-
-  .navbar__navigation .navbar__links {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-    height: auto;
-  }
-
-  .navbar__navigation .navbar__group {
-    gap: 4px;
-  }
-
-  .navbar__navigation .navbar__group-label {
-    padding: 6px 10px;
-  }
-
-  .navbar__navigation .navbar__link {
-    width: 100%;
-    height: 42px;
-    box-sizing: border-box;
-    justify-content: flex-start;
-    padding: 0 12px;
-    font-size: 12px;
-  }
-
-  .navbar__navigation .navbar__link svg {
-    display: block;
-  }
-
-  .navbar__navigation .navbar__link.active::after {
-    display: none;
-  }
-
-  .navbar__navigation .navbar__account {
-    display: flex;
-    width: 100%;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    padding-top: 12px;
-    border-top: 1px solid var(--border-medium);
-  }
-
-  .navbar__navigation .navbar__signup,
-  .navbar__navigation .navbar__login {
     display: inline-flex;
-  }
-
-  .navbar__navigation .navbar__user {
-    display: flex;
-  }
-
-  .navbar__navigation .navbar__username {
-    display: block;
-  }
-
-  /* Avoid duplicate auth buttons inside mobile menu */
-
-  .navbar__quick-account:empty {
-    display: none;
-  }
-
-  .navbar__navigation .navbar__account:has(.navbar__user) {
-    display: flex;
-  }
-
-  .navbar__quick-account:has(.navbar__login) {
-    display: flex;
-  }
-
-  .navbar__navigation .navbar__account .navbar__login,
-  .navbar__navigation .navbar__account .navbar__signup {
-    display: none;
   }
 }
 
@@ -824,63 +833,12 @@
     font-size: 11px;
   }
 
-  :is(.app--home, .app--play, .app--leaderboard)
-    .navbar--home .navbar__logo {
+  :is(
+    .app--home,
+    .app--play,
+    .app--leaderboard,
+    .app--profile
+  ) .navbar--home .navbar__logo {
     width: 100px;
-  }
-}
-
-@media (max-width: 760px) {
-  .navbar--home .navbar__quick-account .navbar__signup {
-    display: inline-flex;
-  }
-}
-
-/* Keep account actions visible in the sidebar */
-:is(.app--home, .app--play, .app--leaderboard)
-  .navbar--home .navbar__account {
-  position: sticky;
-  bottom: 0;
-  margin-top: auto;
-  padding: 16px 0 8px;
-  background: rgba(251, 248, 250, 0.96);
-  border-top: 1px solid var(--border-medium);
-  z-index: 5;
-}
-
-/* Keep both authentication buttons visible */
-:is(.app--home, .app--play, .app--leaderboard)
-  .navbar--home .navbar__account .navbar__login,
-:is(.app--home, .app--play, .app--leaderboard)
-  .navbar--home .navbar__account .navbar__signup {
-  display: inline-flex;
-  flex: 1;
-  min-height: 42px;
-  justify-content: center;
-}
-
-/* Desktop horizontal navbar */
-@media (min-width: 761px) {
-  .navbar:not(.navbar--home) .navbar__account {
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  .navbar:not(.navbar--home) .navbar__login,
-  .navbar:not(.navbar--home) .navbar__signup {
-    display: inline-flex;
-  }
-}
-
-/* Mobile: keep quick account actions in the top bar */
-@media (max-width: 760px) {
-  .navbar__quick-account {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .navbar--home .navbar__quick-account .navbar__signup {
-    display: inline-flex;
   }
 }

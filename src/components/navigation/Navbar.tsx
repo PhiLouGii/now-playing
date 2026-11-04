@@ -29,10 +29,11 @@ function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const isSidebarPage = [
-    '/',
-    '/play',
-    '/leaderboard',
-  ].includes(pathname)
+  '/',
+  '/play',
+  '/leaderboard',
+  '/profile',
+].includes(pathname)
 
   const { user, profile, loading, logout } = useAuth()
 
