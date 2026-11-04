@@ -31,6 +31,7 @@ function Navbar() {
   const isSidebarPage = [
   '/',
   '/play',
+  '/explore',
   '/leaderboard',
   '/profile',
 ].includes(pathname)

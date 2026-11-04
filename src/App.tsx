@@ -6,25 +6,19 @@ import AppRoutes from './routes/AppRoutes'
 function App() {
   const { pathname } = useLocation()
 
-  const isHome = pathname === '/'
-  const isPlay = pathname === '/play'
-  const isLeaderboard = pathname === '/leaderboard'
-  const isProfile = pathname === '/profile'
+  const sidebarPages = [
+    '/',
+    '/play',
+    '/explore',
+    '/leaderboard',
+    '/profile',
+  ]
 
-  const isSidebarPage =
-    isHome || isPlay || isLeaderboard || isProfile
-
-  const sidebarClass = isHome
-    ? 'home'
-    : isPlay
-      ? 'play'
-      : isLeaderboard
-        ? 'leaderboard'
-        : 'profile'
+  const isSidebarPage = sidebarPages.includes(pathname)
 
   return (
     <div
-      className={`app${isSidebarPage ? ` app--${sidebarClass}` : ''}`}
+      className={`app${isSidebarPage ? ` app--${pathname === '/' ? 'home' : pathname.slice(1) === 'explore' ? 'explore' : pathname.slice(1)}` : ''}`}
     >
       <Navbar />
       <AppRoutes />

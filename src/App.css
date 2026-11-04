@@ -1,13 +1,15 @@
+
 .app {
   min-height: 100vh;
   position: relative;
   overflow: hidden;
-
   color: var(--color-white);
   background: var(--color-bg);
 }
 
-/* Background effects */
+/* ========================================
+   BACKGROUND EFFECTS
+   ======================================== */
 
 .app::before {
   content: '';
@@ -33,7 +35,6 @@
   background: rgba(34, 211, 238, 0.05);
   filter: blur(100px);
   pointer-events: none;
-  z-index: 0;
 }
 
 /* ========================================
@@ -43,6 +44,7 @@
 :is(
   .app--home,
   .app--play,
+  .app--explore,
   .app--leaderboard,
   .app--profile
 ) {
@@ -50,7 +52,6 @@
   grid-template-columns: 248px minmax(0, 1fr);
   align-items: start;
   overflow: visible;
-  min-height: 100vh;
 }
 
 /* Sidebar */
@@ -58,6 +59,7 @@
 :is(
   .app--home,
   .app--play,
+  .app--explore,
   .app--leaderboard,
   .app--profile
 ) > .navbar {
@@ -71,6 +73,7 @@
 :is(
   .app--home,
   .app--play,
+  .app--explore,
   .app--leaderboard,
   .app--profile
 ) > :not(.navbar) {
@@ -80,32 +83,26 @@
   min-height: 100vh;
 }
 
-/* Page spacing */
+/* ========================================
+   PAGE SPACING
+   ======================================== */
 
-:is(
-  .app--home,
-  .app--play,
-  .app--leaderboard
-) > .home,
-:is(
-  .app--home,
-  .app--play,
-  .app--leaderboard
-) > .play-page,
-:is(
-  .app--home,
-  .app--play,
-  .app--leaderboard
-) > .leaderboard-page,
-.app--profile > .profile-page {
+:is(.app--home) > .home,
+:is(.app--play) > .play-page,
+:is(.app--explore) > .explore-page,
+:is(.app--leaderboard) > .leaderboard-page,
+:is(.app--profile) > .profile-page {
   padding: 28px clamp(22px, 3vw, 48px) 52px;
 }
 
-/* Background positioning */
+/* ========================================
+   BACKGROUND POSITIONING
+   ======================================== */
 
 :is(
   .app--home,
   .app--play,
+  .app--explore,
   .app--leaderboard,
   .app--profile
 )::before {
@@ -120,6 +117,7 @@
 :is(
   .app--home,
   .app--play,
+  .app--explore,
   .app--leaderboard,
   .app--profile
 ) > * {
@@ -134,6 +132,7 @@
   :is(
     .app--home,
     .app--play,
+    .app--explore,
     .app--leaderboard,
     .app--profile
   ) {
@@ -144,31 +143,31 @@
   :is(
     .app--home,
     .app--play,
+    .app--explore,
     .app--leaderboard,
     .app--profile
   ) > :not(.navbar) {
     min-height: auto;
   }
 
-  :is(
-    .app--home,
-    .app--play,
-    .app--leaderboard,
-    .app--profile
-  ) > .home,
-  :is(
-    .app--home,
-    .app--play,
-    .app--leaderboard,
-    .app--profile
-  ) > .play-page,
-  :is(
-    .app--home,
-    .app--play,
-    .app--leaderboard,
-    .app--profile
-  ) > .leaderboard-page,
+  .app--home > .home,
+  .app--play > .play-page,
+  .app--explore > .explore-page,
+  .app--leaderboard > .leaderboard-page,
   .app--profile > .profile-page {
+    padding: 24px 18px 42px;
+  }
+}
+
+.app--explore > .trivia-placeholder {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 28px clamp(22px, 3vw, 48px) 52px;
+}
+
+@media (max-width: 760px) {
+  .app--explore > .trivia-placeholder {
     padding: 24px 18px 42px;
   }
 }
