@@ -527,3 +527,360 @@
     display: none;
   }
 }
+
+
+/* ========================================
+   NAVIGATION GROUPS
+   ======================================== */
+
+.navbar__navigation {
+  display: contents;
+}
+
+.navbar__group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.navbar__group-label {
+  padding: 0 13px;
+  margin: 0 0 3px;
+  color: var(--color-subtle);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.navbar__link--disabled {
+  cursor: default;
+  opacity: 0.58;
+}
+
+.navbar__coming-soon {
+  margin-left: auto;
+  padding: 3px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-alt);
+  color: var(--color-muted);
+  font-size: 9px;
+  font-weight: 800;
+}
+
+/* ========================================
+   ACCOUNT VISIBILITY
+   ======================================== */
+
+.navbar__quick-account {
+  display: none;
+}
+
+.navbar__mobile-toggle {
+  display: none;
+}
+
+.navbar__account {
+  gap: 8px;
+}
+
+.navbar__login {
+  min-height: 40px;
+  padding: 0 15px;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.navbar__signup {
+  min-height: 40px;
+  padding: 0 17px;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: var(--shadow-sm);
+}
+
+/* ========================================
+   SIDEBAR SPACING
+   ======================================== */
+
+:is(.app--home, .app--play, .app--leaderboard)
+  .navbar--home .navbar-inner {
+  gap: 17px;
+}
+
+:is(.app--home, .app--play, .app--leaderboard)
+  .navbar--home .navbar__links {
+  gap: 15px;
+}
+
+:is(.app--home, .app--play, .app--leaderboard)
+  .navbar--home .navbar__link {
+  height: 38px;
+  flex-shrink: 0;
+}
+
+:is(.app--home, .app--play, .app--leaderboard)
+  .navbar--home .navbar__brand {
+  padding-bottom: 15px;
+}
+
+:is(.app--home, .app--play, .app--leaderboard)
+  .navbar--home .navbar__account {
+  gap: 8px;
+}
+
+:is(.app--home, .app--play, .app--leaderboard)
+  .navbar--home .navbar__signup {
+  flex: 1;
+}
+
+:is(.app--home, .app--play, .app--leaderboard)
+  .navbar--home .navbar__login {
+  flex: 1;
+}
+
+/* ========================================
+   RESPONSIVE NAVIGATION
+   ======================================== */
+
+@media (max-width: 1100px) {
+  :is(.app--home, .app--play, .app--leaderboard)
+    > .navbar--home {
+    width: 220px;
+  }
+
+  :is(.app--home, .app--play, .app--leaderboard)
+    .navbar--home .navbar__link {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 760px) {
+  :is(.app--home, .app--play, .app--leaderboard)
+    > .navbar--home {
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border-medium);
+  }
+
+  :is(.app--home, .app--play, .app--leaderboard)
+    .navbar--home .navbar-inner {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  :is(.app--home, .app--play, .app--leaderboard)
+    .navbar--home .navbar__brand {
+    width: auto;
+    padding: 0;
+    border: 0;
+  }
+
+  :is(.app--home, .app--play, .app--leaderboard)
+    .navbar--home .navbar__logo {
+    width: 116px;
+    height: 34px;
+  }
+
+  .navbar__mobile-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    margin-left: auto;
+    border: 1px solid var(--border-medium);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    color: var(--color-text);
+    cursor: pointer;
+  }
+
+  /* Auth actions stay visible in the top bar */
+
+  .navbar__quick-account {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    order: 3;
+  }
+
+  .navbar__quick-account .navbar__login {
+    min-height: 36px;
+    padding: 0 10px;
+  }
+
+  .navbar__quick-account .navbar__signup {
+    min-height: 36px;
+    padding: 0 11px;
+  }
+
+  .navbar__navigation {
+    display: none;
+    width: 100%;
+    flex-basis: 100%;
+    order: 4;
+  }
+
+  .navbar--open .navbar__navigation {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 14px 0 4px;
+  }
+
+  .navbar__navigation .navbar__links {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    height: auto;
+  }
+
+  .navbar__navigation .navbar__group {
+    gap: 4px;
+  }
+
+  .navbar__navigation .navbar__group-label {
+    padding: 6px 10px;
+  }
+
+  .navbar__navigation .navbar__link {
+    width: 100%;
+    height: 42px;
+    box-sizing: border-box;
+    justify-content: flex-start;
+    padding: 0 12px;
+    font-size: 12px;
+  }
+
+  .navbar__navigation .navbar__link svg {
+    display: block;
+  }
+
+  .navbar__navigation .navbar__link.active::after {
+    display: none;
+  }
+
+  .navbar__navigation .navbar__account {
+    display: flex;
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-medium);
+  }
+
+  .navbar__navigation .navbar__signup,
+  .navbar__navigation .navbar__login {
+    display: inline-flex;
+  }
+
+  .navbar__navigation .navbar__user {
+    display: flex;
+  }
+
+  .navbar__navigation .navbar__username {
+    display: block;
+  }
+
+  /* Avoid duplicate auth buttons inside mobile menu */
+
+  .navbar__quick-account:empty {
+    display: none;
+  }
+
+  .navbar__navigation .navbar__account:has(.navbar__user) {
+    display: flex;
+  }
+
+  .navbar__quick-account:has(.navbar__login) {
+    display: flex;
+  }
+
+  .navbar__navigation .navbar__account .navbar__login,
+  .navbar__navigation .navbar__account .navbar__signup {
+    display: none;
+  }
+}
+
+@media (max-width: 380px) {
+  .navbar__quick-account .navbar__login {
+    display: none;
+  }
+
+  .navbar__quick-account .navbar__signup {
+    padding-inline: 9px;
+    font-size: 11px;
+  }
+
+  :is(.app--home, .app--play, .app--leaderboard)
+    .navbar--home .navbar__logo {
+    width: 100px;
+  }
+}
+
+@media (max-width: 760px) {
+  .navbar--home .navbar__quick-account .navbar__signup {
+    display: inline-flex;
+  }
+}
+
+/* Keep account actions visible in the sidebar */
+:is(.app--home, .app--play, .app--leaderboard)
+  .navbar--home .navbar__account {
+  position: sticky;
+  bottom: 0;
+  margin-top: auto;
+  padding: 16px 0 8px;
+  background: rgba(251, 248, 250, 0.96);
+  border-top: 1px solid var(--border-medium);
+  z-index: 5;
+}
+
+/* Keep both authentication buttons visible */
+:is(.app--home, .app--play, .app--leaderboard)
+  .navbar--home .navbar__account .navbar__login,
+:is(.app--home, .app--play, .app--leaderboard)
+  .navbar--home .navbar__account .navbar__signup {
+  display: inline-flex;
+  flex: 1;
+  min-height: 42px;
+  justify-content: center;
+}
+
+/* Desktop horizontal navbar */
+@media (min-width: 761px) {
+  .navbar:not(.navbar--home) .navbar__account {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .navbar:not(.navbar--home) .navbar__login,
+  .navbar:not(.navbar--home) .navbar__signup {
+    display: inline-flex;
+  }
+}
+
+/* Mobile: keep quick account actions in the top bar */
+@media (max-width: 760px) {
+  .navbar__quick-account {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .navbar--home .navbar__quick-account .navbar__signup {
+    display: inline-flex;
+  }
+}
