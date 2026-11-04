@@ -109,7 +109,7 @@ export default function PlayByArtist() {
       try {
         audio.currentTime = 0
       } catch {
-        // The audio may not have loaded metadata yet.
+        // Audio metadata may not have loaded yet.
       }
     }
 
@@ -118,7 +118,6 @@ export default function PlayByArtist() {
 
   /*
    * Create an audio element for the current song.
-   * Playback state is synchronized with the actual audio events.
    */
   useEffect(() => {
     const audioUrl = question?.song.audioUrl
@@ -178,6 +177,9 @@ export default function PlayByArtist() {
     }
   }, [question, stopTimer])
 
+  /*
+   * Fetch a question for the selected artist only.
+   */
   const fetchQuestion = useCallback(async (): Promise<Question | null> => {
     if (!selectedArtist || !selectedArtistId) {
       setError('No artist was selected.')
@@ -255,7 +257,7 @@ export default function PlayByArtist() {
   )
 
   /*
-   * Load the first question and the loading-screen facts.
+   * Load the first question and loading-screen facts.
    */
   useEffect(() => {
     let cancelled = false
@@ -344,7 +346,6 @@ export default function PlayByArtist() {
 
   /*
    * Play and pause the current song preview.
-   * The timer starts only after playback succeeds.
    */
   const togglePlayback = useCallback(async () => {
     const audio = audioRef.current
@@ -534,20 +535,63 @@ export default function PlayByArtist() {
     submitFinalScore,
   ])
 
+  /*
+   * Exit the artist game.
+   */
   const handleExit = useCallback(() => {
     stopTimer()
     stopAudio()
     navigate('/play')
   }, [navigate, stopAudio, stopTimer])
 
-  const handlePlayAgain = useCallback(() => {
-    navigate('/play-by-artist', {
-      state: {
-        artist: selectedArtist,
-        artistId: selectedArtistId,
-      },
-    })
-  }, [navigate, selectedArtist, selectedArtistId])
+  /*
+   * Start a completely fresh round with the SAME artist.
+   */
+  const handlePlayAgain = useCallback(async () => {
+    stopTimer()
+    stopAudio()
+
+    // Clear the previous run's excluded songs.
+    excludedTrackIdsRef.current = []
+
+    // Reset game submission and initial loading references.
+    scoreSubmittedRef.current = false
+    initialQuestionPromiseRef.current = null
+
+    // Reset all game progress.
+    setQuestion(null)
+    setCurrentQuestion(1)
+    setSelectedAnswer(null)
+    setTimeRemaining(RECOGNITION_TIME)
+
+    setScore(0)
+    setCorrectAnswers(0)
+    setBestStreak(0)
+    setCurrentStreak(0)
+    setTotalListeningTime(0)
+
+    setAnsweredSongs([])
+    setShowResults(false)
+    setError(null)
+
+    // Show loading while fetching a new question for this artist.
+    setLoadingComplete(false)
+    setIsInitialLoading(true)
+
+    const firstQuestion = await fetchQuestion()
+
+    if (firstQuestion) {
+      loadQuestion(firstQuestion)
+      setLoadingComplete(true)
+    }
+
+    setIsInitialLoading(false)
+  }, [
+    fetchQuestion,
+    loadQuestion,
+    stopAudio,
+    stopTimer,
+  ])
 
   const fastestSong = useMemo(() => {
     const answered = answeredSongs.filter(song => !song.timedOut)
@@ -622,7 +666,7 @@ export default function PlayByArtist() {
   }
 
   /*
-   * Initial loading screen.
+   * Initial loading and Play Again loading screen.
    */
   if (isInitialLoading) {
     return (
@@ -842,7 +886,8 @@ export default function PlayByArtist() {
             <button
               type="button"
               className="play-by-artist-results__primary-button"
-              onClick={handlePlayAgain}
+              onClick={() => void handlePlayAgain()}
+              disabled={isInitialLoading}
             >
               PLAY AGAIN
             </button>
@@ -871,7 +916,6 @@ export default function PlayByArtist() {
     selectedAnswer !== '' &&
     selectedAnswer.trim().toLowerCase() ===
       question.correctAnswer.trim().toLowerCase()
-
 
   return (
     <main
@@ -1135,7 +1179,6 @@ export default function PlayByArtist() {
           </div>
         </section>
 
-        {/* Answer feedback and Next Song sit below both panels. */}
         <div className="play-by-artist__bottom">
           <p
             className={`play-by-artist__play-hint ${

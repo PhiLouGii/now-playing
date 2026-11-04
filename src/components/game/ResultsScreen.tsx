@@ -1,6 +1,7 @@
 
 import { useNavigate } from 'react-router-dom'
 import './ResultsScreen.css'
+import type { RoundConfig } from '../../types/game'
 
 type RecognitionResult = {
   questionNumber: number
@@ -18,6 +19,7 @@ type ResultsScreenProps = {
   correctAnswers: number
   bestStreak: number
   recognitionResults: RecognitionResult[]
+  roundConfig: RoundConfig
 }
 
 function ResultsScreen({
@@ -26,6 +28,7 @@ function ResultsScreen({
   correctAnswers,
   bestStreak,
   recognitionResults,
+  roundConfig,
 }: ResultsScreenProps) {
   const navigate = useNavigate()
 
@@ -111,9 +114,10 @@ function ResultsScreen({
   const performance = getPerformanceMessage()
 
   function handlePlayAgain() {
-    navigate('/game')
-    window.location.reload()
-  }
+  navigate('/game', {
+    state: { roundConfig },
+  })
+}
 
   function handleBackToPlay() {
     navigate('/play')

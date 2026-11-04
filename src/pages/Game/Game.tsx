@@ -582,16 +582,17 @@ function Game() {
      ========================================================= */
 
   if (isGameComplete) {
-    return (
-      <ResultsScreen
-        score={score}
-        totalQuestions={roundConfig.questionCount}
-        correctAnswers={correctAnswers}
-        bestStreak={bestStreak}
-        recognitionResults={recognitionResults}
-      />
-    )
-  }
+  return (
+    <ResultsScreen
+      score={score}
+      totalQuestions={roundConfig.questionCount}
+      correctAnswers={correctAnswers}
+      bestStreak={bestStreak}
+      recognitionResults={recognitionResults}
+      roundConfig={roundConfig}
+    />
+  )
+}
 
   const question = questions[currentQuestion]
 
