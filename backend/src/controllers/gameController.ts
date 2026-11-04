@@ -1,7 +1,5 @@
-import type {
-  Request,
-  Response,
-} from 'express'
+
+import type { Request, Response } from 'express'
 
 import {
   generateGameQuestion,
@@ -12,23 +10,77 @@ import type {
   QuestionType,
 } from '../services/game/gameTypes.js'
 
-
-const VALID_QUESTION_TYPES:
-  QuestionType[] = [
-    'name-the-song',
-    'name-the-artist',
-    'name-the-album',
-    'guess-the-year',
-  ]
+import {
+  deezerMusicProvider,
+} from '../services/music/deezerMusicProvider.js'
 
 
-const VALID_DIFFICULTIES:
-  QuestionDifficulty[] = [
-    'easy',
-    'medium',
-    'hard',
-  ]
+const VALID_QUESTION_TYPES: QuestionType[] = [
+  'name-the-song',
+  'name-the-artist',
+  'name-the-album',
+  'guess-the-year',
+]
 
+const VALID_DIFFICULTIES: QuestionDifficulty[] = [
+  'easy',
+  'medium',
+  'hard',
+]
+
+
+/*
+ * -----------------------------------------------------
+ * ARTIST SEARCH
+ * -----------------------------------------------------
+ */
+
+export async function searchGameArtists(
+  req: Request,
+  res: Response,
+) {
+  try {
+    const query =
+      typeof req.query.q === 'string'
+        ? req.query.q.trim()
+        : ''
+
+    if (query.length < 2) {
+      return res.json({ artists: [] })
+    }
+
+    const results =
+      await deezerMusicProvider.searchArtists(query, 8)
+
+    const artists = results
+      .filter(
+        artist => artist.id && artist.name?.trim(),
+      )
+      .map(artist => ({
+        id: String(artist.id),
+        name: artist.name,
+        image:
+          artist.picture_medium ??
+          artist.picture ??
+          '',
+      }))
+
+    return res.json({ artists })
+  } catch (error) {
+    console.error('Failed to search artists:', error)
+
+    return res.status(500).json({
+      error: 'Failed to search artists.',
+    })
+  }
+}
+
+
+/*
+ * -----------------------------------------------------
+ * GAME QUESTION
+ * -----------------------------------------------------
+ */
 
 export async function getGameQuestion(
   req: Request,
@@ -75,34 +127,23 @@ export async function getGameQuestion(
         ? req.query.exclude
         : ''
 
-    const excludedTrackIds =
-      excludeParam
-        ? excludeParam
-            .split(',')
-            .map(
-              id => id.trim(),
-            )
-            .filter(Boolean)
-        : []
+    const excludedTrackIds = excludeParam
+      ? excludeParam
+          .split(',')
+          .map(id => id.trim())
+          .filter(Boolean)
+      : []
 
 
-    /*
-     * -----------------------------------------------------
-     * BASIC VALIDATION
-     * -----------------------------------------------------
-     */
+    // Basic validation
 
     if (
-      !VALID_QUESTION_TYPES.includes(
-        type as QuestionType,
-      )
+      !VALID_QUESTION_TYPES.includes(type as QuestionType)
     ) {
       return res.status(400).json({
-        error:
-          `Invalid question type: ${type}`,
+        error: `Invalid question type: ${type}`,
       })
     }
-
 
     if (
       !VALID_DIFFICULTIES.includes(
@@ -110,11 +151,9 @@ export async function getGameQuestion(
       )
     ) {
       return res.status(400).json({
-        error:
-          `Invalid difficulty: ${difficulty}`,
+        error: `Invalid difficulty: ${difficulty}`,
       })
     }
-
 
     if (
       decade !== undefined &&
@@ -126,63 +165,36 @@ export async function getGameQuestion(
       )
     ) {
       return res.status(400).json({
-        error:
-          'Invalid decade.',
+        error: 'Invalid decade.',
       })
     }
 
-
-    if (
-      categoryId === ''
-    ) {
+    if (categoryId === '') {
       return res.status(400).json({
-        error:
-          'Category cannot be empty.',
+        error: 'Category cannot be empty.',
       })
     }
 
-
-    if (
-      artist === ''
-    ) {
+    if (artist === '') {
       return res.status(400).json({
-        error:
-          'Artist cannot be empty.',
+        error: 'Artist cannot be empty.',
       })
     }
 
-
-    if (
-      artistId === ''
-    ) {
+    if (artistId === '') {
       return res.status(400).json({
-        error:
-          'Artist ID cannot be empty.',
+        error: 'Artist ID cannot be empty.',
       })
     }
 
-
-    if (
-      theme === ''
-    ) {
+    if (theme === '') {
       return res.status(400).json({
-        error:
-          'Theme cannot be empty.',
+        error: 'Theme cannot be empty.',
       })
     }
 
 
-    /*
-     * -----------------------------------------------------
-     * FILTER COMBINATIONS
-     * -----------------------------------------------------
-     *
-     * Category, artist, decade and theme represent
-     * different curated sources.
-     *
-     * Theme gameplay should therefore not be combined
-     * with another curated source.
-     */
+    // Filter combinations
 
     const activeFilters = [
       Boolean(categoryId),
@@ -191,10 +203,7 @@ export async function getGameQuestion(
       Boolean(theme),
     ].filter(Boolean).length
 
-
-    if (
-      activeFilters > 1
-    ) {
+    if (activeFilters > 1) {
       return res.status(400).json({
         error:
           'Category, artist, decade and theme cannot be combined.',
@@ -202,11 +211,7 @@ export async function getGameQuestion(
     }
 
 
-    /*
-     * -----------------------------------------------------
-     * ARTIST VALIDATION
-     * -----------------------------------------------------
-     */
+    // Artist validation
 
     if (
       (artist || artistId) &&
@@ -218,22 +223,14 @@ export async function getGameQuestion(
       })
     }
 
-
-    if (
-      artist &&
-      !artistId
-    ) {
+    if (artist && !artistId) {
       return res.status(400).json({
         error:
           'Artist ID is required for Play by Artist.',
       })
     }
 
-
-    if (
-      artistId &&
-      !artist
-    ) {
+    if (artistId && !artist) {
       return res.status(400).json({
         error:
           'Artist name is required when using an artist ID.',
@@ -241,33 +238,22 @@ export async function getGameQuestion(
     }
 
 
-    /*
-     * -----------------------------------------------------
-     * GAME QUESTION
-     * -----------------------------------------------------
-     */
+    // Generate question
 
-    const question =
-      await generateGameQuestion(
-        type as QuestionType,
-        difficulty as QuestionDifficulty,
-        decade,
-        excludedTrackIds,
-        categoryId,
-        artist,
-        artistId,
-        theme,
-      )
-
-
-    return res.json({
-      question,
-    })
-  } catch (error) {
-    console.error(
-      'Failed to generate game question:',
-      error,
+    const question = await generateGameQuestion(
+      type as QuestionType,
+      difficulty as QuestionDifficulty,
+      decade,
+      excludedTrackIds,
+      categoryId,
+      artist,
+      artistId,
+      theme,
     )
+
+    return res.json({ question })
+  } catch (error) {
+    console.error('Failed to generate game question:', error)
 
     return res.status(500).json({
       error:
