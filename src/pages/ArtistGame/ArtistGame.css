@@ -1,3 +1,8 @@
+
+/* =========================================================
+   GAME
+========================================================= */
+
 .artist-game {
   min-height: calc(100dvh - var(--navbar-height));
   height: calc(100dvh - var(--navbar-height));
@@ -128,7 +133,7 @@
 }
 
 /* =========================================================
-   LEFT / QUESTION
+   QUESTION
 ========================================================= */
 
 .artist-game__question {
@@ -154,7 +159,7 @@
 }
 
 .artist-game__question h2 {
-  margin: 0;
+  margin: 0 0 14px;
 
   color: var(--color-text-secondary);
 
@@ -163,7 +168,7 @@
 }
 
 /* =========================================================
-   ARTWORK / PLACEHOLDER
+   ARTWORK
 ========================================================= */
 
 .artist-game__artwork-placeholder {
@@ -198,11 +203,6 @@
   opacity: 0.35;
 }
 
-/*
-   If the JSX uses the actual artwork before reveal,
-   this keeps it visually consistent with the main game.
-*/
-
 .artist-game__artwork {
   width: min(245px, 42vh);
   aspect-ratio: 1;
@@ -214,7 +214,6 @@
   object-fit: cover;
 
   border-radius: var(--radius-lg);
-
   border: 1px solid var(--border-medium);
 
   background: var(--color-surface);
@@ -411,7 +410,7 @@
 }
 
 /* =========================================================
-   RIGHT / PLAY PANEL
+   PLAY PANEL
 ========================================================= */
 
 .artist-game__play-panel {
@@ -423,7 +422,7 @@
 }
 
 /* =========================================================
-   ANSWERS
+   ARTIST ANSWER FORM
 ========================================================= */
 
 .artist-game__answers {
@@ -435,11 +434,8 @@
   justify-content: space-between;
   align-items: center;
 
-  margin-bottom: 8px;
-}
+  margin-bottom: 12px;
 
-.artist-game__answers-header,
-.artist-game__song-label {
   color: var(--color-text-muted);
 
   font-size: 0.62rem;
@@ -448,78 +444,265 @@
   text-transform: uppercase;
 }
 
-.artist-game__answer-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-
-  gap: 9px;
+.artist-game__artist-form {
+  width: 100%;
 }
 
-.artist-game__answer {
-  min-height: 56px;
+.artist-game__search-wrap {
+  position: relative;
 
   display: flex;
   align-items: center;
 
-  gap: 11px;
-
-  padding: 9px 12px;
+  width: 100%;
+  min-height: 58px;
 
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-md);
 
   background: var(--color-surface);
+
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.artist-game__search-wrap:focus-within {
+  border-color: var(--color-purple-light);
+  box-shadow: 0 0 0 3px rgba(128, 90, 213, 0.12);
+}
+
+.artist-game__search-icon {
+  flex-shrink: 0;
+
+  margin-left: 16px;
+
+  color: var(--color-text-muted);
+}
+
+.artist-game__artist-input {
+  width: 100%;
+  min-width: 0;
+  height: 56px;
+
+  padding: 0 14px;
+
+  border: 0;
+  outline: 0;
+
+  background: transparent;
   color: var(--color-text);
 
   font: inherit;
-  font-size: 0.78rem;
-  font-weight: 650;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
 
+.artist-game__artist-input::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.75;
+}
+
+.artist-game__artist-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.artist-game__search-loading {
+  flex-shrink: 0;
+
+  margin-right: 16px;
+
+  color: var(--color-purple-light);
+
+  animation: artist-search-spin 850ms linear infinite;
+}
+
+@keyframes artist-search-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================================================
+   AUTOCOMPLETE SUGGESTIONS
+========================================================= */
+
+.artist-game__suggestions {
+  position: relative;
+  z-index: 5;
+
+  display: flex;
+  flex-direction: column;
+
+  width: 100%;
+
+  margin-top: 7px;
+  padding: 5px;
+
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+
+  background: var(--color-surface);
+
+  box-shadow: var(--shadow-sm);
+
+  animation: artist-suggestions-in 130ms ease-out;
+}
+
+@keyframes artist-suggestions-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.artist-game__suggestion {
+  width: 100%;
+  min-height: 54px;
+
+  display: flex;
+  align-items: center;
+  gap: 11px;
+
+  padding: 7px 9px;
+
+  border: 0;
+  border-radius: 8px;
+
+  background: transparent;
+  color: var(--color-text);
+
+  font: inherit;
   text-align: left;
 
   cursor: pointer;
 
-  transition:
-    border-color 140ms ease,
-    background 140ms ease,
-    transform 140ms ease;
+  transition: background 140ms ease;
 }
 
-.artist-game__answer:hover {
-  border-color: var(--color-purple-light);
-
-  background:
-    linear-gradient(
-      135deg,
-      rgba(128, 90, 213, 0.08),
-      transparent
-    ),
-    var(--color-surface);
-
-  transform: translateY(-1px);
+.artist-game__suggestion:hover,
+.artist-game__suggestion--active {
+  background: rgba(128, 90, 213, 0.12);
 }
 
-.artist-game__answer:active {
-  transform: translateY(0);
-}
-
-.artist-game__answer-number {
-  width: 26px;
-  height: 26px;
+.artist-game__suggestion-image {
+  width: 38px;
+  height: 38px;
 
   flex-shrink: 0;
 
   display: grid;
   place-items: center;
 
+  object-fit: cover;
+
   border-radius: 7px;
 
   background: var(--color-bg);
+}
+
+.artist-game__suggestion-image--empty {
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+}
+
+.artist-game__suggestion-name {
+  flex: 1;
+  min-width: 0;
+
+  overflow: hidden;
+
+  font-size: 0.8rem;
+  font-weight: 700;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.artist-game__suggestion > svg {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.artist-game__suggestions-empty {
+  margin: 0;
+  padding: 13px 10px;
 
   color: var(--color-text-muted);
 
-  font-size: 0.62rem;
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+/* =========================================================
+   SUBMIT ANSWER
+========================================================= */
+
+.artist-game__submit {
+  width: 100%;
+  min-height: 48px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 9px;
+
+  margin-top: 12px;
+  padding: 0 16px;
+
+  border: 1px solid var(--color-lilac);
+  border-radius: var(--radius-md);
+
+  background: var(--color-lilac);
+  color: var(--color-text);
+
+  font: inherit;
+  font-size: 0.68rem;
   font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+
+  cursor: pointer;
+
+  box-shadow: var(--shadow-sm);
+
+  transition:
+    transform 140ms ease,
+    background 140ms ease,
+    opacity 140ms ease;
+}
+
+.artist-game__submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: var(--color-periwinkle);
+}
+
+.artist-game__submit:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.artist-game__submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.artist-game__submit svg {
+  stroke: currentColor;
+}
+
+.artist-game__input-hint {
+  margin: 11px 0 0;
+
+  color: var(--color-text-muted);
+
+  font-size: 0.67rem;
+  line-height: 1.6;
 }
 
 /* =========================================================
@@ -553,7 +736,17 @@
 }
 
 .artist-game__result strong {
+  display: block;
   font-size: 0.82rem;
+}
+
+.artist-game__result small {
+  display: block;
+  margin-top: 6px;
+
+  color: var(--color-text-muted);
+
+  font-size: 0.68rem;
 }
 
 .artist-game__result--correct {
@@ -615,6 +808,13 @@
 
 .artist-game__song-label {
   margin-bottom: 5px;
+
+  color: var(--color-text-muted);
+
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .artist-game__song-info h3 {
@@ -682,8 +882,7 @@
   transition:
     transform 140ms ease,
     background 140ms ease,
-    border-color 140ms ease,
-    box-shadow 140ms ease;
+    border-color 140ms ease;
 }
 
 .artist-game__next:hover:not(:disabled) {
@@ -701,11 +900,6 @@
   opacity: 0.55;
 }
 
-.artist-game__next svg {
-  color: var(--color-text);
-  stroke: currentColor;
-}
-
 /* =========================================================
    RESULTS SCREEN
 ========================================================= */
@@ -720,7 +914,6 @@
   overflow-y: auto;
 
   color: var(--color-text);
-
   background: var(--color-bg);
 }
 
@@ -739,19 +932,15 @@
 
 .artist-results__confetti {
   position: fixed;
-
   inset: 0;
-
   z-index: 1;
 
   pointer-events: none;
-
   overflow: hidden;
 }
 
 .artist-results__confetti-piece {
   position: absolute;
-
   top: -20px;
 
   width: 6px;
@@ -802,7 +991,6 @@
 
 .artist-results__header {
   text-align: center;
-
   margin-bottom: 24px;
 }
 
@@ -819,7 +1007,6 @@
   border-radius: 50%;
 
   color: var(--color-cyan);
-
   background: var(--color-surface);
 
   box-shadow: var(--glow-purple);
@@ -843,7 +1030,6 @@
 
   font-size: clamp(2rem, 5vw, 3.5rem);
   line-height: 0.95;
-
   letter-spacing: -0.05em;
 }
 
@@ -853,7 +1039,6 @@
   margin: 8px auto 0;
 
   color: var(--color-text-muted);
-
   font-size: 0.82rem;
 }
 
@@ -863,8 +1048,7 @@
 
 .artist-results__hero {
   display: grid;
-
-  grid-template-columns: 1.5fr 1fr;
+  grid-template-columns: 1.1fr 1.9fr;
 
   overflow: hidden;
 
@@ -876,17 +1060,18 @@
   background: var(--color-surface);
 }
 
-.artist-results__hero-main,
-.artist-results__accuracy {
-  padding: 22px;
-}
-
 .artist-results__hero-main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  padding: 24px;
+
   border-right: 1px solid var(--border-medium);
 }
 
-.artist-results__hero span,
-.artist-results__accuracy span,
+.artist-results__hero-main span,
+.artist-results__hero-stats span,
 .artist-results__speed-stat span {
   display: block;
 
@@ -907,30 +1092,38 @@
 
   font-size: clamp(3rem, 7vw, 5rem);
   line-height: 0.85;
-
   letter-spacing: -0.06em;
 }
 
-.artist-results__hero-main small {
-  color: var(--color-text-muted);
-
-  font-size: 0.3em;
-  font-weight: 500;
+.artist-results__hero-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: center;
 }
 
-.artist-results__accuracy {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+.artist-results__hero-stats > div {
+  min-width: 0;
+  padding: 18px;
 }
 
-.artist-results__accuracy strong {
+.artist-results__hero-stats > div + div {
+  border-left: 1px solid var(--border-medium);
+}
+
+.artist-results__hero-stats strong {
+  display: block;
+
   color: var(--color-text);
 
-  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-size: clamp(1.7rem, 4vw, 2.7rem);
   line-height: 1;
-
   letter-spacing: -0.05em;
+}
+
+.artist-results__hero-stats strong small {
+  color: var(--color-text-muted);
+  font-size: 0.5em;
+  font-weight: 500;
 }
 
 /* =========================================================
@@ -958,7 +1151,6 @@
   color: var(--color-text);
 
   font-size: 1.15rem;
-
   letter-spacing: -0.025em;
 }
 
@@ -972,9 +1164,7 @@
 
 .artist-results__speed-grid {
   display: grid;
-
   grid-template-columns: repeat(2, 1fr);
-
   gap: 9px;
 }
 
@@ -994,7 +1184,6 @@
 
   font-size: clamp(1.5rem, 4vw, 2.2rem);
   line-height: 1;
-
   letter-spacing: -0.04em;
 }
 
@@ -1040,7 +1229,6 @@
 
 .artist-results__item {
   display: grid;
-
   grid-template-columns:
     30px
     46px
@@ -1048,11 +1236,9 @@
     auto;
 
   align-items: center;
-
   gap: 10px;
 
   min-height: 62px;
-
   padding: 7px 10px;
 
   border: 1px solid var(--border-medium);
@@ -1097,7 +1283,6 @@
   display: block;
 
   object-fit: cover;
-
   border-radius: 7px;
 }
 
@@ -1118,7 +1303,6 @@
 
   display: flex;
   flex-direction: column;
-
   gap: 2px;
 }
 
@@ -1171,85 +1355,12 @@
 }
 
 /* =========================================================
-   FASTEST
-========================================================= */
-
-.artist-results__fastest {
-  display: flex;
-  align-items: center;
-
-  gap: 11px;
-
-  margin-top: 10px;
-
-  padding: 12px 14px;
-
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-md);
-
-  background:
-    linear-gradient(
-      135deg,
-      rgba(128, 90, 213, 0.08),
-      rgba(0, 220, 255, 0.025)
-    ),
-    var(--color-surface);
-}
-
-.artist-results__fastest-icon {
-  width: 34px;
-  height: 34px;
-
-  flex-shrink: 0;
-
-  display: grid;
-  place-items: center;
-
-  border-radius: 8px;
-
-  background: rgba(128, 90, 213, 0.12);
-
-  color: var(--color-cyan);
-}
-
-.artist-results__fastest span {
-  display: block;
-
-  margin-bottom: 2px;
-
-  color: var(--color-text-muted);
-
-  font-size: 0.55rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.artist-results__fastest strong {
-  display: block;
-
-  color: var(--color-text);
-
-  font-size: 0.78rem;
-}
-
-.artist-results__fastest p {
-  margin: 2px 0 0;
-
-  color: var(--color-text-muted);
-
-  font-size: 0.64rem;
-}
-
-/* =========================================================
    RESULTS ACTIONS
 ========================================================= */
 
 .artist-results__actions {
   display: grid;
-
   grid-template-columns: 1.5fr 1fr;
-
   gap: 9px;
 
   margin-top: 18px;
@@ -1262,7 +1373,6 @@
   display: flex;
   justify-content: center;
   align-items: center;
-
   gap: 8px;
 
   border-radius: var(--radius-md);
@@ -1320,11 +1430,14 @@
     padding: 20px 24px 32px;
   }
 
+  .artist-game__container {
+    height: auto;
+    min-height: calc(100dvh - var(--navbar-height) - 52px);
+  }
+
   .artist-game__board {
     grid-template-columns: 1fr;
-
     gap: 22px;
-
     align-items: start;
   }
 
@@ -1334,7 +1447,6 @@
 
   .artist-game__play-panel {
     width: min(100%, 680px);
-
     margin: 0 auto;
   }
 
@@ -1355,7 +1467,6 @@
 
   .artist-game__header {
     align-items: flex-start;
-
     margin-bottom: 18px;
   }
 
@@ -1374,22 +1485,21 @@
   .artist-game__artwork-placeholder,
   .artist-game__artwork {
     width: min(190px, 55vw);
-
     border-radius: var(--radius-md);
   }
 
   .artist-game__audio {
     width: 100%;
-
     padding: 10px 11px;
   }
 
-  .artist-game__answer-grid {
-    grid-template-columns: 1fr;
+  .artist-game__search-wrap {
+    min-height: 54px;
   }
 
-  .artist-game__answer {
-    min-height: 52px;
+  .artist-game__artist-input {
+    height: 52px;
+    font-size: 0.84rem;
   }
 
   .artist-game__song-card {
@@ -1403,7 +1513,6 @@
 
   .artist-results {
     min-height: calc(100dvh - var(--navbar-height));
-
     padding: 22px 16px 32px;
   }
 
@@ -1422,10 +1531,6 @@
   .artist-results__hero-main {
     border-right: 0;
     border-bottom: 1px solid var(--border-medium);
-  }
-
-  .artist-results__hero-main,
-  .artist-results__accuracy {
     padding: 18px;
   }
 
@@ -1433,8 +1538,16 @@
     font-size: 3.5rem;
   }
 
-  .artist-results__accuracy strong {
-    font-size: 2.5rem;
+  .artist-results__hero-stats > div {
+    padding: 13px 10px;
+  }
+
+  .artist-results__hero-stats strong {
+    font-size: 1.8rem;
+  }
+
+  .artist-results__hero-stats span {
+    font-size: 0.52rem;
   }
 
   .artist-results__speed-grid {
@@ -1453,7 +1566,6 @@
       auto;
 
     gap: 8px;
-
     padding: 7px 8px;
   }
 
@@ -1538,5 +1650,19 @@
 
   .artist-results__time {
     font-size: 0.62rem;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .artist-game *,
+  .artist-results * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }

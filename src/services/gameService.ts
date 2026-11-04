@@ -1,3 +1,4 @@
+
 import type {
   Question,
   QuestionDifficulty,
@@ -8,6 +9,10 @@ import type {
 
 const API_URL = 'http://localhost:3000/api'
 const REQUEST_TIMEOUT_MS = 30_000
+
+/* =========================================================
+   TYPES
+   ========================================================= */
 
 export type EraKey =
   | '1960s'
@@ -53,6 +58,12 @@ export type LoadingFact = {
   [key: string]: unknown
 }
 
+export type ArtistSuggestion = {
+  id: string
+  name: string
+  image: string
+}
+
 type CuratedSong = {
   id: string
   title: string
@@ -86,8 +97,19 @@ type ApiLoadingFactsResponse = {
   message?: string
 }
 
+type ApiArtistSearchResponse = {
+  artists?: ArtistSuggestion[]
+  error?: string
+  message?: string
+}
+
+/* =========================================================
+   API HELPERS
+   ========================================================= */
+
 async function fetchJson<T>(url: string): Promise<T> {
   const controller = new AbortController()
+
   const timeoutId = setTimeout(
     () => controller.abort(),
     REQUEST_TIMEOUT_MS,
@@ -109,7 +131,7 @@ async function fetchJson<T>(url: string): Promise<T> {
 
         message = data.error ?? data.message ?? message
       } catch {
-        // The response may not contain JSON.
+        // The server did not return a JSON error response.
       }
 
       throw new Error(message)
@@ -137,6 +159,10 @@ async function fetchJson<T>(url: string): Promise<T> {
   }
 }
 
+/* =========================================================
+   GENERAL HELPERS
+   ========================================================= */
+
 function shuffle<T>(items: T[]): T[] {
   const result = [...items]
 
@@ -152,19 +178,35 @@ function shuffle<T>(items: T[]): T[] {
   return result
 }
 
+function validateQuestionCount(questionCount: number): void {
+  if (!Number.isInteger(questionCount) || questionCount < 1) {
+    throw new Error('Question count must be a positive whole number.')
+  }
+}
+
+function validateQuestionTypes(questionTypes: QuestionType[]): void {
+  if (questionTypes.length === 0) {
+    throw new Error('At least one question type is required.')
+  }
+}
+
+/* =========================================================
+   SONG HELPERS
+   ========================================================= */
+
 function answerFor(
   song: CuratedSong,
   type: QuestionType,
 ): string | null {
   switch (type) {
     case 'name-the-song':
-      return song.title.trim() || null
+      return song.title?.trim() || null
 
     case 'name-the-artist':
-      return song.artist.trim() || null
+      return song.artist?.trim() || null
 
     case 'name-the-album':
-      return song.album.trim() || null
+      return song.album?.trim() || null
 
     case 'guess-the-year':
       return song.year == null ? null : String(song.year)
@@ -188,6 +230,10 @@ function toSong(song: CuratedSong): Song {
     providerId: song.providerSongId ?? song.id,
   }
 }
+
+/* =========================================================
+   CURATED QUESTION GENERATION
+   ========================================================= */
 
 function createCuratedQuestion(
   songs: CuratedSong[],
@@ -232,7 +278,9 @@ function createCuratedQuestion(
   }
 
   return {
-    id: `question-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+    id: `question-${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2, 9)}`,
     type,
     song: toSong(correctSong),
     answers: shuffle([correctAnswer, ...distractors]),
@@ -241,23 +289,18 @@ function createCuratedQuestion(
   }
 }
 
-function validateQuestionCount(questionCount: number): void {
-  if (!Number.isInteger(questionCount) || questionCount < 1) {
-    throw new Error('Question count must be a positive whole number.')
-  }
-}
+async function fetchCuratedSongs(
+  path: string,
+): Promise<CuratedSong[]> {
+  const data = await fetchJson<ApiSongsResponse>(
+    `${API_URL}${path}`,
+  )
 
-function validateQuestionTypes(questionTypes: QuestionType[]): void {
-  if (questionTypes.length === 0) {
-    throw new Error('At least one question type is required.')
-  }
-}
-
-async function fetchCuratedSongs(path: string): Promise<CuratedSong[]> {
-  const data = await fetchJson<ApiSongsResponse>(`${API_URL}${path}`)
-
-  // Prefer songs with verified preview URLs.
-  const songs = data.playableSongs ?? data.songs ?? data.tracks ?? []
+  const songs =
+    data.playableSongs ??
+    data.songs ??
+    data.tracks ??
+    []
 
   return songs.filter(
     (song): song is CuratedSong =>
@@ -269,6 +312,7 @@ async function fetchCuratedSongs(path: string): Promise<CuratedSong[]> {
           song.title.trim() &&
           typeof song.artist === 'string' &&
           song.artist.trim() &&
+          typeof song.album === 'string' &&
           typeof song.previewUrl === 'string' &&
           song.previewUrl.trim(),
       ),
@@ -299,7 +343,8 @@ async function generateCuratedRound(
 
     const correctIndex = remaining.findIndex(
       (song) =>
-        !usedTrackIds.has(song.id) && answerFor(song, type) !== null,
+        !usedTrackIds.has(song.id) &&
+        answerFor(song, type) !== null,
     )
 
     if (correctIndex === -1) {
@@ -391,7 +436,11 @@ export async function generateRound(
   const questions: Question[] = []
   const usedTrackIds: string[] = []
 
-  for (let index = 0; index < config.questionCount; index += 1) {
+  for (
+    let index = 0;
+    index < config.questionCount;
+    index += 1
+  ) {
     const type =
       config.questionTypes[index % config.questionTypes.length]
 
@@ -417,8 +466,12 @@ export async function generateRound(
    ERA QUESTIONS
    ========================================================= */
 
-export async function getEraSongs(era: EraKey): Promise<CuratedSong[]> {
-  return fetchCuratedSongs(`/eras/${encodeURIComponent(era)}`)
+export async function getEraSongs(
+  era: EraKey,
+): Promise<CuratedSong[]> {
+  return fetchCuratedSongs(
+    `/eras/${encodeURIComponent(era)}`,
+  )
 }
 
 export async function generateEraRound(
@@ -444,7 +497,9 @@ export async function generateEraRound(
 export async function getGenreSongs(
   genre: GenreKey,
 ): Promise<CuratedSong[]> {
-  return fetchCuratedSongs(`/genres/${encodeURIComponent(genre)}`)
+  return fetchCuratedSongs(
+    `/genres/${encodeURIComponent(genre)}`,
+  )
 }
 
 export async function generateGenreRound(
@@ -479,7 +534,11 @@ export async function generateThemeRound(
   const questions: Question[] = []
   const usedTrackIds: string[] = []
 
-  for (let index = 0; index < questionCount; index += 1) {
+  for (
+    let index = 0;
+    index < questionCount;
+    index += 1
+  ) {
     const type = questionTypes[index % questionTypes.length]
 
     const question = await generateQuestion(
@@ -508,7 +567,9 @@ export async function getLoadingFacts(
   count = 5,
 ): Promise<LoadingFact[]> {
   if (!Number.isInteger(count) || count < 1) {
-    throw new Error('Loading fact count must be a positive whole number.')
+    throw new Error(
+      'Loading fact count must be a positive whole number.',
+    )
   }
 
   const params = new URLSearchParams({
@@ -528,7 +589,47 @@ export async function getLoadingFacts(
       Boolean(
         fact &&
           typeof fact === 'object' &&
-          (typeof fact.text === 'string' || typeof fact.fact === 'string'),
+          (
+            typeof fact.text === 'string' ||
+            typeof fact.fact === 'string'
+          ),
+      ),
+  )
+}
+
+/* =========================================================
+   ARTIST SEARCH
+   ========================================================= */
+
+export async function searchArtists(
+  query: string,
+): Promise<ArtistSuggestion[]> {
+  const trimmedQuery = query.trim()
+
+  if (trimmedQuery.length < 2) {
+    return []
+  }
+
+  const params = new URLSearchParams({
+    q: trimmedQuery,
+  })
+
+  const response = await fetchJson<ApiArtistSearchResponse>(
+    `${API_URL}/game/artists/search?${params.toString()}`,
+  )
+
+  if (!Array.isArray(response.artists)) {
+    return []
+  }
+
+  return response.artists.filter(
+    (artist): artist is ArtistSuggestion =>
+      Boolean(
+        artist &&
+          typeof artist.id === 'string' &&
+          artist.id.trim() &&
+          typeof artist.name === 'string' &&
+          artist.name.trim(),
       ),
   )
 }
