@@ -120,65 +120,94 @@ function Login() {
     }
   }
 
-  return (
-    <main className="auth-page">
-      <section className="auth-card">
-        <div className="auth-header">
-          <p className="auth-eyebrow">
-            NOW PLAYING
-          </p>
+ 
+return (
+  <main className="auth-page">
+    <section className="auth-shell">
+      <aside className="auth-player">
+        <div className="auth-brand">
+          <span className="auth-brand-dot" />
+          NOW PLAYING
+        </div>
 
-          <h1>Welcome back</h1>
+        <div className="auth-player-content">
+          <div className="auth-album-art" aria-label="Abstract record artwork">
+            <span className="auth-art-label">NP / 001</span>
+          </div>
 
+          <div className="auth-track">
+            <span className="auth-track-label">
+              PICK UP WHERE YOU LEFT OFF
+            </span>
+            <h2>It's your turn.</h2>
+            <p>Your next high score awaits.</p>
+          </div>
+        </div>
+
+        <div className="auth-player-controls">
+          <div className="auth-progress">
+            <div className="auth-progress-fill" />
+          </div>
+
+          <div className="auth-player-meta">
+            <span>BACK TO THE MUSIC</span>
+            <div className="auth-equalizer" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+              <span />
+              <span />
+            </div>
+          </div>
+        </div>
+
+        <div className="auth-player-footer">
+          A LITTLE MUSIC. A LOT OF NOSTALGIA.
+        </div>
+      </aside>
+
+      <div className="auth-content">
+        <header className="auth-header">
+          <p className="auth-eyebrow">WELCOME BACK</p>
+          <h1>Back in the mix.</h1>
           <p>
             Log in to continue playing,
             track your scores, and climb
             the leaderboard.
           </p>
-        </div>
+        </header>
 
-        <form
-          className="auth-form"
-          onSubmit={handleSubmit}
-        >
+        <form className="auth-form" onSubmit={handleSubmit}>
           <div className="auth-field">
-            <label htmlFor="email">
-              Email
-            </label>
-
+            <label htmlFor="email">Email</label>
             <input
               id="email"
               type="email"
               value={email}
-              onChange={(event) =>
-                setEmail(event.target.value)
-              }
+              onChange={(event) => setEmail(event.target.value)}
               placeholder="you@example.com"
               autoComplete="email"
+              required
               disabled={loading}
             />
           </div>
 
           <div className="auth-field">
-            <label htmlFor="password">
-              Password
-            </label>
-
+            <label htmlFor="password">Password</label>
             <input
               id="password"
               type="password"
               value={password}
-              onChange={(event) =>
-                setPassword(event.target.value)
-              }
+              onChange={(event) => setPassword(event.target.value)}
               placeholder="Your password"
               autoComplete="current-password"
+              required
               disabled={loading}
             />
           </div>
 
           {error && (
-            <p className="auth-error">
+            <p className="auth-error" role="alert">
               {error}
             </p>
           )}
@@ -188,21 +217,23 @@ function Login() {
             className="auth-submit"
             disabled={loading}
           >
-            {loading
-              ? 'Logging in...'
-              : 'Log in'}
+            {loading ? 'Logging in...' : 'Log in'}
+            {!loading && <span aria-hidden="true">↗</span>}
           </button>
         </form>
 
         <p className="auth-switch">
           Don't have an account?{' '}
-          <Link to="/signup">
-            Create one
-          </Link>
+          <Link to="/signup">Create one</Link>
         </p>
-      </section>
-    </main>
-  )
+
+        <div className="auth-content-footer">
+          YOUR MUSIC. YOUR MEMORY. YOUR SCORE.
+        </div>
+      </div>
+    </section>
+  </main>
+)
 }
 
 export default Login

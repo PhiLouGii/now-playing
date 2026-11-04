@@ -141,83 +141,109 @@ function SignUp() {
     }
   }
 
-  return (
-    <main className="auth-page">
-      <section className="auth-card">
-        <div className="auth-header">
-          <p className="auth-eyebrow">
-            NOW PLAYING
-          </p>
-
-          <h1>Create your account</h1>
-
-          <p>
-            Make an account to save your scores,
-            track your progress, and climb the
-            leaderboard.
-          </p>
+  
+return (
+  <main className="auth-page">
+    <section className="auth-shell">
+      <aside className="auth-player">
+        <div className="auth-brand">
+          <span className="auth-brand-dot" />
+          NOW PLAYING
         </div>
 
-        <form
-          className="auth-form"
-          onSubmit={handleSubmit}
-        >
-          <div className="auth-field">
-            <label htmlFor="username">
-              Username
-            </label>
+        <div className="auth-player-content">
+          <div className="auth-album-art" aria-label="Abstract record artwork">
+            <span className="auth-art-label">NP / 001</span>
+          </div>
 
+          <div className="auth-track">
+            <span className="auth-track-label">
+              YOUR NEXT OBSESSION
+            </span>
+            <h2>Know that song?</h2>
+            <p>A game for your music brain.</p>
+          </div>
+        </div>
+
+        <div className="auth-player-controls">
+          <div className="auth-progress">
+            <div className="auth-progress-fill" />
+          </div>
+
+          <div className="auth-player-meta">
+            <span>DISCOVER YOUR MUSIC MEMORY</span>
+            <div className="auth-equalizer" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+              <span />
+              <span />
+            </div>
+          </div>
+        </div>
+
+        <div className="auth-player-footer">
+          A LITTLE MUSIC. A LOT OF NOSTALGIA.
+        </div>
+      </aside>
+
+      <div className="auth-content">
+        <header className="auth-header">
+          <p className="auth-eyebrow">CREATE YOUR ACCOUNT</p>
+          <h1>Join the session.</h1>
+          <p>
+            Save your scores, track your progress,
+            and climb the leaderboard.
+          </p>
+        </header>
+
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <div className="auth-field">
+            <label htmlFor="username">Username</label>
             <input
               id="username"
               type="text"
               value={username}
-              onChange={(event) =>
-                setUsername(event.target.value)
-              }
+              onChange={(event) => setUsername(event.target.value)}
               placeholder="Choose a username"
               autoComplete="username"
+              minLength={3}
+              required
               disabled={loading}
             />
           </div>
 
           <div className="auth-field">
-            <label htmlFor="email">
-              Email
-            </label>
-
+            <label htmlFor="email">Email</label>
             <input
               id="email"
               type="email"
               value={email}
-              onChange={(event) =>
-                setEmail(event.target.value)
-              }
+              onChange={(event) => setEmail(event.target.value)}
               placeholder="you@example.com"
               autoComplete="email"
+              required
               disabled={loading}
             />
           </div>
 
           <div className="auth-field">
-            <label htmlFor="password">
-              Password
-            </label>
-
+            <label htmlFor="password">Password</label>
             <input
               id="password"
               type="password"
               value={password}
-              onChange={(event) =>
-                setPassword(event.target.value)
-              }
+              onChange={(event) => setPassword(event.target.value)}
               placeholder="At least 6 characters"
               autoComplete="new-password"
+              minLength={6}
+              required
               disabled={loading}
             />
           </div>
 
           {error && (
-            <p className="auth-error">
+            <p className="auth-error" role="alert">
               {error}
             </p>
           )}
@@ -227,21 +253,23 @@ function SignUp() {
             className="auth-submit"
             disabled={loading}
           >
-            {loading
-              ? 'Creating account...'
-              : 'Create account'}
+            {loading ? 'Creating account...' : 'Create account'}
+            {!loading && <span aria-hidden="true">↗</span>}
           </button>
         </form>
 
         <p className="auth-switch">
           Already have an account?{' '}
-          <Link to="/login">
-            Log in
-          </Link>
+          <Link to="/login">Log in</Link>
         </p>
-      </section>
-    </main>
-  )
+
+        <div className="auth-content-footer">
+          YOUR MUSIC. YOUR MEMORY. YOUR SCORE.
+        </div>
+      </div>
+    </section>
+  </main>
+)
 }
 
 export default SignUp
