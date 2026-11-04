@@ -45,22 +45,24 @@
 
   pointer-events: none;
 }
-/* Home dashboard layout only. Other routes keep the existing page layout. */
-.app--home {
+/* Home and Play sidebar layouts */
+:is(.app--home, .app--play) {
   display: grid;
   grid-template-columns: 248px minmax(0, 1fr);
   align-items: start;
   overflow: visible;
 }
 
-.app--home > .home {
+:is(.app--home, .app--play) > .home,
+:is(.app--home, .app--play) > .play-page {
   grid-column: 2;
   min-width: 0;
   min-height: 100vh;
   padding: 28px clamp(22px, 3vw, 48px) 52px;
 }
 
-.app--home::before {
+.app--home::before,
+.app--play::before {
   left: auto;
   right: 12%;
   top: -380px;
@@ -68,11 +70,12 @@
 }
 
 @media (max-width: 760px) {
-  .app--home {
+  :is(.app--home, .app--play) {
     display: block;
   }
 
-  .app--home > .home {
+  :is(.app--home, .app--play) > .home,
+  :is(.app--home, .app--play) > .play-page {
     padding: 24px 18px 42px;
   }
 }

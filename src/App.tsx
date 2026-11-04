@@ -6,9 +6,12 @@ import AppRoutes from './routes/AppRoutes'
 function App() {
   const { pathname } = useLocation()
   const isHome = pathname === '/'
+  const isPlay = pathname === '/play'
 
   return (
-    <main className={`app${isHome ? ' app--home' : ''}`}>
+    <main
+      className={`app${isHome ? ' app--home' : ''}${isPlay ? ' app--play' : ''}`}
+    >
       <Navbar />
       <AppRoutes />
     </main>

@@ -354,8 +354,12 @@
     display: none;
   }
 }
-/* The vertical navigation is deliberately scoped to the home dashboard. */
-.app--home > .navbar--home {
+
+/* ========================================
+   SIDEBAR NAVIGATION — HOME AND PLAY
+   ======================================== */
+
+:is(.app--home, .app--play) > .navbar--home {
   position: sticky;
   top: 0;
   grid-column: 1;
@@ -372,7 +376,7 @@
   backdrop-filter: blur(16px);
 }
 
-.app--home .navbar--home .navbar-inner {
+:is(.app--home, .app--play) .navbar--home .navbar-inner {
   width: 100%;
   height: 100%;
   margin: 0;
@@ -382,29 +386,149 @@
   gap: 28px;
 }
 
-.app--home .navbar--home .navbar__brand { width: 100%; padding: 2px 4px 22px; border-bottom: 1px solid var(--border-medium); }
-.app--home .navbar--home .navbar__logo { width: 100%; height: 55px; object-fit: contain; background: transparent; border: 0; border-radius: 0; box-shadow: none; }
-.app--home .navbar--home .navbar__links { height: auto; display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 7px; }
-.app--home .navbar--home .navbar__link { height: 44px; padding: 0 13px; gap: 12px; border-radius: 9px; font-size: 12px; color: var(--color-muted); }
-.app--home .navbar--home .navbar__link svg { display: block; }
-.app--home .navbar--home .navbar__link:hover { background: var(--color-surface-alt); color: var(--color-text); }
-.app--home .navbar--home .navbar__link.active { color: var(--color-text); background: #eadfeb; }
-.app--home .navbar--home .navbar__link.active::after { display: none; }
-.app--home .navbar--home .navbar__account { margin-top: auto; padding-top: 17px; border-top: 1px solid var(--border-medium); justify-content: flex-start; flex-wrap: wrap; }
-.app--home .navbar--home .navbar__user { min-width: 0; flex: 1; }
-.app--home .navbar--home .navbar__username { display: block; max-width: 120px; }
-.app--home .navbar--home .navbar__login span { display: inline; }
-.app--home .navbar--home .navbar__signup { display: inline-flex; }
+:is(.app--home, .app--play) .navbar--home .navbar__brand {
+  width: 100%;
+  padding: 2px 4px 22px;
+  border-bottom: 1px solid var(--border-medium);
+}
+
+:is(.app--home, .app--play) .navbar--home .navbar__logo {
+  width: 100%;
+  height: 55px;
+  object-fit: contain;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+:is(.app--home, .app--play) .navbar--home .navbar__links {
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 7px;
+}
+
+:is(.app--home, .app--play) .navbar--home .navbar__link {
+  height: 44px;
+  padding: 0 13px;
+  gap: 12px;
+  border-radius: 9px;
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+:is(.app--home, .app--play) .navbar--home .navbar__link svg {
+  display: block;
+}
+
+:is(.app--home, .app--play) .navbar--home .navbar__link:hover {
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+}
+
+:is(.app--home, .app--play) .navbar--home .navbar__link.active {
+  color: var(--color-text);
+  background: #eadfeb;
+}
+
+:is(.app--home, .app--play) .navbar--home .navbar__link.active::after {
+  display: none;
+}
+
+:is(.app--home, .app--play) .navbar--home .navbar__account {
+  margin-top: auto;
+  padding-top: 17px;
+  border-top: 1px solid var(--border-medium);
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+:is(.app--home, .app--play) .navbar--home .navbar__user {
+  min-width: 0;
+  flex: 1;
+}
+
+:is(.app--home, .app--play) .navbar--home .navbar__username {
+  display: block;
+  max-width: 120px;
+}
+
+:is(.app--home, .app--play) .navbar--home .navbar__login span {
+  display: inline;
+}
+
+:is(.app--home, .app--play) .navbar--home .navbar__signup {
+  display: inline-flex;
+}
+
+/* ========================================
+   MOBILE SIDEBAR
+   ======================================== */
 
 @media (max-width: 760px) {
-  .app--home > .navbar--home { position: relative; width: 100%; height: auto; min-height: 0; padding: 10px 16px; border-right: 0; border-bottom: 1px solid var(--border-medium); }
-  .app--home .navbar--home .navbar-inner { flex-direction: row; align-items: center; gap: 12px; }
-  .app--home .navbar--home .navbar__brand { width: auto; padding: 0; border: 0; flex-shrink: 0; }
-  .app--home .navbar--home .navbar__logo { width: 116px; height: 34px; }
-  .app--home .navbar--home .navbar__links { flex: 1; flex-direction: row; justify-content: flex-end; gap: 3px; }
-  .app--home .navbar--home .navbar__link { width: 38px; height: 38px; justify-content: center; padding: 0; font-size: 0; }
-  .app--home .navbar--home .navbar__link svg { width: 17px; height: 17px; }
-  .app--home .navbar--home .navbar__account { margin: 0; padding: 0; border: 0; flex-wrap: nowrap; }
-  .app--home .navbar--home .navbar__user { display: none; }
-  .app--home .navbar--home .navbar__signup { display: none; }
+  :is(.app--home, .app--play) > .navbar--home {
+    position: relative;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    padding: 10px 16px;
+    border-right: 0;
+    border-bottom: 1px solid var(--border-medium);
+  }
+
+  :is(.app--home, .app--play) .navbar--home .navbar-inner {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+  }
+
+  :is(.app--home, .app--play) .navbar--home .navbar__brand {
+    width: auto;
+    padding: 0;
+    border: 0;
+    flex-shrink: 0;
+  }
+
+  :is(.app--home, .app--play) .navbar--home .navbar__logo {
+    width: 116px;
+    height: 34px;
+  }
+
+  :is(.app--home, .app--play) .navbar--home .navbar__links {
+    flex: 1;
+    flex-direction: row;
+    justify-content: flex-end;
+    gap: 3px;
+  }
+
+  :is(.app--home, .app--play) .navbar--home .navbar__link {
+    width: 38px;
+    height: 38px;
+    justify-content: center;
+    padding: 0;
+    font-size: 0;
+  }
+
+  :is(.app--home, .app--play) .navbar--home .navbar__link svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  :is(.app--home, .app--play) .navbar--home .navbar__account {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    flex-wrap: nowrap;
+  }
+
+  :is(.app--home, .app--play) .navbar--home .navbar__user {
+    display: none;
+  }
+
+  :is(.app--home, .app--play) .navbar--home .navbar__signup {
+    display: none;
+  }
 }

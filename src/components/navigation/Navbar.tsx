@@ -21,6 +21,8 @@ function Navbar() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const isHome = pathname === '/'
+  const isPlay = pathname === '/play'
+  const isSidebarPage = isHome || isPlay
 
   const {
     user,
@@ -44,7 +46,7 @@ function Navbar() {
     'Player'
 
   return (
-    <nav className={`navbar${isHome ? ' navbar--home' : ''}`}>
+    <nav className={`navbar${isSidebarPage ? ' navbar--home' : ''}`}>
       <div className="navbar-inner">
         <NavLink
   to="/"
