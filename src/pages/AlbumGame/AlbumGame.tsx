@@ -883,31 +883,24 @@ function AlbumResultsScreen({
 
   return (
     <div className="album-results">
-      <div className="album-results__confetti">
-        {Array.from({ length: 36 }, (_, index) => (
-          <span
-            key={index}
-            className="album-results__confetti-piece"
-          />
-        ))}
-      </div>
-
       <div className="album-results__container">
         <header className="album-results__header">
           <div className="album-results__trophy">
             <Trophy size={28} />
           </div>
 
-          <p className="album-results__eyebrow">
-            ROUND COMPLETE
-          </p>
+          <div>
+            <p className="album-results__eyebrow">
+              ROUND COMPLETE
+            </p>
 
-          <h1>You know your albums.</h1>
+            <h1>You know your albums.</h1>
 
-          <p>
-            You recognized <strong>{recognizedCount}</strong>{' '}
-            out of {results.length}.
-          </p>
+            <p>
+              You recognized <strong>{recognizedCount}</strong>{' '}
+              out of {results.length}.
+            </p>
+          </div>
         </header>
 
         <section className="album-results__score">
@@ -916,13 +909,6 @@ function AlbumResultsScreen({
             <strong>{score}</strong>
           </div>
 
-          <div>
-            <span>BEST STREAK</span>
-            <strong>{bestStreak}</strong>
-          </div>
-        </section>
-
-        <section className="album-results__score">
           <div>
             <span>ALBUMS RECOGNIZED</span>
             <strong>
@@ -935,22 +921,31 @@ function AlbumResultsScreen({
             <span>ACCURACY</span>
             <strong>{accuracy}%</strong>
           </div>
+
+          <div>
+            <span>BEST STREAK</span>
+            <strong>{bestStreak}</strong>
+          </div>
         </section>
 
         <section className="album-results__speed">
           <div className="album-results__section-heading">
-            <p>ALBUM RECOGNITION SPEED</p>
-            <span>HOW FAST DID YOU KNOW?</span>
+            <p>RECOGNITION SPEED</p>
+            <span>YOUR LISTENING STATS</span>
           </div>
 
           <div className="album-results__speed-grid">
             <div>
-              <span>AVERAGE</span>
-              <strong>{averageTime.toFixed(1)}s</strong>
+              <span>AVERAGE TIME</span>
+              <strong>
+                {recognitionTimes.length > 0
+                  ? `${averageTime.toFixed(1)}s`
+                  : '—'}
+              </strong>
             </div>
 
             <div>
-              <span>FASTEST</span>
+              <span>FASTEST TIME</span>
               <strong>
                 {fastestTime > 0
                   ? `${fastestTime.toFixed(1)}s`
@@ -960,15 +955,17 @@ function AlbumResultsScreen({
 
             <div>
               <span>FASTEST ALBUM</span>
-              <strong>{fastestResult?.album ?? '—'}</strong>
+              <strong>
+                {fastestResult?.album ?? '—'}
+              </strong>
             </div>
           </div>
         </section>
 
         <section className="album-results__breakdown">
           <div className="album-results__section-heading">
-            <p>YOUR ALBUMS</p>
-            <span>{results.length} SONGS</span>
+            <p>ROUND BREAKDOWN</p>
+            <span>{results.length} QUESTIONS</span>
           </div>
 
           <div className="album-results__list">
@@ -1012,26 +1009,12 @@ function AlbumResultsScreen({
           </div>
         </section>
 
-        {fastestResult && (
-          <section className="album-results__fastest">
-            <span>⚡</span>
-
-            <div>
-              <p>FASTEST RECOGNITION</p>
-              <strong>{fastestResult.album}</strong>
-              <small>
-                Recognized in {fastestResult.recognitionTime.toFixed(1)}s
-              </small>
-            </div>
-          </section>
-        )}
-
         <div className="album-results__actions">
           <button
             className="album-results__primary"
             onClick={onPlayAgain}
           >
-            <RotateCcw size={18} />
+            <RotateCcw size={17} />
             PLAY AGAIN
           </button>
 

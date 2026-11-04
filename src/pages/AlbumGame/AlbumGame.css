@@ -756,40 +756,44 @@
 }
 
 /* =========================================================
-   RESULTS SCREEN
+   RESULTS SCREEN — COMPACT DASHBOARD
 ========================================================= */
 
 .album-results {
-  min-height: calc(100dvh - var(--navbar-height));
+  height: calc(100dvh - var(--navbar-height));
+  min-height: 0;
 
-  padding: 28px 32px 50px;
+  padding: 18px 28px 16px;
 
   overflow-y: auto;
 
   color: var(--color-text);
-
   background: var(--color-bg);
 }
 
 .album-results__container {
-  width: min(100%, 980px);
+  width: min(100%, 920px);
 
   margin: 0 auto;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 10px;
 }
 
 /* =========================================================
-   RESULTS HEADER
+   HEADER
 ========================================================= */
 
 .album-results__header {
   display: flex;
   align-items: center;
 
-  gap: 12px;
+  gap: 11px;
 
-  margin-bottom: 20px;
-
-  padding: 0 4px;
+  margin: 0;
+  padding: 0 3px 3px;
 }
 
 .album-results__trophy {
@@ -802,7 +806,6 @@
   place-items: center;
 
   color: var(--color-lilac);
-
   background: var(--color-surface);
 
   border: 1px solid var(--border-medium);
@@ -810,7 +813,8 @@
 }
 
 .album-results__header > div {
-  display: none;
+  display: grid;
+  place-items: center;
 }
 
 .album-results__eyebrow {
@@ -829,7 +833,7 @@
   color: var(--color-text);
 
   font-family: var(--font-display);
-  font-size: clamp(22px, 3vw, 30px);
+  font-size: clamp(21px, 2.5vw, 28px);
   font-weight: 700;
   line-height: 1;
   letter-spacing: -0.04em;
@@ -848,27 +852,27 @@
 }
 
 /* =========================================================
-   RESULTS TOP STATS
+   FOUR CORE STATS
 ========================================================= */
 
 .album-results__score {
   display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 
-  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
 
-  gap: 9px;
-
-  margin-bottom: 9px;
+  margin: 0;
 }
 
 .album-results__score > div {
-  min-height: 82px;
+  min-width: 0;
+  min-height: 76px;
 
   display: flex;
   flex-direction: column;
   justify-content: center;
 
-  padding: 16px 18px;
+  padding: 12px 15px;
 
   background: var(--color-surface);
 
@@ -883,16 +887,16 @@
 
   color: var(--color-muted);
 
-  font-size: 8px;
+  font-size: 7px;
   font-weight: 800;
-  letter-spacing: 0.13em;
+  letter-spacing: 0.12em;
 }
 
 .album-results__score strong {
   color: var(--color-text);
 
   font-family: var(--font-display);
-  font-size: 25px;
+  font-size: 23px;
   font-weight: 700;
   line-height: 1;
   letter-spacing: -0.04em;
@@ -902,18 +906,18 @@
   color: var(--color-muted);
 
   font-family: var(--font-body);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
 }
 
 /* =========================================================
-   SPEED
+   RECOGNITION SPEED
 ========================================================= */
 
 .album-results__speed {
-  margin-top: 9px;
+  margin: 0;
 
-  padding: 16px 18px;
+  padding: 12px 15px;
 
   background: var(--color-surface);
 
@@ -926,9 +930,9 @@
   align-items: baseline;
   justify-content: space-between;
 
-  gap: 20px;
+  gap: 12px;
 
-  margin-bottom: 12px;
+  margin-bottom: 9px;
 }
 
 .album-results__section-heading p {
@@ -938,31 +942,28 @@
 
   font-size: 8px;
   font-weight: 800;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.13em;
 }
 
 .album-results__section-heading span {
-  margin: 0;
-
   color: var(--color-muted);
 
-  font-size: 8px;
+  font-size: 7px;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
 }
 
 .album-results__speed-grid {
   display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 
-  grid-template-columns: repeat(3, 1fr);
-
-  gap: 8px;
+  gap: 7px;
 }
 
 .album-results__speed-grid > div {
   min-width: 0;
 
-  padding: 12px;
+  padding: 9px 11px;
 
   background: var(--color-bg-secondary);
 
@@ -973,13 +974,13 @@
 .album-results__speed-grid span {
   display: block;
 
-  margin-bottom: 5px;
+  margin-bottom: 4px;
 
   color: var(--color-muted);
 
   font-size: 7px;
   font-weight: 800;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
 }
 
 .album-results__speed-grid strong {
@@ -990,7 +991,7 @@
   color: var(--color-text);
 
   font-family: var(--font-display);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   line-height: 1.15;
 
@@ -1000,18 +1001,17 @@
 
 .album-results__speed-grid > div:last-child strong {
   color: var(--color-lilac);
-
-  font-size: 13px;
+  font-size: 12px;
 }
 
 /* =========================================================
-   ROUND BREAKDOWN
+   ALBUM BREAKDOWN
 ========================================================= */
 
 .album-results__breakdown {
-  margin-top: 9px;
+  margin: 0;
 
-  padding: 16px 18px;
+  padding: 12px 15px;
 
   background: var(--color-surface);
 
@@ -1019,21 +1019,27 @@
   border-radius: var(--radius-md);
 }
 
+.album-results__breakdown .album-results__section-heading {
+  margin-bottom: 8px;
+}
+
 .album-results__list {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 
-  gap: 5px;
+  gap: 5px 8px;
 }
 
 .album-results__item {
-  min-height: 58px;
+  min-width: 0;
+  min-height: 46px;
 
   display: flex;
   align-items: center;
 
-  gap: 10px;
+  gap: 8px;
 
-  padding: 5px 9px;
+  padding: 4px 7px;
 
   background: var(--color-bg-secondary);
 
@@ -1051,28 +1057,28 @@
 }
 
 .album-results__number {
-  width: 22px;
+  width: 18px;
 
-  flex: 0 0 22px;
+  flex: 0 0 18px;
 
   color: var(--color-muted);
 
   font-family: var(--font-display);
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 700;
 
   text-align: center;
 }
 
 .album-results__art {
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
 
-  flex: 0 0 42px;
+  flex: 0 0 36px;
 
   overflow: hidden;
 
-  border-radius: 6px;
+  border-radius: 5px;
 
   background: var(--color-bg);
 }
@@ -1096,12 +1102,11 @@
   color: var(--color-muted);
 
   font-family: var(--font-display);
-  font-size: 15px;
+  font-size: 13px;
 }
 
 .album-results__info {
   min-width: 0;
-
   flex: 1;
 }
 
@@ -1118,16 +1123,16 @@
 .album-results__info strong {
   color: var(--color-text);
 
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
 }
 
 .album-results__info span {
-  margin-top: 3px;
+  margin-top: 2px;
 
   color: var(--color-muted);
 
-  font-size: 8px;
+  font-size: 7px;
   font-weight: 600;
 }
 
@@ -1135,9 +1140,9 @@
 .album-results__missed {
   flex: 0 0 auto;
 
-  font-size: 8px;
+  font-size: 7px;
   font-weight: 800;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
 }
 
 .album-results__time {
@@ -1149,59 +1154,6 @@
 }
 
 /* =========================================================
-   FASTEST
-========================================================= */
-
-.album-results__fastest {
-  display: flex;
-  align-items: center;
-
-  gap: 12px;
-
-  margin-top: 9px;
-
-  padding: 12px 15px;
-
-  background: var(--color-bg-secondary);
-
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-md);
-}
-
-.album-results__fastest > span {
-  font-size: 18px;
-}
-
-.album-results__fastest p {
-  margin: 0 0 2px;
-
-  color: var(--color-lilac);
-
-  font-size: 7px;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-}
-
-.album-results__fastest strong {
-  display: block;
-
-  color: var(--color-text);
-
-  font-family: var(--font-display);
-  font-size: 13px;
-}
-
-.album-results__fastest small {
-  display: block;
-
-  margin-top: 2px;
-
-  color: var(--color-muted);
-
-  font-size: 8px;
-}
-
-/* =========================================================
    ACTIONS
 ========================================================= */
 
@@ -1210,17 +1162,17 @@
 
   gap: 8px;
 
-  margin-top: 12px;
+  margin: 0;
 }
 
 .album-results__primary,
 .album-results__secondary {
-  min-height: 40px;
+  min-height: 38px;
 
   border-radius: var(--radius-md);
 
   font-family: var(--font-body);
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 700;
   letter-spacing: 0.1em;
 
@@ -1274,13 +1226,11 @@
 }
 
 /* =========================================================
-   DISABLE THE OLD CONFETTI LOOK
+   REMOVE REDUNDANT ELEMENTS
 ========================================================= */
 
-.album-results__confetti {
-  display: none;
-}
-
+.album-results__fastest,
+.album-results__confetti,
 .album-results__confetti-piece {
   display: none;
 }
@@ -1290,39 +1240,32 @@
 ========================================================= */
 
 @media (max-height: 760px) and (min-width: 901px) {
-  .album-game {
+  .album-results {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  .album-results__container {
+    gap: 7px;
+  }
+
+  .album-results__score > div {
+    min-height: 65px;
+  }
+
+  .album-results__breakdown {
     padding-top: 9px;
     padding-bottom: 9px;
   }
 
-  .album-game__header {
-    padding-top: 9px;
-
-    margin-bottom: 5px;
+  .album-results__item {
+    min-height: 40px;
   }
 
-  .album-game__player-card {
-    margin-top: 10px;
-  }
-
-  .album-game__wave {
-    height: 48px;
-  }
-
-  .album-game__answers {
-    margin-top: 10px;
-  }
-
-  .album-game__answer {
-    min-height: 48px;
-  }
-
-  .album-game__reveal {
-    margin-top: 10px;
-  }
-
-  .album-game__next {
-    margin-top: 5px;
+  .album-results__art {
+    width: 30px;
+    height: 30px;
+    flex-basis: 30px;
   }
 }
 
@@ -1331,49 +1274,21 @@
 ========================================================= */
 
 @media (max-width: 900px) {
-  .album-game {
-    height: auto;
-    min-height: calc(100vh - var(--navbar-height));
-
-    padding: 26px 24px 50px;
-
-    overflow: visible;
-  }
-
-  .album-game__container {
-    height: auto;
-  }
-
-  .album-game__header {
-    padding-top: 0;
-
-    margin-bottom: 20px;
-  }
-
-  .album-game__player-card {
-    width: 100%;
-
-    margin-top: 0;
-  }
-
-  .album-game__answers {
-    width: 100%;
-
-    margin-top: 24px;
-  }
-
-  .album-game__reveal {
-    width: 100%;
-  }
-
-  .album-game__next {
-    width: 100%;
-  }
-
   .album-results {
+    height: auto;
     min-height: calc(100vh - var(--navbar-height));
 
-    padding: 30px 24px 50px;
+    padding: 24px 20px 32px;
+
+    overflow-y: auto;
+  }
+
+  .album-results__container {
+    gap: 10px;
+  }
+
+  .album-results__score > div {
+    min-height: 70px;
   }
 }
 
@@ -1382,92 +1297,41 @@
 ========================================================= */
 
 @media (max-width: 600px) {
-  .album-game {
-    padding: 20px 16px 40px;
-  }
-
-  .album-game__header {
-    align-items: flex-start;
-
-    padding: 0;
-
-    margin-bottom: 18px;
-  }
-
-  .album-game__title {
-    font-size: 26px;
-  }
-
-  .album-game__progress span:first-child {
-    font-size: 23px;
-  }
-
-  .album-game__player-card {
-    padding: 16px;
-  }
-
-  .album-game__wave {
-    gap: 3px;
-
-    height: 52px;
-  }
-
-  .album-game__wave-bar {
-    width: 3px;
-
-    flex-basis: 3px;
-  }
-
-  .album-game__answer-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .album-game__answer {
-    min-height: 56px;
-  }
-
-  .album-game__reveal {
-    gap: 10px;
-
-    padding: 9px;
-  }
-
-  .album-game__reveal-art {
-    width: 52px;
-    height: 52px;
-
-    flex-basis: 52px;
-  }
-
-  .album-game__result {
-    width: 28px;
-    height: 28px;
-
-    flex-basis: 28px;
-
-    font-size: 13px;
-  }
-
   .album-results {
-    padding: 22px 16px 40px;
+    padding: 18px 13px 28px;
+  }
+
+  .album-results__container {
+    gap: 9px;
   }
 
   .album-results__header {
-    margin-bottom: 15px;
+    gap: 9px;
+  }
+
+  .album-results__trophy {
+    width: 34px;
+    height: 34px;
+    flex-basis: 34px;
+  }
+
+  .album-results__trophy svg {
+    width: 22px;
+    height: 22px;
   }
 
   .album-results__header h1 {
-    font-size: 24px;
+    font-size: 22px;
   }
 
   .album-results__score {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
   }
 
   .album-results__score > div {
-    min-height: 72px;
-
-    padding: 13px;
+    min-height: 64px;
+    padding: 10px 12px;
   }
 
   .album-results__score strong {
@@ -1476,23 +1340,34 @@
 
   .album-results__speed,
   .album-results__breakdown {
-    padding: 14px;
+    padding: 11px;
   }
 
   .album-results__speed-grid {
-    grid-template-columns: 1fr;
+    gap: 5px;
   }
 
   .album-results__speed-grid > div {
-    padding: 10px;
+    padding: 8px;
+  }
+
+  .album-results__speed-grid strong {
+    font-size: 13px;
+  }
+
+  .album-results__speed-grid > div:last-child strong {
+    font-size: 10px;
+  }
+
+  .album-results__list {
+    grid-template-columns: 1fr;
+    gap: 5px;
   }
 
   .album-results__item {
+    min-height: 43px;
     gap: 7px;
-
-    min-height: 54px;
-
-    padding: 5px;
+    padding: 4px 6px;
   }
 
   .album-results__number {
@@ -1500,10 +1375,9 @@
   }
 
   .album-results__art {
-    width: 40px;
-    height: 40px;
-
-    flex-basis: 40px;
+    width: 34px;
+    height: 34px;
+    flex-basis: 34px;
   }
 
   .album-results__info strong {
@@ -1519,16 +1393,31 @@
     font-size: 7px;
   }
 
-  .album-results__fastest {
-    padding: 11px;
-  }
-
   .album-results__actions {
-    flex-direction: column;
+    gap: 7px;
   }
 
   .album-results__primary,
   .album-results__secondary {
-    width: 100%;
+    min-height: 40px;
+    font-size: 8px;
+  }
+}
+
+/* =========================================================
+   VERY SMALL SCREENS
+========================================================= */
+
+@media (max-width: 380px) {
+  .album-results__speed-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .album-results__speed-grid > div:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .album-results__section-heading span {
+    font-size: 6px;
   }
 }
