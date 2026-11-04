@@ -30,7 +30,6 @@
 .navbar__brand {
   display: flex;
   align-items: center;
-  gap: 10px;
   width: fit-content;
   color: var(--color-text);
 }
@@ -41,16 +40,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  object-fit: contain;
 
   background: var(--color-lilac);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
-
-  font-family: var(--font-display);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: -0.04em;
 
   transition:
     transform var(--transition-fast),
@@ -73,6 +68,10 @@
    NAVIGATION LINKS
    ======================================== */
 
+.navbar__navigation {
+  display: contents;
+}
+
 .navbar__links {
   display: flex;
   align-items: center;
@@ -92,6 +91,7 @@
   color: var(--color-muted);
   font-size: 13px;
   font-weight: 600;
+  text-decoration: none;
 
   transition: color var(--transition-fast);
 }
@@ -109,6 +109,37 @@
   bottom: 0;
   height: 3px;
   background: var(--color-lilac);
+}
+
+.navbar__group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.navbar__group-label {
+  padding: 0 13px;
+  margin: 0 0 3px;
+
+  color: var(--color-subtle);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.navbar__link--disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.navbar__coming-soon {
+  margin-left: auto;
+  padding: 3px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-alt);
+  color: var(--color-muted);
+  font-size: 9px;
+  font-weight: 800;
 }
 
 /* ========================================
@@ -130,6 +161,7 @@
   color: var(--color-text-secondary);
   font-size: 13px;
   font-weight: 600;
+  text-decoration: none;
 
   transition: color var(--transition-fast);
 }
@@ -174,6 +206,7 @@
 
   font-size: 12px;
   font-weight: 700;
+  text-decoration: none;
 
   transition:
     background var(--transition-fast),
@@ -191,7 +224,6 @@
 
 .navbar__login:hover {
   background: var(--color-surface-alt);
-  border-color: var(--border-medium);
   color: var(--color-text);
 }
 
@@ -212,9 +244,11 @@
   width: 34px;
   min-height: 34px;
   padding: 0;
+
   background: transparent;
   border: 1px solid var(--border-medium);
   color: var(--color-muted);
+  cursor: pointer;
 }
 
 .navbar__logout:hover {
@@ -227,47 +261,6 @@
 .navbar__signup:active,
 .navbar__logout:active {
   transform: translateY(1px);
-}
-
-/* ========================================
-   NAVIGATION GROUPS
-   ======================================== */
-
-.navbar__navigation {
-  display: contents;
-}
-
-.navbar__group {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.navbar__group-label {
-  padding: 0 13px;
-  margin: 0 0 3px;
-
-  color: var(--color-subtle);
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-}
-
-.navbar__link--disabled {
-  cursor: not-allowed;
-  opacity: 0.58;
-}
-
-.navbar__coming-soon {
-  margin-left: auto;
-  padding: 3px 6px;
-
-  border-radius: var(--radius-sm);
-  background: var(--color-surface-alt);
-  color: var(--color-muted);
-
-  font-size: 9px;
-  font-weight: 800;
 }
 
 /* ========================================
@@ -289,18 +282,6 @@
   .app--play,
   .app--leaderboard,
   .app--profile
-) {
-  display: grid;
-  grid-template-columns: 248px minmax(0, 1fr);
-  grid-template-rows: minmax(100vh, auto);
-  min-height: 100vh;
-}
-
-:is(
-  .app--home,
-  .app--play,
-  .app--leaderboard,
-  .app--profile
 ) > .navbar--home {
   position: sticky;
   top: 0;
@@ -312,27 +293,18 @@
   width: 248px;
   height: 100vh;
   min-height: 620px;
+  box-sizing: border-box;
 
   padding: 24px 16px 18px;
 
   display: flex;
   flex-direction: column;
 
-  background: rgba(251, 248, 250, 0.88);
+  background: rgba(251, 248, 250, 0.92);
   border: 0;
   border-right: 1px solid var(--border-medium);
 
   backdrop-filter: blur(16px);
-}
-
-:is(
-  .app--home,
-  .app--play,
-  .app--leaderboard,
-  .app--profile
-) > :not(.navbar) {
-  grid-column: 2;
-  min-width: 0;
 }
 
 /* Sidebar inner layout */
@@ -345,6 +317,7 @@
 ) .navbar--home .navbar-inner {
   width: 100%;
   height: 100%;
+  min-height: 0;
   margin: 0;
 
   display: flex;
@@ -363,6 +336,7 @@
 ) .navbar--home .navbar__brand {
   width: 100%;
   padding: 2px 4px 15px;
+  box-sizing: border-box;
   border-bottom: 1px solid var(--border-medium);
   flex-shrink: 0;
 }
@@ -430,10 +404,10 @@
   width: 100%;
   height: 38px;
   flex-shrink: 0;
+  box-sizing: border-box;
 
   padding: 0 13px;
   gap: 12px;
-
   border-radius: 9px;
 
   color: var(--color-muted);
@@ -491,10 +465,6 @@
   .app--leaderboard,
   .app--profile
 ) .navbar--home .navbar__account {
-  position: sticky;
-  bottom: 0;
-  z-index: 5;
-
   margin-top: auto;
   padding: 16px 0 8px;
 
@@ -533,13 +503,13 @@
   .app--play,
   .app--leaderboard,
   .app--profile
-) .navbar--home .navbar__login,
+) .navbar--home .navbar__account .navbar__login,
 :is(
   .app--home,
   .app--play,
   .app--leaderboard,
   .app--profile
-) .navbar--home .navbar__signup {
+) .navbar--home .navbar__account .navbar__signup {
   display: inline-flex;
   flex: 1;
   min-height: 42px;
@@ -550,7 +520,7 @@
    STANDARD NAVBAR RESPONSIVE
    ======================================== */
 
-@media (max-width: 900px) {
+@media (max-width: 900px) and (min-width: 761px) {
   .navbar-inner {
     grid-template-columns: auto 1fr auto;
     gap: 16px;
@@ -574,7 +544,7 @@
 }
 
 /* ========================================
-   TABLET SIDEBAR WIDTH
+   TABLET SIDEBAR
    ======================================== */
 
 @media (max-width: 1100px) and (min-width: 761px) {
@@ -611,6 +581,9 @@
    ======================================== */
 
 @media (max-width: 760px) {
+
+  /* App layout */
+
   :is(
     .app--home,
     .app--play,
@@ -621,6 +594,8 @@
     flex-direction: column;
     min-height: 100vh;
   }
+
+  /* Navbar container */
 
   :is(
     .app--home,
@@ -637,10 +612,15 @@
     min-height: 0;
 
     padding: 10px 16px;
+    box-sizing: border-box;
+
+    display: block;
 
     border: 0;
     border-bottom: 1px solid var(--border-medium);
   }
+
+  /* Navbar inner row */
 
   :is(
     .app--home,
@@ -658,6 +638,8 @@
     flex-wrap: wrap;
     gap: 10px;
   }
+
+  /* Mobile brand */
 
   :is(
     .app--home,
@@ -681,6 +663,8 @@
     height: 34px;
   }
 
+  /* Hamburger button */
+
   .navbar__mobile-toggle {
     display: inline-flex;
     align-items: center;
@@ -689,6 +673,8 @@
     width: 40px;
     height: 40px;
     margin-left: auto;
+    padding: 0;
+    flex-shrink: 0;
 
     border: 1px solid var(--border-medium);
     border-radius: var(--radius-md);
@@ -697,6 +683,10 @@
     color: var(--color-text);
 
     cursor: pointer;
+  }
+
+  .navbar__mobile-toggle:hover {
+    background: var(--color-surface-alt);
   }
 
   /* Quick account actions */
@@ -714,9 +704,15 @@
     padding: 0 11px;
   }
 
-  /* Collapsible navigation */
+  /* Collapsed navigation
+     Higher specificity intentionally overrides desktop sidebar styles. */
 
-  .navbar--home .navbar__navigation {
+  :is(
+    .app--home,
+    .app--play,
+    .app--leaderboard,
+    .app--profile
+  ) .navbar--home .navbar__navigation {
     display: none;
     width: 100%;
     flex-basis: 100%;
@@ -724,54 +720,102 @@
     order: 4;
   }
 
-  .navbar--home.navbar--open .navbar__navigation {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    padding: 14px 0 4px;
-  }
+  /* Expanded navigation */
 
-  .navbar--home .navbar__navigation .navbar__links {
+  :is(
+    .app--home,
+    .app--play,
+    .app--leaderboard,
+    .app--profile
+  ) .navbar--home.navbar--open .navbar__navigation {
     display: flex;
     flex-direction: column;
     align-items: stretch;
+    gap: 16px;
+
+    padding: 14px 0 4px;
+  }
+
+  /* Mobile link groups */
+
+  :is(
+    .app--home,
+    .app--play,
+    .app--leaderboard,
+    .app--profile
+  ) .navbar--home .navbar__navigation .navbar__links {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
     gap: 12px;
     height: auto;
   }
 
-  .navbar--home .navbar__navigation .navbar__group {
+  :is(
+    .app--home,
+    .app--play,
+    .app--leaderboard,
+    .app--profile
+  ) .navbar--home .navbar__navigation .navbar__group {
     gap: 4px;
   }
 
-  .navbar--home .navbar__navigation .navbar__group-label {
+  :is(
+    .app--home,
+    .app--play,
+    .app--leaderboard,
+    .app--profile
+  ) .navbar--home .navbar__navigation .navbar__group-label {
     padding: 6px 10px;
   }
 
-  .navbar--home .navbar__navigation .navbar__link {
+  /* Mobile links */
+
+  :is(
+    .app--home,
+    .app--play,
+    .app--leaderboard,
+    .app--profile
+  ) .navbar--home .navbar__navigation .navbar__link {
     width: 100%;
     height: 42px;
     box-sizing: border-box;
 
     justify-content: flex-start;
     padding: 0 12px;
-
     font-size: 12px;
   }
 
-  .navbar--home .navbar__navigation .navbar__link svg {
+  :is(
+    .app--home,
+    .app--play,
+    .app--leaderboard,
+    .app--profile
+  ) .navbar--home .navbar__navigation .navbar__link svg {
     display: block;
   }
 
-  .navbar--home .navbar__navigation .navbar__link.active::after {
+  :is(
+    .app--home,
+    .app--play,
+    .app--leaderboard,
+    .app--profile
+  ) .navbar--home .navbar__navigation .navbar__link.active::after {
     display: none;
   }
 
   /* Account section inside expanded menu */
 
-  .navbar--home .navbar__navigation .navbar__account {
+  :is(
+    .app--home,
+    .app--play,
+    .app--leaderboard,
+    .app--profile
+  ) .navbar--home .navbar__navigation .navbar__account {
     position: static;
-    display: flex;
 
+    display: flex;
     width: 100%;
     flex-wrap: wrap;
     justify-content: flex-start;
@@ -783,21 +827,52 @@
     background: transparent;
   }
 
-  .navbar--home .navbar__navigation .navbar__user {
+  :is(
+    .app--home,
+    .app--play,
+    .app--leaderboard,
+    .app--profile
+  ) .navbar--home .navbar__navigation .navbar__user {
     display: flex;
   }
 
-  .navbar--home .navbar__navigation .navbar__username {
+  :is(
+    .app--home,
+    .app--play,
+    .app--leaderboard,
+    .app--profile
+  ) .navbar--home .navbar__navigation .navbar__username {
     display: block;
   }
 
-  .navbar--home .navbar__navigation .navbar__account .navbar__login,
-  .navbar--home .navbar__navigation .navbar__account .navbar__signup {
+  /* Hide duplicate login buttons inside the expanded menu */
+
+  :is(
+    .app--home,
+    .app--play,
+    .app--leaderboard,
+    .app--profile
+  ) .navbar--home .navbar__navigation .navbar__account .navbar__login,
+  :is(
+    .app--home,
+    .app--play,
+    .app--leaderboard,
+    .app--profile
+  ) .navbar--home .navbar__navigation .navbar__account .navbar__signup {
     display: none;
   }
 
-  .navbar__quick-account:empty {
-    display: none;
+  /* Main content */
+
+  :is(
+    .app--home,
+    .app--play,
+    .app--leaderboard,
+    .app--profile
+  ) > :not(.navbar) {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
   }
 }
 
@@ -806,10 +881,6 @@
    ======================================== */
 
 @media (max-width: 480px) {
-  .navbar-inner {
-    width: calc(100% - 24px);
-  }
-
   .navbar__title {
     display: none;
   }
@@ -820,6 +891,15 @@
 
   .navbar__quick-account .navbar__signup {
     display: inline-flex;
+  }
+
+  :is(
+    .app--home,
+    .app--play,
+    .app--leaderboard,
+    .app--profile
+  ) > .navbar--home {
+    padding: 9px 12px;
   }
 }
 

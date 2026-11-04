@@ -1,4 +1,3 @@
-
 import { useLocation } from 'react-router-dom'
 import './App.css'
 import Navbar from './components/navigation/Navbar'
@@ -21,17 +20,15 @@ function App() {
       ? 'play'
       : isLeaderboard
         ? 'leaderboard'
-        : isProfile
-          ? 'profile'
-          : ''
+        : 'profile'
 
   return (
-    <main
+    <div
       className={`app${isSidebarPage ? ` app--${sidebarClass}` : ''}`}
     >
       <Navbar />
       <AppRoutes />
-    </main>
+    </div>
   )
 }
 
