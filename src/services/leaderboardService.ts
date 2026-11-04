@@ -7,7 +7,7 @@ export type LeaderboardGameMode =
   | 'name-the-artist'
   | 'name-the-album'
   | 'guess-the-year'
-  | 'daily-challenge'
+  | 'pixel-cover'
 
 export interface LeaderboardEntry {
   rank: number
