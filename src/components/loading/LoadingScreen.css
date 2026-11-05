@@ -18,6 +18,8 @@
   color: var(--color-text);
 
   overflow: hidden;
+  position: relative;
+  isolation: isolate;
 }
 
 
@@ -27,7 +29,7 @@
 
 .loading-screen__content {
   position: relative;
-  z-index: 1;
+  z-index: 3;
 
   width: min(100%, 620px);
   max-height: 100%;
@@ -467,71 +469,189 @@
 }
 
 /* =========================================================
-   CATCH THE NOTE - LOADING MINI GAME
+   TAP THE MUSIC - FULL SCREEN ACTIVITY
    ========================================================= */
 
 .loading-game {
-  width: 100%;
-  margin-top: 22px;
-  text-align: left;
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+
+  overflow: hidden;
+
+  pointer-events: none;
 }
 
-.loading-game__header {
+
+/* =========================================================
+   COLLECTION COUNTER
+   ========================================================= */
+
+.loading-game__counter {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
+  gap: 9px;
 
-.loading-game__eyebrow {
-  display: block;
-  margin-bottom: 4px;
-
-  color: var(--color-purple-light);
-
-  font-size: 0.52rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-}
-
-.loading-game__header h2 {
-  margin: 0;
-
-  color: var(--color-text);
-
-  font-family: var(--font-display);
-  font-size: 0.95rem;
-  font-weight: 800;
-}
-
-.loading-game__score {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  padding: 6px 11px;
+  padding: 8px 13px;
 
   border: 1px solid var(--color-border);
   border-radius: 999px;
 
   background: var(--color-surface);
+
+  pointer-events: none;
 }
 
-.loading-game__score span {
+.loading-game__counter span {
   color: var(--color-muted);
 
-  font-size: 0.5rem;
+  font-size: 0.52rem;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
 }
 
-.loading-game__score strong {
+.loading-game__counter strong {
   color: var(--color-purple-light);
 
   font-family: var(--font-display);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
 }
 
+
+/* =========================================================
+   FLOATING COLLECTIBLES
+   ========================================================= */
+
+.loading-game__collectible {
+  position: absolute;
+
+  display: grid;
+  place-items: center;
+
+  padding: 0;
+
+  border: none;
+  background: transparent;
+
+  cursor: pointer;
+
+  pointer-events: auto;
+
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+
+  transition:
+    filter 150ms ease,
+    scale 150ms ease;
+}
+
+.loading-game__collectible img {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+
+  image-rendering: pixelated;
+
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.loading-game__collectible:hover {
+  scale: 1.15;
+  filter: brightness(1.12);
+}
+
+.loading-game__collectible:active {
+  scale: 0.85;
+}
+
+.loading-game__collectible:focus-visible {
+  outline: 2px solid var(--color-purple-light);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+
+/* =========================================================
+   ACTIVITY HINT
+   ========================================================= */
+
+.loading-screen__activity-hint {
+  margin-top: 12px;
+
+  color: var(--color-purple-light);
+
+  font-size: 0.58rem;
+  font-weight: 700;
+
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+
+
+/* =========================================================
+   SLOW LOADING WARNING
+   ========================================================= */
+
+.loading-screen__slow-warning {
+  margin: 9px 0 0;
+
+  color: var(--color-muted);
+
+  font-size: 0.58rem;
+  font-weight: 600;
+  line-height: 1.5;
+
+  text-align: center;
+
+  animation: loading-warning-appear 350ms ease-out both;
+}
+
+@keyframes loading-warning-appear {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 600px) {
+  .loading-game__counter {
+    top: 10px;
+    right: 10px;
+
+    padding: 6px 10px;
+  }
+
+  .loading-game__counter span {
+    font-size: 0.45rem;
+  }
+
+  .loading-game__counter strong {
+    font-size: 0.8rem;
+  }
+
+  .loading-game__collectible:hover {
+    scale: 1;
+  }
+}
 
 /* =========================================================
    PLAYFIELD

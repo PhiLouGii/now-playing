@@ -24,31 +24,30 @@ type LoadingScreenProps = {
   isComplete?: boolean
 }
 
-type FallingNote = {
+type Collectible = {
   id: number
   image: string
   x: number
   y: number
-  speed: number
+  velocityX: number
+  velocityY: number
   size: number
+  rotation: number
 }
 
 const EMPTY_FACTS: LoadingFact[] = []
 
-const BASKET_IMAGE = '/basket.png'
-
-const NOTE_IMAGES = [
-  '/notes/note-blue.png',
-  '/notes/note-lavender.png',
-  '/notes/note-pink.png',
-  '/notes/note-purple.png',
-  '/notes/note-rose.png',
-  '/notes/note-lilac.png',
+const COLLECTIBLE_IMAGES = [
+  '/loading-game/cassette.png',
+  '/loading-game/floppy-disk.png',
+  '/loading-game/ipod.png',
+  '/loading-game/vinyl.png',
+  '/loading-game/headphones.png',
+  '/loading-game/jukebox.png',
+  '/loading-game/cd.png',
 ]
 
-const NOTE_SPAWN_HEIGHT = -12
-const CATCH_HEIGHT = 82
-const BASKET_CATCH_RANGE = 12
+const COLLECTIBLE_COUNT = 7
 
 function shuffle<T>(array: T[]): T[] {
   const shuffled = [...array]
@@ -65,26 +64,29 @@ function shuffle<T>(array: T[]): T[] {
   return shuffled
 }
 
-function createNote(id: number): FallingNote {
+function createCollectible(id: number): Collectible {
+  const angle = Math.random() * Math.PI * 2
+  const speed = 0.12 + Math.random() * 0.16
+
   return {
     id,
-    image: NOTE_IMAGES[
-      Math.floor(Math.random() * NOTE_IMAGES.length)
-    ],
-    x: 7 + Math.random() * 86,
-    y: NOTE_SPAWN_HEIGHT - Math.random() * 35,
-    speed: 0.65 + Math.random() * 0.65,
-    size: 27 + Math.random() * 17,
+    image:
+      COLLECTIBLE_IMAGES[
+        Math.floor(Math.random() * COLLECTIBLE_IMAGES.length)
+      ],
+    x: 6 + Math.random() * 88,
+    y: 8 + Math.random() * 84,
+    velocityX: Math.cos(angle) * speed,
+    velocityY: Math.sin(angle) * speed,
+    size: 38 + Math.random() * 16,
+    rotation: -12 + Math.random() * 24,
   }
 }
 
-function createInitialNotes(): FallingNote[] {
+function createInitialCollectibles(): Collectible[] {
   return Array.from(
-    { length: 5 },
-    (_, index) => ({
-      ...createNote(index),
-      y: -10 - Math.random() * 100,
-    }),
+    { length: COLLECTIBLE_COUNT },
+    (_, index) => createCollectible(index),
   )
 }
 
@@ -104,22 +106,17 @@ export default function LoadingScreen({
   const [showSlowWarning, setShowSlowWarning] =
     useState(false)
 
-  const [basketPosition, setBasketPosition] =
-    useState(50)
+  const [collectibles, setCollectibles] =
+    useState<Collectible[]>(createInitialCollectibles)
 
-  const [caughtCount, setCaughtCount] =
+  const [collectedCount, setCollectedCount] =
     useState(0)
 
-  const [notes, setNotes] =
-    useState<FallingNote[]>(createInitialNotes)
-
-  const notesRef = useRef<FallingNote[]>(notes)
-  const basketPositionRef = useRef(50)
-  const nextNoteId = useRef(5)
+  const collectiblesRef = useRef<Collectible[]>(collectibles)
+  const nextId = useRef(COLLECTIBLE_COUNT)
 
   /*
-   * Shuffle facts whenever the
-   * supplied facts change.
+   * Shuffle facts whenever supplied facts change.
    */
   useEffect(() => {
     if (facts.length === 0) {
@@ -149,7 +146,6 @@ export default function LoadingScreen({
 
   /*
    * Loading progress.
-   * Progress stops at 90% until loading completes.
    */
   useEffect(() => {
     if (isComplete) {
@@ -172,8 +168,7 @@ export default function LoadingScreen({
   }, [isComplete])
 
   /*
-   * Show a gentle warning if loading
-   * takes longer than 9 seconds.
+   * Slow-loading warning after 9 seconds.
    */
   useEffect(() => {
     if (isComplete) {
@@ -189,108 +184,102 @@ export default function LoadingScreen({
   }, [isComplete])
 
   /*
-   * Keep the note animation running
-   * while the game is loading.
+   * Floating collectible movement.
    */
   useEffect(() => {
     if (isComplete) return
 
     const interval = window.setInterval(() => {
-      let caughtThisTick = 0
+      const nextCollectibles = collectiblesRef.current.map(item => {
+        let nextX = item.x + item.velocityX
+        let nextY = item.y + item.velocityY
 
-      const nextNotes = notesRef.current.map(note => {
-        const nextY = note.y + note.speed
+        let nextVelocityX = item.velocityX
+        let nextVelocityY = item.velocityY
 
-        const isAtBasket =
-          nextY >= CATCH_HEIGHT &&
-          note.y < CATCH_HEIGHT
-
-        const isCaught =
-          isAtBasket &&
-          Math.abs(
-            note.x - basketPositionRef.current,
-          ) <= BASKET_CATCH_RANGE
-
-        if (isCaught) {
-          caughtThisTick += 1
-          return createNote(nextNoteId.current++)
+        // Bounce horizontally.
+        if (nextX < 5 || nextX > 95) {
+          nextVelocityX *= -1
+          nextX = Math.max(5, Math.min(95, nextX))
         }
 
-        if (nextY > 105) {
-          return createNote(nextNoteId.current++)
+        // Bounce vertically.
+        if (nextY < 7 || nextY > 93) {
+          nextVelocityY *= -1
+          nextY = Math.max(7, Math.min(93, nextY))
         }
 
         return {
-          ...note,
+          ...item,
+          x: nextX,
           y: nextY,
+          velocityX: nextVelocityX,
+          velocityY: nextVelocityY,
         }
       })
 
-      notesRef.current = nextNotes
-      setNotes(nextNotes)
-
-      if (caughtThisTick > 0) {
-        setCaughtCount(current => current + caughtThisTick)
-      }
+      collectiblesRef.current = nextCollectibles
+      setCollectibles(nextCollectibles)
     }, 40)
 
     return () => window.clearInterval(interval)
   }, [isComplete])
 
   /*
-   * Move the basket using pointer position.
+   * Collect an object and spawn a replacement.
    */
-  const moveBasket = (
-    event: React.PointerEvent<HTMLDivElement>,
-  ) => {
-    const bounds = event.currentTarget.getBoundingClientRect()
+  const collectItem = (id: number) => {
+    const replacement = createCollectible(nextId.current++)
 
-    const relativePosition =
-      ((event.clientX - bounds.left) / bounds.width) * 100
-
-    const nextPosition = Math.max(
-      7,
-      Math.min(93, relativePosition),
+    const nextCollectibles = collectiblesRef.current.map(item =>
+      item.id === id ? replacement : item,
     )
 
-    basketPositionRef.current = nextPosition
-    setBasketPosition(nextPosition)
-  }
+    collectiblesRef.current = nextCollectibles
+    setCollectibles(nextCollectibles)
 
-  /*
-   * Keyboard controls.
-   */
-  const handleGameKeyDown = (
-    event: React.KeyboardEvent<HTMLDivElement>,
-  ) => {
-    if (
-      event.key !== 'ArrowLeft' &&
-      event.key !== 'ArrowRight'
-    ) {
-      return
-    }
-
-    event.preventDefault()
-
-    const direction =
-      event.key === 'ArrowLeft' ? -6 : 6
-
-    const nextPosition = Math.max(
-      7,
-      Math.min(
-        93,
-        basketPositionRef.current + direction,
-      ),
-    )
-
-    basketPositionRef.current = nextPosition
-    setBasketPosition(nextPosition)
+    setCollectedCount(count => count + 1)
   }
 
   const currentFact = shuffledFacts[currentFactIndex]
 
   return (
     <main className="loading-screen">
+
+      {!isComplete && (
+        <div className="loading-game">
+
+          <div className="loading-game__counter">
+            <span>COLLECTED</span>
+            <strong>{collectedCount}</strong>
+          </div>
+
+          {collectibles.map(item => (
+            <button
+              key={item.id}
+              type="button"
+              className="loading-game__collectible"
+              onClick={() => collectItem(item.id)}
+              aria-label={`Collect ${item.image.split('/').pop()?.replace('.png', '').replace('-', ' ')}`}
+              style={{
+                left: `${item.x}%`,
+                top: `${item.y}%`,
+                width: `${item.size}px`,
+                height: `${item.size}px`,
+                transform: `translate(-50%, -50%) rotate(${item.rotation}deg)`,
+              }}
+            >
+              <img
+                src={item.image}
+                alt=""
+                draggable={false}
+              />
+            </button>
+          ))}
+
+        </div>
+      )}
+
       <div className="loading-screen__content">
 
         <div className="loading-screen__brand">
@@ -328,77 +317,16 @@ export default function LoadingScreen({
         </div>
 
         {!isComplete && (
-          <section className="loading-game">
+          <div className="loading-screen__activity-hint">
+            Tap the floating music collectibles while you wait!
+          </div>
+        )}
 
-            <div className="loading-game__header">
-              <div>
-                <span className="loading-game__eyebrow">
-                  WHILE YOU WAIT
-                </span>
-
-                <h2>Catch the Note</h2>
-              </div>
-
-              <div
-                className="loading-game__score"
-                aria-live="polite"
-              >
-                <span>CAUGHT</span>
-                <strong>{caughtCount}</strong>
-              </div>
-            </div>
-
-            <div
-              className="loading-game__playfield"
-              onPointerMove={moveBasket}
-              onPointerDown={moveBasket}
-              onKeyDown={handleGameKeyDown}
-              tabIndex={0}
-              role="application"
-              aria-label="Catch the falling musical notes. Move the basket with your pointer or use the left and right arrow keys."
-            >
-              <div className="loading-game__instructions">
-                MOVE TO CATCH
-              </div>
-
-              {notes.map(note => (
-                <img
-                  key={note.id}
-                  className="loading-game__note"
-                  src={note.image}
-                  alt=""
-                  draggable={false}
-                  style={{
-                    left: `${note.x}%`,
-                    top: `${note.y}%`,
-                    width: `${note.size}px`,
-                    height: `${note.size}px`,
-                  }}
-                />
-              ))}
-
-              <div
-                className="loading-game__basket"
-                style={{
-                  left: `${basketPosition}%`,
-                }}
-              >
-                <img
-                  src={BASKET_IMAGE}
-                  alt=""
-                  draggable={false}
-                />
-              </div>
-            </div>
-
-            {showSlowWarning && (
-              <p className="loading-game__slow-warning">
-                Taking a little longer than expected.
-                Hang tight — your music is on its way!
-              </p>
-            )}
-
-          </section>
+        {showSlowWarning && !isComplete && (
+          <p className="loading-screen__slow-warning">
+            Taking a little longer than expected.
+            Hang tight — your music is on its way!
+          </p>
         )}
 
         <section className="loading-screen__fact">
