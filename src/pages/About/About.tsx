@@ -3,7 +3,6 @@ import {
   ArrowUpRight,
   AudioLines,
   Disc3,
-  Code2,
   Headphones,
   Heart,
   Layers3,
@@ -301,7 +300,7 @@ function About() {
             </h2>
 
             <p>
-              Hi, I'm Philippa — a software engineering graduate
+              Hi, I'm Philippa a software engineer
               and creative developer who enjoys turning ideas
               into interactive experiences.
             </p>
@@ -324,7 +323,7 @@ function About() {
                 rel="noreferrer"
                 aria-label="GitHub"
               >
-                <Code2 size={17} />
+                <Terminal size={17} />
                 GitHub
                 <ArrowUpRight size={14} />
               </a>

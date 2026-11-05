@@ -6,6 +6,8 @@
 .about-page {
   width: 100%;
   min-width: 0;
+  padding-left: 30px;
+  padding-right: 30px;
   padding-bottom: 30px;
   color: var(--color-text);
 }
