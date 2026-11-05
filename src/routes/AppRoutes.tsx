@@ -5,6 +5,7 @@ import Play from '../pages/Play/Play'
 import Explore from '../pages/Explore/Explore'
 import Leaderboard from '../pages/Leaderboard/Leaderboard'
 import Profile from '../pages/Profile/Profile'
+import About from '../pages/About/About'
 import Game from '../pages/Game/Game'
 import ArtistGame from '../pages/ArtistGame/ArtistGame'
 import AlbumGame from '../pages/AlbumGame/AlbumGame'
@@ -67,6 +68,7 @@ function AppRoutes() {
         element={<Leaderboard />}
       />
       <Route path="/profile" element={<Profile />} />
+      <Route path="/about" element={<About />} />
       <Route path="/signup" element={<SignUp />} />
       <Route path="/login" element={<Login />} />
     </Routes>

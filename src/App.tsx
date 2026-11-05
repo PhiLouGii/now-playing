@@ -12,13 +12,19 @@ function App() {
     '/explore',
     '/leaderboard',
     '/profile',
+    '/about',
   ]
 
   const isSidebarPage = sidebarPages.includes(pathname)
 
+  const pageClass =
+    pathname === '/'
+      ? 'home'
+      : pathname.slice(1)
+
   return (
     <div
-      className={`app${isSidebarPage ? ` app--${pathname === '/' ? 'home' : pathname.slice(1) === 'explore' ? 'explore' : pathname.slice(1)}` : ''}`}
+      className={`app${isSidebarPage ? ` app--${pageClass}` : ''}`}
     >
       <Navbar />
       <AppRoutes />
