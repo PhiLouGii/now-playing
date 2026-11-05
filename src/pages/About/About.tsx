@@ -8,11 +8,12 @@ import {
   Layers3,
   Mail,
   Radio,
+  Send,
   Sparkles,
   Terminal,
 } from 'lucide-react'
 
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import './About.css'
 
 
@@ -82,6 +83,47 @@ const roadmap = [
 
 function About() {
   const [openFaq, setOpenFaq] = useState<number | null>(0)
+
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    subject: '',
+    message: '',
+  })
+
+  const [formStatus, setFormStatus] = useState<
+    'idle' | 'submitting' | 'success' | 'error'
+  >('idle')
+
+  const handleContactSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setFormStatus('submitting')
+
+    try {
+      const response = await fetch('https://formspree.io/f/meaadzzk', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      if (!response.ok) {
+        throw new Error('Something went wrong while sending your message.')
+      }
+
+      setFormStatus('success')
+      setFormData({
+        name: '',
+        email: '',
+        subject: '',
+        message: '',
+      })
+    } catch {
+      setFormStatus('error')
+    }
+  }
 
   return (
     <main className="about-page">
@@ -519,33 +561,111 @@ function About() {
           CONTACT / CLOSING
           ===================================================== */}
 
-      <section className="about-closing">
-        <div className="about-closing__record">
-          <Disc3 size={46} strokeWidth={1.1} />
-        </div>
+      <section className="about-closing" id="contact">
+  <div className="about-closing__record">
+    <Disc3 size={46} strokeWidth={1.1} />
+  </div>
 
-        <p className="about-eyebrow">THAT'S OUR STORY. WHAT'S YOURS?</p>
+  <p className="about-eyebrow">THAT'S OUR STORY. WHAT'S YOURS?</p>
 
-        <h2>
-          Got something
-          <br />
-          <span>to say?</span>
-        </h2>
+  <h2>
+    Got something
+    <br />
+    <span>to say?</span>
+  </h2>
 
-        <p>
-          Have an idea, spotted something that needs fixing,
-          or just want to talk music? We'd love to hear from you.
-        </p>
+  <p>
+    Have an idea, spotted something that needs fixing,
+    or just want to talk music? We'd love to hear from you.
+  </p>
 
-        <a href="mailto:" className="about-button about-button--light">
-          Get in touch
-          <Mail size={16} />
-        </a>
+  <form className="about-contact-form" onSubmit={handleContactSubmit}>
+    <div className="about-contact-form__row">
+      <label>
+        Your name
+        <input
+          type="text"
+          name="name"
+          placeholder="What should we call you?"
+          value={formData.name}
+          onChange={(event) =>
+            setFormData({ ...formData, name: event.target.value })
+          }
+          required
+        />
+      </label>
 
-        <span className="about-closing__footer">
-          NOW PLAYING · INDEPENDENTLY MADE
-        </span>
-      </section>
+      <label>
+        Email address
+        <input
+          type="email"
+          name="email"
+          placeholder="you@example.com"
+          value={formData.email}
+          onChange={(event) =>
+            setFormData({ ...formData, email: event.target.value })
+          }
+          required
+        />
+      </label>
+    </div>
+
+    <label>
+      Subject <span>(optional)</span>
+      <input
+        type="text"
+        name="subject"
+        placeholder="What's this about?"
+        value={formData.subject}
+        onChange={(event) =>
+          setFormData({ ...formData, subject: event.target.value })
+        }
+      />
+    </label>
+
+    <label>
+      Your message
+      <textarea
+        name="message"
+        placeholder="Tell us what's on your mind..."
+        rows={5}
+        value={formData.message}
+        onChange={(event) =>
+          setFormData({ ...formData, message: event.target.value })
+        }
+        required
+      />
+    </label>
+
+    <button
+      type="submit"
+      className="about-button about-button--light about-contact-form__submit"
+      disabled={formStatus === 'submitting'}
+    >
+      {formStatus === 'submitting'
+        ? 'Sending...'
+        : 'Send message'}
+
+      <Send size={16} />
+    </button>
+
+    {formStatus === 'success' && (
+      <p className="about-contact-form__feedback is-success" role="status">
+        Message sent! Thanks for getting in touch. We'll be in touch soon.
+      </p>
+    )}
+
+    {formStatus === 'error' && (
+      <p className="about-contact-form__feedback is-error" role="alert">
+        We couldn't send your message. Please try again in a moment.
+      </p>
+    )}
+  </form>
+
+  <span className="about-closing__footer">
+    NOW PLAYING · INDEPENDENTLY MADE
+  </span>
+</section>
 
     </main>
   )

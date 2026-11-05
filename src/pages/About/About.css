@@ -876,6 +876,104 @@
 }
 
 /* =========================================================
+   CONTACT FORM
+   ========================================================= */
+
+.about-contact-form {
+  width: min(100%, 510px);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 27px;
+  text-align: left;
+}
+
+.about-contact-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 13px;
+}
+
+.about-contact-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: #f1e6f1;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.about-contact-form label span {
+  display: inline;
+  color: #cdbbd0;
+  font-size: 8px;
+  font-weight: 500;
+  text-transform: none;
+}
+
+.about-contact-form input,
+.about-contact-form textarea {
+  width: 100%;
+  padding: 12px 13px;
+  color: #493d4d;
+  background: #f8f1f7;
+  border: 1px solid #e6d8e7;
+  border-radius: 9px;
+  outline: none;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.about-contact-form input::placeholder,
+.about-contact-form textarea::placeholder {
+  color: #a99baa;
+}
+
+.about-contact-form input:focus,
+.about-contact-form textarea:focus {
+  border-color: #d9b8d9;
+  box-shadow: 0 0 0 3px #e5cce430;
+}
+
+.about-contact-form textarea {
+  resize: vertical;
+  min-height: 120px;
+  line-height: 1.7;
+}
+
+.about-contact-form__submit {
+  align-self: center;
+  margin-top: 5px;
+  cursor: pointer;
+}
+
+.about-contact-form__submit:disabled {
+  opacity: .65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.about-contact-form__feedback {
+  font-size: 11px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.about-contact-form__feedback.is-success {
+  color: #e0f2df;
+}
+
+.about-contact-form__feedback.is-error {
+  color: #ffd8d8;
+}
+
+/* =========================================================
    RESPONSIVE
    ========================================================= */
 
@@ -1003,6 +1101,10 @@
   .about-faq__question > span:first-child {
     font-size: 12px;
   }
+
+  .about-contact-form__row {
+  grid-template-columns: 1fr;
+}
 
   .about-faq__answer {
     padding-left: 28px;
