@@ -34,6 +34,7 @@ function Navbar() {
   '/explore',
   '/leaderboard',
   '/profile',
+  '/about',
 ].includes(pathname)
 
   const { user, profile, loading, logout } = useAuth()

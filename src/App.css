@@ -46,7 +46,8 @@
   .app--play,
   .app--explore,
   .app--leaderboard,
-  .app--profile
+  .app--profile,
+  .app--about
 ) {
   display: grid;
   grid-template-columns: 248px minmax(0, 1fr);
@@ -61,7 +62,8 @@
   .app--play,
   .app--explore,
   .app--leaderboard,
-  .app--profile
+  .app--profile,
+  .app--about
 ) > .navbar {
   grid-column: 1;
   grid-row: 1;
@@ -75,7 +77,8 @@
   .app--play,
   .app--explore,
   .app--leaderboard,
-  .app--profile
+  .app--profile,
+  .app--about
 ) > :not(.navbar) {
   grid-column: 2;
   grid-row: 1;
@@ -104,7 +107,8 @@
   .app--play,
   .app--explore,
   .app--leaderboard,
-  .app--profile
+  .app--profile,
+  .app--about
 )::before {
   left: auto;
   right: 12%;
@@ -119,7 +123,8 @@
   .app--play,
   .app--explore,
   .app--leaderboard,
-  .app--profile
+  .app--profile,
+  .app--about
 ) > * {
   position: relative;
 }
@@ -134,7 +139,8 @@
     .app--play,
     .app--explore,
     .app--leaderboard,
-    .app--profile
+    .app--profile,
+    .app--about
   ) {
     display: block;
     min-height: 100vh;
@@ -145,7 +151,8 @@
     .app--play,
     .app--explore,
     .app--leaderboard,
-    .app--profile
+    .app--profile,
+    .app--about
   ) > :not(.navbar) {
     min-height: auto;
   }
@@ -154,6 +161,9 @@
   .app--play > .play-page,
   .app--explore > .explore-page,
   .app--leaderboard > .leaderboard-page,
+  .app--profile > .profile-page {
+    padding: 24px 18px 42px;
+  }
   .app--profile > .profile-page {
     padding: 24px 18px 42px;
   }
