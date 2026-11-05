@@ -465,3 +465,243 @@
     font-size: 0.9rem;
   }
 }
+
+/* =========================================================
+   CATCH THE NOTE - LOADING MINI GAME
+   ========================================================= */
+
+.loading-game {
+  width: 100%;
+  margin-top: 22px;
+  text-align: left;
+}
+
+.loading-game__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.loading-game__eyebrow {
+  display: block;
+  margin-bottom: 4px;
+
+  color: var(--color-purple-light);
+
+  font-size: 0.52rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.loading-game__header h2 {
+  margin: 0;
+
+  color: var(--color-text);
+
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.loading-game__score {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 6px 11px;
+
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+
+  background: var(--color-surface);
+}
+
+.loading-game__score span {
+  color: var(--color-muted);
+
+  font-size: 0.5rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.loading-game__score strong {
+  color: var(--color-purple-light);
+
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+}
+
+
+/* =========================================================
+   PLAYFIELD
+   ========================================================= */
+
+.loading-game__playfield {
+  position: relative;
+
+  width: 100%;
+  height: 160px;
+
+  overflow: hidden;
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+
+  background:
+    radial-gradient(
+      ellipse at 50% 100%,
+      var(--color-surface-hover),
+      transparent 75%
+    ),
+    var(--color-surface);
+
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  outline: none;
+}
+
+.loading-game__playfield:active {
+  cursor: grabbing;
+}
+
+.loading-game__playfield:focus-visible {
+  outline: 2px solid var(--color-purple-light);
+  outline-offset: 3px;
+}
+
+.loading-game__instructions {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  color: var(--color-muted);
+
+  font-size: 0.48rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   FALLING NOTES
+   ========================================================= */
+
+.loading-game__note {
+  position: absolute;
+
+  display: block;
+
+  object-fit: contain;
+
+  transform: translate(-50%, -50%);
+
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+
+/* =========================================================
+   BASKET
+   ========================================================= */
+
+.loading-game__basket {
+  position: absolute;
+  bottom: -7px;
+
+  width: 94px;
+  height: 88px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transform: translateX(-50%);
+
+  pointer-events: none;
+  will-change: left;
+}
+
+.loading-game__basket img {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+
+/* =========================================================
+   SLOW LOADING WARNING
+   ========================================================= */
+
+.loading-game__slow-warning {
+  margin: 9px 0 0;
+
+  color: var(--color-muted);
+
+  font-size: 0.58rem;
+  font-weight: 600;
+  line-height: 1.5;
+
+  text-align: center;
+
+  animation: loading-warning-appear 350ms ease-out both;
+}
+
+@keyframes loading-warning-appear {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-height: 700px) {
+  .loading-game {
+    margin-top: 14px;
+  }
+
+  .loading-game__playfield {
+    height: 125px;
+  }
+
+  .loading-game__basket {
+    width: 78px;
+    height: 74px;
+  }
+}
+
+@media (max-width: 600px) {
+  .loading-game {
+    margin-top: 18px;
+  }
+
+  .loading-game__playfield {
+    height: 140px;
+  }
+
+  .loading-game__basket {
+    width: 86px;
+    height: 80px;
+  }
+}
