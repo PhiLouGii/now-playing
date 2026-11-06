@@ -7,25 +7,29 @@ function App() {
   const { pathname } = useLocation()
 
   const sidebarPages = [
-    '/',
-    '/play',
-    '/explore',
-    '/leaderboard',
-    '/profile',
-    '/about',
-  ]
+  '/',
+  '/play',
+  '/explore',
+  '/leaderboard',
+  '/profile',
+  '/about',
+]
 
-  const isSidebarPage = sidebarPages.includes(pathname)
+const matchingPage = sidebarPages.find((page) =>
+  page === '/'
+    ? pathname === '/'
+    : pathname === page || pathname.startsWith(`${page}/`)
+)
 
-  const pageClass =
-    pathname === '/'
-      ? 'home'
-      : pathname.slice(1)
+const pageClass =
+  matchingPage === '/'
+    ? 'home'
+    : matchingPage?.slice(1) ?? ''
+
+const isSidebarPage = Boolean(matchingPage)
 
   return (
-    <div
-      className={`app${isSidebarPage ? ` app--${pageClass}` : ''}`}
-    >
+    <div className={`app${isSidebarPage ? ` app--${pageClass}` : ''}`}>
       <Navbar />
       <AppRoutes />
     </div>

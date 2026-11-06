@@ -28,14 +28,20 @@ function Navbar() {
   const { pathname } = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
 
-  const isSidebarPage = [
+  const sidebarPages = [
   '/',
   '/play',
   '/explore',
   '/leaderboard',
   '/profile',
   '/about',
-].includes(pathname)
+]
+
+const isSidebarPage = sidebarPages.some((page) =>
+  page === '/'
+    ? pathname === '/'
+    : pathname === page || pathname.startsWith(`${page}/`)
+)
 
   const { user, profile, loading, logout } = useAuth()
 
