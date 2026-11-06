@@ -29,19 +29,21 @@ function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const sidebarPages = [
-  '/',
-  '/play',
-  '/explore',
-  '/leaderboard',
-  '/profile',
-  '/about',
-]
+    '/',
+    '/play',
+    '/explore',
+    '/leaderboard',
+    '/profile',
+    '/about',
+  ]
 
-const isSidebarPage = sidebarPages.some((page) =>
-  page === '/'
-    ? pathname === '/'
-    : pathname === page || pathname.startsWith(`${page}/`)
-)
+  const isSidebarPage = 
+    pathname === '/pixel-cover' ||
+    sidebarPages.some((page) =>
+      page === '/'
+        ? pathname === '/'
+        : pathname === page || pathname.startsWith(`${page}/`)
+    )
 
   const { user, profile, loading, logout } = useAuth()
 
@@ -72,9 +74,7 @@ const isSidebarPage = sidebarPages.some((page) =>
     { to: '/about', label: 'About', icon: Info },
   ]
 
-  function renderLinks(
-    links: typeof mainLinks,
-  ) {
+  function renderLinks(links: typeof mainLinks) {
     return links.map(({ to, label, icon: Icon, end }) => (
       <NavLink
         key={to}
@@ -128,27 +128,17 @@ const isSidebarPage = sidebarPages.some((page) =>
         </button>
 
         {/* NAVIGATION */}
-        <div
-          className={`navbar__navigation${
-            mobileOpen ? ' navbar__navigation--open' : ''
-          }`}
-        >
+        <div className="navbar__navigation">
           <div className="navbar__links">
             {isSidebarPage ? (
               <>
                 <div className="navbar__group">
-                  <span className="navbar__group-label">
-                    MAIN
-                  </span>
-
+                  <span className="navbar__group-label">MAIN</span>
                   {renderLinks(mainLinks)}
                 </div>
 
                 <div className="navbar__group">
-                  <span className="navbar__group-label">
-                    MORE
-                  </span>
-
+                  <span className="navbar__group-label">MORE</span>
                   {renderLinks(secondaryLinks)}
                 </div>
               </>

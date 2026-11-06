@@ -6,7 +6,9 @@ import AppRoutes from './routes/AppRoutes'
 function App() {
   const { pathname } = useLocation()
 
-  const sidebarPages = [
+  const isPixelCover = pathname === '/pixel-cover'
+
+const sidebarPages = [
   '/',
   '/play',
   '/explore',
@@ -15,18 +17,19 @@ function App() {
   '/about',
 ]
 
-const matchingPage = sidebarPages.find((page) =>
-  page === '/'
-    ? pathname === '/'
-    : pathname === page || pathname.startsWith(`${page}/`)
-)
+const isSidebarPage =
+  isPixelCover ||
+  sidebarPages.some((page) =>
+    page === '/'
+      ? pathname === '/'
+      : pathname === page || pathname.startsWith(`${page}/`)
+  )
 
-const pageClass =
-  matchingPage === '/'
+const pageClass = isPixelCover
+  ? 'play'
+  : pathname === '/'
     ? 'home'
-    : matchingPage?.slice(1) ?? ''
-
-const isSidebarPage = Boolean(matchingPage)
+    : pathname.slice(1)
 
   return (
     <div className={`app${isSidebarPage ? ` app--${pageClass}` : ''}`}>
