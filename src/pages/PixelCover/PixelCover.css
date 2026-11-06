@@ -1103,3 +1103,16 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+.pixel-cover-suggestion--guessed {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+  background: #e5e5e5;
+}
+
+.pixel-cover-suggestion__status {
+  font-size: 0.7rem;
+  color: #888;
+  margin-left: auto;
+}

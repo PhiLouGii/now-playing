@@ -171,6 +171,7 @@ function PixelCover() {
   const [wrongGuess, setWrongGuess] = useState(false)
   const [feedback, setFeedback] = useState('')
   const [gameFinished, setGameFinished] = useState(false)
+  const [previousGuesses, setPreviousGuesses] = useState<string[]>([])
 
   const currentAlbum = roundAlbums[roundIndex]
 
@@ -234,17 +235,17 @@ function PixelCover() {
      ========================================================= */
 
   const suggestions = useMemo(() => {
-    const query = normalizeText(guess)
+  const query = normalizeText(guess)
 
-    if (!query || answered || revealedAnswer || wrongGuess) return []
+  if (!query || answered || revealedAnswer || wrongGuess) return []
 
-    return albums
-      .filter(album =>
-        normalizeText(album.title).includes(query) ||
-        normalizeText(album.artist).includes(query),
-      )
-      .slice(0, 6)
-  }, [albums, guess, answered, revealedAnswer, wrongGuess])
+  return albums
+    .filter(album =>
+      normalizeText(album.title).includes(query) ||
+      normalizeText(album.artist).includes(query),
+    )
+    .slice(0, 6)
+}, [albums, guess, answered, revealedAnswer, wrongGuess])
 
   /* =========================================================
      CURRENT REVEAL STAGE
@@ -262,6 +263,11 @@ function PixelCover() {
       if (!currentAlbum || answered || revealedAnswer) return
 
       const cleanedGuess = normalizeText(value)
+  if (previousGuesses.includes(cleanedGuess)) {
+  setWrongGuess(true)
+  setFeedback('Already guessed! Try a different album title.')
+  return
+}
 
       if (!cleanedGuess) {
         setWrongGuess(false)
@@ -292,11 +298,13 @@ function PixelCover() {
         return
       }
 
-      setWrongGuess(true)
-      setFeedback('Not quite! That is not the album. Try another guess.')
+      setPreviousGuesses(previous => [...previous, cleanedGuess])
+setWrongGuess(true)
+setFeedback('Not quite! That is not the album. Try another guess.')
     },
-    [guess, currentAlbum, answered, revealedAnswer, revealStage],
+    [guess, currentAlbum, answered, revealedAnswer, revealStage, previousGuesses],
   )
+
 
   /* =========================================================
      REVEAL COVER / ANSWER
@@ -349,6 +357,7 @@ function PixelCover() {
     setRevealedAnswer(false)
     setWrongGuess(false)
     setFeedback('')
+    setPreviousGuesses([])
   }
 
   /* =========================================================
@@ -373,6 +382,7 @@ function PixelCover() {
     setWrongGuess(false)
     setFeedback('')
     setGameFinished(false)
+    setPreviousGuesses([])
   }
 
   /* =========================================================
@@ -692,26 +702,41 @@ function PixelCover() {
                   role="listbox"
                   aria-label="Album suggestions"
                 >
-                  {suggestions.map(album => (
-                    <button
-                      key={album.id}
-                      type="button"
-                      className="pixel-cover-suggestion"
-                      onClick={() => {
-                        setGuess(album.title)
-                        submitGuess(album.title)
-                      }}
-                      role="option"
-                      aria-selected={false}
-                    >
-                      <span className="pixel-cover-suggestion__title">
-                        {album.title}
-                      </span>
-                      <span className="pixel-cover-suggestion__artist">
-                        {album.artist}
-                      </span>
-                    </button>
-                  ))}
+                  {suggestions.map(album => {
+  const alreadyGuessed = previousGuesses.includes(
+    normalizeText(album.title),
+  )
+
+  return (
+    <button
+      key={album.id}
+      type="button"
+      className={[
+        'pixel-cover-suggestion',
+        alreadyGuessed ? 'pixel-cover-suggestion--guessed' : '',
+      ].join(' ')}
+      disabled={alreadyGuessed}
+      onClick={() => {
+        setGuess(album.title)
+        submitGuess(album.title)
+      }}
+      role="option"
+      aria-selected={false}
+    >
+      <span className="pixel-cover-suggestion__title">
+        {album.title}
+      </span>
+      <span className="pixel-cover-suggestion__artist">
+        {album.artist}
+      </span>
+      {alreadyGuessed && (
+        <span className="pixel-cover-suggestion__status">
+          Already guessed
+        </span>
+      )}
+    </button>
+  )
+})}
                 </div>
               )}
 
