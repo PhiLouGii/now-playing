@@ -1,4 +1,3 @@
-
 import type {
   Question,
   QuestionDifficulty,
@@ -522,6 +521,78 @@ export async function generateGenreRound(
    THEME QUESTIONS
    ========================================================= */
 
+const THEME_RETRY_DELAYS = [400, 900] as const
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function isRetryableThemeError(error: unknown): boolean {
+  const message =
+    error instanceof Error ? error.message.toLowerCase() : ''
+
+  const permanentErrors = [
+    'not enough distinct answers',
+    'needs at least',
+    'unsupported question type',
+    'invalid theme',
+    'not found',
+    'not enough unused songs',
+  ]
+
+  return !permanentErrors.some((phrase) =>
+    message.includes(phrase),
+  )
+}
+
+async function generateThemeQuestionWithRetry(
+  theme: ThemeKey,
+  type: QuestionType,
+  difficulty: QuestionDifficulty,
+  excludedTrackIds: string[],
+): Promise<Question> {
+  let lastError: unknown
+
+  for (
+    let attempt = 0;
+    attempt <= THEME_RETRY_DELAYS.length;
+    attempt += 1
+  ) {
+    try {
+      return await generateQuestion(
+        type,
+        difficulty,
+        undefined,
+        excludedTrackIds,
+        undefined,
+        undefined,
+        undefined,
+        theme,
+      )
+    } catch (error) {
+      lastError = error
+
+      const hasAnotherAttempt =
+        attempt < THEME_RETRY_DELAYS.length
+
+      if (
+        !hasAnotherAttempt ||
+        !isRetryableThemeError(error)
+      ) {
+        break
+      }
+
+      await wait(THEME_RETRY_DELAYS[attempt])
+    }
+  }
+
+  throw lastError instanceof Error
+    ? lastError
+    : new Error(
+        'Unable to generate a question for this theme. Please try again.',
+      )
+}
+
 export async function generateThemeRound(
   theme: ThemeKey,
   questionCount: number,
@@ -531,6 +602,16 @@ export async function generateThemeRound(
   validateQuestionCount(questionCount)
   validateQuestionTypes(questionTypes)
 
+  if (
+    questionTypes.some(
+      (type) => type !== 'name-the-song',
+    )
+  ) {
+    throw new Error(
+      'Theme rounds currently support name-the-song questions only.',
+    )
+  }
+
   const questions: Question[] = []
   const usedTrackIds: string[] = []
 
@@ -539,17 +620,14 @@ export async function generateThemeRound(
     index < questionCount;
     index += 1
   ) {
-    const type = questionTypes[index % questionTypes.length]
+    const type =
+      questionTypes[index % questionTypes.length]
 
-    const question = await generateQuestion(
+    const question = await generateThemeQuestionWithRetry(
+      theme,
       type,
       difficulty,
-      undefined,
       usedTrackIds,
-      undefined,
-      undefined,
-      undefined,
-      theme,
     )
 
     questions.push(question)

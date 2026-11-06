@@ -128,6 +128,11 @@ function Game() {
 
   const [isLoading, setIsLoading] =
     useState(true)
+  const [loadingError, setLoadingError] =
+  useState<string | null>(null)
+
+const [retryCount, setRetryCount] =
+  useState(0)
 
   const [loadingFacts, setLoadingFacts] =
     useState<LoadingFact[]>([])
@@ -235,6 +240,7 @@ function Game() {
     async function loadFirstQuestion() {
       setIsLoading(true)
       setLoadingComplete(false)
+      setLoadingError(null)
 
       setQuestions([])
       setCurrentQuestion(0)
@@ -325,7 +331,7 @@ function Game() {
           return
         }
 
-        /* -------------------------------------------------------
+          /* -------------------------------------------------------
            THEME ROUND
            ------------------------------------------------------- */
 
@@ -333,13 +339,35 @@ function Game() {
           const theme =
             roundConfig.theme as ThemeKey
 
-          const themeQuestions =
-            await generateThemeRound(
+          let themeQuestions: Question[] = []
+
+          try {
+            themeQuestions = await generateThemeRound(
               theme,
               roundConfig.questionCount,
               roundConfig.questionTypes,
               roundConfig.difficulty,
             )
+          } catch (firstError) {
+            console.warn(
+              'Theme round generation failed. Retrying once...',
+              firstError,
+            )
+
+            // Brief pause before retrying the complete round.
+            await new Promise((resolve) =>
+              setTimeout(resolve, 800),
+            )
+
+            if (!isMounted) return
+
+            themeQuestions = await generateThemeRound(
+              theme,
+              roundConfig.questionCount,
+              roundConfig.questionTypes,
+              roundConfig.difficulty,
+            )
+          }
 
           if (isMounted) {
             themeQuestions.forEach((question) => {
@@ -381,13 +409,19 @@ function Game() {
           setLoadingComplete(true)
           setIsLoading(false)
         }
-      } catch (error) {
+            } catch (error) {
         console.error(
           'Failed to generate first question:',
           error,
         )
 
         if (isMounted) {
+          setLoadingError(
+            error instanceof Error
+              ? error.message
+              : 'Something went wrong while loading the game.',
+          )
+
           setIsLoading(false)
         }
       }
@@ -398,7 +432,7 @@ function Game() {
     return () => {
       isMounted = false
     }
-  }, [roundConfig, categoryId])
+    }, [roundConfig, categoryId, retryCount])
 
   /* =========================================================
      PRELOAD NORMAL GAME QUESTIONS
@@ -553,7 +587,7 @@ function Game() {
     )
   }
 
-  /* =========================================================
+    /* =========================================================
      NO QUESTIONS
      ========================================================= */
 
@@ -569,8 +603,20 @@ function Game() {
             <h1>NO QUESTIONS AVAILABLE</h1>
 
             <p>
-              We couldn't generate a round right now.
+              {loadingError ??
+                "We couldn't generate a round right now."}
             </p>
+
+            <button
+              type="button"
+              className="game-next"
+              onClick={() => {
+                setRetryCount((count) => count + 1)
+                setIsLoading(true)
+              }}
+            >
+              TRY AGAIN
+            </button>
           </main>
         </div>
       </div>

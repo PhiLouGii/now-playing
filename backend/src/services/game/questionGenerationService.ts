@@ -1,3 +1,4 @@
+
 import type {
   GeneratedQuestion,
   GeneratedSong,
@@ -21,6 +22,12 @@ import {
   getCategoryCandidatePool,
 } from '../category/categoryCandidateService.js'
 
+
+/*
+ * =========================================================
+ * HELPERS
+ * =========================================================
+ */
 
 function createQuestionId(): string {
   return `question-${Date.now()}-${Math.random()
@@ -50,6 +57,23 @@ function shuffle<T>(items: T[]): T[] {
 }
 
 
+function normalizeAnswer(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[()[\]{}]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+
+/*
+ * =========================================================
+ * ANSWER RESOLUTION
+ * =========================================================
+ */
+
 function getCorrectAnswer(
   track: MusicTrack,
   type: QuestionType,
@@ -67,7 +91,7 @@ function getCorrectAnswer(
     case 'guess-the-year':
       if (track.releaseYear === undefined) {
         throw new Error(
-          'Correct track does not have a release year',
+          'Correct track does not have a release year.',
         )
       }
 
@@ -98,7 +122,7 @@ function getDistractorAnswer(
     case 'guess-the-year':
       if (track.releaseYear === undefined) {
         throw new Error(
-          'Distractor does not have a release year',
+          'Distractor does not have a release year.',
         )
       }
 
@@ -111,6 +135,12 @@ function getDistractorAnswer(
   }
 }
 
+
+/*
+ * =========================================================
+ * SONG MAPPING
+ * =========================================================
+ */
 
 function toGeneratedSong(
   track: MusicTrack,
@@ -132,7 +162,7 @@ function toGeneratedSong(
 
 /*
  * =========================================================
- * GUESS THE YEAR DISTRACTORS
+ * GUESS THE YEAR
  * =========================================================
  */
 
@@ -163,13 +193,85 @@ function getGuessTheYearDistractors(
 
   if (availableYears.length < 3) {
     throw new Error(
-      `Guess the Year needs at least 3 distinct incorrect years. Found ${availableYears.length}. Expand the curated catalogue.`,
+      `Guess the Year needs at least 3 distinct incorrect years. Found ${availableYears.length}.`,
     )
   }
 
   return shuffle(availableYears)
     .slice(0, 3)
     .map(String)
+}
+
+
+/*
+ * =========================================================
+ * THEME CANDIDATES
+ * =========================================================
+ */
+
+function getThemeCandidates(
+  catalogue: MusicTrack[],
+  correctTrack: MusicTrack,
+) {
+  const seen = new Set<string>()
+
+  return catalogue
+    .filter(track => {
+      if (track.id === correctTrack.id) {
+        return false
+      }
+
+      const answer = normalizeAnswer(track.title)
+
+      if (!answer || seen.has(answer)) {
+        return false
+      }
+
+      seen.add(answer)
+      return true
+    })
+    .map(track => ({
+      track,
+      source: 'category' as const,
+    }))
+}
+
+
+/*
+ * =========================================================
+ * FINAL ANSWER VALIDATION
+ * =========================================================
+ */
+
+function validateAnswers(
+  answers: string[],
+  correctAnswer: string,
+): void {
+  if (answers.length !== 4) {
+    throw new Error(
+      `A question must have exactly 4 answers. Found ${answers.length}.`,
+    )
+  }
+
+  const normalizedAnswers = answers.map(
+    normalizeAnswer,
+  )
+
+  if (new Set(normalizedAnswers).size !== 4) {
+    throw new Error(
+      'Question contains duplicate answer options.',
+    )
+  }
+
+  if (
+    !normalizedAnswers.includes(
+      normalizeAnswer(correctAnswer),
+    )
+  ) {
+    throw new Error(
+      'Question options do not contain the correct answer.',
+    )
+  }
 }
 
 
@@ -188,8 +290,13 @@ export async function generateQuestion(
   categoryId?: string,
   artistMode = false,
   curatedCatalogue: MusicTrack[] = [],
+  themeCatalogue: MusicTrack[] = [],
 ): Promise<GeneratedQuestion> {
   let distractorAnswers: string[]
+
+  /*
+   * GUESS THE YEAR
+   */
 
   if (type === 'guess-the-year') {
     console.log(
@@ -201,19 +308,64 @@ export async function generateQuestion(
         correctTrack,
         curatedCatalogue,
       )
-  } else {
+  }
+
+  /*
+   * OTHER QUESTION TYPES
+   */
+
+  else {
     const excludedIds = new Set(excludedTrackIds)
 
-    console.time('[Game] getCandidatePool')
+    const timerLabel =
+      `[Game] getCandidatePool ${createQuestionId()}`
 
-    const candidates = categoryId
-      ? await getCategoryCandidatePool(
+    console.time(timerLabel)
+
+    try {
+      let candidates
+
+      /*
+       * THEME ROUND
+       *
+       * Use the supplied Firebase catalogue.
+       * Do not search Deezer or Last.fm for distractors.
+       */
+
+      if (themeCatalogue.length > 0) {
+        candidates = getThemeCandidates(
+          themeCatalogue,
+          correctTrack,
+        )
+
+        console.log(
+          '[Game] Using Firebase theme catalogue for distractors.',
+          {
+            themeTracks: themeCatalogue.length,
+            candidateCount: candidates.length,
+          },
+        )
+      }
+
+      /*
+       * CATEGORY ROUND
+       */
+
+      else if (categoryId) {
+        candidates = await getCategoryCandidatePool(
           categoryId,
           correctTrack,
           type,
           excludedIds,
         )
-      : await getCandidatePool(
+      }
+
+      /*
+       * NORMAL, ARTIST AND ERA ROUNDS
+       */
+
+      else {
+        candidates = await getCandidatePool(
           correctTrack,
           {
             requireReleaseYear: false,
@@ -224,35 +376,41 @@ export async function generateQuestion(
               : excludedIds,
           },
         )
+      }
 
-    console.timeEnd('[Game] getCandidatePool')
-
-    console.log(
-      '[Game] Candidate count:',
-      candidates.length,
-    )
-
-    const distractors = selectDistractors(
-      candidates,
-      correctTrack,
-      type,
-      3,
-    )
-
-    if (distractors.length !== 3) {
-      throw new Error(
-        `Could not generate exactly 3 distractors. Found ${distractors.length}.`,
+      console.log(
+        '[Game] Candidate count:',
+        candidates.length,
       )
-    }
 
-    distractorAnswers = distractors.map(
-      distractor =>
-        getDistractorAnswer(
-          distractor.track,
-          type,
-        ),
-    )
+      const distractors = selectDistractors(
+        candidates,
+        correctTrack,
+        type,
+        3,
+      )
+
+      if (distractors.length !== 3) {
+        throw new Error(
+          `Could not generate exactly 3 distractors. Found ${distractors.length}.`,
+        )
+      }
+
+      distractorAnswers = distractors.map(
+        distractor =>
+          getDistractorAnswer(
+            distractor.track,
+            type,
+          ),
+      )
+    } finally {
+      console.timeEnd(timerLabel)
+    }
   }
+
+  /*
+   * BUILD QUESTION
+   */
 
   const correctAnswer = getCorrectAnswer(
     correctTrack,
@@ -264,6 +422,11 @@ export async function generateQuestion(
     ...distractorAnswers,
   ])
 
+  validateAnswers(
+    answers,
+    correctAnswer,
+  )
+
   console.log(
     '[Game] Question generated successfully:',
     {
@@ -271,6 +434,7 @@ export async function generateQuestion(
       correctAnswer,
       answerCount: answers.length,
       categoryId,
+      themeCatalogueSize: themeCatalogue.length,
     },
   )
 

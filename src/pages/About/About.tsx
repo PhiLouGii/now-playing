@@ -360,7 +360,7 @@ function About() {
 
             <div className="about-developer__links">
               <a
-                href="https://github.com/"
+                href="https://github.com/PhiLouGii"
                 target="_blank"
                 rel="noreferrer"
                 aria-label="GitHub"
@@ -371,7 +371,7 @@ function About() {
               </a>
 
               <a
-                href="mailto:"
+                href="mailto:pgiibwa04@gmail.com"
                 aria-label="Email Philippa"
               >
                 <Mail size={17} />
@@ -381,7 +381,7 @@ function About() {
             </div>
 
             <p className="about-developer__link-note">
-              Replace these links with your actual profiles and contact address.
+              Use the contact form below to send a message directly to the developer.
             </p>
           </div>
         </div>
@@ -537,7 +537,7 @@ function About() {
 
           <div>
             <span>MUSIC DATA & PREVIEWS</span>
-            <p>Deezer</p>
+            <p>Deezer, Last.fm</p>
           </div>
 
           <div>
