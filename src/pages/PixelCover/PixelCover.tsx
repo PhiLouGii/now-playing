@@ -21,6 +21,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 
 import './PixelCover.css'
+import LoadingScreen from '../../components/loading/LoadingScreen'
 
 /* =========================================================
    TYPES
@@ -379,16 +380,13 @@ function PixelCover() {
      ========================================================= */
 
   if (loading) {
-    return (
-      <main className="pixel-cover-page">
-        <div className="pixel-cover-status">
-          <LoaderCircle className="pixel-cover-spinner" size={30} />
-          <h1>Loading Pixel Cover</h1>
-          <p>Getting the album artwork ready…</p>
-        </div>
-      </main>
-    )
-  }
+  return (
+    <LoadingScreen
+  message="Getting your album artwork ready..."
+  isComplete={false}
+/>
+  )
+}
 
   if (loadError || albums.length === 0) {
     return (
