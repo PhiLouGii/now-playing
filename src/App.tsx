@@ -17,19 +17,24 @@ const sidebarPages = [
   '/about',
 ]
 
-const isSidebarPage =
-  isPixelCover ||
-  sidebarPages.some((page) =>
-    page === '/'
-      ? pathname === '/'
-      : pathname === page || pathname.startsWith(`${page}/`)
-  )
+const isPlaySubpage =
+  pathname === '/pixel-cover' ||
+  pathname === '/artists' ||
+  pathname.startsWith('/play/')
 
-const pageClass = isPixelCover
+const matchingPage = sidebarPages.find((page) =>
+  page === '/'
+    ? pathname === '/'
+    : pathname === page || pathname.startsWith(`${page}/`)
+)
+
+const isSidebarPage = Boolean(matchingPage) || isPlaySubpage
+
+const pageClass = isPlaySubpage
   ? 'play'
-  : pathname === '/'
+  : matchingPage === '/'
     ? 'home'
-    : pathname.slice(1)
+    : matchingPage?.slice(1) ?? ''
 
   return (
     <div className={`app${isSidebarPage ? ` app--${pageClass}` : ''}`}>

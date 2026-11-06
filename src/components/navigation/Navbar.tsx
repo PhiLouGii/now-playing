@@ -29,21 +29,22 @@ function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const sidebarPages = [
-    '/',
-    '/play',
-    '/explore',
-    '/leaderboard',
-    '/profile',
-    '/about',
-  ]
+  '/',
+  '/play',
+  '/explore',
+  '/leaderboard',
+  '/profile',
+  '/about',
+]
 
-  const isSidebarPage = 
-    pathname === '/pixel-cover' ||
-    sidebarPages.some((page) =>
-      page === '/'
-        ? pathname === '/'
-        : pathname === page || pathname.startsWith(`${page}/`)
-    )
+const isSidebarPage =
+  pathname === '/pixel-cover' ||
+  pathname === '/artists' ||
+  sidebarPages.some((page) =>
+    page === '/'
+      ? pathname === '/'
+      : pathname === page || pathname.startsWith(`${page}/`)
+  )
 
   const { user, profile, loading, logout } = useAuth()
 
