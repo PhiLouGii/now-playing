@@ -895,7 +895,7 @@ export default function PlayByArtist() {
             <button
               type="button"
               className="play-by-artist-results__secondary-button"
-              onClick={() => navigate('/play')}
+              onClick={() => navigate('/artists')}
             >
               CHOOSE ANOTHER ARTIST
             </button>
