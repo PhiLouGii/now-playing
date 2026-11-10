@@ -1,4 +1,3 @@
-
 import {
   ArrowLeft,
   ArrowRight,
@@ -9,6 +8,7 @@ import {
   LoaderCircle,
   RotateCcw,
   Search,
+  X,
 } from 'lucide-react'
 
 import {
@@ -173,6 +173,8 @@ function PixelCover() {
   const [gameFinished, setGameFinished] = useState(false)
   const [previousGuesses, setPreviousGuesses] = useState<string[]>([])
 
+  const [showSlowNotice, setShowSlowNotice] = useState(false)
+
   const currentAlbum = roundAlbums[roundIndex]
 
   /* =========================================================
@@ -180,55 +182,66 @@ function PixelCover() {
      ========================================================= */
 
   useEffect(() => {
-    let cancelled = false
+  let cancelled = false
 
-    async function loadAlbums() {
-      try {
-        setLoading(true)
-        setLoadError('')
+  const slowNoticeTimer = window.setTimeout(() => {
+    if (!cancelled) {
+      setShowSlowNotice(true)
+    }
+  }, 8000)
 
-        const response = await fetch('/api/pixel-cover/albums')
+  async function loadAlbums() {
+    try {
+      setLoading(true)
+      setLoadError('')
+      setShowSlowNotice(false)
 
-        if (!response.ok) {
-          throw new Error('Unable to load album covers.')
-        }
+      const response = await fetch('/api/pixel-cover/albums')
 
-        const data: AlbumResponse = await response.json()
+      if (!response.ok) {
+        throw new Error('Unable to load album covers.')
+      }
 
-        if (!Array.isArray(data.albums) || data.albums.length === 0) {
-          throw new Error('No album covers are available right now.')
-        }
+      const data: AlbumResponse = await response.json()
 
-        if (cancelled) return
+      if (!Array.isArray(data.albums) || data.albums.length === 0) {
+        throw new Error('No album covers are available right now.')
+      }
 
-        setAlbums(data.albums)
+      if (cancelled) return
 
-        const shuffled = shuffleAlbums(data.albums)
+      setAlbums(data.albums)
 
-        setRoundAlbums(
-          shuffled.slice(0, Math.min(TOTAL_ROUNDS, shuffled.length)),
-        )
-      } catch (error) {
-        if (cancelled) return
+      const shuffled = shuffleAlbums(data.albums)
 
-        setLoadError(
-          error instanceof Error
-            ? error.message
-            : 'Something went wrong while loading album covers.',
-        )
-      } finally {
-        if (!cancelled) {
-          setLoading(false)
-        }
+      setRoundAlbums(
+        shuffled.slice(0, Math.min(TOTAL_ROUNDS, shuffled.length)),
+      )
+    } catch (error) {
+      if (cancelled) return
+
+      setLoadError(
+        error instanceof Error
+          ? error.message
+          : 'Something went wrong while loading album covers.',
+      )
+    } finally {
+      window.clearTimeout(slowNoticeTimer)
+
+      if (!cancelled) {
+        setLoading(false)
+        setShowSlowNotice(false)
       }
     }
+  }
 
-    loadAlbums()
+  loadAlbums()
 
-    return () => {
-      cancelled = true
-    }
-  }, [])
+  return () => {
+    cancelled = true
+    window.clearTimeout(slowNoticeTimer)
+  }
+}, [])
 
   /* =========================================================
      ALBUM TITLE & ARTIST SUGGESTIONS
@@ -391,10 +404,39 @@ setFeedback('Not quite! That is not the album. Try another guess.')
 
   if (loading) {
   return (
-    <LoadingScreen
-  message="Getting your album artwork ready..."
-  isComplete={false}
-/>
+    <>
+      <LoadingScreen
+        message="Getting your album artwork ready..."
+        isComplete={false}
+      />
+
+      {showSlowNotice && (
+        <div className="pixel-cover-slow-notice">
+          <div className="pixel-cover-slow-notice__content">
+            <div className="pixel-cover-slow-notice__icon">
+              <LoaderCircle size={22} />
+            </div>
+
+            <div className="pixel-cover-slow-notice__text">
+              <strong>Taking a little longer...</strong>
+              <p>
+                Your album covers are still loading. This round is
+                moving a little slower than usual, but we're working
+                on it. Thanks for hanging tight!
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowSlowNotice(false)}
+              aria-label="Dismiss loading notice"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 
@@ -665,80 +707,53 @@ setFeedback('Not quite! That is not the album. Try another guess.')
               </label>
 
               <div
-                className={[
-                  'pixel-cover-input-wrapper',
-                  wrongGuess ? 'pixel-cover-input-wrapper--error' : '',
-                  answered ? 'pixel-cover-input-wrapper--success' : '',
-                ].filter(Boolean).join(' ')}
-              >
-                {wrongGuess ? (
-                  <CircleX size={18} aria-hidden="true" />
-                ) : answered ? (
-                  <CircleCheck size={18} aria-hidden="true" />
-                ) : (
-                  <Search size={18} aria-hidden="true" />
-                )}
+  className={[
+    'pixel-cover-input-wrapper',
+    wrongGuess ? 'pixel-cover-input-wrapper--error' : '',
+    answered ? 'pixel-cover-input-wrapper--success' : '',
+  ].filter(Boolean).join(' ')}
+>
+  {wrongGuess ? (
+    <CircleX size={18} aria-hidden="true" />
+  ) : answered ? (
+    <CircleCheck size={18} aria-hidden="true" />
+  ) : (
+    <Search size={18} aria-hidden="true" />
+  )}
 
-                <input
-                  id="pixel-cover-guess"
-                  type="text"
-                  value={guess}
-                  onChange={event => {
-                    setGuess(event.target.value)
-                    setWrongGuess(false)
-                    setFeedback('')
-                  }}
-                  placeholder="Start typing an album…"
-                  autoComplete="off"
-                  disabled={answered || revealedAnswer}
-                  aria-invalid={wrongGuess}
-                  aria-describedby={feedback ? 'pixel-cover-feedback' : undefined}
-                />
-              </div>
+  <input
+    id="pixel-cover-guess"
+    type="text"
+    value={guess}
+    onChange={event => {
+      setGuess(event.target.value)
+      setWrongGuess(false)
+      setFeedback('')
+    }}
+    placeholder="Start typing an album…"
+    autoComplete="off"
+    disabled={answered || revealedAnswer}
+    aria-invalid={wrongGuess}
+    aria-describedby={feedback ? 'pixel-cover-feedback' : undefined}
+  />
 
-              {suggestions.length > 0 && (
-                <div
-                  className="pixel-cover-suggestions"
-                  role="listbox"
-                  aria-label="Album suggestions"
-                >
-                  {suggestions.map(album => {
-  const alreadyGuessed = previousGuesses.includes(
-    normalizeText(album.title),
-  )
-
-  return (
+  {guess.trim() && !answered && !revealedAnswer && (
     <button
-      key={album.id}
       type="button"
-      className={[
-        'pixel-cover-suggestion',
-        alreadyGuessed ? 'pixel-cover-suggestion--guessed' : '',
-      ].join(' ')}
-      disabled={alreadyGuessed}
+      className="pixel-cover-input-clear"
       onClick={() => {
-        setGuess(album.title)
-        submitGuess(album.title)
+        setGuess('')
+        setWrongGuess(false)
+        setFeedback('')
       }}
-      role="option"
-      aria-selected={false}
+      aria-label="Clear answer"
+      title="Clear answer"
     >
-      <span className="pixel-cover-suggestion__title">
-        {album.title}
-      </span>
-      <span className="pixel-cover-suggestion__artist">
-        {album.artist}
-      </span>
-      {alreadyGuessed && (
-        <span className="pixel-cover-suggestion__status">
-          Already guessed
-        </span>
-      )}
+      <X size={17} />
     </button>
-  )
-})}
-                </div>
-              )}
+  )}
+</div>
+
 
               <button
                 type="submit"
