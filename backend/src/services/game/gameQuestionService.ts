@@ -610,9 +610,16 @@ function getChrisBrownCatalogue(): Promise<MusicTrack[]> {
   return getCuratedArtistCatalogue('chrisbrown', 'Chris Brown')
 }
 
-
 function getAdeleCatalogue(): Promise<MusicTrack[]> {
   return getCuratedArtistCatalogue('adele', 'Adele')
+}
+
+function getSamSmithCatalogue(): Promise<MusicTrack[]> {
+  return getCuratedArtistCatalogue('samsmith', 'Sam Smith')
+}
+
+function getSiaCatalogue(): Promise<MusicTrack[]> {
+  return getCuratedArtistCatalogue('sia', 'Sia')
 }
 
 
@@ -759,11 +766,21 @@ async function getEligibleArtistTracks(
         'Loading Chris Brown from the curated Firestore catalogue.',
       )
       tracks = await getChrisBrownCatalogue()
-    } else if (normalizedArtist === 'adele') {
+        } else if (normalizedArtist === 'adele') {
       console.log(
         'Loading Adele from the curated Firestore catalogue.',
       )
       tracks = await getAdeleCatalogue()
+    } else if (normalizedArtist === 'sam smith') {
+      console.log(
+        'Loading Sam Smith from the curated Firestore catalogue.',
+      )
+      tracks = await getSamSmithCatalogue()
+    } else if (normalizedArtist === 'sia') {
+      console.log(
+        'Loading Sia from the curated Firestore catalogue.',
+      )
+      tracks = await getSiaCatalogue()
     } else {
       if (
         !artistId ||
