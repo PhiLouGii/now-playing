@@ -13,6 +13,7 @@
     "seed:theme": "tsx src/scripts/seedTheme.ts",
     "seed:drake": "tsx src/scripts/seedDrake.ts",
     "seed:chris-brown": "tsx src/scripts/seedChrisBrown.ts",
+    "seed:sam-smith": "tsx src/scripts/seedSamSmith.ts",
     "seed:guess-the-year": "tsx src/scripts/seedGuessTheYear.ts",
     "start": "node dist/server.js"
   },
