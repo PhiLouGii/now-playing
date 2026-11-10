@@ -8,6 +8,7 @@ import type {
 
 const API_URL = 'http://localhost:3000/api'
 const REQUEST_TIMEOUT_MS = 30_000
+const ARTIST_REQUEST_TIMEOUT_MS = 120_000
 
 /* =========================================================
    TYPES
@@ -106,12 +107,15 @@ type ApiArtistSearchResponse = {
    API HELPERS
    ========================================================= */
 
-async function fetchJson<T>(url: string): Promise<T> {
+async function fetchJson<T>(
+  url: string,
+  timeoutMs = REQUEST_TIMEOUT_MS,
+): Promise<T> {
   const controller = new AbortController()
 
   const timeoutId = setTimeout(
     () => controller.abort(),
-    REQUEST_TIMEOUT_MS,
+    timeoutMs,
   )
 
   try {
@@ -411,9 +415,14 @@ export async function generateQuestion(
     params.set('theme', theme)
   }
 
-  const data = await fetchJson<ApiQuestionResponse>(
-    `${API_URL}/game/question?${params.toString()}`,
-  )
+  const timeoutMs = artist && artistId
+  ? ARTIST_REQUEST_TIMEOUT_MS
+  : REQUEST_TIMEOUT_MS
+
+const data = await fetchJson<ApiQuestionResponse>(
+  `${API_URL}/game/question?${params.toString()}`,
+  timeoutMs,
+)
 
   if (!data.question) {
     throw new Error(

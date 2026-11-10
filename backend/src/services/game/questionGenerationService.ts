@@ -68,6 +68,18 @@ function normalizeAnswer(value: string): string {
 }
 
 
+function normalizeArtistName(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[()[\]{}'’"`]/g, ' ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+
 /*
  * =========================================================
  * ANSWER RESOLUTION
@@ -213,7 +225,9 @@ function getThemeCandidates(
   catalogue: MusicTrack[],
   correctTrack: MusicTrack,
 ) {
-  const seen = new Set<string>()
+  const seen = new Set<string>([
+    normalizeAnswer(correctTrack.title),
+  ])
 
   return catalogue
     .filter(track => {
@@ -239,6 +253,49 @@ function getThemeCandidates(
 
 /*
  * =========================================================
+ * ARTIST CANDIDATES
+ * =========================================================
+ */
+
+function getArtistCandidates(
+  catalogue: MusicTrack[],
+  correctTrack: MusicTrack,
+) {
+  const expectedArtist = normalizeArtistName(
+    correctTrack.artist,
+  )
+
+  const seen = new Set<string>([
+    normalizeAnswer(correctTrack.title),
+  ])
+
+  return catalogue
+    .filter(track => {
+      if (
+        track.id === correctTrack.id ||
+        normalizeArtistName(track.artist) !== expectedArtist
+      ) {
+        return false
+      }
+
+      const title = normalizeAnswer(track.title)
+
+      if (!title || seen.has(title)) {
+        return false
+      }
+
+      seen.add(title)
+      return true
+    })
+    .map(track => ({
+      track,
+      source: 'artist' as const,
+    }))
+}
+
+
+/*
+ * =========================================================
  * FINAL ANSWER VALIDATION
  * =========================================================
  */
@@ -257,9 +314,12 @@ function validateAnswers(
     normalizeAnswer,
   )
 
-  if (new Set(normalizedAnswers).size !== 4) {
+  if (
+    normalizedAnswers.some(answer => !answer) ||
+    new Set(normalizedAnswers).size !== 4
+  ) {
     throw new Error(
-      'Question contains duplicate answer options.',
+      'Question contains empty or duplicate answer options.',
     )
   }
 
@@ -291,6 +351,7 @@ export async function generateQuestion(
   artistMode = false,
   curatedCatalogue: MusicTrack[] = [],
   themeCatalogue: MusicTrack[] = [],
+  artistCatalogue: MusicTrack[] = [],
 ): Promise<GeneratedQuestion> {
   let distractorAnswers: string[]
 
@@ -303,11 +364,10 @@ export async function generateQuestion(
       '[Game] Generating Guess the Year options from curated catalogue.',
     )
 
-    distractorAnswers =
-      getGuessTheYearDistractors(
-        correctTrack,
-        curatedCatalogue,
-      )
+    distractorAnswers = getGuessTheYearDistractors(
+      correctTrack,
+      curatedCatalogue,
+    )
   }
 
   /*
@@ -318,7 +378,7 @@ export async function generateQuestion(
     const excludedIds = new Set(excludedTrackIds)
 
     const timerLabel =
-      `[Game] getCandidatePool ${createQuestionId()}`
+      `[Game] Generate distractors ${createQuestionId()}`
 
     console.time(timerLabel)
 
@@ -327,9 +387,6 @@ export async function generateQuestion(
 
       /*
        * THEME ROUND
-       *
-       * Use the supplied Firebase catalogue.
-       * Do not search Deezer or Last.fm for distractors.
        */
 
       if (themeCatalogue.length > 0) {
@@ -361,7 +418,32 @@ export async function generateQuestion(
       }
 
       /*
-       * NORMAL, ARTIST AND ERA ROUNDS
+       * PLAY BY ARTIST
+       */
+
+      else if (artistMode) {
+        candidates = getArtistCandidates(
+          artistCatalogue,
+          correctTrack,
+        )
+
+        console.log(
+          '[Game] Using selected artist catalogue for distractors.',
+          {
+            artistTracks: artistCatalogue.length,
+            candidateCount: candidates.length,
+          },
+        )
+
+        if (candidates.length < 3) {
+          throw new Error(
+            `Not enough distinct songs in the artist catalogue. Found ${candidates.length} distractor candidates; 3 are required.`,
+          )
+        }
+      }
+
+      /*
+       * NORMAL AND ERA ROUNDS
        */
 
       else {
@@ -371,9 +453,7 @@ export async function generateQuestion(
             requireReleaseYear: false,
             decade,
             questionType: type,
-            excludedTrackIds: artistMode
-              ? new Set<string>()
-              : excludedIds,
+            excludedTrackIds: excludedIds,
           },
         )
       }
@@ -435,6 +515,7 @@ export async function generateQuestion(
       answerCount: answers.length,
       categoryId,
       themeCatalogueSize: themeCatalogue.length,
+      artistCatalogueSize: artistCatalogue.length,
     },
   )
 

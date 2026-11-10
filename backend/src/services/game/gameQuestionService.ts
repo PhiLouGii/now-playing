@@ -106,6 +106,7 @@ function deduplicateTracks(
  * =========================================================
  */
 
+
 async function getArtistCatalogue(
   artist: string,
   artistId: string,
@@ -125,93 +126,45 @@ async function getArtistCatalogue(
     console.warn(
       `Invalid Deezer artist ID "${artistId}".`,
     )
-
     return []
   }
 
-  const normalizedArtist =
-    normalizeArtistName(artist)
+  const normalizedArtist = normalizeArtistName(artist)
 
-  const cataloguePromise =
-    (async (): Promise<MusicTrack[]> => {
-      let tracks =
-        await deezerMusicProvider.getArtistDiscography(
-          artistId,
-        )
+  const cataloguePromise = (async (): Promise<MusicTrack[]> => {
+    console.log(
+      `Loading top tracks for "${artist}" using Deezer ID ${artistId}.`,
+    )
 
-      tracks = tracks.filter(isPlayableMusicTrack)
+    const [topTracks, searchedTracks] = await Promise.all([
+      deezerMusicProvider.getArtistTopTracks(artistId, 100),
+      deezerMusicProvider.searchTracks(artist, 50),
+    ])
 
-      console.log(
-        `Artist discography provided ${tracks.length} playable tracks for "${artist}".`,
-      )
+    const byId = new Map<string, MusicTrack>()
 
-      if (tracks.length < 10) {
-        try {
-          console.log(
-            `Expanding artist catalogue for "${artist}".`,
-          )
-
-          const [
-            additionalTracks,
-            searchedTracks,
-          ] = await Promise.all([
-            deezerMusicProvider.getArtistTopTracks(
-              artistId,
-              100,
-            ),
-            deezerMusicProvider.searchTracks(
-              artist,
-              50,
-            ),
-          ])
-
-          const byId =
-            new Map<string, MusicTrack>()
-
-          for (const track of tracks) {
-            byId.set(track.id, track)
-          }
-
-          for (const track of [
-            ...additionalTracks,
-            ...searchedTracks,
-          ]) {
-            if (
-              isPlayableMusicTrack(track) &&
-              normalizeArtistName(track.artist) ===
-                normalizedArtist &&
-              !byId.has(track.id)
-            ) {
-              byId.set(track.id, track)
-            }
-          }
-
-          tracks = Array.from(byId.values())
-
-          console.log(
-            `Expanded artist catalogue to ${tracks.length} playable tracks for "${artist}".`,
-          )
-        } catch (error) {
-          console.warn(
-            `Artist catalogue expansion failed for "${artist}". Using available discography results.`,
-            error,
-          )
-        }
+    for (const track of [...topTracks, ...searchedTracks]) {
+      if (
+        isPlayableMusicTrack(track) &&
+        normalizeArtistName(track.artist) === normalizedArtist &&
+        !byId.has(track.id)
+      ) {
+        byId.set(track.id, track)
       }
+    }
 
-      const artistTracks = tracks.filter(
-        track =>
-          normalizeArtistName(track.artist) ===
-          normalizedArtist,
-      )
+    const tracks = deduplicateTracks(
+      Array.from(byId.values()),
+    )
 
-      return deduplicateTracks(artistTracks)
-    })()
+    console.log(
+      `Artist catalogue loaded: ${tracks.length} playable tracks for "${artist}".`,
+    )
 
-  artistCatalogueCache.set(
-    artistId,
-    cataloguePromise,
-  )
+    return tracks
+  })()
+
+  artistCatalogueCache.set(artistId, cataloguePromise)
 
   try {
     const tracks = await cataloguePromise
@@ -226,6 +179,7 @@ async function getArtistCatalogue(
     throw error
   }
 }
+
 
 
 /*
@@ -1017,5 +971,7 @@ return generateQuestion(
   type === 'guess-the-year'
     ? await getEligibleGuessTheYearTracks()
     : [],
+  [],
+  artist ? eligibleTracks : [],
 )
 }
