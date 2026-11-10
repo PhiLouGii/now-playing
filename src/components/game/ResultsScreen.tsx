@@ -1,5 +1,4 @@
-
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import './ResultsScreen.css'
 import type { RoundConfig } from '../../types/game'
 
@@ -31,6 +30,7 @@ function ResultsScreen({
   roundConfig,
 }: ResultsScreenProps) {
   const navigate = useNavigate()
+  const location = useLocation()
 
   const accuracy =
     totalQuestions > 0
@@ -114,13 +114,13 @@ function ResultsScreen({
   const performance = getPerformanceMessage()
 
   function handlePlayAgain() {
-  navigate('/game', {
+  navigate(`/game${location.search}`, {
     state: { roundConfig },
   })
 }
 
   function handleBackToPlay() {
-    navigate('/play')
+    navigate('/')
   }
 
   return (

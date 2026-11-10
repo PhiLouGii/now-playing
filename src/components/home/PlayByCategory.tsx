@@ -63,13 +63,13 @@ const categories: Category[] = [
   {
     id: 'queen',
     name: 'Queen',
-    description: 'Classic hits · Deep cuts · Live',
+    description: 'Killer · Champions · Radio Ga Ga',
     type: 'artist',
   },
   {
     id: 'ariana-grande',
     name: 'Ariana Grande',
-    description: 'Early hits · Pop era · Sweetener',
+    description: 'Yours Truly · Petal · Sweetener',
     type: 'artist',
   },
 ]
