@@ -267,6 +267,7 @@
 :is(
   .app--home,
   .app--play,
+  .app--game,
   .app--explore,
   .app--leaderboard,
   .app--profile,
@@ -295,6 +296,7 @@
 :is(
   .app--home,
   .app--play,
+  .app--game,
   .app--explore,
   .app--leaderboard,
   .app--profile,
@@ -315,6 +317,7 @@
 :is(
   .app--home,
   .app--play,
+  .app--game,
   .app--explore,
   .app--leaderboard,
   .app--profile,
@@ -330,6 +333,7 @@
 :is(
   .app--home,
   .app--play,
+  .app--game,
   .app--explore,
   .app--leaderboard,
   .app--profile,
@@ -349,6 +353,7 @@
 :is(
   .app--home,
   .app--play,
+  .app--game,
   .app--explore,
   .app--leaderboard,
   .app--profile,
@@ -363,6 +368,7 @@
 :is(
   .app--home,
   .app--play,
+  .app--game,
   .app--explore,
   .app--leaderboard,
   .app--profile,
@@ -379,6 +385,7 @@
 :is(
   .app--home,
   .app--play,
+  .app--game,
   .app--explore,
   .app--leaderboard,
   .app--profile,
@@ -390,6 +397,7 @@
 :is(
   .app--home,
   .app--play,
+  .app--game,
   .app--explore,
   .app--leaderboard,
   .app--profile,
@@ -412,6 +420,7 @@
 :is(
   .app--home,
   .app--play,
+  .app--game,
   .app--explore,
   .app--leaderboard,
   .app--profile,
@@ -424,6 +433,7 @@
 :is(
   .app--home,
   .app--play,
+  .app--game,
   .app--explore,
   .app--leaderboard,
   .app--profile,
@@ -436,6 +446,7 @@
 :is(
   .app--home,
   .app--play,
+  .app--game,
   .app--explore,
   .app--leaderboard,
   .app--profile,
@@ -448,6 +459,7 @@
 :is(
   .app--home,
   .app--play,
+  .app--game,
   .app--explore,
   .app--leaderboard,
   .app--profile,
@@ -461,6 +473,7 @@
 :is(
   .app--home,
   .app--play,
+  .app--game,
   .app--explore,
   .app--leaderboard,
   .app--profile,
@@ -479,6 +492,7 @@
 :is(
   .app--home,
   .app--play,
+  .app--game,
   .app--explore,
   .app--leaderboard,
   .app--profile,
@@ -492,6 +506,7 @@
 :is(
   .app--home,
   .app--play,
+  .app--game,
   .app--explore,
   .app--leaderboard,
   .app--profile,
@@ -504,6 +519,7 @@
 :is(
   .app--home,
   .app--play,
+  .app--game,
   .app--explore,
   .app--leaderboard,
   .app--profile,
@@ -512,6 +528,7 @@
 :is(
   .app--home,
   .app--play,
+  .app--game,
   .app--explore,
   .app--leaderboard,
   .app--profile,
@@ -558,6 +575,7 @@
   :is(
     .app--home,
     .app--play,
+    .app--game,
     .app--explore,
     .app--leaderboard,
     .app--profile,
@@ -569,6 +587,7 @@
   :is(
     .app--home,
     .app--play,
+    .app--game,
     .app--explore,
     .app--leaderboard,
     .app--profile,
@@ -580,6 +599,7 @@
   :is(
     .app--home,
     .app--play,
+    .app--game,
     .app--explore,
     .app--leaderboard,
     .app--profile,
@@ -600,6 +620,7 @@
   :is(
     .app--home,
     .app--play,
+    .app--game,
     .app--explore,
     .app--leaderboard,
     .app--profile,
@@ -615,6 +636,7 @@
   :is(
     .app--home,
     .app--play,
+    .app--game,
     .app--explore,
     .app--leaderboard,
     .app--profile,
@@ -638,6 +660,7 @@
   :is(
     .app--home,
     .app--play,
+    .app--game,
     .app--explore,
     .app--leaderboard,
     .app--profile,
@@ -658,6 +681,7 @@
   :is(
     .app--home,
     .app--play,
+    .app--game,
     .app--explore,
     .app--leaderboard,
     .app--profile,
@@ -672,6 +696,7 @@
   :is(
     .app--home,
     .app--play,
+    .app--game,
     .app--explore,
     .app--leaderboard,
     .app--profile,
@@ -723,6 +748,7 @@
   :is(
     .app--home,
     .app--play,
+    .app--game,
     .app--explore,
     .app--leaderboard,
     .app--profile,
@@ -740,6 +766,7 @@
   :is(
     .app--home,
     .app--play,
+    .app--game,
     .app--explore,
     .app--leaderboard,
     .app--profile,
@@ -757,6 +784,7 @@
   :is(
     .app--home,
     .app--play,
+    .app--game,
     .app--explore,
     .app--leaderboard,
     .app--profile,
@@ -773,6 +801,7 @@
   :is(
     .app--home,
     .app--play,
+    .app--game,
     .app--explore,
     .app--leaderboard,
     .app--profile,
@@ -784,6 +813,7 @@
   :is(
     .app--home,
     .app--play,
+    .app--game,
     .app--explore,
     .app--leaderboard,
     .app--profile,
@@ -797,6 +827,7 @@
   :is(
     .app--home,
     .app--play,
+    .app--game,
     .app--explore,
     .app--leaderboard,
     .app--profile,
@@ -813,6 +844,7 @@
   :is(
     .app--home,
     .app--play,
+    .app--game,
     .app--explore,
     .app--leaderboard,
     .app--profile,
@@ -824,6 +856,7 @@
   :is(
     .app--home,
     .app--play,
+    .app--game,
     .app--explore,
     .app--leaderboard,
     .app--profile,
@@ -837,6 +870,7 @@
   :is(
     .app--home,
     .app--play,
+    .app--game,
     .app--explore,
     .app--leaderboard,
     .app--profile,
@@ -856,6 +890,7 @@
   :is(
     .app--home,
     .app--play,
+    .app--game,
     .app--explore,
     .app--leaderboard,
     .app--profile,
@@ -867,6 +902,7 @@
   :is(
     .app--home,
     .app--play,
+    .app--game,
     .app--explore,
     .app--leaderboard,
     .app--profile,
@@ -880,6 +916,7 @@
   :is(
     .app--home,
     .app--play,
+    .app--game,
     .app--explore,
     .app--leaderboard,
     .app--profile,
@@ -888,6 +925,7 @@
   :is(
     .app--home,
     .app--play,
+    .app--game,
     .app--explore,
     .app--leaderboard,
     .app--profile,
@@ -901,6 +939,7 @@
   :is(
     .app--home,
     .app--play,
+    .app--game,
     .app--explore,
     .app--leaderboard,
     .app--profile,
@@ -932,6 +971,7 @@
   :is(
     .app--home,
     .app--play,
+    .app--game,
     .app--explore,
     .app--leaderboard,
     .app--profile,
@@ -954,6 +994,7 @@
   :is(
     .app--home,
     .app--play,
+    .app--game,
     .app--explore,
     .app--leaderboard,
     .app--profile,

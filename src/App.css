@@ -1,7 +1,11 @@
 
+/* ========================================
+   APP BASE
+   ======================================== */
+
 .app {
-  min-height: 100vh;
   position: relative;
+  min-height: 100vh;
   overflow: hidden;
   color: var(--color-white);
   background: var(--color-bg);
@@ -11,9 +15,15 @@
    BACKGROUND EFFECTS
    ======================================== */
 
-.app::before {
+.app::before,
+.app::after {
   content: '';
   position: fixed;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app::before {
   width: 700px;
   height: 700px;
   top: -350px;
@@ -21,20 +31,15 @@
   transform: translateX(-50%);
   background: rgba(139, 92, 246, 0.08);
   filter: blur(120px);
-  pointer-events: none;
-  z-index: 0;
 }
 
 .app::after {
-  content: '';
-  position: fixed;
   width: 500px;
   height: 500px;
   right: -250px;
   bottom: -250px;
   background: rgba(34, 211, 238, 0.05);
   filter: blur(100px);
-  pointer-events: none;
 }
 
 /* ========================================
@@ -44,6 +49,7 @@
 :is(
   .app--home,
   .app--play,
+  .app--game,
   .app--explore,
   .app--leaderboard,
   .app--profile,
@@ -60,6 +66,7 @@
 :is(
   .app--home,
   .app--play,
+  .app--game,
   .app--explore,
   .app--leaderboard,
   .app--profile,
@@ -75,6 +82,7 @@
 :is(
   .app--home,
   .app--play,
+  .app--game,
   .app--explore,
   .app--leaderboard,
   .app--profile,
@@ -86,16 +94,18 @@
   min-height: 100vh;
 }
 
-/* ========================================
-   PAGE SPACING
-   ======================================== */
+/* Keep page content above background effects */
 
-:is(.app--home) > .home,
-:is(.app--play) > .play-page,
-:is(.app--explore) > .explore-page,
-:is(.app--leaderboard) > .leaderboard-page,
-:is(.app--profile) > .profile-page {
-  padding: 28px clamp(22px, 3vw, 48px) 52px;
+:is(
+  .app--home,
+  .app--play,
+  .app--game,
+  .app--explore,
+  .app--leaderboard,
+  .app--profile,
+  .app--about
+) > * {
+  position: relative;
 }
 
 /* ========================================
@@ -105,6 +115,7 @@
 :is(
   .app--home,
   .app--play,
+  .app--game,
   .app--explore,
   .app--leaderboard,
   .app--profile,
@@ -116,58 +127,19 @@
   transform: none;
 }
 
-/* Keep page content above background effects */
-
-:is(
-  .app--home,
-  .app--play,
-  .app--explore,
-  .app--leaderboard,
-  .app--profile,
-  .app--about
-) > * {
-  position: relative;
-}
-
 /* ========================================
-   MOBILE LAYOUT
+   PAGE SPACING
    ======================================== */
 
-@media (max-width: 760px) {
-  :is(
-    .app--home,
-    .app--play,
-    .app--explore,
-    .app--leaderboard,
-    .app--profile,
-    .app--about
-  ) {
-    display: block;
-    min-height: 100vh;
-  }
-
-  :is(
-    .app--home,
-    .app--play,
-    .app--explore,
-    .app--leaderboard,
-    .app--profile,
-    .app--about
-  ) > :not(.navbar) {
-    min-height: auto;
-  }
-
-  .app--home > .home,
-  .app--play > .play-page,
-  .app--explore > .explore-page,
-  .app--leaderboard > .leaderboard-page,
-  .app--profile > .profile-page {
-    padding: 24px 18px 42px;
-  }
-  .app--profile > .profile-page {
-    padding: 24px 18px 42px;
-  }
+.app--home > .home,
+.app--play > .play-page,
+.app--explore > .explore-page,
+.app--leaderboard > .leaderboard-page,
+.app--profile > .profile-page {
+  padding: 28px clamp(22px, 3vw, 48px) 52px;
 }
+
+/* Trivia placeholder */
 
 .app--explore > .trivia-placeholder {
   width: 100%;
@@ -176,8 +148,85 @@
   padding: 28px clamp(22px, 3vw, 48px) 52px;
 }
 
-@media (max-width: 760px) {
+/* ========================================
+   TABLET SIDEBAR
+   ======================================== */
+
+@media (max-width: 1100px) and (min-width: 761px) {
+  :is(
+    .app--home,
+    .app--play,
+    .app--game,
+    .app--explore,
+    .app--leaderboard,
+    .app--profile,
+    .app--about
+  ) {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+}
+
+/* ========================================
+   MOBILE LAYOUT
+   Matches Navbar.css breakpoint
+   ======================================== */
+
+@media (max-width: 1100px) {
+  :is(
+    .app--home,
+    .app--play,
+    .app--game,
+    .app--explore,
+    .app--leaderboard,
+    .app--profile,
+    .app--about
+  ) {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
+  /* Main content */
+
+  :is(
+    .app--home,
+    .app--play,
+    .app--game,
+    .app--explore,
+    .app--leaderboard,
+    .app--profile,
+    .app--about
+  ) > :not(.navbar) {
+    width: 100%;
+    min-width: 0;
+    min-height: auto;
+    box-sizing: border-box;
+  }
+
+  /* Page spacing */
+
+  .app--home > .home,
+  .app--play > .play-page,
+  .app--explore > .explore-page,
+  .app--leaderboard > .leaderboard-page,
+  .app--profile > .profile-page,
   .app--explore > .trivia-placeholder {
     padding: 24px 18px 42px;
+  }
+}
+
+/* ========================================
+   SMALL MOBILE
+   ======================================== */
+
+@media (max-width: 480px) {
+  .app--home > .home,
+  .app--play > .play-page,
+  .app--explore > .explore-page,
+  .app--leaderboard > .leaderboard-page,
+  .app--profile > .profile-page,
+  .app--explore > .trivia-placeholder {
+    padding: 20px 14px 36px;
   }
 }

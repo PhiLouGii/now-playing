@@ -31,6 +31,7 @@ function Navbar() {
   const sidebarPages = [
   '/',
   '/play',
+  '/game',
   '/explore',
   '/leaderboard',
   '/profile',

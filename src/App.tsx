@@ -6,11 +6,11 @@ import AppRoutes from './routes/AppRoutes'
 function App() {
   const { pathname } = useLocation()
 
-  const isPixelCover = pathname === '/pixel-cover'
 
 const sidebarPages = [
   '/',
   '/play',
+  '/game',
   '/explore',
   '/leaderboard',
   '/profile',
