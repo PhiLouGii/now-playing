@@ -508,6 +508,69 @@
   font-size: 0.75rem;
 }
 
+.pixel-cover-suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 10px;
+  border: 1px solid var(--border-color, #e5e5e5);
+  border-radius: 12px;
+  background: var(--surface-color, #fff);
+}
+
+.pixel-cover-suggestions__label {
+  padding: 4px 8px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  opacity: 0.6;
+}
+
+.pixel-cover-suggestion {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.pixel-cover-suggestion:hover {
+  background: rgba(128, 128, 128, 0.12);
+}
+
+.pixel-cover-suggestion__image {
+  width: 42px;
+  height: 42px;
+  border-radius: 5px;
+  object-fit: cover;
+}
+
+.pixel-cover-suggestion__details {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.pixel-cover-suggestion__details strong {
+  overflow: hidden;
+  font-size: 0.85rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pixel-cover-suggestion__details small {
+  font-size: 0.75rem;
+  opacity: 0.65;
+}
+
 /* =========================================================
    BUTTONS
    ========================================================= */

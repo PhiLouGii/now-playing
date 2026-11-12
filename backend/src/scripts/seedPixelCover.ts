@@ -1,5 +1,7 @@
-
-import { seedCuratedPixelCoverAlbums } from '../services/pixelCoverService.js'
+import {
+  seedCuratedPixelCoverAlbums,
+  discoverPixelCoverAlbums,
+} from '../services/pixelCoverService.js'
 
 async function main() {
   try {
