@@ -1,3 +1,4 @@
+
 import {
   Disc3,
   Headphones,
@@ -8,6 +9,11 @@ import {
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
+import songModeImage from '../../../images/home/song-mode.jpg'
+import artistModeImage from '../../../images/home/artist-mode.jpg'
+import albumModeImage from '../../../images/home/album-mode.jpg'
+import yearModeImage from '../../../images/home/year-mode.jpg'
+
 import './GameModes.css'
 
 const gameModes = [
@@ -17,7 +23,7 @@ const gameModes = [
     description: 'Hear it. Name it.',
     path: '/game',
     icon: Disc3,
-    artwork: '/images/home/song-mode.jpg',
+    artwork: songModeImage,
     className: 'game-mode--primary',
   },
   {
@@ -26,7 +32,7 @@ const gameModes = [
     description: 'Know who made it?',
     path: '/artist-game',
     icon: Mic2,
-    artwork: '/images/home/artist-mode.jpg',
+    artwork: artistModeImage,
     className: '',
   },
   {
@@ -35,7 +41,7 @@ const gameModes = [
     description: 'Recognise the record.',
     path: '/album-game',
     icon: Radio,
-    artwork: '/images/home/album-mode.jpg',
+    artwork: albumModeImage,
     className: '',
   },
   {
@@ -44,7 +50,7 @@ const gameModes = [
     description: 'When did it drop?',
     path: '/year-game',
     icon: Headphones,
-    artwork: '/images/home/year-mode.jpg',
+    artwork: yearModeImage,
     className: '',
   },
   {
@@ -53,7 +59,7 @@ const gameModes = [
     description: 'Keep your streak alive.',
     path: '/endless',
     icon: Sparkles,
-    artwork: '/images/home/endless-mode.jpg',
+    artwork: null,
     className: 'game-mode--endless',
   },
 ]
@@ -67,7 +73,6 @@ function GameModes() {
         <div className="game-modes__header">
           <div>
             <p className="label">PLAY</p>
-
             <h2>Choose your game</h2>
           </div>
 
@@ -82,58 +87,62 @@ function GameModes() {
 
             return (
               <button
-  key={mode.title}
-  type="button"
-  className={`game-mode ${mode.className} ${
-    mode.title === 'Endless' ? 'game-mode--coming-soon' : ''
-  }`}
-  onClick={() => {
-    if (mode.title !== 'Endless') {
-      navigate(mode.path)
-    }
-  }}
-  aria-disabled={mode.title === 'Endless'}
->
-  <div
-    className="game-mode__artwork"
-    style={{
-      backgroundImage: `url("${mode.artwork}")`,
-    }}
-    aria-hidden="true"
-  />
+                key={mode.title}
+                type="button"
+                className={`game-mode ${mode.className} ${
+                  mode.title === 'Endless'
+                    ? 'game-mode--coming-soon'
+                    : ''
+                }`}
+                onClick={() => {
+                  if (mode.title !== 'Endless') {
+                    navigate(mode.path)
+                  }
+                }}
+                aria-disabled={mode.title === 'Endless'}
+              >
+                <div
+                  className="game-mode__artwork"
+                  style={{
+                    backgroundImage: mode.artwork
+                      ? `url("${mode.artwork}")`
+                      : 'none',
+                  }}
+                  aria-hidden="true"
+                />
 
-  <div
-    className="game-mode__overlay"
-    aria-hidden="true"
-  />
+                <div
+                  className="game-mode__overlay"
+                  aria-hidden="true"
+                />
 
-  <div className="game-mode__top">
-    <span className="game-mode__number">
-      {mode.number}
-    </span>
+                <div className="game-mode__top">
+                  <span className="game-mode__number">
+                    {mode.number}
+                  </span>
 
-    <span className="game-mode__icon">
-      <Icon size={19} strokeWidth={1.8} />
-    </span>
-  </div>
+                  <span className="game-mode__icon">
+                    <Icon size={19} strokeWidth={1.8} />
+                  </span>
+                </div>
 
-  {mode.title === 'Endless' && (
-    <span className="game-mode__coming-soon">
-      Coming soon
-    </span>
-  )}
+                {mode.title === 'Endless' && (
+                  <span className="game-mode__coming-soon">
+                    Coming soon
+                  </span>
+                )}
 
-  <div className="game-mode__info">
-    <h3>{mode.title}</h3>
-    <p>{mode.description}</p>
-  </div>
+                <div className="game-mode__info">
+                  <h3>{mode.title}</h3>
+                  <p>{mode.description}</p>
+                </div>
 
-  {mode.title === 'Endless' && (
-    <span className="game-mode__disabled-icon">
-      <Ban size={25} strokeWidth={1.8} />
-    </span>
-  )}
-</button>
+                {mode.title === 'Endless' && (
+                  <span className="game-mode__disabled-icon">
+                    <Ban size={25} strokeWidth={1.8} />
+                  </span>
+                )}
+              </button>
             )
           })}
         </div>
