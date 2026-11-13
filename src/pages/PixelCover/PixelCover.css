@@ -571,6 +571,25 @@
   opacity: 0.65;
 }
 
+.pixel-cover-suggestion--guessed {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: #eeeeee;
+}
+
+.pixel-cover-suggestion--guessed:hover {
+  background: #eeeeee;
+  transform: none;
+}
+
+.pixel-cover-suggestion__status {
+  margin-left: auto;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #888;
+  white-space: nowrap;
+}
+
 /* =========================================================
    BUTTONS
    ========================================================= */

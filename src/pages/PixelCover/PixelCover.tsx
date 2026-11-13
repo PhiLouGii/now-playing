@@ -326,32 +326,32 @@ function PixelCover() {
      ========================================================= */
 
   const suggestions = useMemo(() => {
-    const query = normalizeText(guess)
+  const query = normalizeText(guess)
 
-    if (
-      !query ||
-      answered ||
-      revealedAnswer ||
-      wrongGuess
-    ) {
-      return []
-    }
+  if (
+    !query ||
+    answered ||
+    revealedAnswer ||
+    wrongGuess
+  ) {
+    return []
+  }
 
-    return albums
-      .filter(album => {
-        const title = normalizeText(album.title)
-        const artist = normalizeText(album.artist)
+  return albums
+    .filter(album => {
+      const title = normalizeText(album.title)
+      const artist = normalizeText(album.artist)
 
-        return title.includes(query) || artist.includes(query)
-      })
-      .slice(0, MAX_SUGGESTIONS)
-  }, [
-    albums,
-    guess,
-    answered,
-    revealedAnswer,
-    wrongGuess,
-  ])
+      return title.includes(query) || artist.includes(query)
+    })
+    .slice(0, MAX_SUGGESTIONS)
+}, [
+  albums,
+  guess,
+  answered,
+  revealedAnswer,
+  wrongGuess,
+])
 
   function selectSuggestion(album: PixelCoverAlbum) {
     setGuess(album.title)
@@ -891,24 +891,45 @@ function PixelCover() {
                     SUGGESTED ALBUMS
                   </span>
 
-                  {suggestions.map(album => (
-                    <button
-                      key={album.id}
-                      type="button"
-                      className="pixel-cover-suggestion"
-                      role="option"
-                      aria-selected={false}
-                      onClick={() => selectSuggestion(album)}
-                    >
-                      <span className="pixel-cover-suggestion__details">
-                        <strong>{album.title}</strong>
-                        <small>
-                          {album.artist}
-                          {album.year ? ` · ${album.year}` : ''}
-                        </small>
-                      </span>
-                    </button>
-                  ))}
+                  {suggestions.map(album => {
+  const alreadyGuessed = previousGuesses.includes(
+    normalizeText(album.title),
+  )
+
+  return (
+    <button
+      key={album.id}
+      type="button"
+      className={[
+        'pixel-cover-suggestion',
+        alreadyGuessed
+          ? 'pixel-cover-suggestion--guessed'
+          : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+      role="option"
+      aria-selected={false}
+      aria-disabled={alreadyGuessed}
+      disabled={alreadyGuessed}
+      onClick={() => selectSuggestion(album)}
+    >
+      <span className="pixel-cover-suggestion__details">
+        <strong>{album.title}</strong>
+        <small>
+          {album.artist}
+          {album.year ? ` · ${album.year}` : ''}
+        </small>
+      </span>
+
+      {alreadyGuessed && (
+        <span className="pixel-cover-suggestion__status">
+          Already guessed
+        </span>
+      )}
+    </button>
+  )
+})}
                 </div>
               )}
 

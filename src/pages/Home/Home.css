@@ -20,7 +20,53 @@
 .home-mode-card__arrow { position:absolute; right:15px; bottom:15px; color:var(--color-subtle); }
 .home__spin-heading { margin-top:10px; margin-bottom:0; }
 .home__spin-heading h2 { font-size:23px; }
+.home__section-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
 
+.home__more-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 11px;
+  border: 1px solid var(--border-color, #dedbd3);
+  border-radius: 6px;
+  background: #46315c;
+  color: #d9d8d9;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.home__more-button:hover {
+  background: #68507b;
+  border-color: currentColor;
+}
+
+.home__more-button svg {
+  transition: transform 0.2s ease;
+}
+
+.home__more-button:hover svg {
+  transform: translate(2px, -2px);
+}
+
+@media (max-width: 600px) {
+  .home__section-actions {
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .home__more-button {
+    font-size: 0.7rem;
+    padding: 6px 8px;
+  }
+}
 /* Keep the hero compact as a dashboard banner rather than a full-screen landing page. */
 .app--home .hero { min-height:0; padding:22px 0 28px; background:transparent; }
 .app--home .hero__inner { width:100%; grid-template-columns:minmax(0,1fr) minmax(250px,310px); gap:24px; }

@@ -49,12 +49,23 @@ function Home() {
 
       <section className="home__other-modes">
         <div className="home__section-heading">
-          <div>
-            <p className="label">MORE WAYS TO PLAY</p>
-            <h2>Other game modes</h2>
-          </div>
-          <span>03 EXTRA MODES</span>
-        </div>
+  <div>
+    <p className="label">MORE WAYS TO PLAY</p>
+    <h2>Other game modes</h2>
+  </div>
+
+  <div className="home__section-actions">
+    <button
+      type="button"
+      className="home__more-button"
+      onClick={() => navigate('/play')}
+    >
+      More ways to play
+      <ArrowUpRight size={15} />
+    </button>
+
+  </div>
+</div>
 
         <div className="home__other-grid">
           {otherModes.map((mode, index) => {
