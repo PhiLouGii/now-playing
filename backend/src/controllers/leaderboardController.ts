@@ -6,6 +6,12 @@ import { getFirestore } from 'firebase-admin/firestore'
 
 const db = getFirestore()
 
+const HIDDEN_LEADERBOARD_USERS = new Set([
+  'm8asQqjCsXg5jSkNrGYg3HiCkFE3', // alexturner
+  'FtM6b6I1nMhkuiA8An1EWbjpu973', // alexkarev
+  'AQYsdPlWonbXz9i1K8tNBWG0ayD2', // jack&jack
+])
+
 export async function getLeaderboard(
   req: Request,
   res: Response,
@@ -73,12 +79,14 @@ if (gameMode) {
         const scoreData =
           scoreDoc.data()
 
-        const userId =
-          scoreData.userId
+        const userId = scoreData.userId
 
-        if (!userId) {
-          return
-        }
+if (
+  !userId ||
+  HIDDEN_LEADERBOARD_USERS.has(userId)
+) {
+  return
+}
 
         const existingScore =
           bestScoresByUser.get(userId)
