@@ -1,3 +1,4 @@
+
 import {
   ArrowLeft,
   ArrowRight,
@@ -7,6 +8,7 @@ import {
   useState,
 } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { API_URL } from '../../config/api'
 import './Artists.css'
 
 type FeaturedArtist = {
@@ -15,46 +17,29 @@ type FeaturedArtist = {
   image: string | null
 }
 
-function getArtistSlug(
-  name: string,
-) {
+function getArtistSlug(name: string) {
   return name
     .normalize('NFD')
-    .replace(
-      /[\u0300-\u036f]/g,
-      '',
-    )
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
-    .replace(
-      /[^a-z0-9]+/g,
-      '-',
-    )
-    .replace(
-      /^-|-$/g,
-      '',
-    )
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
 }
 
 type ArtistCardProps = {
   artist: FeaturedArtist
-  onSelect: (
-    artist: FeaturedArtist,
-  ) => void
+  onSelect: (artist: FeaturedArtist) => void
 }
 
 function ArtistCard({
   artist,
   onSelect,
 }: ArtistCardProps) {
-  const [
-    imageError,
-    setImageError,
-  ] = useState(false)
+  const [imageError, setImageError] = useState(false)
 
-  const imagePath =
-    `/artists/${getArtistSlug(
-      artist.name,
-    )}.png`
+  const imagePath = `/artists/${getArtistSlug(
+    artist.name,
+  )}.png`
 
   return (
     <button
@@ -64,9 +49,7 @@ function ArtistCard({
           ? 'artists-page__card--missing'
           : ''
       }`}
-      onClick={() =>
-        onSelect(artist)
-      }
+      onClick={() => onSelect(artist)}
     >
       <div className="artists-page__image-wrapper">
         {!imageError ? (
@@ -74,19 +57,12 @@ function ArtistCard({
             src={imagePath}
             alt=""
             className="artists-page__image"
-            onError={() =>
-              setImageError(true)
-            }
+            onError={() => setImageError(true)}
           />
         ) : (
           <div className="artists-page__missing-image">
-            <span>
-              ARTWORK
-            </span>
-
-            <strong>
-              NEEDED
-            </strong>
+            <span>ARTWORK</span>
+            <strong>NEEDED</strong>
           </div>
         )}
       </div>
@@ -114,45 +90,28 @@ function ArtistCard({
 function Artists() {
   const navigate = useNavigate()
 
-  const [
-    artists,
-    setArtists,
-  ] = useState<FeaturedArtist[]>(
-    [],
-  )
-
-  const [
-    artistsLoading,
-    setArtistsLoading,
-  ] = useState(true)
-
-  const [
-    loadError,
-    setLoadError,
-  ] = useState(false)
+  const [artists, setArtists] = useState<FeaturedArtist[]>([])
+  const [artistsLoading, setArtistsLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
 
   useEffect(() => {
     async function loadArtists() {
       try {
         setLoadError(false)
 
-        const response =
-          await fetch(
-            '/api/music/artists',
-          )
+        const response = await fetch(
+          `${API_URL}/music/artists`,
+        )
 
         if (!response.ok) {
           throw new Error(
-            'Failed to load artists',
+            `Failed to load artists: ${response.status}`,
           )
         }
 
-        const data =
-          await response.json()
+        const data = await response.json()
 
-        setArtists(
-          data.artists ?? [],
-        )
+        setArtists(data.artists ?? [])
       } catch (error) {
         console.error(
           'Failed to load artists:',
@@ -168,18 +127,13 @@ function Artists() {
     loadArtists()
   }, [])
 
-  function handleArtistSelect(
-    artist: FeaturedArtist,
-  ) {
-    navigate(
-      '/play-by-artist',
-      {
-        state: {
-          artistId: artist.id,
-          artist: artist.name,
-        },
+  function handleArtistSelect(artist: FeaturedArtist) {
+    navigate('/play-by-artist', {
+      state: {
+        artistId: artist.id,
+        artist: artist.name,
       },
-    )
+    })
   }
 
   return (
@@ -189,9 +143,7 @@ function Artists() {
           <button
             type="button"
             className="artists-page__back"
-            onClick={() =>
-              navigate('/play')
-            }
+            onClick={() => navigate('/play')}
           >
             <ArrowLeft size={16} />
             Back to play
@@ -214,21 +166,17 @@ function Artists() {
             </p>
           </div>
 
-          {!artistsLoading &&
-            !loadError && (
-              <span className="artists-page__count">
-                {artists.length}{' '}
-                artists
-              </span>
-            )}
+          {!artistsLoading && !loadError && (
+            <span className="artists-page__count">
+              {artists.length} artists
+            </span>
+          )}
         </header>
 
         <main className="artists-page__content">
           {artistsLoading ? (
             <div className="artists-page__grid">
-              {Array.from({
-                length: 12,
-              }).map(
+              {Array.from({ length: 12 }).map(
                 (_, index) => (
                   <div
                     key={index}
@@ -238,7 +186,6 @@ function Artists() {
 
                     <div className="artists-page__footer-skeleton">
                       <div className="artists-page__name-skeleton" />
-
                       <div className="artists-page__arrow-skeleton" />
                     </div>
                   </div>
@@ -247,9 +194,7 @@ function Artists() {
             </div>
           ) : loadError ? (
             <div className="artists-page__state">
-              <h2>
-                Something went wrong.
-              </h2>
+              <h2>Something went wrong.</h2>
 
               <p>
                 We couldn&apos;t load the artists
@@ -258,19 +203,14 @@ function Artists() {
 
               <button
                 type="button"
-                onClick={() =>
-                  window.location.reload()
-                }
+                onClick={() => window.location.reload()}
               >
                 Try again
               </button>
             </div>
-          ) : artists.length ===
-            0 ? (
+          ) : artists.length === 0 ? (
             <div className="artists-page__state">
-              <h2>
-                No artists yet.
-              </h2>
+              <h2>No artists yet.</h2>
 
               <p>
                 Add artists to the featured
@@ -279,17 +219,13 @@ function Artists() {
             </div>
           ) : (
             <div className="artists-page__grid">
-              {artists.map(
-                (artist) => (
-                  <ArtistCard
-                    key={artist.id}
-                    artist={artist}
-                    onSelect={
-                      handleArtistSelect
-                    }
-                  />
-                ),
-              )}
+              {artists.map((artist) => (
+                <ArtistCard
+                  key={artist.id}
+                  artist={artist}
+                  onSelect={handleArtistSelect}
+                />
+              ))}
             </div>
           )}
         </main>
@@ -299,4 +235,3 @@ function Artists() {
 }
 
 export default Artists
-

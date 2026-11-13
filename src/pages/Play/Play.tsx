@@ -1,6 +1,7 @@
 import { ArrowRight, Disc3, Film } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { API_URL } from '../../config/api'
 import './Play.css'
 
 /* =========================================================
@@ -146,7 +147,7 @@ function Play() {
   useEffect(() => {
     async function loadArtists() {
       try {
-        const response = await fetch('/api/music/artists')
+        const response = await fetch(`${API_URL}/music/artists`)
 
         if (!response.ok) {
           throw new Error('Failed to load artists')
