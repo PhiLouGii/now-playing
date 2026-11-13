@@ -150,55 +150,62 @@ function AlbumGame() {
 
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const timerRef = useRef<number | null>(null)
+  const clearGameTimer = useCallback(() => {
+  if (timerRef.current !== null) {
+    window.clearInterval(timerRef.current)
+    timerRef.current = null
+  }
+}, [])
 
-  /*
-   * Initial setup.
-   *
-   * Load the first question only. The rest of the round is
-   * generated as the player progresses, so one failed request
-   * cannot prevent all ten questions from loading.
-   */
   const initializeGame = useCallback(async () => {
-    setIsLoading(true)
-    setLoadingComplete(false)
-    setError(null)
+  // Immediately leave the results screen and reset the round.
+  setIsLoading(true)
+  setLoadingComplete(false)
+  setError(null)
 
-    try {
-      const firstQuestion = await requestAlbumQuestion([])
+  setShowResults(false)
+  setQuestion(null)
+  setQuestionDeck([])
+  setQuestionNumber(1)
 
-      if (!isMountedRef.current) return
+  setTimeRemaining(ROUND_LENGTH)
+  setSelectedAnswer(null)
+  setHasAnswered(false)
+  setIsTimeUp(false)
+  setIsPlaying(false)
 
-      setQuestionDeck([firstQuestion])
-      setQuestion(firstQuestion)
-      setQuestionNumber(1)
-      setTimeRemaining(ROUND_LENGTH)
+  setResults([])
+  setScore(0)
+  setStreak(0)
+  setBestStreak(0)
 
-      setSelectedAnswer(null)
-      setHasAnswered(false)
-      setIsTimeUp(false)
-      setIsPlaying(false)
+  scoreSubmitted.current = false
+  isAdvancingRef.current = false
+  setIsAdvancing(false)
 
-      setResults([])
-      setShowResults(false)
+  clearGameTimer()
+  audioRef.current?.pause()
 
-      setScore(0)
-      setStreak(0)
-      setBestStreak(0)
+  try {
+    const firstQuestion = await requestAlbumQuestion([])
 
-      scoreSubmitted.current = false
-      setLoadingComplete(true)
-    } catch {
-      if (isMountedRef.current) {
-        setError(
-          'We could not load an album question. Please try again.',
-        )
-      }
-    } finally {
-      if (isMountedRef.current) {
-        setIsLoading(false)
-      }
+    if (!isMountedRef.current) return
+
+    setQuestionDeck([firstQuestion])
+    setQuestion(firstQuestion)
+    setLoadingComplete(true)
+  } catch {
+    if (isMountedRef.current) {
+      setError(
+        'We could not load an album question. Please try again.',
+      )
     }
-  }, [])
+  } finally {
+    if (isMountedRef.current) {
+      setIsLoading(false)
+    }
+  }
+}, [clearGameTimer])
 
   useEffect(() => {
     isMountedRef.current = true
@@ -230,12 +237,6 @@ function AlbumGame() {
   /*
    * Timer cleanup.
    */
-  const clearGameTimer = useCallback(() => {
-    if (timerRef.current !== null) {
-      window.clearInterval(timerRef.current)
-      timerRef.current = null
-    }
-  }, [])
 
   /*
    * Record a failed or completed question exactly once.

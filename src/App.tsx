@@ -21,6 +21,9 @@ const isPlaySubpage =
   pathname === '/pixel-cover' ||
   pathname === '/artists' ||
   pathname === '/play-by-artist' ||
+  pathname === '/year-game' ||
+  pathname === '/artist-game' ||
+  pathname === '/album-game' ||
   pathname.startsWith('/play/')
 
 const matchingPage = sidebarPages.find((page) =>
