@@ -74,7 +74,7 @@ function YearGame() {
 
       getLoadingFacts()
         .then((data) => {
-          if (isMounted) setLoadingFacts(data.facts)
+          if (isMounted) setLoadingFacts(data)
         })
         .catch((err) => {
           console.error('Failed to load loading facts:', err)

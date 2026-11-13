@@ -1,3 +1,4 @@
+
 import type {
   Question,
   QuestionDifficulty,
@@ -27,6 +28,13 @@ function getYearDifference(
   correctSong: Song,
   candidate: Song,
 ) {
+  if (
+    correctSong.releaseYear == null ||
+    candidate.releaseYear == null
+  ) {
+    return Infinity
+  }
+
   return Math.abs(
     correctSong.releaseYear - candidate.releaseYear,
   )

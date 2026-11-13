@@ -271,14 +271,14 @@ export default function PlayByArtist() {
       setLoadingComplete(false)
 
       getLoadingFacts()
-        .then(data => {
-          if (!cancelled) {
-            setLoadingFacts(data.facts)
-          }
-        })
-        .catch(err => {
-          console.error('Failed to load loading facts:', err)
-        })
+  .then(data => {
+    if (!cancelled) {
+      setLoadingFacts(data)
+    }
+  })
+  .catch(err => {
+    console.error('Failed to load loading facts:', err)
+  })
 
       if (!initialQuestionPromiseRef.current) {
         initialQuestionPromiseRef.current = fetchQuestion()

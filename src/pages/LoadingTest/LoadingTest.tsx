@@ -1,3 +1,4 @@
+
 import {
   useEffect,
   useState,
@@ -26,7 +27,7 @@ export default function LoadingTest() {
         const data =
           await getLoadingFacts()
 
-        setFacts(data.facts)
+        setFacts(data)
       } catch (err) {
         console.error(
           'Failed to load loading facts:',

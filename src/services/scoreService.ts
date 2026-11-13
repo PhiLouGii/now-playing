@@ -10,6 +10,7 @@ export type GameMode =
   | 'name-the-album'
   | 'guess-the-year'
   | 'daily-challenge'
+  | 'pixel-cover'
 
 export interface SubmitScoreData {
   gameMode: GameMode
