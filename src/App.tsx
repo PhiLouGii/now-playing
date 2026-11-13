@@ -20,6 +20,7 @@ const sidebarPages = [
 const isPlaySubpage =
   pathname === '/pixel-cover' ||
   pathname === '/artists' ||
+  pathname === '/play-by-artist' ||
   pathname.startsWith('/play/')
 
 const matchingPage = sidebarPages.find((page) =>

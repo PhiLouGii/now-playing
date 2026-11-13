@@ -6,7 +6,6 @@ import {
   Headphones,
   Heart,
   Layers3,
-  Mail,
   Radio,
   Send,
   Sparkles,
@@ -370,14 +369,14 @@ function About() {
                 <ArrowUpRight size={14} />
               </a>
 
-              <a
+              {/*<a
                 href="mailto:pgiibwa04@gmail.com"
                 aria-label="Email Philippa"
               >
                 <Mail size={17} />
                 Get in touch
                 <ArrowUpRight size={14} />
-              </a>
+              </a> */}
             </div>
 
             <p className="about-developer__link-note">
@@ -537,12 +536,12 @@ function About() {
 
           <div>
             <span>MUSIC DATA & PREVIEWS</span>
-            <p>Deezer, Last.fm</p>
+            <p>Deezer · Last.fm</p>
           </div>
 
           <div>
             <span>BACKEND & DATA</span>
-            <p>Firebase</p>
+            <p>Firebase · Node.js · Formspree</p>
           </div>
 
           <div>

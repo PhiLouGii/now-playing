@@ -32,6 +32,7 @@ function Navbar() {
   '/',
   '/play',
   '/game',
+  '/play-by-artist',
   '/explore',
   '/leaderboard',
   '/profile',
