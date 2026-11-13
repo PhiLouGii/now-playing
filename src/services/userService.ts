@@ -7,6 +7,7 @@ export interface PersonalBests {
   nameTheArtist: number | null
   nameTheAlbum: number | null
   guessTheYear: number | null
+  pixelCover: number | null
   dailyChallenge: number | null
 }
 
@@ -23,11 +24,12 @@ export interface UserScore {
   id: string
   userId: string
   gameMode:
-    | 'name-that-song'
-    | 'name-the-artist'
-    | 'name-the-album'
-    | 'guess-the-year'
-    | 'daily-challenge'
+  | 'name-that-song'
+  | 'name-the-artist'
+  | 'name-the-album'
+  | 'guess-the-year'
+  | 'pixel-cover'
+  | 'daily-challenge'
   score: number
   accuracy: number
   bestStreak: number

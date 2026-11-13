@@ -16,13 +16,16 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 
 import { useNavigate } from 'react-router-dom'
 
-import './PixelCover.css'
+import { submitScore } from '../../services/scoreService'
 import LoadingScreen from '../../components/loading/LoadingScreen'
+
+import './PixelCover.css'
 
 /* =========================================================
    TYPES
@@ -68,7 +71,7 @@ const MAX_SUGGESTIONS = 6
    HELPERS
    ========================================================= */
 
-function normalizeText(value: string) {
+function normalizeText(value: string): string {
   return value
     .toLowerCase()
     .normalize('NFKD')
@@ -77,7 +80,7 @@ function normalizeText(value: string) {
     .trim()
 }
 
-function shuffleAlbums(albums: PixelCoverAlbum[]) {
+function shuffleAlbums(albums: PixelCoverAlbum[]): PixelCoverAlbum[] {
   const shuffled = [...albums]
 
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -122,7 +125,9 @@ function PixelatedArtwork({
           className={[
             'pixel-artwork__image',
             imageLoaded ? 'pixel-artwork__image--loaded' : '',
-          ].filter(Boolean).join(' ')}
+          ]
+            .filter(Boolean)
+            .join(' ')}
           style={{
             filter: `blur(${resolution.blur}px)`,
             transform: resolution.blur > 0 ? 'scale(1.08)' : 'scale(1)',
@@ -153,6 +158,7 @@ function PixelatedArtwork({
 
 function PixelCover() {
   const navigate = useNavigate()
+  const scoreSubmitted = useRef(false)
 
   /* ALBUM DATA */
 
@@ -184,12 +190,10 @@ function PixelCover() {
   const [roundResults, setRoundResults] = useState<RoundResult[]>([])
   const [gameFinished, setGameFinished] = useState(false)
 
-  /* CURRENT ALBUM */
+  /* CURRENT ROUND */
 
   const currentAlbum = roundAlbums[roundIndex]
-
   const currentResolution = REVEAL_STAGES[revealStage]
-  const stageLabel = currentResolution.label
 
   const roundNumber = roundIndex + 1
 
@@ -266,13 +270,56 @@ function PixelCover() {
       }
     }
 
-    loadAlbums()
+    void loadAlbums()
 
     return () => {
       cancelled = true
       window.clearTimeout(slowNoticeTimer)
     }
   }, [])
+
+  /* =========================================================
+     SAVE SCORE
+     ========================================================= */
+
+  useEffect(() => {
+    if (!gameFinished || scoreSubmitted.current) return
+
+    scoreSubmitted.current = true
+
+    const questions = roundResults.length
+
+    const correct = roundResults.filter(
+      result => result.correct,
+    ).length
+
+    const accuracy = questions > 0
+      ? (correct / questions) * 100
+      : 0
+
+    async function saveScore() {
+      try {
+        await submitScore({
+          gameMode: 'pixel-cover',
+          score,
+          accuracy,
+          bestStreak: 0,
+          questions,
+          correctAnswers: correct,
+          totalListeningTime: 0,
+        })
+
+        console.log('PIXEL COVER SCORE SAVED')
+      } catch (error) {
+        console.error(
+          'Could not save Pixel Cover score:',
+          error,
+        )
+      }
+    }
+
+    void saveScore()
+  }, [gameFinished, roundResults, score])
 
   /* =========================================================
      ALBUM TITLE & ARTIST AUTOCOMPLETE
@@ -295,10 +342,7 @@ function PixelCover() {
         const title = normalizeText(album.title)
         const artist = normalizeText(album.artist)
 
-        return (
-          title.includes(query) ||
-          artist.includes(query)
-        )
+        return title.includes(query) || artist.includes(query)
       })
       .slice(0, MAX_SUGGESTIONS)
   }, [
@@ -309,13 +353,13 @@ function PixelCover() {
     wrongGuess,
   ])
 
-  const selectSuggestion = (album: PixelCoverAlbum) => {
+  function selectSuggestion(album: PixelCoverAlbum) {
     setGuess(album.title)
     setWrongGuess(false)
     setFeedback('')
   }
 
-  const clearGuess = () => {
+  function clearGuess() {
     setGuess('')
     setWrongGuess(false)
     setFeedback('')
@@ -465,6 +509,8 @@ function PixelCover() {
     setFeedback('')
     setGameFinished(false)
     setPreviousGuesses([])
+
+    scoreSubmitted.current = false
   }
 
   /* =========================================================
@@ -723,7 +769,9 @@ function PixelCover() {
           <div className="pixel-cover-art-column">
             <div className="pixel-cover-art-heading">
               <span>ALBUM ARTWORK</span>
-              <span className="pixel-cover-stage">{stageLabel}</span>
+              <span className="pixel-cover-stage">
+                {currentResolution.label}
+              </span>
             </div>
 
             <PixelatedArtwork
@@ -785,7 +833,9 @@ function PixelCover() {
                   'pixel-cover-input-wrapper',
                   wrongGuess ? 'pixel-cover-input-wrapper--error' : '',
                   answered ? 'pixel-cover-input-wrapper--success' : '',
-                ].filter(Boolean).join(' ')}
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
               >
                 {wrongGuess ? (
                   <CircleX size={18} aria-hidden="true" />
@@ -828,45 +878,39 @@ function PixelCover() {
                 )}
               </div>
 
-              
-{/* AUTOCOMPLETE SUGGESTIONS */}
+              {/* AUTOCOMPLETE SUGGESTIONS */}
 
-{suggestions.length > 0 && (
-  <div
-    className="pixel-cover-suggestions"
-    id="pixel-cover-suggestions"
-    role="listbox"
-    aria-label="Album suggestions"
-  >
-    <span className="pixel-cover-suggestions__label">
-      SUGGESTED ALBUMS
-    </span>
+              {suggestions.length > 0 && (
+                <div
+                  className="pixel-cover-suggestions"
+                  id="pixel-cover-suggestions"
+                  role="listbox"
+                  aria-label="Album suggestions"
+                >
+                  <span className="pixel-cover-suggestions__label">
+                    SUGGESTED ALBUMS
+                  </span>
 
-    {suggestions.map(album => (
-      <button
-        key={album.id}
-        type="button"
-        className="pixel-cover-suggestion"
-        role="option"
-        aria-selected={false}
-        onClick={() => {
-          setGuess(album.title)
-          setWrongGuess(false)
-          setFeedback('')
-        }}
-      >
-        <span className="pixel-cover-suggestion__details">
-          <strong>{album.title}</strong>
-          <small>
-            {album.artist}
-            {album.year ? ` · ${album.year}` : ''}
-          </small>
-        </span>
-      </button>
-    ))}
-  </div>
-)}
-
+                  {suggestions.map(album => (
+                    <button
+                      key={album.id}
+                      type="button"
+                      className="pixel-cover-suggestion"
+                      role="option"
+                      aria-selected={false}
+                      onClick={() => selectSuggestion(album)}
+                    >
+                      <span className="pixel-cover-suggestion__details">
+                        <strong>{album.title}</strong>
+                        <small>
+                          {album.artist}
+                          {album.year ? ` · ${album.year}` : ''}
+                        </small>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {/* SUBMIT */}
 
@@ -890,7 +934,9 @@ function PixelCover() {
                   feedbackType
                     ? `pixel-cover-feedback--${feedbackType}`
                     : '',
-                ].filter(Boolean).join(' ')}
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
                 role="status"
                 aria-live="polite"
               >
@@ -915,7 +961,9 @@ function PixelCover() {
                   answered
                     ? 'pixel-cover-answer-reveal--correct'
                     : '',
-                ].filter(Boolean).join(' ')}
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
               >
                 <div className="pixel-cover-answer-reveal__check">
                   {answered ? (

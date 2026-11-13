@@ -56,6 +56,7 @@ export async function getUserStats(
           nameTheAlbum: null,
           guessTheYear: null,
           dailyChallenge: null,
+          pixelCover: null,
         },
       })
     }
@@ -118,12 +119,13 @@ export async function getUserStats(
      * Best score for each game mode.
      */
     const personalBests = {
-      nameThatSong: null as number | null,
-      nameTheArtist: null as number | null,
-      nameTheAlbum: null as number | null,
-      guessTheYear: null as number | null,
-      dailyChallenge: null as number | null,
-    }
+  nameThatSong: null as number | null,
+  nameTheArtist: null as number | null,
+  nameTheAlbum: null as number | null,
+  guessTheYear: null as number | null,
+  dailyChallenge: null as number | null,
+  pixelCover: null as number | null,
+}
 
     scores.forEach(
       (score) => {
@@ -185,6 +187,14 @@ export async function getUserStats(
             ) {
               personalBests.dailyChallenge =
                 score.score
+            }
+            break
+          case 'pixel-cover':
+            if (
+              personalBests.pixelCover === null ||
+              score.score > personalBests.pixelCover
+            ) {
+              personalBests.pixelCover = score.score
             }
             break
         }
