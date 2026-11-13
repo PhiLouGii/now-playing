@@ -52,6 +52,7 @@ export type CandidateSource =
   | 'era'
   | 'discovery'
   | 'category'
+  | 'artist'
 
 export type MusicCandidate = {
   track: MusicTrack
