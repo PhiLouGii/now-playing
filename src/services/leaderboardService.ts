@@ -1,6 +1,7 @@
 import { getIdToken } from 'firebase/auth'
 
 import { auth } from '../config/firebase'
+import { API_URL } from '../config/api'
 
 export type LeaderboardGameMode =
   | 'name-that-song'
@@ -40,8 +41,9 @@ export async function getLeaderboard(
   gameMode?: LeaderboardGameMode,
 ): Promise<LeaderboardResponse> {
   const url = new URL(
-    'http://localhost:3000/api/leaderboard',
-  )
+  `${API_URL}/leaderboard`,
+  window.location.origin,
+)
 
   if (gameMode) {
     url.searchParams.set(

@@ -2,6 +2,8 @@ import { getIdToken } from 'firebase/auth'
 
 import { auth } from '../config/firebase'
 
+import { API_URL } from '../config/api'
+
 export type GameMode =
   | 'name-that-song'
   | 'name-the-artist'
@@ -34,7 +36,7 @@ export async function submitScore(
     await getIdToken(currentUser)
 
   const response = await fetch(
-    'http://localhost:3000/api/scores',
+  `${API_URL}/scores`,
     {
       method: 'POST',
       headers: {

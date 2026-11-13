@@ -1,3 +1,4 @@
+import { API_URL } from '../config/api'
 import type {
   Question,
   QuestionDifficulty,
@@ -6,7 +7,7 @@ import type {
   Song,
 } from '../types/game'
 
-const API_URL = 'http://localhost:3000/api'
+
 const REQUEST_TIMEOUT_MS = 30_000
 const ARTIST_REQUEST_TIMEOUT_MS = 120_000
 

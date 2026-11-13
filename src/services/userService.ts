@@ -2,6 +2,8 @@ import { getIdToken } from 'firebase/auth'
 
 import { auth } from '../config/firebase'
 
+import { API_URL } from '../config/api'
+
 export interface PersonalBests {
   nameThatSong: number | null
   nameTheArtist: number | null
@@ -66,7 +68,7 @@ export async function getUserStats(): Promise<UserStats> {
     await getAuthHeaders()
 
   const response = await fetch(
-    'http://localhost:3000/api/users/stats',
+    `${API_URL}/users/stats`,
     {
       headers,
     },
@@ -97,7 +99,7 @@ export async function getUserScores(): Promise<
     await getAuthHeaders()
 
   const response = await fetch(
-    'http://localhost:3000/api/users/scores',
+    `${API_URL}/users/scores`,
     {
       headers,
     },

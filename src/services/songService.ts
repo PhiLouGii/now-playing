@@ -1,7 +1,6 @@
-import type { Song } from '../types/game'
 
-const API_URL =
-  'http://localhost:3000/api'
+import type { Song } from '../types/game'
+import { API_URL } from '../config/api'
 
 type MusicTrackResponse = {
   track: Song
