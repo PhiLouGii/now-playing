@@ -22,6 +22,8 @@ import {
 
 import { useNavigate } from 'react-router-dom'
 
+import { API_URL } from '../../config/api'
+
 import { submitScore } from '../../services/scoreService'
 import LoadingScreen from '../../components/loading/LoadingScreen'
 
@@ -231,7 +233,7 @@ function PixelCover() {
         setLoadError('')
         setShowSlowNotice(false)
 
-        const response = await fetch('/api/pixel-cover/albums')
+        const response = await fetch(`${API_URL}/pixel-cover/albums`)
 
         if (!response.ok) {
           throw new Error('Unable to load album covers.')
