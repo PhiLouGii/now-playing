@@ -662,8 +662,16 @@ function About() {
   </form>
 
   <span className="about-closing__footer">
-    NOW PLAYING · INDEPENDENTLY MADE
-  </span>
+  NOW PLAYING · INDEPENDENTLY MADE · © 2026 PHILIPPA L. GIIBWA
+</span>
+
+<p className="about-closing__copyright">
+  The original code, design, branding and creative elements of
+  Now Playing are the intellectual property of their creator.
+  Reproduction, redistribution or use without prior written
+  permission is not permitted. Third-party assets and services
+  remain the property of their respective owners.
+</p>
 </section>
 
     </main>

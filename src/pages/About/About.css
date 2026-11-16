@@ -875,6 +875,15 @@
   letter-spacing: .16em;
 }
 
+.about-closing__copyright {
+  max-width: 620px;
+  margin: 14px auto 0;
+  font-size: 0.75rem;
+  line-height: 1.7;
+  opacity: 0.65;
+  text-align: center;
+}
+
 /* =========================================================
    CONTACT FORM
    ========================================================= */
