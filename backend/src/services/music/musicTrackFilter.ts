@@ -14,7 +14,6 @@ const EXCLUDED_PATTERNS = [
   'slowed + reverb',
   'nightcore',
   'edit',
-  'version',
   'cover',
   'tribute',
   'demo',
