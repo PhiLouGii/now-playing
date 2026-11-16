@@ -15,6 +15,7 @@
     "seed:chris-brown": "tsx src/scripts/seedChrisBrown.ts",
     "seed:sam-smith": "tsx src/scripts/seedSamSmith.ts",
     "seed:sia": "tsx src/scripts/seedSia.ts",
+    "seed:ne-yo": "tsx src/scripts/seedNeYo.ts",
     "seed:pixel-cover": "tsx src/scripts/seedPixelCover.ts",
     "seed:guess-the-year": "tsx src/scripts/seedGuessTheYear.ts",
     "start": "node dist/server.js"
