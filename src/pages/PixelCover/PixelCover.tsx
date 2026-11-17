@@ -195,7 +195,11 @@ function PixelCover() {
   /* CURRENT ROUND */
 
   const currentAlbum = roundAlbums[roundIndex]
-  const currentResolution = REVEAL_STAGES[revealStage]
+const isRoundResolved = answered || revealedAnswer
+
+const currentResolution = isRoundResolved
+  ? REVEAL_STAGES[REVEAL_STAGES.length - 1]
+  : REVEAL_STAGES[revealStage]
 
   const roundNumber = roundIndex + 1
 
@@ -787,12 +791,16 @@ function PixelCover() {
                   key={stage.label}
                   className={[
                     'pixel-cover-stage-item',
-                    index <= revealStage
-                      ? 'pixel-cover-stage-item--active'
-                      : '',
-                    index === revealStage
-                      ? 'pixel-cover-stage-item--current'
-                      : '',
+                    index <= (isRoundResolved
+  ? REVEAL_STAGES.length - 1
+  : revealStage)
+  ? 'pixel-cover-stage-item--active'
+  : '',
+index === (isRoundResolved
+  ? REVEAL_STAGES.length - 1
+  : revealStage)
+  ? 'pixel-cover-stage-item--current'
+  : '',
                   ].join(' ')}
                 >
                   <span className="pixel-cover-stage-item__dot" />
