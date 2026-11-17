@@ -40,7 +40,7 @@ function Home() {
           <h1>Good to have you back.</h1>
           <p className="home__subtitle">Pick a game, trust your ears, and see what you know.</p>
         </div>
-        <div className="home__status"><span /> ALL SYSTEMS PLAYING</div>
+        <div className="home__status"><span /> SOUND SYSTEM READY</div>
       </div>
 
       <Hero />
